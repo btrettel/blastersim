@@ -12,24 +12,21 @@
         - pistons
             - The motion of the "piston" will be calculated. The projectile will be a "piston".
             - The overall length, area, and volume of each piston-connected control volume must be the same. And piston-connected control volumes must only refer to each other.
-        - valves
+        - flow paths
     - Connections represented with adjacency matrices.
         - <https://en.wikipedia.org/wiki/Adjacency_matrix>
-    - `state_type` contains an array of `dual_control_volume_type`s and the adjacency matrix for connections between control volumes.
+    - `state_type` contains an array of `control_volume_type`s and the adjacency matrix for connections between control volumes.
     - Start with an input file where you specify the control volumes specifically, one per `control_volume` namelist, then later add modes which automatically create the control volumes.
         - Make `control_volume_type` and use a separate control volume for each side of a piston.
         - Control volume 1: atmosphere
         - Control volume 2: barrel
         - Control volume 3: pressure chamber
-- MC data type
-    - Why part of the MVP? Because retrofitting the code to add this later will take too much time, and it's simple to add at the beginning.
-    - Why Monte Carlo? BlasterSim should be fast, so computation time is not a problem. Uncertainty also is likely to be large, and Monte Carlo would handle that better than FOSM.
-    - Write MC module for Fortran.
+- automatic differentiation
 - Lagrange pressure gradient
     - projectile base pressure is used in force calculation
     - take spatial average of equation of state to relate average pressure to other average thermodynamic functions
     - <https://apps.dtic.mil/sti/citations/ADA222590>
-    - also consider that the other side of the chamber may have a non-zero velocity
+    - also consider that the other side of the chamber may have a non-zero velocity (unlike normal Lagrange solution)
 - ISO valve model with laminar modification
 - units.f90
 - Documentation
@@ -39,6 +36,7 @@
     - ideal gas
     - constant specific heat
     - one species (air) by default
+    - gas has no momentum or kinetic energy
 - Tests
     - mass, momentum, and energy conservation (Using a time integration scheme which preserves these would be nice, but is not necessary for a MVP.)
 - Checks:
@@ -52,8 +50,7 @@
     - Data:
         - <http://nerfhaven.com/forums/topic/21832-experimental-methods-for-determining-and-predicting-blaster-power/?p=307341>
             - <http://www.danielbeaver.net/storage/projects/nerf/SpringerTesting/>
-- `make release` compiles for more generic architecture (not `-march=native` in gfortran, etc.) for portability.
-- Use GA when simulation is fast. Combine with MC for robust optimization. Also have fitting model coefficients to data, with uncertainties if possible.
+- Use gradient descent for optimization. Also have fitting model coefficients to data.
 - optimization (optimal barrel length, optimal dart mass, optimal 
     - objective functions: maximize muzzle velocity, minimize input energy, maximize number of shots per tank
     - constraints: max KED, max dart mass, max muzzle velocity
@@ -92,3 +89,7 @@
     - <https://github.com/Engine-Simulator/engine-sim-community-edition>
 - <http://www.zdspb.com/tech/index.html>
     - Make sure that you can model paintball guns easily too to get that part of the market.
+- UQ
+    - FOSM for robust optimization
+    - Model fitting with uncertainties.
+- Sell BlasterSim stickers to put on blasters that were designed using it?
