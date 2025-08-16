@@ -1,0 +1,42 @@
+&config
+output_file     = "src/units.f90"
+base_units      = "m", "kg", "s"
+type_definition = "type(ad)"
+use_line        = "use prec, only: WP;use fmad, only: ad, sin, cos, tan, exp, log, abs, min, max"
+kind_parameter  = "WP"
+module_name     = "units"
+max_n_units     = 10
+
+min_exponents = 0.0, 0.0, -1.0
+max_exponents = 1.0, 1.0, 1.0
+denominators  = 1, 1, 1
+
+sqrt   = .false.
+cbrt   = .false.
+square = .false.
+/
+
+&seed_unit
+label = "unitless"
+e = 0.0, 0.0, 0.0
+/
+
+&seed_unit
+label = "length"
+e = 1.0, 0.0, 0.0
+/
+
+&seed_unit
+label = "mass"
+e = 0.0, 1.0, 0.0
+/
+
+&seed_unit
+label = "time"
+e = 0.0, 0.0, 1.0
+/
+
+&seed_unit
+label = "mass_flow_rate"
+e = 0.0, 1.0, -1.0
+/
