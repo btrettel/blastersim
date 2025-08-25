@@ -21,7 +21,9 @@ private
 ! <https://fortran-lang.discourse.group/t/proper-usage-of-system-clock/3245/3>
 integer, public, parameter :: TIMER_KIND = selected_int_kind(18)
 
-public :: timeit, sleep
+public :: timeit, sleep, now
+
+integer, public, parameter :: TIMESTAMP_LEN = 29
 
 type, public :: timer_type
     logical             :: active = .false. ! whether the timer is currently timing
@@ -194,5 +196,47 @@ subroutine sleep(duration)
         end if
     end do
 end subroutine sleep
+
+function now()
+    use checks, only: assert
+    
+    character(len=5)             :: zone
+    integer                      :: values(8)
+    character(len=4)             :: year
+    character(len=2)             :: month, day, hour, minutes, seconds
+    character(len=3)             :: milliseconds
+    character(len=TIMESTAMP_LEN) :: now
+    
+    ! ISO 8601 date-time format.
+    ! <https://en.wikipedia.org/wiki/ISO_8601>
+    
+    call date_and_time(zone=zone, values=values)
+    
+    write(unit=year,         fmt="(i4.4)") values(1)
+    write(unit=month,        fmt="(i2.2)") values(2)
+    write(unit=day,          fmt="(i2.2)") values(3)
+    write(unit=hour,         fmt="(i2.2)") values(5)
+    write(unit=minutes,      fmt="(i2.2)") values(6)
+    write(unit=seconds,      fmt="(i2.2)") values(7)
+    write(unit=milliseconds, fmt="(i3.3)") values(8)
+    
+    now = year // "-" // month // "-" // day // "T" // hour // ":" // minutes // ":" // seconds // &
+                "." // milliseconds // zone(1:3) // ":" // zone(4:5)
+    
+    call assert(values(1) > 2000, "timer (now): year is in the past")
+    call assert(values(1) < 2100, "timer (now): year is in the future")
+    call assert(values(2) >= 1, "timer (now): month is below 1")
+    call assert(values(2) <= 12, "timer (now): month is above 12")
+    call assert(values(3) >= 1, "timer (now): day is below 1")
+    call assert(values(3) <= 31, "timer (now): day is above 31")
+    call assert(values(5) >= 0, "timer (now): hour is below 0")
+    call assert(values(5) <= 23, "timer (now): hour is above 23")
+    call assert(values(6) >= 0, "timer (now): minutes are below 0")
+    call assert(values(6) <= 59, "timer (now): minutes are above 23")
+    call assert(values(7) >= 0, "timer (now): seconds are below 0")
+    call assert(values(7) <= 59, "timer (now): seconds are above 23")
+    call assert(values(8) >= 0, "timer (now): milliseconds are below 0")
+    call assert(values(8) <= 999, "timer (now): milliseconds are above 999")
+end function now
 
 end module timer

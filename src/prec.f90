@@ -42,4 +42,9 @@ integer, public, parameter :: CL = 1024 ! `CL` stands for character length
 ! <https://stackoverflow.com/a/49416279/1124489>
 real(WP), public, parameter :: PI = 4.0_WP * atan(1.0_WP)
 
+! Needed or else ifort truncates namelist file lines and can't read them back correctly.
+! 10000 is arbitrary. Just pick a number larger than anything you expect to use.
+! gfortran had a strange run-time error with 1000.
+integer, public, parameter :: NML_RECL = 10000
+
 end module prec
