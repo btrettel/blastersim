@@ -1,10 +1,5 @@
 &LOG
- TIMESTAMP="2025-08-16T18:31:55.046-04:00",
+ TIMESTAMP="2025-08-31T15:12:37.353-04:00",
  LEVEL="info",
- MESSAGE="Generated 10 physical dimensions. Writing src/units.f90...",
- /
-&LOG
- TIMESTAMP="2025-08-16T18:31:55.085-04:00",
- LEVEL="info",
- MESSAGE="Generated 243 interfaces.",
+ MESSAGE="Generated 100 physical dimensions. Writing src/units.f90...",
  /
