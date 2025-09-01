@@ -1,0 +1,69 @@
+# Summary: Makefile for Microsoft NMAKE
+# Author: Ben Trettel (<http://trettel.us/>)
+# Project: [BlasterSim](https://github.com/btrettel/blastersim)
+# License: [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html)
+
+# Partially tested with NMAKE on Windows. Some tests will fail due to non-portable code. Should eventually work with `nmake /f Nmakefile`.
+
+# defaults
+!ifndef FC
+FC=ifx
+!endif
+BUILD  = debug
+OPENMP = no
+STATIC = no
+!include mk\windows_defaults.mk
+
+#############
+# Compilers #
+#############
+
+!if "$(FC)" == "ifort"
+!include mk\ifort_windows.mk
+!elseif "$(FC)" == "ifx"
+!include mk\ifx_windows.mk
+!elseif "$(FC)" == "gfortran"
+!include mk\gfortran.mk
+!else
+!error Invalid FC: $(FC)
+!endif
+
+!if "$(ARCH)" == "native"
+AFLAGS = $(NFLAGS)
+!endif
+
+!if "$(BUILD)" == "debug"
+FFLAGS = $(FFLAGS) $(DFLAGS) $(AFLAGS)
+!elseif "$(BUILD)" == "release"
+FFLAGS = $(FFLAGS) $(RFLAGS) $(AFLAGS)
+!else
+!error Set BUILD to either debug or release. BUILD=$(BUILD)
+!endif
+
+!if "$(OPENMP)" == "yes"
+FFLAGS = $(FFLAGS) $(OMPFLAGS)
+!elseif "$(OPENMP)" == "no"
+FFLAGS = $(FFLAGS)
+!else
+!error Set OPENMP to either yes or no. OPENMP=$(OPENMP)
+!endif
+
+!if "$(STATIC)" == "yes"
+FFLAGS = $(FFLAGS) $(SFLAGS)
+!elseif "$(STATIC)" == "no"
+FFLAGS = $(FFLAGS)
+!else
+!error Set STATIC to either yes or no. STATIC=$(STATIC)
+!endif
+
+# jom needs the folders manually specified.
+# NMAKE does not require this if the folder is the same for both.
+# <https://learn.microsoft.com/en-us/cpp/build/reference/inference-rules?view=msvc-170#search-paths-in-rules>
+# <https://forums.freebsd.org/threads/a-surprising-thing-about-bsd-make-suffix-rules.89767/>
+{src}.f90{src}.$(OBJEXT):
+	$(FC) $(OBJFLAGS) $@ $(FFLAGS) $<
+
+!include mk\before.mk
+!include mk\common.mk
+!include mk\manual.mk
+!include mk\depends.mk
