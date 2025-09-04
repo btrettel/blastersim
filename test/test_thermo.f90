@@ -27,19 +27,20 @@ call tests%end_tests()
 contains
 
 subroutine test_p_eos(tests)
+    use thermo, only: P_ATM, T_ATM, RHO_ATM, p_eos
+    
     type(test_results_type), intent(in out) :: tests
 
     type(si_mass_density) :: rho
     type(si_temperature)  :: temp
     type(si_pressure)     :: p
     
-    ! <https://en.wikipedia.org/wiki/Density_of_air>
-    call rho%v%init_const(1.2250_WP, 0)
-    call temp%v%init_const(273.15_WP + 15.0_WP, 0)
+    call rho%v%init_const(RHO_ATM, 0)
+    call temp%v%init_const(T_ATM, 0)
     
     p = p_eos(rho, temp)
     
-    call tests%real_eq(p%v%v, 101.325e3_WP, "p_eos, atmospheric", abs_tol=1.0_WP)
+    call tests%real_eq(p%v%v, P_ATM, "p_eos, atmospheric", abs_tol=1.0_WP)
 end subroutine test_p_eos
 
 end program test_thermo
