@@ -1,15 +1,18 @@
 &config
 output_file     = "src/units.f90"
-base_units      = "m", "kg", "s", "K", "mol"
+base_units      = "m", "kg", "s", "K"
 type_definition = "type(ad)"
 use_line        = "use prec, only: WP;use fmad, only: ad"
 kind_parameter  = "WP"
 module_name     = "units"
 max_n_units     = 100
 
-min_exponents = -3.0, -1.0, -2.0, -1.0, -1.0
-max_exponents =  2.0,  1.0,  1.0,  1.0,  0.0
-denominators  = 1, 1, 1
+!               m     kg    s     K
+min_exponents = -3.0, -1.0, -2.0, -1.0
+max_exponents =  2.0,  1.0,  1.0,  1.0
+denominators  =    1,    1,    1,    1
+
+debug = .false.
 
 sqrt       = .false.
 cbrt       = .false.
@@ -19,125 +22,104 @@ intrinsics = .false.
 
 &seed_unit
 label = "unitless"
-!   m    kg   s    K    mol
-e = 0.0, 0.0, 0.0, 0.0, 0.0
+!   m    kg   s    K
+e = 0.0, 0.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$x_i$`
 label = "si_length"
-!   m    kg   s    K    mol
-e = 1.0, 0.0, 0.0, 0.0, 0.0
+!   m    kg   s    K
+e = 1.0, 0.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$\dot{x}_i$`
 label = "si_velocity"
-!   m    kg   s    K    mol
-e = 1.0, 0.0, -1.0, 0.0, 0.0
+!   m    kg   s     K
+e = 1.0, 0.0, -1.0, 0.0
 /
 
 &seed_unit
 ! example: `$A_i$`
 label = "si_area"
-!   m    kg   s    K    mol
-e = 2.0, 0.0, 0.0, 0.0, 0.0
+!   m    kg   s    K
+e = 2.0, 0.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$m_{\text{p}i}$`
 label = "si_mass"
-!   m    kg   s    K    mol
-e = 0.0, 1.0, 0.0, 0.0, 0.0
+!   m    kg   s    K
+e = 0.0, 1.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$1/m_{\text{p}i}$`
 label = "si_inverse_mass"
-!   m    kg   s    K    mol
-e = 0.0, -1.0, 0.0, 0.0, 0.0
+!   m    kg    s    K
+e = 0.0, -1.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$k_i$`
 label = "si_stiffness"
-!   m     kg  s     K    mol
-e = 0.0, 1.0, -2.0, 0.0, 0.0
+!   m     kg  s     K
+e = 0.0, 1.0, -2.0, 0.0
 /
 
 &seed_unit
 ! example: `$p_i$`
 label = "si_pressure"
-!   m     kg   s      K    mol
-e = -1.0, 1.0, -2.0, 0.0, 0.0
+!   m     kg   s     K
+e = -1.0, 1.0, -2.0, 0.0
 /
 
 &seed_unit
 ! example: `$\dot{m}$`
 label = "si_mass_flow_rate"
-!   m    kg   s     K    mol
-e = 0.0, 1.0, -1.0, 0.0, 0.0
+!   m    kg   s     K
+e = 0.0, 1.0, -1.0, 0.0
 /
 
 &seed_unit
 ! example: `$E$`
 label = "si_energy"
-!   m    kg   s     K    mol
-e = 2.0, 1.0, -2.0, 0.0, 0.0
+!   m    kg   s     K
+e = 2.0, 1.0, -2.0, 0.0
 /
 
 &seed_unit
 ! example: `$h$`
 label = "si_specific_energy"
-!   m    kg   s     K    mol
-e = 2.0, 0.0, -2.0, 0.0, 0.0
-/
-
-&seed_unit
-! example: `$\overline{R}$`
-label = "si_universal_gas_constant"
-!   m    kg   s     K     mol
-e = 2.0, 1.0, -2.0, -1.0, -1.0
-/
-
-&seed_unit
-! example: `$M$`
-label = "si_molecular_mass"
-!   m    kg   s    K    mol
-e = 0.0, 1.0, 0.0, 0.0, -1.0
+!   m    kg   s     K
+e = 2.0, 0.0, -2.0, 0.0
 /
 
 &seed_unit
 ! example: `$c_v$`
 label = "si_specific_heat"
-!   m    kg   s     K     mol
-e = 2.0, 0.0, -2.0, -1.0, 0.0
+!   m    kg   s     K
+e = 2.0, 0.0, -2.0, -1.0
 /
 
 &seed_unit
 ! example: `$T_i$`
 label = "si_temperature"
-!   m    kg   s    K    mol
-e = 0.0, 0.0, 0.0, 1.0, 0.0
+!   m    kg   s    K
+e = 0.0, 0.0, 0.0, 1.0
 /
 
 &seed_unit
 ! example: `$\rho_i$`
 label = "si_mass_density"
-!   m     kg   s    K    mol
-e = -3.0, 1.0, 0.0, 0.0, 0.0
+!   m     kg   s    K
+e = -3.0, 1.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$t$`
 label = "si_time"
-!   m    kg   s    K    mol
-e = 0.0, 0.0, 1.0, 0.0, 0.0
-/
-
-&seed_unit
-! example: `$t$`
-label = "si_time"
-!   m    kg   s    K    mol
-e = 0.0, 0.0, 1.0, 0.0, 0.0
+!   m    kg   s    K
+e = 0.0, 0.0, 1.0, 0.0
 /

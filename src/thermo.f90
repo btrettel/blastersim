@@ -23,11 +23,10 @@ contains
 
 pure function p_eos(rho, temp)
     use fmad, only: ad
-    use units, only: si_mass_density           => unit_m30_p10_p00_p00_p00, &
-                     si_temperature            => unit_p00_p00_p00_p10_p00, &
-                     si_pressure               => unit_m10_p10_m20_p00_p00, &
-                     si_universal_gas_constant => unit_p20_p10_m20_m10_m10, &
-                     si_molecular_mass         => unit_p00_p10_p00_p00_m10
+    use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
+                     si_temperature   => unit_p00_p00_p00_p10, &
+                     si_pressure      => unit_m10_p10_m20_p00, &
+                     si_specific_heat => unit_p20_p00_m20_m10
     
     type(si_mass_density), intent(in) :: rho
     type(si_temperature), intent(in)  :: temp
@@ -35,15 +34,13 @@ pure function p_eos(rho, temp)
     
     integer :: n_dv
     
-    type(si_universal_gas_constant) :: R_bar_
-    type(si_molecular_mass)         :: M_air_
+    type(si_specific_heat) :: R
     
     n_dv = size(rho%v%d)
     
-    call R_bar_%v%init_const(R_BAR, n_dv)
-    call M_air_%v%init_const(M_AIR, n_dv)
+    call R%v%init_const(R_BAR/M_AIR, n_dv)
     
-    p_eos = rho * R_bar_ * temp / M_air_
+    p_eos = rho * R * temp
 end function p_eos
 
 end module thermo

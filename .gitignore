@@ -31,4 +31,16 @@
 *.out
 *.app
 
+*.gcda
 *.gcno
+*.lst
+modtable.txt
+*.nml
+!genunits.nml
+test_*
+!test_*.f90
+src/rev.f90
+missed.txt
+*.opt.yaml
+*.optrpt
+*.pdb
