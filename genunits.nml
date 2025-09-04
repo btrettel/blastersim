@@ -1,5 +1,0 @@
-&LOG
- TIMESTAMP="2025-08-31T15:12:37.353-04:00",
- LEVEL="info",
- MESSAGE="Generated 100 physical dimensions. Writing src/units.f90...",
- /

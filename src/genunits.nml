@@ -5,9 +5,9 @@ type_definition = "type(ad)"
 use_line        = "use prec, only: WP;use fmad, only: ad"
 kind_parameter  = "WP"
 module_name     = "units"
-max_n_units     = 50
+max_n_units     = 100
 
-min_exponents = -2.0, -1.0, -2.0, -1.0, -1.0
+min_exponents = -3.0, -1.0, -2.0, -1.0, -1.0
 max_exponents =  2.0,  1.0,  1.0,  1.0,  0.0
 denominators  = 1, 1, 1
 
@@ -101,6 +101,13 @@ e = 2.0, 1.0, -2.0, -1.0, -1.0
 /
 
 &seed_unit
+! example: `$M$`
+label = "si_molecular_mass"
+!   m    kg   s    K    mol
+e = 0.0, 1.0, 0.0, 0.0, -1.0
+/
+
+&seed_unit
 ! example: `$c_v$`
 label = "si_specific_heat"
 !   m    kg   s     K     mol
@@ -112,6 +119,20 @@ e = 2.0, 0.0, -2.0, -1.0, 0.0
 label = "si_temperature"
 !   m    kg   s    K    mol
 e = 0.0, 0.0, 0.0, 1.0, 0.0
+/
+
+&seed_unit
+! example: `$\rho_i$`
+label = "si_mass_density"
+!   m     kg   s    K    mol
+e = -3.0, 1.0, 0.0, 0.0, 0.0
+/
+
+&seed_unit
+! example: `$t$`
+label = "si_time"
+!   m    kg   s    K    mol
+e = 0.0, 0.0, 1.0, 0.0, 0.0
 /
 
 &seed_unit

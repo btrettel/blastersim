@@ -22,11 +22,21 @@ src$(DIR_SEP)release.$(OBJEXT): src$(DIR_SEP)release.f90
 
 src$(DIR_SEP)stopcodes.$(OBJEXT): src$(DIR_SEP)stopcodes.f90
 
+src$(DIR_SEP)thermo.$(OBJEXT): src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)thermo.f90
+
 src$(DIR_SEP)timer.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.f90
+
+src$(DIR_SEP)units.$(OBJEXT): src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)units.f90
 
 src$(DIR_SEP)unittest.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)unittest.f90
 
 ########################
 # Program dependencies #
 ########################
+
+test_thermo$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)thermo.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) test$(DIR_SEP)test_thermo.f90
+	$(FC) $(OFLAG) $@ $(FFLAGS) src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)thermo.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) test$(DIR_SEP)test_thermo.f90
+
+thermo.nml: test_thermo$(BINEXT)
+	$(RUN)test_thermo$(BINEXT)
 
