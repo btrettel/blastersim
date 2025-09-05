@@ -1,11 +1,11 @@
-! Module for thermodynamic calculations.
+! Module for control volume analysis.
 ! Standard: Fortran 2018
 ! Preprocessor: none
 ! Author: Ben Trettel (<http://trettel.us/>)
 ! Project: [BlasterSim](https://github.com/btrettel/blastersim)
 ! License: [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html)
 
-module thermo
+module cva
 
 use prec, only: WP
 implicit none
@@ -54,4 +54,4 @@ pure function p_eos(rho, temp)
     call assert(p_eos%v%v > 0.0_WP, "thermo (p_eos): p_eos%v > 0 violated")
 end function p_eos
 
-end module thermo
+end module cva
