@@ -53,7 +53,8 @@ type, public :: cv_type
     type(si_length)       :: x_z        ! zero force location for spring
 contains
     !procedure :: p => p_cv
-    procedure :: p_f => p_f
+    procedure :: p_f  => p_f
+    procedure :: p_f0 => p_f0
 end type cv_type
 
 contains
@@ -94,27 +95,35 @@ end function p_eos
     
 !end function p_cv(cv)
 
-pure function p_f(cv, p_f0)
-    ! Returns effective pressure of friction as a function of velocity.
+pure function p_f(cv, p_fe)
+    ! Returns pressure of friction.
     
-    use units, only: exp, abs, min, tanh, square
+    use units, only: tanh
     
     class(cv_type), intent(in)    :: cv
-    type(si_pressure), intent(in) :: p_f0
+    type(si_pressure), intent(in) :: p_fe ! equilibrium pressure
     
     type(si_pressure) :: p_f
     
-    integer           :: n_d
     type(si_velocity) :: v_scale
-    type(si_pressure) :: p_scale
     
-    n_d = size(cv%x%v%d)
+    call v_scale%v%init_const(0.1_WP, size(cv%x%v%d))
     
-    call v_scale%v%init_const(1.0_WP, n_d) ! exp underflows if I make it smaller
-    call p_scale%v%init_const(1.0_WP, n_d)
-    
-    p_f = min(cv%p_fs, abs(p_f0))*exp(-square(cv%x_dot/v_scale))*tanh(p_f0/p_scale) &
-            + cv%p_fd*tanh(cv%x_dot/v_scale)
+    p_f = p_f0(cv, p_fe) + (cv%p_fd - tanh(cv%x_dot/v_scale)*p_f0(cv, p_fe))*tanh(cv%x_dot/v_scale)
 end function p_f
+
+pure function p_f0(cv, p_fe)
+    ! Returns actual static pressure of friction.
+    ! `p_fs` is the *maximum* static pressure of friction.
+    
+    use units, only: tanh
+    
+    class(cv_type), intent(in)    :: cv
+    type(si_pressure), intent(in) :: p_fe ! equilibrium pressure
+    
+    type(si_pressure) :: p_f0
+    
+    p_f0 = cv%p_fs * tanh(p_fe/cv%p_fs)
+end function p_f0
 
 end module cva

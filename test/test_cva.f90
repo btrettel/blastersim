@@ -7,6 +7,7 @@
 
 program test_cva
 
+use prec, only: WP
 use unittest, only: test_results_type
 implicit none
 
@@ -49,16 +50,16 @@ subroutine test_p_f(tests)
     type(test_results_type), intent(in out) :: tests
 
     type(cv_type)     :: cv
-    type(si_pressure) :: p_f0, p_f
+    type(si_pressure) :: p_fe, p_f
     
     call cv%x%v%init_const(0.0_WP, 0)
     call cv%p_fs%v%init_const(0.1e5_WP, 0)
     call cv%p_fd%v%init_const(0.05e5_WP, 0)
     
-    call cv%x_dot%v%init_const(-10.0_WP, 0)
-    call p_f0%v%init_const(-1.0e5_WP, 0)
-    p_f = cv%p_f(p_f0)
-    call tests%real_eq(p_f%v%v, cv%p_fs, "p_f, x_dot < 0, p_f0 < 0")
+    call cv%x_dot%v%init_const(10.0_WP, 0)
+    call p_fe%v%init_const(1.0e5_WP, 0)
+    p_f = cv%p_f(p_fe)
+    call tests%real_eq(p_f%v%v, cv%p_fd%v%v, "p_f, x_dot > 0, p_fe > 0 (dynamic friction)")
 end subroutine test_p_f
 
 end program test_cva
