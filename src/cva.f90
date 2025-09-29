@@ -74,8 +74,8 @@ pure function p_eos(rho, temp)
     
     type(si_specific_heat) :: R
     
-    call assert(rho%v%v > 0.0_WP, "thermo (p_eos): rho%v > 0 violated")
-    call assert(temp%v%v > 0.0_WP, "thermo (p_eos): temp%v > 0 violated")
+    call assert(rho%v%v > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
+    call assert(temp%v%v > 0.0_WP, "cva (p_eos): temp%v > 0 violated")
     
     n_d = size(rho%v%d)
     
@@ -83,8 +83,8 @@ pure function p_eos(rho, temp)
     
     p_eos = rho * R * temp
     
-    call assert(p_eos%v%v > 0.0_WP, "thermo (p_eos): p_eos%v > 0 violated")
-    call assert(p_eos%v%v < P_C_AIR, "thermo (p_eos): ideal gas law validity is questionable")
+    call assert(p_eos%v%v > 0.0_WP, "cva (p_eos): p_eos%v > 0 violated")
+    call assert(p_eos%v%v < P_C_AIR, "cva (p_eos): ideal gas law validity is questionable")
 end function p_eos
 
 !pure function p_cv(cv)
@@ -99,6 +99,7 @@ pure function p_f(cv, p_fe)
     ! Returns pressure of friction.
     
     use units, only: tanh
+    use checks, only: assert
     
     class(cv_type), intent(in)    :: cv
     type(si_pressure), intent(in) :: p_fe ! equilibrium pressure
@@ -109,6 +110,9 @@ pure function p_f(cv, p_fe)
     
     call v_scale%v%init_const(0.1_WP, size(cv%x%v%d))
     
+    call assert(cv%p_fs%v%v > 0.0_WP, "cva (p_f): cv%p_fs%v > 0 violated")
+    call assert(cv%p_fd%v%v > 0.0_WP, "cva (p_f): cv%p_fd%v > 0 violated")
+    
     p_f = p_f0(cv, p_fe) + (cv%p_fd - tanh(cv%x_dot/v_scale)*p_f0(cv, p_fe))*tanh(cv%x_dot/v_scale)
 end function p_f
 
@@ -117,11 +121,15 @@ pure function p_f0(cv, p_fe)
     ! `p_fs` is the *maximum* static pressure of friction.
     
     use units, only: tanh
+    use checks, only: assert
     
     class(cv_type), intent(in)    :: cv
     type(si_pressure), intent(in) :: p_fe ! equilibrium pressure
     
     type(si_pressure) :: p_f0
+    
+    call assert(cv%p_fs%v%v > 0.0_WP, "cva (p_f0): cv%p_fs%v > 0 violated")
+    call assert(cv%p_fd%v%v > 0.0_WP, "cva (p_f0): cv%p_fd%v > 0 violated")
     
     p_f0 = cv%p_fs * tanh(p_fe/cv%p_fs)
 end function p_f0

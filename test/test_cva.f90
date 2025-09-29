@@ -17,6 +17,7 @@ call tests%start_tests("cva.nml")
 
 call test_p_eos(tests)
 call test_p_f(tests)
+call test_p_f0(tests)
 
 call tests%end_tests()
 
@@ -117,5 +118,43 @@ subroutine test_p_f(tests)
     p_f = cv%p_f(p_fe)
     call tests%real_eq(p_f%v%v, cv%p_fd%v%v, "p_f, x_dot > 0 (dynamic friction), p_fe > 0")
 end subroutine test_p_f
+
+subroutine test_p_f0(tests)
+    use units, only: si_pressure => unit_m10_p10_m20_p00
+    use cva, only: cv_type
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_type)     :: cv
+    type(si_pressure) :: p_fe, p_f0
+    
+    call cv%x%v%init_const(0.0_WP, 0)
+    call cv%p_fs%v%init_const(0.1e5_WP, 0)
+    call cv%p_fd%v%init_const(0.05e5_WP, 0)
+    
+    call p_fe%v%init_const(-1.0e5_WP, 0)
+    p_f0 = cv%p_f0(p_fe)
+    call tests%real_eq(p_f0%v%v, -cv%p_fs%v%v, "p_f0 (1)", abs_tol=1.0_WP)
+    
+    deallocate(p_fe%v%d)
+    p_fe = -cv%p_fs/10.0_WP
+    p_f0 = cv%p_f0(p_fe)
+    call tests%real_eq(p_f0%v%v, p_fe%v%v, "p_f0 (2)", abs_tol=10.0_WP)
+    
+    deallocate(p_fe%v%d)
+    call p_fe%v%init_const(0.0_WP, 0)
+    p_f0 = cv%p_f0(p_fe)
+    call tests%real_eq(p_f0%v%v, 0.0_WP, "p_f0 (3)")
+    
+    deallocate(p_fe%v%d)
+    p_fe = cv%p_fs/10.0_WP
+    p_f0 = cv%p_f0(p_fe)
+    call tests%real_eq(p_f0%v%v, p_fe%v%v, "p_f0 (4)", abs_tol=10.0_WP)
+    
+    deallocate(p_fe%v%d)
+    call p_fe%v%init_const(1.0e5_WP, 0)
+    p_f0 = cv%p_f0(p_fe)
+    call tests%real_eq(p_f0%v%v, cv%p_fs%v%v, "p_f0 (5)", abs_tol=1.0_WP)
+end subroutine test_p_f0
 
 end program test_cva
