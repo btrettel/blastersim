@@ -56,10 +56,66 @@ subroutine test_p_f(tests)
     call cv%p_fs%v%init_const(0.1e5_WP, 0)
     call cv%p_fd%v%init_const(0.05e5_WP, 0)
     
+    call cv%x_dot%v%init_const(-10.0_WP, 0)
+    call p_fe%v%init_const(-1.0e5_WP, 0)
+    p_f = cv%p_f(p_fe)
+    call tests%real_eq(p_f%v%v, -cv%p_fd%v%v, "p_f, x_dot < 0 (dynamic friction), p_fe < 0")
+    
+    deallocate(cv%x_dot%v%d)
+    deallocate(p_fe%v%d)
+    call cv%x_dot%v%init_const(-10.0_WP, 0)
+    call p_fe%v%init_const(0.0_WP, 0)
+    p_f = cv%p_f(p_fe)
+    call tests%real_eq(p_f%v%v, -cv%p_fd%v%v, "p_f, x_dot < 0 (dynamic friction), p_fe == 0")
+    
+    deallocate(cv%x_dot%v%d)
+    deallocate(p_fe%v%d)
+    call cv%x_dot%v%init_const(-10.0_WP, 0)
+    call p_fe%v%init_const(1.0e5_WP, 0)
+    p_f = cv%p_f(p_fe)
+    call tests%real_eq(p_f%v%v, -cv%p_fd%v%v, "p_f, x_dot < 0 (dynamic friction), p_fe > 0")
+    
+    deallocate(cv%x_dot%v%d)
+    deallocate(p_fe%v%d)
+    call cv%x_dot%v%init_const(0.0_WP, 0)
+    p_fe = -cv%p_fs/10.0_WP
+    p_f  = cv%p_f(p_fe)
+    call tests%real_eq(p_f%v%v, p_fe%v%v, "p_f, x_dot == 0 (static friction), p_fe < 0", abs_tol=10.0_WP)
+    
+    deallocate(cv%x_dot%v%d)
+    deallocate(p_fe%v%d)
+    call cv%x_dot%v%init_const(0.0_WP, 0)
+    call p_fe%v%init_const(0.0_WP, 0)
+    p_f = cv%p_f(p_fe)
+    call tests%real_eq(p_f%v%v, 0.0_WP, "p_f, x_dot == 0 (static friction), p_fe == 0")
+    
+    deallocate(cv%x_dot%v%d)
+    deallocate(p_fe%v%d)
+    call cv%x_dot%v%init_const(0.0_WP, 0)
+    p_fe = cv%p_fs/10.0_WP
+    p_f  = cv%p_f(p_fe)
+    call tests%real_eq(p_f%v%v, p_fe%v%v, "p_f, x_dot == 0 (static friction), p_fe > 0", abs_tol=10.0_WP)
+    
+    deallocate(cv%x_dot%v%d)
+    deallocate(p_fe%v%d)
+    call cv%x_dot%v%init_const(10.0_WP, 0)
+    call p_fe%v%init_const(-1.0e5_WP, 0)
+    p_f = cv%p_f(p_fe)
+    call tests%real_eq(p_f%v%v, cv%p_fd%v%v, "p_f, x_dot > 0 (dynamic friction), p_fe < 0")
+    
+    deallocate(cv%x_dot%v%d)
+    deallocate(p_fe%v%d)
+    call cv%x_dot%v%init_const(10.0_WP, 0)
+    call p_fe%v%init_const(0.0_WP, 0)
+    p_f = cv%p_f(p_fe)
+    call tests%real_eq(p_f%v%v, cv%p_fd%v%v, "p_f, x_dot > 0 (dynamic friction), p_fe == 0")
+    
+    deallocate(cv%x_dot%v%d)
+    deallocate(p_fe%v%d)
     call cv%x_dot%v%init_const(10.0_WP, 0)
     call p_fe%v%init_const(1.0e5_WP, 0)
     p_f = cv%p_f(p_fe)
-    call tests%real_eq(p_f%v%v, cv%p_fd%v%v, "p_f, x_dot > 0, p_fe > 0 (dynamic friction)")
+    call tests%real_eq(p_f%v%v, cv%p_fd%v%v, "p_f, x_dot > 0 (dynamic friction), p_fe > 0")
 end subroutine test_p_f
 
 end program test_cva
