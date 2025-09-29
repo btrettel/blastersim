@@ -2,8 +2,8 @@
 ! Standard: Fortran 2018
 ! Preprocessor: none
 ! Author: Ben Trettel (<http://trettel.us/>)
-! Project: [BlasterSim](https://github.com/btrettel/blastersim)
-! License: [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html)
+! Project: [flt](https://github.com/btrettel/flt)
+! License: [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 module fmad
 
@@ -98,44 +98,44 @@ contains
 ! Constructors for `ad`
 ! ---------------------
 
-elemental subroutine init(x, v, n, n_dv)
+elemental subroutine init(x, v, n, n_d)
     use checks, only: is_close
     
     class(ad), intent(in out) :: x    ! `class` can't be `intent(out)` and `pure`?!?
     real(WP), intent(in)      :: v    ! value of variable to set
     integer, intent(in)       :: n, & ! variable number represented (sets the appropriate derivative)
-                                 n_dv ! total number of differentiable variables
+                                 n_d ! total number of differentiable variables
 
     integer :: i_dv ! loop index
     
-    call assert(n_dv >= 0, "fmad (init): n_dv must be zero or more")
+    call assert(n_d >= 0, "fmad (init): n_d must be zero or more")
     
     x%v = v
     
-    allocate(x%d(n_dv))
+    allocate(x%d(n_d))
     
-    if (n_dv > 0) then
+    if (n_d > 0) then
         call assert(n >= 1, "fmad (init): n must be 1 or more")
-        call assert(n <= n_dv, "fmad (init): n must be n_dv or less")
-        do concurrent (i_dv = 1:n_dv)
+        call assert(n <= n_d, "fmad (init): n must be n_d or less")
+        do concurrent (i_dv = 1:n_d)
             x%d(i_dv) = merge(1.0_WP, 0.0_WP, i_dv == n)
         end do
         call assert(any(is_close(x%d, 1.0_WP)), "fmad (init): at least one derivative set")
-        call assert(any(is_close(x%d, 0.0_WP)) .or. (n_dv <= 1), "fmad (init): at least one derivative not set")
+        call assert(any(is_close(x%d, 0.0_WP)) .or. (n_d <= 1), "fmad (init): at least one derivative not set")
     end if
 end subroutine init
 
-elemental subroutine init_const(x, v, n_dv)
-    class(ad), intent(in out) :: x ! `class` can't be `intent(out)` and `pure`?!?
-    real(WP), intent(in) :: v    ! value of constant to set
-    integer, intent(in)  :: n_dv ! total number of differentiable variables
+elemental subroutine init_const(x, v, n_d)
+    class(ad), intent(in out) :: x    ! `class` can't be `intent(out)` and `pure`?!?
+    real(WP), intent(in)      :: v    ! value of constant to set
+    integer, intent(in)       :: n_d ! total number of differentiable variables
     
-    call assert(n_dv >= 0, "fmad (init): n_dv must be zero or more")
+    call assert(n_d >= 0, "fmad (init): n_d must be zero or more")
     
-    allocate(x%d(n_dv))
+    allocate(x%d(n_d))
 
-    x%v  = v
-    if (n_dv > 0) then
+    x%v = v
+    if (n_d > 0) then
         x%d = 0.0_WP
     end if
 end subroutine init_const

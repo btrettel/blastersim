@@ -2,7 +2,7 @@
 output_file     = "src/units.f90"
 base_units      = "m", "kg", "s", "K"
 type_definition = "type(ad)"
-use_line        = "use prec, only: WP;use fmad, only: ad"
+use_line        = "use prec, only: WP;use fmad, only: ad, sin, cos, tan, exp, log, tanh, abs, min, max"
 kind_parameter  = "WP"
 module_name     = "units"
 max_n_units     = 100
@@ -16,8 +16,8 @@ debug = .false.
 
 sqrt       = .false.
 cbrt       = .false.
-square     = .false.
-intrinsics = .false.
+square     = .true.
+intrinsics = .true.
 /
 
 &seed_unit
