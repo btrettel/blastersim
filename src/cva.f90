@@ -121,7 +121,7 @@ pure function p_f0(cv, p_fe)
     ! `p_fs` is the *maximum* static pressure of friction.
     
     use units, only: tanh
-    use checks, only: assert, is_close
+    use checks, only: assert
     
     class(cv_type), intent(in)    :: cv
     type(si_pressure), intent(in) :: p_fe ! equilibrium pressure
@@ -131,8 +131,9 @@ pure function p_f0(cv, p_fe)
     call assert(cv%p_fs%v%v >= 0.0_WP, "cva (p_f0): cv%p_fs%v > 0 violated")
     call assert(cv%p_fd%v%v >= 0.0_WP, "cva (p_f0): cv%p_fd%v > 0 violated")
     
-    if (is_close(cv%p_fs%v%v, 0.0_WP)) then
-        call p_f0%v%init_const(0.0_WP, size(cv%x%v%d))
+    if (cv%p_fs%v%v < 20.0_WP*spacing(0.0_WP)) then
+        ! To avoid a division by zero.
+        p_f0 = p_fe
     else
         p_f0 = cv%p_fs * tanh(p_fe/cv%p_fs)
     end if
