@@ -16,7 +16,8 @@ type(test_results_type) :: tests
 call tests%start_tests("cva.nml")
 
 call test_p_eos(tests)
-call test_p_f(tests)
+call test_p_f_1(tests)
+call test_p_f_2(tests)
 call test_p_f0(tests)
 
 call tests%end_tests()
@@ -44,7 +45,7 @@ subroutine test_p_eos(tests)
     call tests%real_eq(p%v%v, P_ATM, "p_eos, atmospheric", abs_tol=1.0_WP)
 end subroutine test_p_eos
 
-subroutine test_p_f(tests)
+subroutine test_p_f_1(tests)
     use units, only: si_pressure => unit_m10_p10_m20_p00
     use cva, only: cv_type
     
@@ -117,7 +118,26 @@ subroutine test_p_f(tests)
     call p_fe%v%init_const(1.0e5_WP, 0)
     p_f = cv%p_f(p_fe)
     call tests%real_eq(p_f%v%v, cv%p_fd%v%v, "p_f, x_dot > 0 (dynamic friction), p_fe > 0")
-end subroutine test_p_f
+end subroutine test_p_f_1
+
+subroutine test_p_f_2(tests)
+    use units, only: si_pressure => unit_m10_p10_m20_p00
+    use cva, only: cv_type
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_type)     :: cv
+    type(si_pressure) :: p_fe, p_f
+    
+    call cv%x%v%init_const(0.0_WP, 0)
+    call cv%p_fs%v%init_const(0.0_WP, 0)
+    call cv%p_fd%v%init_const(0.0_WP, 0)
+    
+    call cv%x_dot%v%init_const(10.0_WP, 0)
+    call p_fe%v%init_const(1.0e5_WP, 0)
+    p_f = cv%p_f(p_fe)
+    call tests%real_eq(p_f%v%v, 0.0_WP, "p_f, p_fs = p_fd = 0")
+end subroutine test_p_f_2
 
 subroutine test_p_f0(tests)
     use units, only: si_pressure => unit_m10_p10_m20_p00

@@ -110,8 +110,8 @@ pure function p_f(cv, p_fe)
     
     call v_scale%v%init_const(0.1_WP, size(cv%x%v%d))
     
-    call assert(cv%p_fs%v%v > 0.0_WP, "cva (p_f): cv%p_fs%v > 0 violated")
-    call assert(cv%p_fd%v%v > 0.0_WP, "cva (p_f): cv%p_fd%v > 0 violated")
+    call assert(cv%p_fs%v%v >= 0.0_WP, "cva (p_f): cv%p_fs%v > 0 violated")
+    call assert(cv%p_fd%v%v >= 0.0_WP, "cva (p_f): cv%p_fd%v > 0 violated")
     
     p_f = p_f0(cv, p_fe) + (cv%p_fd - tanh(cv%x_dot/v_scale)*p_f0(cv, p_fe))*tanh(cv%x_dot/v_scale)
 end function p_f
@@ -121,17 +121,21 @@ pure function p_f0(cv, p_fe)
     ! `p_fs` is the *maximum* static pressure of friction.
     
     use units, only: tanh
-    use checks, only: assert
+    use checks, only: assert, is_close
     
     class(cv_type), intent(in)    :: cv
     type(si_pressure), intent(in) :: p_fe ! equilibrium pressure
     
     type(si_pressure) :: p_f0
     
-    call assert(cv%p_fs%v%v > 0.0_WP, "cva (p_f0): cv%p_fs%v > 0 violated")
-    call assert(cv%p_fd%v%v > 0.0_WP, "cva (p_f0): cv%p_fd%v > 0 violated")
+    call assert(cv%p_fs%v%v >= 0.0_WP, "cva (p_f0): cv%p_fs%v > 0 violated")
+    call assert(cv%p_fd%v%v >= 0.0_WP, "cva (p_f0): cv%p_fd%v > 0 violated")
     
-    p_f0 = cv%p_fs * tanh(p_fe/cv%p_fs)
+    if (is_close(cv%p_fs%v%v, 0.0_WP)) then
+        call p_f0%v%init_const(0.0_WP, size(cv%x%v%d))
+    else
+        p_f0 = cv%p_fs * tanh(p_fe/cv%p_fs)
+    end if
 end function p_f0
 
 end module cva
