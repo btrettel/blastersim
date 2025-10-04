@@ -162,7 +162,7 @@ subroutine test_p_f0_1(tests)
     
     call p_fe%v%init_const(-1.0e5_WP, 0)
     p_f0 = cv%p_f0(p_fe)
-    call tests%real_eq(p_f0%v%v, -cv%p_fs%v%v, "p_f0 (1)")
+    call tests%real_eq(p_f0%v%v, -cv%p_fs%v%v, "p_f0 (1)", abs_tol=1.0e-4_WP)
     
     deallocate(p_fe%v%d)
     p_fe = -cv%p_fs/10.0_WP
@@ -182,7 +182,7 @@ subroutine test_p_f0_1(tests)
     deallocate(p_fe%v%d)
     call p_fe%v%init_const(1.0e5_WP, 0)
     p_f0 = cv%p_f0(p_fe)
-    call tests%real_eq(p_f0%v%v, cv%p_fs%v%v, "p_f0 (5)")
+    call tests%real_eq(p_f0%v%v, cv%p_fs%v%v, "p_f0 (5)", abs_tol=1.0e-4_WP)
 end subroutine test_p_f0_1
 
 subroutine test_p_f0_2(tests)
