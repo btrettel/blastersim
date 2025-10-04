@@ -12,7 +12,7 @@ use checks, only: assert
 implicit none
 private
 
-public :: sqrt, tanh, log, exp, merge, max, min, abs, sin, cos, tan
+public :: sqrt, tanh, log, exp, merge, max, min, abs, sin, cos, tan, atanh
 public :: var, stdev
 public :: f
 
@@ -92,6 +92,10 @@ end interface cos
 interface tan
     module procedure :: ad_tan
 end interface tan
+
+interface atanh
+    module procedure :: ad_atanh
+end interface atanh
 
 contains
 
@@ -433,7 +437,7 @@ elemental function ad_sqrt(ad_in)
     call assert(ad_in%v > 0.0_WP, "fmad (ad_sqrt): argument is zero or negative")
     call assert(allocated(ad_in%d), "fmad (ad_sqrt): ad_in%d must be allocated")
     
-    ad_sqrt%v  = sqrt(ad_in%v)
+    ad_sqrt%v = sqrt(ad_in%v)
     ad_sqrt%d = ad_in%d/(2.0_WP * sqrt(ad_in%v))
 end function ad_sqrt
 
@@ -444,7 +448,7 @@ elemental function ad_tanh(ad_in)
     
     call assert(allocated(ad_in%d), "fmad (ad_tanh): ad_in%d must be allocated")
     
-    ad_tanh%v  = tanh(ad_in%v)
+    ad_tanh%v = tanh(ad_in%v)
     ad_tanh%d = ad_in%d*(1.0_WP - tanh(ad_in%v)**2)
 end function ad_tanh
 
@@ -456,7 +460,7 @@ elemental function ad_log(ad_in)
     call assert(ad_in%v > 0.0_WP, "fmad (ad_log): argument is zero or negative")
     call assert(allocated(ad_in%d), "fmad (ad_log): ad_in%d must be allocated")
     
-    ad_log%v  = log(ad_in%v)
+    ad_log%v = log(ad_in%v)
     ad_log%d = ad_in%d/ad_in%v
 end function ad_log
 
@@ -467,7 +471,7 @@ elemental function ad_exp(ad_in)
     
     call assert(allocated(ad_in%d), "fmad (ad_exp): ad_in%d must be allocated")
     
-    ad_exp%v  = exp(ad_in%v)
+    ad_exp%v = exp(ad_in%v)
     ad_exp%d = ad_in%d*exp(ad_in%v)
 end function ad_exp
 
@@ -539,7 +543,7 @@ elemental function ad_abs(ad_in)
     call assert(allocated(ad_in%d), "fmad (ad_abs): ad_in%d must be allocated")
     
     if (.not. is_close(ad_in%v, 0.0_WP)) then
-        ad_abs%v  = abs(ad_in%v)
+        ad_abs%v = abs(ad_in%v)
         ad_abs%d = ad_in%d*(ad_in%v/abs(ad_in%v))
     else
         call ad_abs%init_const(0.0_WP, size(ad_in%d))
@@ -555,7 +559,7 @@ elemental function ad_sin(ad_in)
     
     call assert(allocated(ad_in%d), "fmad (ad_sin): ad_in%d must be allocated")
     
-    ad_sin%v  = sin(ad_in%v)
+    ad_sin%v = sin(ad_in%v)
     ad_sin%d = ad_in%d*cos(ad_in%v)
 end function ad_sin
 
@@ -566,7 +570,7 @@ elemental function ad_cos(ad_in)
     
     call assert(allocated(ad_in%d), "fmad (ad_cos): ad_in%d must be allocated")
     
-    ad_cos%v  = cos(ad_in%v)
+    ad_cos%v = cos(ad_in%v)
     ad_cos%d = -ad_in%d*sin(ad_in%v)
 end function ad_cos
 
@@ -577,9 +581,21 @@ elemental function ad_tan(ad_in)
     
     call assert(allocated(ad_in%d), "fmad (ad_tan): ad_in%d must be allocated")
     
-    ad_tan%v  = tan(ad_in%v)
+    ad_tan%v = tan(ad_in%v)
     ad_tan%d = ad_in%d/(cos(ad_in%v)**2)
 end function ad_tan
+
+elemental function ad_atanh(ad_in)
+    class(ad), intent(in) :: ad_in
+    
+    type(ad) :: ad_atanh
+    
+    call assert(allocated(ad_in%d), "fmad (ad_atanh): ad_in%d must be allocated")
+    call assert(abs(ad_in%v) < 1.0_WP, "fmad (ad_atanh): abs(ad_in%v) < 1 violated")
+    
+    ad_atanh%v = atanh(ad_in%v)
+    ad_atanh%d = ad_in%d/(1.0_WP - ad_in%v**2)
+end function ad_atanh
 
 pure function var(x, sigmas)
     ! Computes the variance with the FOSM method.

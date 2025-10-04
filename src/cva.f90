@@ -114,29 +114,51 @@ pure function p_f(cv, p_fe)
     call assert(cv%p_fd%v%v >= 0.0_WP, "cva (p_f): cv%p_fd%v > 0 violated")
     
     p_f = p_f0(cv, p_fe) + (cv%p_fd - tanh(cv%x_dot/v_scale)*p_f0(cv, p_fe))*tanh(cv%x_dot/v_scale)
+    
+    call assert(p_f%v%v <= max(cv%p_fs%v%v, cv%p_fd%v%v), "cva (p_f): p_f <= max(p_fs, p_fd) violated")
 end function p_f
 
 pure function p_f0(cv, p_fe)
     ! Returns actual static pressure of friction.
     ! `p_fs` is the *maximum* static pressure of friction.
     
-    use units, only: tanh
     use checks, only: assert
     
     class(cv_type), intent(in)    :: cv
     type(si_pressure), intent(in) :: p_fe ! equilibrium pressure
     
-    type(si_pressure) :: p_f0
+    type(si_pressure) :: p_f0, p_s
     
     call assert(cv%p_fs%v%v >= 0.0_WP, "cva (p_f0): cv%p_fs%v > 0 violated")
-    call assert(cv%p_fd%v%v >= 0.0_WP, "cva (p_f0): cv%p_fd%v > 0 violated")
     
-    if (cv%p_fs%v%v < 20.0_WP*spacing(0.0_WP)) then
-        ! To avoid a division by zero.
+    p_s = 0.1_WP*cv%p_fs ! TODO: make a function of `dt`
+    call assert(p_s%v%v <= cv%p_fs%v%v, "cva (p_f0): p_s <= p_fs violated")
+    
+    if (p_fe%v%v <= -p_s%v%v) then
+        p_f0 = -p_f0_high(p_fe, cv%p_fs, p_s)
+        
+        call assert(p_f0%v%v <= -p_s%v%v, "cva (p_f0), first branch: p_f0 <= -p_s violated")
+    else if (p_fe%v%v <= p_s%v%v) then
         p_f0 = p_fe
     else
-        p_f0 = cv%p_fs * tanh(p_fe/cv%p_fs)
+        p_f0 = p_f0_high(p_fe, cv%p_fs, p_s)
+        
+        call assert(p_f0%v%v >= p_s%v%v, "cva (p_f0), third branch: p_f0 >= p_s violated")
     end if
+    
+    call assert(p_f0%v%v >= -cv%p_fs%v%v, "cva (p_f0): p_f0 >= -p_fs violated")
+    call assert(p_f0%v%v <= cv%p_fs%v%v, "cva (p_f0): p_f0 <= p_fs violated")
+    
+    contains
+    
+    pure function p_f0_high(p_fe, p_fs, p_s)
+        use units, only: tanh, abs, atanh
+        
+        type(si_pressure), intent(in) :: p_fe, p_fs, p_s
+        type(si_pressure) :: p_f0_high
+        
+        p_f0_high = p_fs * tanh((abs(p_fe) - p_s)/(p_fs - p_s) + atanh(p_s/p_fs))
+    end function p_f0_high
 end function p_f0
 
 end module cva
