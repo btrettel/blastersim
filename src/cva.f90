@@ -132,32 +132,37 @@ pure function p_f0(cv, p_fe)
     call assert(cv%p_fs%v%v >= 0.0_WP, "cva (p_f0): cv%p_fs%v > 0 violated")
     
     p_s = 0.1_WP*cv%p_fs ! TODO: make a function of `dt`
-    call assert(p_s%v%v <= cv%p_fs%v%v, "cva (p_f0): p_s <= p_fs violated")
+    call assert(p_s <= cv%p_fs, "cva (p_f0): p_s <= p_fs violated")
     
-    if (p_fe%v%v <= -p_s%v%v) then
+    if (p_fe <= -p_s) then
         p_f0 = -p_f0_high(p_fe, cv%p_fs, p_s)
         
-        call assert(p_f0%v%v <= -p_s%v%v, "cva (p_f0), first branch: p_f0 <= -p_s violated")
-    else if (p_fe%v%v <= p_s%v%v) then
+        call assert(p_f0 <= -p_s, "cva (p_f0), first branch: p_f0 <= -p_s violated")
+    else if (p_fe <= p_s) then
         p_f0 = p_fe
     else
         p_f0 = p_f0_high(p_fe, cv%p_fs, p_s)
         
-        call assert(p_f0%v%v >= p_s%v%v, "cva (p_f0), third branch: p_f0 >= p_s violated")
+        call assert(p_f0 >= p_s, "cva (p_f0), third branch: p_f0 >= p_s violated")
     end if
     
-    call assert(p_f0%v%v >= -cv%p_fs%v%v, "cva (p_f0): p_f0 >= -p_fs violated")
-    call assert(p_f0%v%v <= cv%p_fs%v%v, "cva (p_f0): p_f0 <= p_fs violated")
+    call assert(p_f0 >= -cv%p_fs, "cva (p_f0): p_f0 >= -p_fs violated")
+    call assert(p_f0 <= cv%p_fs, "cva (p_f0): p_f0 <= p_fs violated")
     
     contains
     
     pure function p_f0_high(p_fe, p_fs, p_s)
         use units, only: tanh, abs, atanh
+        use checks, only: is_close
         
         type(si_pressure), intent(in) :: p_fe, p_fs, p_s
         type(si_pressure) :: p_f0_high
         
-        p_f0_high = p_fs * tanh((abs(p_fe) - p_s)/(p_fs - p_s) + atanh(p_s/p_fs))
+        if (is_close(p_fs%v%v, 0.0_WP)) then
+            p_f0_high = p_fs
+        else
+            p_f0_high = p_fs * tanh((abs(p_fe) - p_s)/(p_fs - p_s) + atanh(p_s/p_fs))
+        end if
     end function p_f0_high
 end function p_f0
 
