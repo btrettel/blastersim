@@ -2,7 +2,7 @@
 ! Standard: Fortran 2018
 ! Preprocessor: none
 ! Author: Ben Trettel (<http://trettel.us/>)
-! Project: [flt](https://github.com/btrettel/flt)
+! Project: [BlasterSim](https://github.com/btrettel/blastersim)
 ! License: [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 module fmad

@@ -3,7 +3,7 @@
 ! Preprocessor: none
 ! Author: Ben Trettel (<http://trettel.us/>)
 ! Project: [BlasterSim](https://github.com/btrettel/blastersim)
-! License: [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html)
+! License: [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
 
 ! Notation follows luke_essentials_2013 p. 31 in most instances.
 ! Instead of "fitness" or "quality", I am using the term objective function.
@@ -57,7 +57,7 @@ type, public :: ga_config
     real(WP) :: f_max_all_infeasible   = 0.0_WP
     logical  :: stop_if_all_unfeasible = .true.
     
-    logical          :: progress = .true.
+    logical          :: progress = .true., check_sum_g = .true.
     character(len=8) :: f_fmt = "f12.2"
 end type ga_config
 
@@ -268,6 +268,16 @@ subroutine evaluate(config, objfun, pop)
         end if
         
         call assert(pop%indivs(i_pop)%sum_g >= 0.0_WP, "ga (evaluate): pop%indivs(i_pop)%sum_g >= 0 violated")
+        
+        ! If `sum_g` is much less than `f_max`, then underflow could occur.
+        ! This prevents the constraint violation from providing a gradient to guide the population to a feasible area.
+        ! Consequently, `sum_g` should be scaled to be order 1.
+        ! Later when calculating `f`, `sum_g` will be multiplied by `abs(f_max)` to avoid underflow.
+        ! `constraint_lt` and `constraint_gt` are set up to encourage this scaling.
+        if (config%check_sum_g) then
+            call assert(pop%indivs(i_pop)%sum_g <= 10.0_WP, "ga (evaluate): sum_g must be order 1" // &
+                                                                " (disable check with config%check_sum_g=.false.)")
+        end if
     end do
     
     f_max                = -huge(1.0_WP)
@@ -275,7 +285,7 @@ subroutine evaluate(config, objfun, pop)
     best_pop_indiv_set   = .false.
     do i_pop = 1, config%n_pop ! SERIAL
         if (is_close(pop%indivs(i_pop)%sum_g, 0.0_WP)) then
-            f_max      = max(f_max, pop%indivs(i_pop)%f)
+            f_max                 = max(f_max, pop%indivs(i_pop)%f)
             pop%indivs(i_pop)%set = .true.
             
             if (pop%best_pop_indiv%f > pop%indivs(i_pop)%f) then
@@ -304,7 +314,7 @@ subroutine evaluate(config, objfun, pop)
             ! Infeasible individuals have their fitness recalculated based on the current population.
             ! This is regardless of whether they were `set` before `evaluate` was called.
             ! This avoid issues from the fitness depending on the population.
-            pop%indivs(i_pop)%f   = f_max + pop%indivs(i_pop)%sum_g
+            pop%indivs(i_pop)%f   = f_max + pop%indivs(i_pop)%sum_g*abs(f_max)
             pop%indivs(i_pop)%set = .true.
         end if
     end do
@@ -387,31 +397,33 @@ subroutine optimize_ga(config, rng, objfun, pop, rc)
     end do
 end subroutine optimize_ga
 
-pure subroutine constraint_lt(x, y, sum_g)
+pure subroutine constraint_lt(x, y, delta_scale, sum_g)
     use checks, only: assert
     
-    real(WP), intent(in)     :: x, y
+    real(WP), intent(in)     :: x, y, delta_scale
     real(WP), intent(in out) :: sum_g
     
     call assert(sum_g >= 0.0_WP, "ga (constraint_lt): sum_g >= 0 violated (1)")
+    call assert(delta_scale > 0.0_WP, "ga (constraint_lt): delta_scale > 0 violated")
     
     if (.not. (x < y)) then
-        sum_g = sum_g + (x - y)
+        sum_g = sum_g + (x - y) / delta_scale
     end if
     
     call assert(sum_g >= 0.0_WP, "ga (constraint_lt): sum_g >= 0 violated (2)")
 end subroutine constraint_lt
 
-pure subroutine constraint_gt(x, y, sum_g)
+pure subroutine constraint_gt(x, y, delta_scale, sum_g)
     use checks, only: assert
     
-    real(WP), intent(in)     :: x, y
+    real(WP), intent(in)     :: x, y, delta_scale
     real(WP), intent(in out) :: sum_g
     
     call assert(sum_g >= 0.0_WP, "ga (constraint_gt): sum_g >= 0 violated (1)")
+    call assert(delta_scale > 0.0_WP, "ga (constraint_gt): delta_scale > 0 violated")
     
     if (.not. (x > y)) then
-        sum_g = sum_g + (y - x)
+        sum_g = sum_g + (y - x) / delta_scale
     end if
     
     call assert(sum_g >= 0.0_WP, "ga (constraint_gt): sum_g >= 0 violated (2)")

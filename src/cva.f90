@@ -31,6 +31,10 @@ real(WP), public, parameter :: M_AIR = 28.9647e-3_WP ! kg/mol
 ! Critical pressure of air
 real(WP), public, parameter :: P_C_AIR = 37.7e5_WP ! Pa
 
+! moran_fundamentals_2008 table A-20
+! Specific heat ratio of air at 300 K
+real(WP), public, parameter :: K_AIR = 1.400_WP ! unitless
+
 ! <https://en.wikipedia.org/wiki/Density_of_air>
 real(WP), public, parameter :: P_ATM   = 101325.0_WP         ! Pa
 real(WP), public, parameter :: T_ATM   = 273.15_WP + 15.0_WP ! K
@@ -55,12 +59,12 @@ contains
     !procedure :: p => p_cv
     procedure :: p_f  => p_f
     procedure :: p_f0 => p_f0
+    procedure :: temp => temp_cv
 end type cv_type
 
 contains
 
 pure function p_eos(rho, temp)
-    use fmad, only: ad
     use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
                      si_temperature   => unit_p00_p00_p00_p10, &
                      si_specific_heat => unit_p20_p00_m20_m10
@@ -72,16 +76,16 @@ pure function p_eos(rho, temp)
     
     integer :: n_d
     
-    type(si_specific_heat) :: R
+    type(si_specific_heat) :: r
     
     call assert(rho%v%v > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
     call assert(temp%v%v > 0.0_WP, "cva (p_eos): temp%v > 0 violated")
     
     n_d = size(rho%v%d)
     
-    call R%v%init_const(R_BAR/M_AIR, n_d)
+    call r%v%init_const(R_BAR/M_AIR, n_d)
     
-    p_eos = rho * R * temp
+    p_eos = rho * r * temp
     
     call assert(p_eos%v%v > 0.0_WP, "cva (p_eos): p_eos%v > 0 violated")
     call assert(p_eos%v%v < P_C_AIR, "cva (p_eos): ideal gas law validity is questionable")
@@ -94,6 +98,34 @@ end function p_eos
     
     
 !end function p_cv(cv)
+
+pure function temp_cv(cv)
+    use units, only: si_temperature     => unit_p00_p00_p00_p10, &
+                     si_specific_energy => unit_p20_p00_m20_p00, &
+                     si_specific_heat   => unit_p20_p00_m20_m10
+    use checks, only: assert
+    
+    class(cv_type), intent(in) :: cv
+    
+    type(si_temperature) :: temp_cv
+    
+    integer                  :: n_d
+    type(si_specific_heat)   :: r, c_v
+    type(si_specific_energy) :: u
+    
+    ! Constant specific heats assumed for now. Will improve later.
+    
+    call assert(K_AIR > 1.0_WP, "cva (temp_cv): ")
+    
+    call r%v%init_const(R_BAR/M_AIR, n_d)
+    
+    ! moran_fundamentals_2008 eq. 3.47b, p. 119
+    c_v = r / (K_AIR - 1.0_WP)
+    
+    u = cv%e / cv%m
+    
+    temp_cv = u / c_v
+end function temp_cv
 
 pure function p_f(cv, p_fe)
     ! Returns pressure of friction.
@@ -165,5 +197,19 @@ pure function p_f0(cv, p_fe)
         end if
     end function p_f0_high
 end function p_f0
+
+!pure function m_dot(cv_from, cv_to)
+!    type(cv_type), intent(in) :: cv_from, cv_to
+    
+!    type(si_mass_flow_rate) :: m_dot
+    
+!    call assert(cv_from%p >= cv_to%p, "cva (m_dot): cv_from%p >= cv_to%p violated")
+    
+!    contains
+    
+!    pure function f_m_dot(p_s, b)
+        
+!    end function f_m_dot(p_s, b)
+!end function m_dot
 
 end module cva
