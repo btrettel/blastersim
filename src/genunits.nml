@@ -9,7 +9,7 @@ max_n_units     = 100
 
 !               m     kg    s     K
 min_exponents = -3.0, -1.0, -2.0, -1.0
-max_exponents =  2.0,  1.0,  1.0,  1.0
+max_exponents =  3.0,  1.0,  1.0,  1.0
 denominators  =    1,    1,    1,    1
 
 debug = .false.
@@ -122,4 +122,11 @@ e = -3.0, 1.0, 0.0, 0.0
 label = "si_time"
 !   m    kg   s    K
 e = 0.0, 0.0, 1.0, 0.0
+/
+
+&seed_unit
+! example: `$V$`
+label = "si_volume"
+!   m    kg   s    K
+e = 3.0, 0.0, 0.0, 0.0
 /

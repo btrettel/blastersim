@@ -245,4 +245,8 @@ subroutine test_temp_cv(tests)
     call tests%real_eq(temp%v%v, 300.0_WP, "temp_cv (qualitative)", abs_tol=5.0_WP)
 end subroutine test_temp_cv
 
+! TODO: test `vol_cv`
+! TODO: test `rho_cv`
+! TODO: test `p_cv`
+
 end program test_cva

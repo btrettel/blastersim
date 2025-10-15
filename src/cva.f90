@@ -56,10 +56,12 @@ type, public :: cv_type
     type(si_stiffness)    :: k          ! stiffness of spring attached to piston
     type(si_length)       :: x_z        ! zero force location for spring
 contains
-    !procedure :: p => p_cv
     procedure :: p_f  => p_f
     procedure :: p_f0 => p_f0
     procedure :: temp => temp_cv
+    procedure :: vol  => vol_cv
+    procedure :: rho  => rho_cv
+    procedure :: p    => p_cv
 end type cv_type
 
 contains
@@ -90,14 +92,6 @@ pure function p_eos(rho, temp)
     call assert(p_eos%v%v > 0.0_WP, "cva (p_eos): p_eos%v > 0 violated")
     call assert(p_eos%v%v < P_C_AIR, "cva (p_eos): ideal gas law validity is questionable")
 end function p_eos
-
-!pure function p_cv(cv)
-!    use units, only: si_mass_density  => unit_m30_p10_p00_p00
-    
-!    class(cv_type), intent(in) :: cv
-    
-    
-!end function p_cv(cv)
 
 pure function temp_cv(cv)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
@@ -133,6 +127,62 @@ pure function temp_cv(cv)
     
     call assert(temp_cv%v%v > 0.0_WP, "cva (temp_cv): temp_cv > 0 violated")
 end function temp_cv
+
+pure function vol_cv(cv)
+    use units, only: si_volume => unit_p30_p00_p00_p00, &
+                     si_length => unit_p10_p00_p00_p00, &
+                     si_area   => unit_p20_p00_p00_p00
+    use checks, only: assert
+    
+    class(cv_type), intent(in) :: cv
+    
+    type(si_volume) :: vol_cv
+    
+    call assert(cv%x%v%v > 0.0_WP, "cva (vol_cv): cv%x > 0 violated")
+    call assert(cv%csa%v%v > 0.0_WP, "cva (vol_cv): cv%csa > 0 violated")
+    
+    vol_cv = cv%x * cv%csa
+    
+    call assert(vol_cv%v%v > 0.0_WP, "cva (vol_cv): vol_cv > 0 violated")
+end function vol_cv
+
+pure function rho_cv(cv)
+    use units, only: si_mass_density => unit_m30_p10_p00_p00, &
+                     si_volume       => unit_p30_p00_p00_p00
+    use checks, only: assert
+    
+    class(cv_type), intent(in) :: cv
+    
+    type(si_mass_density) :: rho_cv
+    type(si_volume)       :: vol
+    
+    call assert(cv%m%v%v > 0.0_WP, "cva (rho_cv): cv%m > 0 violated")
+    
+    vol    = cv%vol()
+    rho_cv = cv%m / vol
+    
+    call assert(rho_cv%v%v > 0.0_WP, "cva (rho_cv): rho_cv > 0 violated")
+end function rho_cv
+
+pure function p_cv(cv)
+    use units, only: si_mass_density => unit_m30_p10_p00_p00, &
+                     si_temperature  => unit_p00_p00_p00_p10
+    use checks, only: assert
+    
+    class(cv_type), intent(in) :: cv
+    
+    type(si_pressure) :: p_cv
+    
+    type(si_mass_density) :: rho
+    type(si_temperature)  :: temp
+    
+    rho  = cv%rho()
+    temp = cv%temp()
+    
+    p_cv = p_eos(rho, temp)
+    
+    call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated")
+end function p_cv
 
 pure function p_f(cv, p_fe)
     ! Returns pressure of friction.
