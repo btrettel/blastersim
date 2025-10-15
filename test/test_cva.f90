@@ -20,6 +20,7 @@ call test_p_f_1(tests)
 call test_p_f_2(tests)
 call test_p_f0_1(tests)
 call test_p_f0_2(tests)
+call test_temp_cv(tests)
 
 call tests%end_tests()
 
@@ -224,5 +225,24 @@ subroutine test_p_f0_2(tests)
 end subroutine test_p_f0_2
 
 ! TODO: Plot `p_f0` to test it.
+
+subroutine test_temp_cv(tests)
+    use units, only: si_temperature => unit_p00_p00_p00_p10
+    use cva, only: cv_type
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_type)        :: cv
+    type(si_temperature) :: temp
+    
+    ! 1 kg of mass
+    call cv%m%v%init_const(1.0_WP, 0)
+    
+    ! moran_fundamentals_2008 table A-22, 300 K with 1 kg of mass
+    call cv%e%v%init_const(214.07e3_WP, 0)
+    
+    temp = cv%temp()
+    call tests%real_eq(temp%v%v, 300.0_WP, "temp_cv (qualitative)", abs_tol=5.0_WP)
+end subroutine test_temp_cv
 
 end program test_cva

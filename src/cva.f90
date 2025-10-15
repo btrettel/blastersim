@@ -115,7 +115,12 @@ pure function temp_cv(cv)
     
     ! Constant specific heats assumed for now. Will improve later.
     
-    call assert(K_AIR > 1.0_WP, "cva (temp_cv): ")
+    call assert(K_AIR > 1.0_WP, "cva (temp_cv): K_AIR > 1 violated")
+    call assert(cv%m%v%v > 0.0_WP, "cva (temp_cv): cv%m > 0 violated")
+    call assert(cv%e%v%v > 0.0_WP, "cva (temp_cv): cv%e > 0 violated")
+    call assert(size(cv%e%v%d) == size(cv%m%v%d), "cva (temp_cv): inconsistent derivative array sizes")
+    
+    n_d = size(cv%m%v%d)
     
     call r%v%init_const(R_BAR/M_AIR, n_d)
     
@@ -125,6 +130,8 @@ pure function temp_cv(cv)
     u = cv%e / cv%m
     
     temp_cv = u / c_v
+    
+    call assert(temp_cv%v%v > 0.0_WP, "cva (temp_cv): temp_cv > 0 violated")
 end function temp_cv
 
 pure function p_f(cv, p_fe)
