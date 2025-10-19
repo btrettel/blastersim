@@ -23,6 +23,7 @@ call test_p_f0_1(tests)
 call test_p_f0_2(tests)
 call test_temp_cv(tests)
 call test_set(tests)
+call test_f_m_dot(tests)
 
 call tests%end_tests()
 
@@ -336,5 +337,27 @@ subroutine test_set(tests)
     call tests%real_eq(cv%m%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, m", abs_tol=1.0e-6_WP)
     call tests%real_eq(cv%e%v%v, R_BAR*temp%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP/(M_AIR*(K_AIR - 1.0_WP)), "set, e", abs_tol=1.0_WP)
 end subroutine test_set
+
+subroutine test_f_m_dot(tests)
+    use units, only: unitless => unit_p00_p00_p00_p00
+    use cva, only: f_m_dot
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    type(unitless) :: p_r, b, f
+    
+    call b%v%init_const(0.5_WP, 0)
+    
+    call p_r%v%init_const(0.0_WP, 0)
+    f = f_m_dot(p_r, b)
+    call tests%real_eq(f%v%v, 0.0_WP, "f_m_dot (1)")
+    
+    deallocate(p_r%v%d)
+    call p_r%v%init_const(1.0_WP, 0)
+    f = f_m_dot(p_r, b)
+    call tests%real_eq(f%v%v, 1.0_WP, "f_m_dot (2)")
+end subroutine test_f_m_dot
+
+! TODO: Plot `p_f0` to test it.
 
 end program test_cva

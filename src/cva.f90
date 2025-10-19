@@ -20,6 +20,9 @@ use units, only: si_length       => unit_p10_p00_p00_p00, &
 implicit none
 private
 
+public :: p_eos, rho_eos
+public :: f_m_dot
+
 ! <https://en.wikipedia.org/wiki/Gas_constant>
 real(WP), public, parameter :: R_BAR = 8.31446261815324_WP ! J/(mol*K)
 
@@ -39,8 +42,6 @@ real(WP), public, parameter :: K_AIR = 1.400_WP ! unitless
 real(WP), public, parameter :: P_ATM   = 101325.0_WP         ! Pa
 real(WP), public, parameter :: T_ATM   = 273.15_WP + 15.0_WP ! K
 real(WP), public, parameter :: RHO_ATM = 1.2250_WP           ! kg/m3
-
-public :: p_eos, rho_eos
 
 type, public :: cv_type
     ! time varying
@@ -364,17 +365,37 @@ pure function p_f0(cv, p_fe)
 end function p_f0
 
 !pure function m_dot(cv_from, cv_to)
+!    ! Modified valve flow rate model from beater_pneumatic_2007 ch. 5.
+!    ! Modified to be differentiable.
+    
+!    use units, only: si_mass_flow_rate => unit_p00_p10_m10_p00
+!    use checks, only: assert
+    
 !    type(cv_type), intent(in) :: cv_from, cv_to
     
 !    type(si_mass_flow_rate) :: m_dot
     
-!    call assert(cv_from%p >= cv_to%p, "cva (m_dot): cv_from%p >= cv_to%p violated")
-    
-!    contains
-    
-!    pure function f_m_dot(p_s, b)
-        
-!    end function f_m_dot(p_s, b)
+!    call assert(cv_from%p() >= cv_to%p(), "cva (m_dot): cv_from%p >= cv_to%p violated")
 !end function m_dot
+
+pure function f_m_dot(p_r, b)
+    ! See beater_pneumatic_2007 eq. 5.4
+    ! This is a replacement for the ((p_2/p_1 - b)/(1-b))**2 term, smoothly going between the various cases.
+    
+    use units, only: tanh, square
+    use checks, only: assert
+    
+    type(unitless), intent(in) :: p_r, b
+    
+    type(unitless) :: f_m_dot
+    
+    type(unitless) :: p_rs!, p_rmax ! scales used to make function differentiable
+    
+    call p_rs%v%init_const(0.01_WP, size(p_r%v%d))
+    !call p_rmax%v%init_const(0.999_WP, size(p_r%v%d)) ! based on first part of beater_pneumatic_2007 eq. 5.4
+    
+    f_m_dot = square((p_r - b) / (1.0_WP - b)) &
+                * 0.5_WP * (1.0_WP + tanh((p_r - b) / p_rs))
+end function f_m_dot
 
 end module cva
