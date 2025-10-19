@@ -16,7 +16,7 @@ type(test_results_type) :: tests
 call tests%start_tests("cva.nml")
 
 call test_p_eos(tests)
-! TODO: call test_rho_eos(tests)
+call test_rho_eos(tests)
 call test_p_f_1(tests)
 call test_p_f_2(tests)
 call test_p_f0_1(tests)
@@ -51,6 +51,27 @@ subroutine test_p_eos(tests)
     
     call tests%real_eq(p%v%v, P_ATM, "p_eos, atmospheric", abs_tol=1.0_WP)
 end subroutine test_p_eos
+
+subroutine test_rho_eos(tests)
+    use units, only: si_mass_density => unit_m30_p10_p00_p00, &
+                     si_temperature  => unit_p00_p00_p00_p10, &
+                     si_pressure     => unit_m10_p10_m20_p00
+    use prec, only: WP
+    use cva, only: P_ATM, T_ATM, RHO_ATM, rho_eos
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(si_mass_density) :: rho
+    type(si_temperature)  :: temp
+    type(si_pressure)     :: p
+    
+    call p%v%init_const(P_ATM, 0)
+    call temp%v%init_const(T_ATM, 0)
+    
+    rho = rho_eos(p, temp)
+    
+    call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric", abs_tol=1.0e-4_WP)
+end subroutine test_rho_eos
 
 subroutine test_p_f_1(tests)
     use units, only: si_pressure => unit_m10_p10_m20_p00

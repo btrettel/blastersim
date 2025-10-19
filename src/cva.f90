@@ -83,7 +83,7 @@ pure function p_eos(rho, temp)
     
     type(si_specific_heat) :: r_air
     
-    call assert(rho%v%v > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
+    call assert(rho%v%v  > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
     call assert(temp%v%v > 0.0_WP, "cva (p_eos): temp%v > 0 violated")
     call assert(size(rho%v%d) == size(temp%v%d), "cva (rho_eos): inconsistent derivative array sizes")
     
@@ -98,7 +98,9 @@ pure function p_eos(rho, temp)
 end function p_eos
 
 pure function rho_eos(p, temp)
-    ! Calculate pressure using the equation of state.
+    ! Calculate density using the equation of state.
+    ! In the future, if an EOS more complex than the ideal gas law is used, it might make sense to calculate `rho_eos` from `p_eos`
+    ! with the Newton method.
     
     use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
                      si_temperature   => unit_p00_p00_p00_p10, &
@@ -114,8 +116,8 @@ pure function rho_eos(p, temp)
     
     type(si_specific_heat) :: r_air
     
-    call assert(p%v%v > 0.0_WP, "cva (rho_eos): p%v > 0 violated")
-    call assert(p%v%v < P_C_AIR, "cva (rho_eos): ideal gas law validity is questionable")
+    call assert(p%v%v    > 0.0_WP, "cva (rho_eos): p%v > 0 violated")
+    call assert(p%v%v    < P_C_AIR, "cva (rho_eos): ideal gas law validity is questionable")
     call assert(temp%v%v > 0.0_WP, "cva (rho_eos): temp%v > 0 violated")
     call assert(size(p%v%d) == size(temp%v%d), "cva (rho_eos): inconsistent derivative array sizes")
     
