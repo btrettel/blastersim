@@ -74,7 +74,7 @@ pure function p_eos(rho, temp)
     use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
                      si_temperature   => unit_p00_p00_p00_p10, &
                      si_specific_heat => unit_p20_p00_m20_m10
-    use checks, only: assert
+    use checks, only: assert, assert_dimension
     
     type(si_mass_density), intent(in) :: rho
     type(si_temperature), intent(in)  :: temp
@@ -86,7 +86,7 @@ pure function p_eos(rho, temp)
     
     call assert(rho%v%v  > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
     call assert(temp%v%v > 0.0_WP, "cva (p_eos): temp%v > 0 violated")
-    call assert(size(rho%v%d) == size(temp%v%d), "cva (rho_eos): inconsistent derivative array sizes")
+    call assert_dimension(rho%v%d, temp%v%d)
     
     n_d = size(rho%v%d)
     
@@ -106,7 +106,7 @@ pure function rho_eos(p, temp)
     use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
                      si_temperature   => unit_p00_p00_p00_p10, &
                      si_specific_heat => unit_p20_p00_m20_m10
-    use checks, only: assert
+    use checks, only: assert, assert_dimension
     
     type(si_pressure), intent(in)    :: p
     type(si_temperature), intent(in) :: temp
@@ -120,7 +120,7 @@ pure function rho_eos(p, temp)
     call assert(p%v%v    > 0.0_WP, "cva (rho_eos): p%v > 0 violated")
     call assert(p%v%v    < P_C_AIR, "cva (rho_eos): ideal gas law validity is questionable")
     call assert(temp%v%v > 0.0_WP, "cva (rho_eos): temp%v > 0 violated")
-    call assert(size(p%v%d) == size(temp%v%d), "cva (rho_eos): inconsistent derivative array sizes")
+    call assert_dimension(p%v%d, temp%v%d)
     
     n_d = size(p%v%d)
     
@@ -135,7 +135,7 @@ pure function temp_cv(cv)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
                      si_specific_energy => unit_p20_p00_m20_p00, &
                      si_specific_heat   => unit_p20_p00_m20_m10
-    use checks, only: assert
+    use checks, only: assert, assert_dimension
     
     class(cv_type), intent(in) :: cv
     
@@ -150,7 +150,7 @@ pure function temp_cv(cv)
     call assert(K_AIR > 1.0_WP, "cva (temp_cv): K_AIR > 1 violated")
     call assert(cv%m%v%v > 0.0_WP, "cva (temp_cv): cv%m > 0 violated")
     call assert(cv%e%v%v > 0.0_WP, "cva (temp_cv): cv%e > 0 violated")
-    call assert(size(cv%e%v%d) == size(cv%m%v%d), "cva (temp_cv): inconsistent derivative array sizes")
+    call assert_dimension(cv%e%v%d, cv%m%v%d)
     
     n_d = size(cv%m%v%d)
     
@@ -227,7 +227,7 @@ pure subroutine set(cv, x, x_dot, p, temp, csa, m_p, p_fs, p_fd, k, x_z)
                      si_mass            => unit_p00_p10_p00_p00, &
                      si_specific_energy => unit_p20_p00_m20_p00, &
                      si_specific_heat   => unit_p20_p00_m20_m10
-    use checks, only: assert
+    use checks, only: assert, assert_dimension
     
     class(cv_type), intent(in out) :: cv
     
@@ -288,9 +288,9 @@ pure subroutine set(cv, x, x_dot, p, temp, csa, m_p, p_fs, p_fd, k, x_z)
     call assert(cv%m%v%v > 0.0_WP, "cva (set): cv%m > 0 violated")
     call assert(cv%e%v%v > 0.0_WP, "cva (set): cv%e > 0 violated")
     
-    call assert(size(cv%x%v%d) == size(cv%x_dot%v%d), "cva (set): inconsistent derivative array sizes (1)")
-    call assert(size(cv%x%v%d) == size(cv%m%v%d), "cva (set): inconsistent derivative array sizes (2)")
-    call assert(size(cv%x%v%d) == size(cv%e%v%d), "cva (set): inconsistent derivative array sizes (3)")
+    call assert_dimension(cv%x%v%d, cv%x_dot%v%d)
+    call assert_dimension(cv%x%v%d, cv%m%v%d)
+    call assert_dimension(cv%x%v%d, cv%e%v%d)
 end subroutine set
 
 pure function p_f(cv, p_fe)
@@ -383,19 +383,45 @@ pure function f_m_dot(p_r, b)
     ! This is a replacement for the ((p_2/p_1 - b)/(1-b))**2 term, smoothly going between the various cases.
     
     use units, only: tanh, square
-    use checks, only: assert
+    use checks, only: assert_dimension
     
     type(unitless), intent(in) :: p_r, b
     
     type(unitless) :: f_m_dot
     
-    type(unitless) :: p_rs!, p_rmax ! scales used to make function differentiable
+    type(unitless) :: p_rs, p_rmax ! scales used to make function differentiable
+    
+    call assert_dimension(p_r%v%d, b%v%d)
     
     call p_rs%v%init_const(0.01_WP, size(p_r%v%d))
-    !call p_rmax%v%init_const(0.999_WP, size(p_r%v%d)) ! based on first part of beater_pneumatic_2007 eq. 5.4
+    call p_rmax%v%init_const(0.999_WP, size(p_r%v%d)) ! based on first part of beater_pneumatic_2007 eq. 5.4
     
-    f_m_dot = square((p_r - b) / (1.0_WP - b)) &
+    ! TODO: Make a smooth alternative to the max function here.
+    f_m_dot = square((smooth_min(p_r, p_rmax) - b) / (1.0_WP - b)) &
                 * 0.5_WP * (1.0_WP + tanh((p_r - b) / p_rs))
 end function f_m_dot
+
+pure function smooth_min(x, y)
+    ! Exponential from <https://iquilezles.org/articles/smin/>.
+    ! Also see: <https://en.wikipedia.org/wiki/Smooth_maximum>
+    
+    use checks, only: assert, assert_dimension
+    use units, only: log, exp
+    
+    type(unitless), intent(in) :: x, y
+    
+    type(unitless) :: smooth_min
+    
+    type(unitless) :: k
+    
+    call assert_dimension(x%v%d, y%v%d)
+    
+    call k%v%init_const(0.01_WP, size(x%v%d))
+    
+    smooth_min = -k*log(exp(-x/k) + exp(-y/k))
+    
+    call assert(smooth_min <= x, "cva (smooth_min): smooth_min <= x violated")
+    call assert(smooth_min <= y, "cva (smooth_min): smooth_min <= y violated")
+end function smooth_min
 
 end module cva

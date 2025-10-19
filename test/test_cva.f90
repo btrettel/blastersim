@@ -23,6 +23,7 @@ call test_p_f0_1(tests)
 call test_p_f0_2(tests)
 call test_temp_cv(tests)
 call test_set(tests)
+!call test_smooth_min(tests)
 call test_f_m_dot(tests)
 
 call tests%end_tests()
@@ -355,8 +356,20 @@ subroutine test_f_m_dot(tests)
     deallocate(p_r%v%d)
     call p_r%v%init_const(1.0_WP, 0)
     f = f_m_dot(p_r, b)
-    call tests%real_eq(f%v%v, 1.0_WP, "f_m_dot (2)")
+    call tests%real_eq(f%v%v, 1.0_WP, "f_m_dot (2)", abs_tol=0.04_WP)
+    call tests%real_lt(f%v%v, 1.0_WP, "f_m_dot (3)")
 end subroutine test_f_m_dot
+
+!subroutine test_smooth_min(tests)
+!    use units, only: unitless => unit_p00_p00_p00_p00
+!    use cva, only: smooth_min
+    
+!    type(test_results_type), intent(in out) :: tests
+    
+!    type(unitless) :: x, y
+    
+    
+!end subroutine test_smooth_min
 
 ! TODO: Plot `p_f0` to test it.
 
