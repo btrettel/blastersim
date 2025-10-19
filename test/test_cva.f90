@@ -279,7 +279,7 @@ subroutine test_set(tests)
                      si_volume       => unit_p30_p00_p00_p00, &
                      si_mass_density => unit_m30_p10_p00_p00, &
                      si_temperature  => unit_p00_p00_p00_p10
-    use cva, only: cv_type
+    use cva, only: P_ATM, T_ATM, RHO_ATM, R_BAR, M_AIR, K_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -300,8 +300,8 @@ subroutine test_set(tests)
     
     call x%v%init_const(0.5_WP, 0)
     call x_dot%v%init_const(0.5_WP, 0)
-    call p%v%init_const(2.0e5_WP, 0)
-    call temp%v%init_const(400.0_WP, 0)
+    call p%v%init_const(2.0_WP*P_ATM, 0)
+    call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 0)
     call csa%v%init_const(0.1_WP, 0)
     call m_p%v%init_const(0.5_WP, 0)
     call p_fs%v%init_const(0.2e5_WP, 0)
@@ -321,8 +321,6 @@ subroutine test_set(tests)
     call tests%real_eq(cv%k%v%v, k%v%v, "set, k")
     call tests%real_eq(cv%x_z%v%v, x_z%v%v, "set, x_z")
     
-    ! TODO: `m`, `e`
-    
     temp_cv = cv%temp()
     call tests%real_eq(temp_cv%v%v, temp%v%v, "set, temp")
     
@@ -330,10 +328,13 @@ subroutine test_set(tests)
     call tests%real_eq(vol_cv%v%v, 0.05_WP, "set, vol")
     
     rho_cv = cv%rho()
-    call tests%real_eq(rho_cv%v%v, 2.0_WP, "set, rho")
+    call tests%real_eq(rho_cv%v%v, sqrt(2.0_WP)*RHO_ATM, "set, rho", abs_tol=1.0e-4_WP)
     
     p_cv = cv%p()
     call tests%real_eq(p_cv%v%v, p%v%v, "set, p")
+    
+    call tests%real_eq(cv%m%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, m", abs_tol=1.0e-6_WP)
+    call tests%real_eq(cv%e%v%v, R_BAR*temp%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP/(M_AIR*(K_AIR - 1.0_WP)), "set, e", abs_tol=1.0_WP)
 end subroutine test_set
 
 end program test_cva
