@@ -116,6 +116,8 @@ elemental subroutine init(x, v, n, n_d)
     
     x%v = v
     
+    if (allocated(x%d)) deallocate(x%d)
+    
     allocate(x%d(n_d))
     
     if (n_d > 0) then
@@ -135,6 +137,8 @@ elemental subroutine init_const(x, v, n_d)
     integer, intent(in)       :: n_d ! total number of differentiable variables
     
     call assert(n_d >= 0, "fmad (init): n_d must be zero or more")
+    
+    if (allocated(x%d)) deallocate(x%d)
     
     allocate(x%d(n_d))
 

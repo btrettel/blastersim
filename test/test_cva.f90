@@ -90,57 +90,41 @@ subroutine test_p_f_1(tests)
     p_f = cv%p_f(p_fe)
     call tests%real_eq(p_f%v%v, -cv%p_fd%v%v, "p_f, x_dot < 0 (dynamic friction), p_fe < 0")
     
-    deallocate(cv%x_dot%v%d)
-    deallocate(p_fe%v%d)
     call cv%x_dot%v%init_const(-10.0_WP, 0)
     call p_fe%v%init_const(0.0_WP, 0)
     p_f = cv%p_f(p_fe)
     call tests%real_eq(p_f%v%v, -cv%p_fd%v%v, "p_f, x_dot < 0 (dynamic friction), p_fe == 0")
     
-    deallocate(cv%x_dot%v%d)
-    deallocate(p_fe%v%d)
     call cv%x_dot%v%init_const(-10.0_WP, 0)
     call p_fe%v%init_const(1.0e5_WP, 0)
     p_f = cv%p_f(p_fe)
     call tests%real_eq(p_f%v%v, -cv%p_fd%v%v, "p_f, x_dot < 0 (dynamic friction), p_fe > 0")
     
-    deallocate(cv%x_dot%v%d)
-    deallocate(p_fe%v%d)
     call cv%x_dot%v%init_const(0.0_WP, 0)
     p_fe = -cv%p_fs/10.0_WP
     p_f  = cv%p_f(p_fe)
     call tests%real_eq(p_f%v%v, p_fe%v%v, "p_f, x_dot == 0 (static friction), p_fe < 0")
     
-    deallocate(cv%x_dot%v%d)
-    deallocate(p_fe%v%d)
     call cv%x_dot%v%init_const(0.0_WP, 0)
     call p_fe%v%init_const(0.0_WP, 0)
     p_f = cv%p_f(p_fe)
     call tests%real_eq(p_f%v%v, 0.0_WP, "p_f, x_dot == 0 (static friction), p_fe == 0")
     
-    deallocate(cv%x_dot%v%d)
-    deallocate(p_fe%v%d)
     call cv%x_dot%v%init_const(0.0_WP, 0)
     p_fe = cv%p_fs/10.0_WP
     p_f  = cv%p_f(p_fe)
     call tests%real_eq(p_f%v%v, p_fe%v%v, "p_f, x_dot == 0 (static friction), p_fe > 0")
     
-    deallocate(cv%x_dot%v%d)
-    deallocate(p_fe%v%d)
     call cv%x_dot%v%init_const(10.0_WP, 0)
     call p_fe%v%init_const(-1.0e5_WP, 0)
     p_f = cv%p_f(p_fe)
     call tests%real_eq(p_f%v%v, cv%p_fd%v%v, "p_f, x_dot > 0 (dynamic friction), p_fe < 0")
     
-    deallocate(cv%x_dot%v%d)
-    deallocate(p_fe%v%d)
     call cv%x_dot%v%init_const(10.0_WP, 0)
     call p_fe%v%init_const(0.0_WP, 0)
     p_f = cv%p_f(p_fe)
     call tests%real_eq(p_f%v%v, cv%p_fd%v%v, "p_f, x_dot > 0 (dynamic friction), p_fe == 0")
     
-    deallocate(cv%x_dot%v%d)
-    deallocate(p_fe%v%d)
     call cv%x_dot%v%init_const(10.0_WP, 0)
     call p_fe%v%init_const(1.0e5_WP, 0)
     p_f = cv%p_f(p_fe)
@@ -165,8 +149,6 @@ subroutine test_p_f_2(tests)
     p_f = cv%p_f(p_fe)
     call tests%real_eq(p_f%v%v, 0.0_WP, "p_f, p_fs = p_fd = 0, x_dot > 0")
     
-    deallocate(cv%x_dot%v%d)
-    deallocate(p_fe%v%d)
     call cv%x_dot%v%init_const(0.0_WP, 0)
     call p_fe%v%init_const(1.0e5_WP, 0)
     p_f = cv%p_f(p_fe)
@@ -190,22 +172,18 @@ subroutine test_p_f0_1(tests)
     p_f0 = cv%p_f0(p_fe)
     call tests%real_eq(p_f0%v%v, -cv%p_fs%v%v, "p_f0 (1)", abs_tol=1.0e-4_WP)
     
-    deallocate(p_fe%v%d)
     p_fe = -cv%p_fs/10.0_WP
     p_f0 = cv%p_f0(p_fe)
     call tests%real_eq(p_f0%v%v, p_fe%v%v, "p_f0 (2)")
     
-    deallocate(p_fe%v%d)
     call p_fe%v%init_const(0.0_WP, 0)
     p_f0 = cv%p_f0(p_fe)
     call tests%real_eq(p_f0%v%v, 0.0_WP, "p_f0 (3)")
     
-    deallocate(p_fe%v%d)
     p_fe = cv%p_fs/10.0_WP
     p_f0 = cv%p_f0(p_fe)
     call tests%real_eq(p_f0%v%v, p_fe%v%v, "p_f0 (4)")
     
-    deallocate(p_fe%v%d)
     call p_fe%v%init_const(1.0e5_WP, 0)
     p_f0 = cv%p_f0(p_fe)
     call tests%real_eq(p_f0%v%v, cv%p_fs%v%v, "p_f0 (5)", abs_tol=1.0e-4_WP)
@@ -228,22 +206,18 @@ subroutine test_p_f0_2(tests)
     p_f0 = cv%p_f0(p_fe)
     call tests%real_eq(p_f0%v%v, 0.0_WP, "p_f0 (1)")
     
-    deallocate(p_fe%v%d)
     p_fe = -cv%p_fs/10.0_WP
     p_f0 = cv%p_f0(p_fe)
     call tests%real_eq(p_f0%v%v, 0.0_WP, "p_f0 (2)")
     
-    deallocate(p_fe%v%d)
     call p_fe%v%init_const(0.0_WP, 0)
     p_f0 = cv%p_f0(p_fe)
     call tests%real_eq(p_f0%v%v, 0.0_WP, "p_f0 (3)")
     
-    deallocate(p_fe%v%d)
     p_fe = cv%p_fs/10.0_WP
     p_f0 = cv%p_f0(p_fe)
     call tests%real_eq(p_f0%v%v, 0.0_WP, "p_f0 (4)")
     
-    deallocate(p_fe%v%d)
     call p_fe%v%init_const(1.0e5_WP, 0)
     p_f0 = cv%p_f0(p_fe)
     call tests%real_eq(p_f0%v%v, 0.0_WP, "p_f0 (5)")
@@ -339,6 +313,17 @@ subroutine test_set(tests)
     call tests%real_eq(cv%e%v%v, R_BAR*temp%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP/(M_AIR*(K_AIR - 1.0_WP)), "set, e", abs_tol=1.0_WP)
 end subroutine test_set
 
+!subroutine test_smooth_min(tests)
+!    use units, only: unitless => unit_p00_p00_p00_p00
+!    use cva, only: smooth_min
+    
+!    type(test_results_type), intent(in out) :: tests
+    
+!    type(unitless) :: x, y
+    
+    
+!end subroutine test_smooth_min
+
 subroutine test_f_m_dot(tests)
     use units, only: unitless => unit_p00_p00_p00_p00
     use cva, only: f_m_dot
@@ -353,24 +338,12 @@ subroutine test_f_m_dot(tests)
     f = f_m_dot(p_r, b)
     call tests%real_eq(f%v%v, 0.0_WP, "f_m_dot (1)")
     
-    deallocate(p_r%v%d)
     call p_r%v%init_const(1.0_WP, 0)
     f = f_m_dot(p_r, b)
     call tests%real_eq(f%v%v, 1.0_WP, "f_m_dot (2)", abs_tol=0.04_WP)
     call tests%real_lt(f%v%v, 1.0_WP, "f_m_dot (3)")
 end subroutine test_f_m_dot
 
-!subroutine test_smooth_min(tests)
-!    use units, only: unitless => unit_p00_p00_p00_p00
-!    use cva, only: smooth_min
-    
-!    type(test_results_type), intent(in out) :: tests
-    
-!    type(unitless) :: x, y
-    
-    
-!end subroutine test_smooth_min
-
-! TODO: Plot `p_f0` to test it.
+! TODO: Plot `f_m_dot` to test it.
 
 end program test_cva
