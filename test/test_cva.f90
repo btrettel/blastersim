@@ -25,6 +25,7 @@ call test_temp_cv(tests)
 call test_set(tests)
 call test_smooth_min(tests)
 call test_f_m_dot(tests)
+call test_g_m_dot(tests)
 
 call tests%end_tests()
 
@@ -353,5 +354,28 @@ subroutine test_f_m_dot(tests)
 end subroutine test_f_m_dot
 
 ! TODO: Plot `f_m_dot` to test it.
+
+subroutine test_g_m_dot(tests)
+    use units, only: unitless => unit_p00_p00_p00_p00
+    use cva, only: g_m_dot
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    type(unitless) :: p_r, g
+    
+    call p_r%v%init_const(0.0_WP, 0)
+    g = g_m_dot(p_r)
+    call tests%real_eq(g%v%v, 0.0_WP, "g_m_dot (1)")
+    
+    call p_r%v%init_const(0.9_WP, 0)
+    g = g_m_dot(p_r)
+    call tests%real_eq(g%v%v, 0.0_WP, "g_m_dot (2)")
+    
+    call p_r%v%init_const(1.0_WP, 0)
+    g = g_m_dot(p_r)
+    call tests%real_eq(g%v%v, 1.0_WP, "g_m_dot (3)", abs_tol=1.0e-6_WP)
+end subroutine test_g_m_dot
+
+! TODO: Plot `g_m_dot` to test it.
 
 end program test_cva
