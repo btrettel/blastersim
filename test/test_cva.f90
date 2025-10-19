@@ -1,4 +1,4 @@
-! tests for the port module
+! tests for control volume analysis
 ! Standard: Fortran 2018
 ! Preprocessor: none
 ! Author: Ben Trettel (<http://trettel.us/>)
@@ -16,11 +16,16 @@ type(test_results_type) :: tests
 call tests%start_tests("cva.nml")
 
 call test_p_eos(tests)
+! TODO: call test_rho_eos(tests)
 call test_p_f_1(tests)
 call test_p_f_2(tests)
 call test_p_f0_1(tests)
 call test_p_f0_2(tests)
 call test_temp_cv(tests)
+call test_vol_cv(tests)
+! TODO: call test_rho_cv(tests)
+! TODO: call test_p_cv(tests)
+! TODO: call test_set(tests)
 
 call tests%end_tests()
 
@@ -245,8 +250,20 @@ subroutine test_temp_cv(tests)
     call tests%real_eq(temp%v%v, 300.0_WP, "temp_cv (qualitative)", abs_tol=5.0_WP)
 end subroutine test_temp_cv
 
-! TODO: test `vol_cv`
-! TODO: test `rho_cv`
-! TODO: test `p_cv`
+subroutine test_vol_cv(tests)
+    use units, only: si_volume => unit_p30_p00_p00_p00
+    use cva, only: cv_type
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_type)   :: cv
+    type(si_volume) :: vol
+    
+    call cv%x%v%init_const(0.5_WP, 0)
+    call cv%csa%v%init_const(0.1_WP, 0)
+    
+    vol = cv%vol()
+    call tests%real_eq(vol%v%v, 0.05_WP, "vol_cv")
+end subroutine test_vol_cv
 
 end program test_cva

@@ -40,7 +40,7 @@ real(WP), public, parameter :: P_ATM   = 101325.0_WP         ! Pa
 real(WP), public, parameter :: T_ATM   = 273.15_WP + 15.0_WP ! K
 real(WP), public, parameter :: RHO_ATM = 1.2250_WP           ! kg/m3
 
-public :: p_eos
+public :: p_eos, rho_eos
 
 type, public :: cv_type
     ! time varying
@@ -62,11 +62,14 @@ contains
     procedure :: vol  => vol_cv
     procedure :: rho  => rho_cv
     procedure :: p    => p_cv
+    procedure :: set  => set
 end type cv_type
 
 contains
 
 pure function p_eos(rho, temp)
+    ! Calculate pressure using the equation of state.
+    
     use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
                      si_temperature   => unit_p00_p00_p00_p10, &
                      si_specific_heat => unit_p20_p00_m20_m10
@@ -76,22 +79,54 @@ pure function p_eos(rho, temp)
     type(si_temperature), intent(in)  :: temp
     type(si_pressure)                 :: p_eos
     
-    integer :: n_d
+    integer :: n_d ! number of derivatives
     
-    type(si_specific_heat) :: r
+    type(si_specific_heat) :: r_air
     
     call assert(rho%v%v > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
     call assert(temp%v%v > 0.0_WP, "cva (p_eos): temp%v > 0 violated")
+    call assert(size(rho%v%d) == size(temp%v%d), "cva (rho_eos): inconsistent derivative array sizes")
     
     n_d = size(rho%v%d)
     
-    call r%v%init_const(R_BAR/M_AIR, n_d)
+    call r_air%v%init_const(R_BAR/M_AIR, n_d)
     
-    p_eos = rho * r * temp
+    p_eos = rho * r_air * temp
     
     call assert(p_eos%v%v > 0.0_WP, "cva (p_eos): p_eos%v > 0 violated")
     call assert(p_eos%v%v < P_C_AIR, "cva (p_eos): ideal gas law validity is questionable")
 end function p_eos
+
+pure function rho_eos(p, temp)
+    ! Calculate pressure using the equation of state.
+    
+    use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
+                     si_temperature   => unit_p00_p00_p00_p10, &
+                     si_specific_heat => unit_p20_p00_m20_m10
+    use checks, only: assert
+    
+    type(si_pressure), intent(in)    :: p
+    type(si_temperature), intent(in) :: temp
+    
+    type(si_mass_density) :: rho_eos
+    
+    integer :: n_d ! number of derivatives
+    
+    type(si_specific_heat) :: r_air
+    
+    call assert(p%v%v > 0.0_WP, "cva (rho_eos): p%v > 0 violated")
+    call assert(p%v%v < P_C_AIR, "cva (rho_eos): ideal gas law validity is questionable")
+    call assert(temp%v%v > 0.0_WP, "cva (rho_eos): temp%v > 0 violated")
+    call assert(size(p%v%d) == size(temp%v%d), "cva (rho_eos): inconsistent derivative array sizes")
+    
+    n_d = size(p%v%d)
+    
+    call r_air%v%init_const(R_BAR/M_AIR, n_d)
+    
+    rho_eos = p / (r_air * temp)
+    
+    call assert(rho_eos%v%v > 0.0_WP, "cva (rho_eos): rho_eos%v > 0 violated")
+end function rho_eos
 
 pure function temp_cv(cv)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
@@ -103,8 +138,8 @@ pure function temp_cv(cv)
     
     type(si_temperature) :: temp_cv
     
-    integer                  :: n_d
-    type(si_specific_heat)   :: r, c_v
+    integer                  :: n_d  ! number of derivatives
+    type(si_specific_heat)   :: r_air, c_v
     type(si_specific_energy) :: u
     
     ! Constant specific heats assumed for now. Will improve later.
@@ -116,10 +151,10 @@ pure function temp_cv(cv)
     
     n_d = size(cv%m%v%d)
     
-    call r%v%init_const(R_BAR/M_AIR, n_d)
+    call r_air%v%init_const(R_BAR/M_AIR, n_d)
     
     ! moran_fundamentals_2008 eq. 3.47b, p. 119
-    c_v = r / (K_AIR - 1.0_WP)
+    c_v = r_air / (K_AIR - 1.0_WP)
     
     u = cv%e / cv%m
     
@@ -183,6 +218,76 @@ pure function p_cv(cv)
     
     call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated")
 end function p_cv
+
+pure subroutine set(cv, x, x_dot, p, temp, csa, rmp, p_fs, p_fd, k, x_z)
+    use units, only: si_temperature     => unit_p00_p00_p00_p10, &
+                     si_specific_energy => unit_p20_p00_m20_p00, &
+                     si_specific_heat   => unit_p20_p00_m20_m10
+    use checks, only: assert
+    
+    class(cv_type), intent(in out) :: cv
+    
+    ! time varying
+    type(si_length), intent(in)      :: x     ! location of piston/projectile
+    type(si_velocity), intent(in)    :: x_dot ! velocity of piston/projectile
+    type(si_pressure), intent(in)    :: p     ! pressure
+    type(si_temperature), intent(in) :: temp  ! temperature
+    
+    ! constant
+    type(si_area), intent(in)         :: csa        ! cross-sectional area
+    type(si_inverse_mass), intent(in) :: rmp        ! reciprocol mass of piston/projectile
+    type(si_pressure), intent(in)     :: p_fs, p_fd ! static and dynamic friction pressure
+    type(si_stiffness), intent(in)    :: k          ! stiffness of spring attached to piston
+    type(si_length), intent(in)       :: x_z        ! zero force location for spring
+    
+    integer                  :: n_d
+    type(si_specific_heat)   :: r_air, c_v
+    type(si_specific_energy) :: u
+    
+    ! Constant specific heats assumed for now. Will improve later.
+    
+    call assert(K_AIR > 1.0_WP, "cva (temp_cv): K_AIR > 1 violated")
+    
+    n_d = size(cv%x%v%d)
+    
+    cv%x     = x
+    cv%x_dot = x_dot
+    ! `p` and `temp` will be handled below
+    
+    cv%csa  = csa
+    cv%rmp  = rmp
+    cv%p_fs = p_fs
+    cv%p_fd = p_fd
+    cv%k    = k
+    cv%x_z  = x_z
+    
+    call assert(cv%x%v%v    >  0.0_WP, "cva (set): x > 0 violated")
+    call assert(p%v%v       >  0.0_WP, "cva (set): p > 0 violated")
+    call assert(temp%v%v    >  0.0_WP, "cva (set): temp > 0 violated")
+    call assert(csa%v%v     >  0.0_WP, "cva (set): csa > 0 violated")
+    call assert(cv%p_fs%v%v >= 0.0_WP, "cva (set): p_fs > 0 violated")
+    call assert(cv%p_fd%v%v >= 0.0_WP, "cva (set): p_fd > 0 violated")
+    call assert(cv%k%v%v    >= 0.0_WP, "cva (set): k >= 0 violated")
+    call assert(cv%x_z%v%v  >= 0.0_WP, "cva (set): x_z >= 0 violated")
+    
+    cv%m = cv%vol() * rho_eos(p, temp)
+    
+    call r_air%v%init_const(R_BAR/M_AIR, n_d)
+    
+    ! moran_fundamentals_2008 eq. 3.47b, p. 119
+    c_v = r_air / (K_AIR - 1.0_WP)
+    
+    u = c_v * temp
+    
+    cv%e = u * cv%m
+    
+    call assert(cv%m%v%v > 0.0_WP, "cva (set): cv%m > 0 violated")
+    call assert(cv%e%v%v > 0.0_WP, "cva (set): cv%e > 0 violated")
+    
+    call assert(size(cv%x%v%d) == size(cv%x_dot%v%d), "cva (set): inconsistent derivative array sizes (1)")
+    call assert(size(cv%x%v%d) == size(cv%m%v%d), "cva (set): inconsistent derivative array sizes (2)")
+    call assert(size(cv%x%v%d) == size(cv%e%v%d), "cva (set): inconsistent derivative array sizes (3)")
+end subroutine set
 
 pure function p_f(cv, p_fe)
     ! Returns pressure of friction.
