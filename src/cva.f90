@@ -51,7 +51,7 @@ type, public :: cv_type
     
     ! constants
     type(si_area)         :: csa        ! cross-sectional area
-    type(si_inverse_mass) :: rmp        ! reciprocol mass of piston/projectile
+    type(si_inverse_mass) :: rm_p       ! reciprocal mass of piston/projectile
     type(si_pressure)     :: p_fs, p_fd ! static and dynamic friction pressure
     type(si_stiffness)    :: k          ! stiffness of spring attached to piston
     type(si_length)       :: x_z        ! zero force location for spring
@@ -221,8 +221,9 @@ pure function p_cv(cv)
     call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated")
 end function p_cv
 
-pure subroutine set(cv, x, x_dot, p, temp, csa, rmp, p_fs, p_fd, k, x_z)
+pure subroutine set(cv, x, x_dot, p, temp, csa, m_p, p_fs, p_fd, k, x_z)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
+                     si_mass            => unit_p00_p10_p00_p00, &
                      si_specific_energy => unit_p20_p00_m20_p00, &
                      si_specific_heat   => unit_p20_p00_m20_m10
     use checks, only: assert
@@ -236,11 +237,11 @@ pure subroutine set(cv, x, x_dot, p, temp, csa, rmp, p_fs, p_fd, k, x_z)
     type(si_temperature), intent(in) :: temp  ! temperature
     
     ! constant
-    type(si_area), intent(in)         :: csa        ! cross-sectional area
-    type(si_inverse_mass), intent(in) :: rmp        ! reciprocol mass of piston/projectile
-    type(si_pressure), intent(in)     :: p_fs, p_fd ! static and dynamic friction pressure
-    type(si_stiffness), intent(in)    :: k          ! stiffness of spring attached to piston
-    type(si_length), intent(in)       :: x_z        ! zero force location for spring
+    type(si_area), intent(in)      :: csa        ! cross-sectional area
+    type(si_mass), intent(in)      :: m_p        ! mass of piston/projectile
+    type(si_pressure), intent(in)  :: p_fs, p_fd ! static and dynamic friction pressure
+    type(si_stiffness), intent(in) :: k          ! stiffness of spring attached to piston
+    type(si_length), intent(in)    :: x_z        ! zero force location for spring
     
     integer                  :: n_d
     type(si_specific_heat)   :: r_air, c_v
@@ -250,14 +251,14 @@ pure subroutine set(cv, x, x_dot, p, temp, csa, rmp, p_fs, p_fd, k, x_z)
     
     call assert(K_AIR > 1.0_WP, "cva (temp_cv): K_AIR > 1 violated")
     
-    n_d = size(cv%x%v%d)
+    n_d = size(x%v%d)
     
     cv%x     = x
     cv%x_dot = x_dot
     ! `p` and `temp` will be handled below
     
     cv%csa  = csa
-    cv%rmp  = rmp
+    cv%rm_p = 1.0_WP/m_p ! reciprocal mass of piston/projectile
     cv%p_fs = p_fs
     cv%p_fd = p_fd
     cv%k    = k

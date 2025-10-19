@@ -22,10 +22,7 @@ call test_p_f_2(tests)
 call test_p_f0_1(tests)
 call test_p_f0_2(tests)
 call test_temp_cv(tests)
-call test_vol_cv(tests)
-! TODO: call test_rho_cv(tests)
-! TODO: call test_p_cv(tests)
-! TODO: call test_set(tests)
+call test_set(tests)
 
 call tests%end_tests()
 
@@ -271,20 +268,72 @@ subroutine test_temp_cv(tests)
     call tests%real_eq(temp%v%v, 300.0_WP, "temp_cv (qualitative)", abs_tol=5.0_WP)
 end subroutine test_temp_cv
 
-subroutine test_vol_cv(tests)
-    use units, only: si_volume => unit_p30_p00_p00_p00
+subroutine test_set(tests)
+    use units, only: si_length       => unit_p10_p00_p00_p00, &
+                     si_velocity     => unit_p10_p00_m10_p00, &
+                     si_mass         => unit_p00_p10_p00_p00, &
+                     si_energy       => unit_p20_p10_m20_p00, &
+                     si_area         => unit_p20_p00_p00_p00, &
+                     si_pressure     => unit_m10_p10_m20_p00, &
+                     si_stiffness    => unit_p00_p10_m20_p00, &
+                     si_volume       => unit_p30_p00_p00_p00, &
+                     si_mass_density => unit_m30_p10_p00_p00, &
+                     si_temperature  => unit_p00_p00_p00_p10
     use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
 
-    type(cv_type)   :: cv
-    type(si_volume) :: vol
+    type(cv_type) :: cv
     
-    call cv%x%v%init_const(0.5_WP, 0)
-    call cv%csa%v%init_const(0.1_WP, 0)
+    type(si_length)      :: x
+    type(si_velocity)    :: x_dot
+    type(si_pressure)    :: p, p_cv
+    type(si_temperature) :: temp, temp_cv
+    type(si_area)        :: csa
+    type(si_mass)        :: m_p
+    type(si_pressure)    :: p_fs, p_fd
+    type(si_stiffness)   :: k
+    type(si_length)      :: x_z
     
-    vol = cv%vol()
-    call tests%real_eq(vol%v%v, 0.05_WP, "vol_cv")
-end subroutine test_vol_cv
+    type(si_volume)       :: vol_cv
+    type(si_mass_density) :: rho_cv
+    
+    call x%v%init_const(0.5_WP, 0)
+    call x_dot%v%init_const(0.5_WP, 0)
+    call p%v%init_const(2.0e5_WP, 0)
+    call temp%v%init_const(400.0_WP, 0)
+    call csa%v%init_const(0.1_WP, 0)
+    call m_p%v%init_const(0.5_WP, 0)
+    call p_fs%v%init_const(0.2e5_WP, 0)
+    call p_fd%v%init_const(0.1e5_WP, 0)
+    call k%v%init_const(10.0_WP, 0)
+    call x_z%v%init_const(3.0_WP, 0)
+    
+    call cv%set(x, x_dot, p, temp, csa, m_p, p_fs, p_fd, k, x_z)
+    
+    call tests%real_eq(cv%x%v%v, x%v%v, "set, x")
+    call tests%real_eq(cv%x_dot%v%v, x_dot%v%v, "set, x_dot")
+    ! no `p` or `temp` member variables
+    call tests%real_eq(cv%csa%v%v, csa%v%v, "set, csa")
+    call tests%real_eq(cv%rm_p%v%v, 1.0_WP/m_p%v%v, "set, rm_p")
+    call tests%real_eq(cv%p_fs%v%v, p_fs%v%v, "set, p_fs")
+    call tests%real_eq(cv%p_fd%v%v, p_fd%v%v, "set, p_fd")
+    call tests%real_eq(cv%k%v%v, k%v%v, "set, k")
+    call tests%real_eq(cv%x_z%v%v, x_z%v%v, "set, x_z")
+    
+    ! TODO: `m`, `e`
+    
+    temp_cv = cv%temp()
+    call tests%real_eq(temp_cv%v%v, temp%v%v, "set, temp")
+    
+    vol_cv = cv%vol()
+    call tests%real_eq(vol_cv%v%v, 0.05_WP, "set, vol")
+    
+    rho_cv = cv%rho()
+    call tests%real_eq(rho_cv%v%v, 2.0_WP, "set, rho")
+    
+    p_cv = cv%p()
+    call tests%real_eq(p_cv%v%v, p%v%v, "set, p")
+end subroutine test_set
 
 end program test_cva
