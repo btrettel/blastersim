@@ -23,7 +23,7 @@ call test_p_f0_1(tests)
 call test_p_f0_2(tests)
 call test_temp_cv(tests)
 call test_set(tests)
-!call test_smooth_min(tests)
+call test_smooth_min(tests)
 call test_f_m_dot(tests)
 
 call tests%end_tests()
@@ -313,16 +313,24 @@ subroutine test_set(tests)
     call tests%real_eq(cv%e%v%v, R_BAR*temp%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP/(M_AIR*(K_AIR - 1.0_WP)), "set, e", abs_tol=1.0_WP)
 end subroutine test_set
 
-!subroutine test_smooth_min(tests)
-!    use units, only: unitless => unit_p00_p00_p00_p00
-!    use cva, only: smooth_min
+subroutine test_smooth_min(tests)
+    use units, only: unitless => unit_p00_p00_p00_p00
+    use cva, only: smooth_min
     
-!    type(test_results_type), intent(in out) :: tests
+    type(test_results_type), intent(in out) :: tests
     
-!    type(unitless) :: x, y
+    type(unitless) :: x, y, z
     
+    call x%v%init_const(0.0_WP, 0)
+    call y%v%init_const(1.0_WP, 0)
+    z = smooth_min(x, y)
+    call tests%real_eq(z%v%v, 0.0_WP, "smooth_min (1)")
     
-!end subroutine test_smooth_min
+    call x%v%init_const(1.1_WP, 0)
+    call y%v%init_const(0.1_WP, 0)
+    z = smooth_min(x, y)
+    call tests%real_eq(z%v%v, 0.1_WP, "smooth_min (1)")
+end subroutine test_smooth_min
 
 subroutine test_f_m_dot(tests)
     use units, only: unitless => unit_p00_p00_p00_p00

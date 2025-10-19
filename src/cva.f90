@@ -21,6 +21,7 @@ implicit none
 private
 
 public :: p_eos, rho_eos
+public :: smooth_min
 public :: f_m_dot
 
 ! <https://en.wikipedia.org/wiki/Gas_constant>
@@ -364,6 +365,29 @@ pure function p_f0(cv, p_fe)
     end function p_f0_high
 end function p_f0
 
+pure function smooth_min(x, y)
+    ! Exponential from <https://iquilezles.org/articles/smin/>.
+    ! Also see: <https://en.wikipedia.org/wiki/Smooth_maximum>
+    
+    use checks, only: assert, assert_dimension
+    use units, only: log, exp
+    
+    type(unitless), intent(in) :: x, y
+    
+    type(unitless) :: smooth_min
+    
+    type(unitless) :: k
+    
+    call assert_dimension(x%v%d, y%v%d)
+    
+    call k%v%init_const(0.01_WP, size(x%v%d))
+    
+    smooth_min = -k*log(exp(-x/k) + exp(-y/k))
+    
+    call assert(smooth_min <= x, "cva (smooth_min): smooth_min <= x violated")
+    call assert(smooth_min <= y, "cva (smooth_min): smooth_min <= y violated")
+end function smooth_min
+
 !pure function m_dot(cv_from, cv_to)
 !    ! Modified valve flow rate model from beater_pneumatic_2007 ch. 5.
 !    ! Modified to be differentiable.
@@ -400,28 +424,5 @@ pure function f_m_dot(p_r, b)
     f_m_dot = square((smooth_min(p_r, p_rmax) - b) / (1.0_WP - b)) &
                 * 0.5_WP * (1.0_WP + tanh((p_r - b) / p_rs))
 end function f_m_dot
-
-pure function smooth_min(x, y)
-    ! Exponential from <https://iquilezles.org/articles/smin/>.
-    ! Also see: <https://en.wikipedia.org/wiki/Smooth_maximum>
-    
-    use checks, only: assert, assert_dimension
-    use units, only: log, exp
-    
-    type(unitless), intent(in) :: x, y
-    
-    type(unitless) :: smooth_min
-    
-    type(unitless) :: k
-    
-    call assert_dimension(x%v%d, y%v%d)
-    
-    call k%v%init_const(0.01_WP, size(x%v%d))
-    
-    smooth_min = -k*log(exp(-x/k) + exp(-y/k))
-    
-    call assert(smooth_min <= x, "cva (smooth_min): smooth_min <= x violated")
-    call assert(smooth_min <= y, "cva (smooth_min): smooth_min <= y violated")
-end function smooth_min
 
 end module cva
