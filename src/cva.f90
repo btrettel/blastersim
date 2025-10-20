@@ -16,13 +16,14 @@ use units, only: si_length       => unit_p10_p00_p00_p00, &
                  si_inverse_mass => unit_p00_m10_p00_p00, &
                  si_pressure     => unit_m10_p10_m20_p00, &
                  unitless        => unit_p00_p00_p00_p00, &
-                 si_stiffness    => unit_p00_p10_m20_p00
+                 si_stiffness    => unit_p00_p10_m20_p00, &
+                 si_area         => unit_p20_p00_p00_p00
 implicit none
 private
 
 public :: p_eos, rho_eos
 public :: smooth_min
-public :: omega, laminar_factor!, m_dot
+public :: f_m_dot, g_m_dot, m_dot
 
 ! <https://en.wikipedia.org/wiki/Gas_constant>
 real(WP), public, parameter :: R_BAR = 8.31446261815324_WP ! J/(mol*K)
@@ -71,7 +72,12 @@ contains
     procedure :: set  => set
 end type cv_type
 
-! TODO: type, public :: valve_type
+type, public :: valve_type
+    type(si_area)  :: a_e ! effective area
+    type(unitless) :: b   ! critical pressure ratio
+contains
+    procedure :: m_dot => m_dot
+end type valve_type
 
 contains
 
@@ -394,7 +400,7 @@ pure function smooth_min(x, y)
     call assert(smooth_min <= y, "cva (smooth_min): smooth_min <= y violated")
 end function smooth_min
 
-pure function omega(p_r, b)
+pure function f_m_dot(p_r, b)
     ! See beater_pneumatic_2007 eq. 5.4
     ! This is a replacement for the ((p_2/p_1 - b)/(1-b))**2 term, smoothly going between the various cases.
     
@@ -403,7 +409,7 @@ pure function omega(p_r, b)
     
     type(unitless), intent(in) :: p_r, b
     
-    type(unitless) :: omega
+    type(unitless) :: f_m_dot
     
     type(unitless) :: p_rs, p_rl_ ! scales used to make function differentiable
     
@@ -412,12 +418,11 @@ pure function omega(p_r, b)
     call p_rs%v%init_const(0.01_WP, size(p_r%v%d)) ! TODO: make `p_rs` a function of `dt`
     call p_rl_%v%init_const(P_RL, size(p_r%v%d)) ! based on first part of beater_pneumatic_2007 eq. 5.4
     
-    ! TODO: Make a smooth alternative to the max function here.
-    omega = square((smooth_min(p_r, p_rl_) - b) / (1.0_WP - b)) &
+    f_m_dot = square((smooth_min(p_r, p_rl_) - b) / (1.0_WP - b)) &
                 * 0.5_WP * (1.0_WP + tanh((p_r - b) / p_rs))
-end function omega
+end function f_m_dot
 
-pure function laminar_factor(p_r)
+pure function g_m_dot(p_r)
     ! See beater_pneumatic_2007 eq. 5.4
     ! This is a replacement for the p_1 term, smoothly going between the various cases.
     
@@ -426,33 +431,51 @@ pure function laminar_factor(p_r)
     
     type(unitless), intent(in) :: p_r
     
-    type(unitless) :: laminar_factor
+    type(unitless) :: g_m_dot
     
     type(unitless) :: p_rs, p_rl_ ! scales used to make function differentiable
     
     call p_rs%v%init_const((1.0_WP - P_RL) / 10.0_WP, size(p_r%v%d)) ! TODO: make `p_rs` a function of `dt`
     call p_rl_%v%init_const(P_RL, size(p_r%v%d)) ! based on first part of beater_pneumatic_2007 eq. 5.4
     
-    laminar_factor = 0.5_WP * (1.0_WP + tanh((p_r - p_rl_) / p_rs))
+    g_m_dot = 0.5_WP * (1.0_WP + tanh((p_r - p_rl_) / p_rs))
     
-    call assert(laminar_factor%v%v >= 0.0_WP, "cva (laminar_factor): laminar_factor >= 0 violated")
-    call assert(laminar_factor%v%v <= 1.0_WP, "cva (laminar_factor): laminar_factor <= 1 violated")
-end function laminar_factor
+    call assert(g_m_dot%v%v >= 0.0_WP, "cva (g_m_dot): g_m_dot >= 0 violated")
+    call assert(g_m_dot%v%v <= 1.0_WP, "cva (g_m_dot): g_m_dot <= 1 violated")
+end function g_m_dot
 
-!pure function m_dot(cv_from, cv_to)
-!    ! Modified valve flow rate model from beater_pneumatic_2007 ch. 5.
-!    ! Modified to be differentiable.
+pure function m_dot(valve, cv_from, cv_to)
+    ! Modified valve flow rate model from beater_pneumatic_2007 ch. 5.
+    ! Modified to be differentiable.
     
-!    use units, only: si_mass_flow_rate => unit_p00_p10_m10_p00
-!    use checks, only: assert
+    use units, only: si_mass_flow_rate => unit_p00_p10_m10_p00, &
+                     si_specific_heat  => unit_p20_p00_m20_m10, &
+                     sqrt
+    use checks, only: assert, assert_dimension
     
-!    type(cv_type), intent(in) :: cv_from, cv_to
+    class(valve_type), intent(in) :: valve
+    type(cv_type), intent(in)     :: cv_from, cv_to
     
-!    type(si_mass_flow_rate) :: m_dot
+    type(si_mass_flow_rate) :: m_dot
     
-!    call assert(cv_from%p() >= cv_to%p(), "cva (m_dot): cv_from%p >= cv_to%p violated")
+    integer                :: n_d
+    type(si_specific_heat) :: r_air
+    type(unitless)         :: p_r
     
-!    m_dot = 
-!end function m_dot
+    call assert_dimension(valve%a_e%v%d, valve%b%v%d)
+    
+    call assert(cv_from%p() >= cv_to%p(), "cva (m_dot): cv_from%p >= cv_to%p violated")
+    
+    n_d = size(valve%a_e%v%d)
+    call r_air%v%init_const(R_BAR/M_AIR, n_d)
+    
+    p_r = cv_to%p() / cv_from%p()
+    call assert(p_r%v%v >  0.0_WP, "cva (m_dot): p_r > 0 violated")
+    call assert(p_r%v%v <= 0.0_WP, "cva (m_dot): p_r <= 1 violated")
+    
+    m_dot = valve%a_e * (cv_from%p() - g_m_dot(p_r) * cv_to%p()) &
+                * sqrt((1.0_WP - valve%b) / (r_air * cv_from%temp())) &
+                * sqrt(1.0_WP - f_m_dot(p_r, valve%b))
+end function m_dot
 
 end module cva

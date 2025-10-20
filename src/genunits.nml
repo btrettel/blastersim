@@ -2,19 +2,19 @@
 output_file     = "src/units.f90"
 base_units      = "m", "kg", "s", "K"
 type_definition = "type(ad)"
-use_line        = "use prec, only: WP;use fmad, only: ad, sin, cos, tan, exp, log, tanh, atanh, abs, min, max"
+use_line        = "use prec, only: WP;use fmad, only: ad, sin, cos, tan, exp, log, tanh, atanh, abs, min, max, sqrt"
 kind_parameter  = "WP"
 module_name     = "units"
 max_n_units     = 100
 
 !               m     kg    s     K
 min_exponents = -3.0, -1.0, -2.0, -1.0
-max_exponents =  3.0,  1.0,  1.0,  1.0
+max_exponents =  3.0,  1.0,  2.0,  1.0
 denominators  =    1,    1,    1,    1
 
 debug = .false.
 
-sqrt       = .false.
+sqrt       = .true.
 cbrt       = .false.
 square     = .true.
 intrinsics = .true.
