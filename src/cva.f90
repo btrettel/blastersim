@@ -22,7 +22,7 @@ private
 
 public :: p_eos, rho_eos
 public :: smooth_min
-public :: f_m_dot, g_m_dot
+public :: omega, g_m_dot!, m_dot
 
 ! <https://en.wikipedia.org/wiki/Gas_constant>
 real(WP), public, parameter :: R_BAR = 8.31446261815324_WP ! J/(mol*K)
@@ -70,6 +70,8 @@ contains
     procedure :: p    => p_cv
     procedure :: set  => set
 end type cv_type
+
+! TODO: type, public :: valve_type
 
 contains
 
@@ -392,23 +394,7 @@ pure function smooth_min(x, y)
     call assert(smooth_min <= y, "cva (smooth_min): smooth_min <= y violated")
 end function smooth_min
 
-!pure function m_dot(cv_from, cv_to)
-!    ! Modified valve flow rate model from beater_pneumatic_2007 ch. 5.
-!    ! Modified to be differentiable.
-    
-!    use units, only: si_mass_flow_rate => unit_p00_p10_m10_p00
-!    use checks, only: assert
-    
-!    type(cv_type), intent(in) :: cv_from, cv_to
-    
-!    type(si_mass_flow_rate) :: m_dot
-    
-!    call assert(cv_from%p() >= cv_to%p(), "cva (m_dot): cv_from%p >= cv_to%p violated")
-    
-    
-!end function m_dot
-
-pure function f_m_dot(p_r, b)
+pure function omega(p_r, b)
     ! See beater_pneumatic_2007 eq. 5.4
     ! This is a replacement for the ((p_2/p_1 - b)/(1-b))**2 term, smoothly going between the various cases.
     
@@ -417,7 +403,7 @@ pure function f_m_dot(p_r, b)
     
     type(unitless), intent(in) :: p_r, b
     
-    type(unitless) :: f_m_dot
+    type(unitless) :: omega
     
     type(unitless) :: p_rs, p_rl_ ! scales used to make function differentiable
     
@@ -427,9 +413,9 @@ pure function f_m_dot(p_r, b)
     call p_rl_%v%init_const(P_RL, size(p_r%v%d)) ! based on first part of beater_pneumatic_2007 eq. 5.4
     
     ! TODO: Make a smooth alternative to the max function here.
-    f_m_dot = square((smooth_min(p_r, p_rl_) - b) / (1.0_WP - b)) &
+    omega = square((smooth_min(p_r, p_rl_) - b) / (1.0_WP - b)) &
                 * 0.5_WP * (1.0_WP + tanh((p_r - b) / p_rs))
-end function f_m_dot
+end function omega
 
 pure function g_m_dot(p_r)
     ! See beater_pneumatic_2007 eq. 5.4
@@ -452,5 +438,21 @@ pure function g_m_dot(p_r)
     call assert(g_m_dot%v%v >= 0.0_WP, "cva (g_m_dot): g_m_dot >= 0 violated")
     call assert(g_m_dot%v%v <= 1.0_WP, "cva (g_m_dot): g_m_dot <= 1 violated")
 end function g_m_dot
+
+!pure function m_dot(cv_from, cv_to)
+!    ! Modified valve flow rate model from beater_pneumatic_2007 ch. 5.
+!    ! Modified to be differentiable.
+    
+!    use units, only: si_mass_flow_rate => unit_p00_p10_m10_p00
+!    use checks, only: assert
+    
+!    type(cv_type), intent(in) :: cv_from, cv_to
+    
+!    type(si_mass_flow_rate) :: m_dot
+    
+!    call assert(cv_from%p() >= cv_to%p(), "cva (m_dot): cv_from%p >= cv_to%p violated")
+    
+!    m_dot = 
+!end function m_dot
 
 end module cva

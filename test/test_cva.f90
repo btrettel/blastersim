@@ -24,7 +24,7 @@ call test_p_f0_2(tests)
 call test_temp_cv(tests)
 call test_set(tests)
 call test_smooth_min(tests)
-call test_f_m_dot(tests)
+call test_omega(tests)
 call test_g_m_dot(tests)
 
 call tests%end_tests()
@@ -333,9 +333,9 @@ subroutine test_smooth_min(tests)
     call tests%real_eq(z%v%v, 0.1_WP, "smooth_min (1)")
 end subroutine test_smooth_min
 
-subroutine test_f_m_dot(tests)
+subroutine test_omega(tests)
     use units, only: unitless => unit_p00_p00_p00_p00
-    use cva, only: f_m_dot
+    use cva, only: omega
     
     type(test_results_type), intent(in out) :: tests
     
@@ -344,16 +344,16 @@ subroutine test_f_m_dot(tests)
     call b%v%init_const(0.5_WP, 0)
     
     call p_r%v%init_const(0.0_WP, 0)
-    f = f_m_dot(p_r, b)
-    call tests%real_eq(f%v%v, 0.0_WP, "f_m_dot (1)")
+    f = omega(p_r, b)
+    call tests%real_eq(f%v%v, 0.0_WP, "omega (1)")
     
     call p_r%v%init_const(1.0_WP, 0)
-    f = f_m_dot(p_r, b)
-    call tests%real_eq(f%v%v, 1.0_WP, "f_m_dot (2)", abs_tol=0.04_WP)
-    call tests%real_lt(f%v%v, 1.0_WP, "f_m_dot (3)")
-end subroutine test_f_m_dot
+    f = omega(p_r, b)
+    call tests%real_eq(f%v%v, 1.0_WP, "omega (2)", abs_tol=0.04_WP)
+    call tests%real_lt(f%v%v, 1.0_WP, "omega (3)")
+end subroutine test_omega
 
-! TODO: Plot `f_m_dot` to test it.
+! TODO: Plot `omega` to test it.
 
 subroutine test_g_m_dot(tests)
     use units, only: unitless => unit_p00_p00_p00_p00
