@@ -37,7 +37,7 @@ subroutine test_p_eos(tests)
                      si_temperature  => unit_p00_p00_p00_p10, &
                      si_pressure     => unit_m10_p10_m20_p00
     use prec, only: WP
-    use cva, only: P_ATM, T_ATM, RHO_ATM, p_eos
+    use cva, only: P_ATM, T_ATM, RHO_ATM, AIR
     
     type(test_results_type), intent(in out) :: tests
 
@@ -48,7 +48,7 @@ subroutine test_p_eos(tests)
     call rho%v%init_const(RHO_ATM, 0)
     call temp%v%init_const(T_ATM, 0)
     
-    p = p_eos(rho, temp)
+    p = AIR%p(rho, temp)
     
     call tests%real_eq(p%v%v, P_ATM, "p_eos, atmospheric", abs_tol=1.0_WP)
 end subroutine test_p_eos
@@ -58,7 +58,7 @@ subroutine test_rho_eos(tests)
                      si_temperature  => unit_p00_p00_p00_p10, &
                      si_pressure     => unit_m10_p10_m20_p00
     use prec, only: WP
-    use cva, only: P_ATM, T_ATM, RHO_ATM, rho_eos
+    use cva, only: P_ATM, T_ATM, RHO_ATM, AIR
     
     type(test_results_type), intent(in out) :: tests
 
@@ -69,7 +69,7 @@ subroutine test_rho_eos(tests)
     call p%v%init_const(P_ATM, 0)
     call temp%v%init_const(T_ATM, 0)
     
-    rho = rho_eos(p, temp)
+    rho = AIR%rho(p, temp)
     
     call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric", abs_tol=1.0e-4_WP)
 end subroutine test_rho_eos
@@ -247,31 +247,33 @@ subroutine test_temp_cv(tests)
 end subroutine test_temp_cv
 
 subroutine test_set(tests)
-    use units, only: si_length       => unit_p10_p00_p00_p00, &
-                     si_velocity     => unit_p10_p00_m10_p00, &
-                     si_mass         => unit_p00_p10_p00_p00, &
-                     si_energy       => unit_p20_p10_m20_p00, &
-                     si_area         => unit_p20_p00_p00_p00, &
-                     si_pressure     => unit_m10_p10_m20_p00, &
-                     si_stiffness    => unit_p00_p10_m20_p00, &
-                     si_volume       => unit_p30_p00_p00_p00, &
-                     si_mass_density => unit_m30_p10_p00_p00, &
-                     si_temperature  => unit_p00_p00_p00_p10
-    use cva, only: P_ATM, T_ATM, RHO_ATM, R_BAR, M_AIR, K_AIR, cv_type
+    use units, only: si_length          => unit_p10_p00_p00_p00, &
+                     si_velocity        => unit_p10_p00_m10_p00, &
+                     si_mass            => unit_p00_p10_p00_p00, &
+                     si_energy          => unit_p20_p10_m20_p00, &
+                     si_area            => unit_p20_p00_p00_p00, &
+                     si_pressure        => unit_m10_p10_m20_p00, &
+                     si_stiffness       => unit_p00_p10_m20_p00, &
+                     si_volume          => unit_p30_p00_p00_p00, &
+                     si_mass_density    => unit_m30_p10_p00_p00, &
+                     si_temperature     => unit_p00_p00_p00_p10, &
+                     si_specific_energy => unit_p20_p00_m20_p00
+    use cva, only: P_ATM, T_ATM, RHO_ATM, AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
     type(cv_type) :: cv
     
-    type(si_length)      :: x
-    type(si_velocity)    :: x_dot
-    type(si_pressure)    :: p, p_cv
-    type(si_temperature) :: temp, temp_cv
-    type(si_area)        :: csa
-    type(si_mass)        :: m_p
-    type(si_pressure)    :: p_fs, p_fd
-    type(si_stiffness)   :: k
-    type(si_length)      :: x_z
+    type(si_length)          :: x
+    type(si_velocity)        :: x_dot
+    type(si_pressure)        :: p, p_cv
+    type(si_temperature)     :: temp, temp_cv
+    type(si_area)            :: csa
+    type(si_mass)            :: m_p
+    type(si_pressure)        :: p_fs, p_fd
+    type(si_stiffness)       :: k
+    type(si_length)          :: x_z
+    type(si_specific_energy) :: u
     
     type(si_volume)       :: vol_cv
     type(si_mass_density) :: rho_cv
@@ -311,8 +313,9 @@ subroutine test_set(tests)
     p_cv = cv%p()
     call tests%real_eq(p_cv%v%v, p%v%v, "set, p")
     
+    u = AIR%u(temp)
     call tests%real_eq(cv%m%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, m", abs_tol=1.0e-6_WP)
-    call tests%real_eq(cv%e%v%v, R_BAR*temp%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP/(M_AIR*(K_AIR - 1.0_WP)), "set, e", abs_tol=1.0_WP)
+    call tests%real_eq(cv%e%v%v, u%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, e", abs_tol=1.0_WP)
 end subroutine test_set
 
 subroutine test_smooth_min(tests)
@@ -378,5 +381,13 @@ subroutine test_g_m_dot(tests)
 end subroutine test_g_m_dot
 
 ! TODO: Plot `g_m_dot` to test it.
+
+!subroutine test_m_dot(tests)
+!    use cva, only: m_dot
+    
+!    type(test_results_type), intent(in out) :: tests
+    
+!    ! TODO: check dm_dot/ddp for dp = 0
+!end subroutine test_m_dot
 
 end program test_cva
