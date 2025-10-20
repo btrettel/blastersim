@@ -22,7 +22,7 @@ private
 
 public :: p_eos, rho_eos
 public :: smooth_min
-public :: omega, g_m_dot!, m_dot
+public :: omega, laminar_factor!, m_dot
 
 ! <https://en.wikipedia.org/wiki/Gas_constant>
 real(WP), public, parameter :: R_BAR = 8.31446261815324_WP ! J/(mol*K)
@@ -417,7 +417,7 @@ pure function omega(p_r, b)
                 * 0.5_WP * (1.0_WP + tanh((p_r - b) / p_rs))
 end function omega
 
-pure function g_m_dot(p_r)
+pure function laminar_factor(p_r)
     ! See beater_pneumatic_2007 eq. 5.4
     ! This is a replacement for the p_1 term, smoothly going between the various cases.
     
@@ -426,18 +426,18 @@ pure function g_m_dot(p_r)
     
     type(unitless), intent(in) :: p_r
     
-    type(unitless) :: g_m_dot
+    type(unitless) :: laminar_factor
     
     type(unitless) :: p_rs, p_rl_ ! scales used to make function differentiable
     
     call p_rs%v%init_const((1.0_WP - P_RL) / 10.0_WP, size(p_r%v%d)) ! TODO: make `p_rs` a function of `dt`
     call p_rl_%v%init_const(P_RL, size(p_r%v%d)) ! based on first part of beater_pneumatic_2007 eq. 5.4
     
-    g_m_dot = 0.5_WP * (1.0_WP + tanh((p_r - p_rl_) / p_rs))
+    laminar_factor = 0.5_WP * (1.0_WP + tanh((p_r - p_rl_) / p_rs))
     
-    call assert(g_m_dot%v%v >= 0.0_WP, "cva (g_m_dot): g_m_dot >= 0 violated")
-    call assert(g_m_dot%v%v <= 1.0_WP, "cva (g_m_dot): g_m_dot <= 1 violated")
-end function g_m_dot
+    call assert(laminar_factor%v%v >= 0.0_WP, "cva (laminar_factor): laminar_factor >= 0 violated")
+    call assert(laminar_factor%v%v <= 1.0_WP, "cva (laminar_factor): laminar_factor <= 1 violated")
+end function laminar_factor
 
 !pure function m_dot(cv_from, cv_to)
 !    ! Modified valve flow rate model from beater_pneumatic_2007 ch. 5.
