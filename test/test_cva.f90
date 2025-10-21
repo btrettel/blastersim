@@ -17,6 +17,7 @@ call tests%start_tests("cva.nml")
 
 call test_p_eos(tests)
 call test_rho_eos(tests)
+call test_u_h(tests)
 call test_p_f_1(tests)
 call test_p_f_2(tests)
 call test_p_f0_1(tests)
@@ -73,6 +74,27 @@ subroutine test_rho_eos(tests)
     
     call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric", abs_tol=1.0e-4_WP)
 end subroutine test_rho_eos
+
+subroutine test_u_h(tests)
+    use units, only: si_temperature     => unit_p00_p00_p00_p10, &
+                     si_specific_energy => unit_p20_p00_m20_p00
+    use prec, only: WP
+    use cva, only: AIR
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(si_temperature)     :: temp
+    type(si_specific_energy) :: u, h
+    
+    call temp%v%init_const(400.0_WP, 0)
+    
+    u = AIR%u(temp)
+    h = AIR%h(temp)
+    
+    ! Data from moran_fundamentals_2008 table A-22.
+    call tests%real_eq(u%v%v, 286.16e3_WP, "u, 400 K", abs_tol=1.0e3_WP)
+    call tests%real_eq(h%v%v, 400.98e3_WP, "h, 400 K", abs_tol=1.0e3_WP)
+end subroutine test_u_h
 
 subroutine test_p_f_1(tests)
     use units, only: si_pressure => unit_m10_p10_m20_p00
