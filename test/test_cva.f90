@@ -38,18 +38,24 @@ subroutine test_p_eos(tests)
                      si_temperature  => unit_p00_p00_p00_p10, &
                      si_pressure     => unit_m10_p10_m20_p00
     use prec, only: WP
-    use cva, only: P_ATM, T_ATM, RHO_ATM, AIR
+    use cva, only: P_ATM, T_ATM, RHO_ATM, AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
     type(si_mass_density) :: rho
     type(si_temperature)  :: temp
     type(si_pressure)     :: p
+    type(cv_type)         :: cv
     
     call rho%v%init_const(RHO_ATM, 0)
     call temp%v%init_const(T_ATM, 0)
+    call cv%m_1%v%init_const(1.0_WP, 0)
+    call cv%m_2%v%init_const(0.0_WP, 0)
     
-    p = AIR%p(rho, temp)
+    cv%gas_1 = AIR
+    cv%gas_2 = AIR
+    
+    p = cv%p_eos(rho, temp)
     
     call tests%real_eq(p%v%v, P_ATM, "p_eos, atmospheric", abs_tol=1.0_WP)
 end subroutine test_p_eos
@@ -59,18 +65,24 @@ subroutine test_rho_eos(tests)
                      si_temperature  => unit_p00_p00_p00_p10, &
                      si_pressure     => unit_m10_p10_m20_p00
     use prec, only: WP
-    use cva, only: P_ATM, T_ATM, RHO_ATM, AIR
+    use cva, only: P_ATM, T_ATM, RHO_ATM, AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
     type(si_mass_density) :: rho
     type(si_temperature)  :: temp
     type(si_pressure)     :: p
+    type(cv_type)         :: cv
     
     call p%v%init_const(P_ATM, 0)
     call temp%v%init_const(T_ATM, 0)
+    call cv%m_1%v%init_const(1.0_WP, 0)
+    call cv%m_2%v%init_const(0.0_WP, 0)
     
-    rho = AIR%rho(p, temp)
+    cv%gas_1 = AIR
+    cv%gas_2 = AIR
+    
+    rho = cv%rho_eos(p, temp)
     
     call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric", abs_tol=1.0e-4_WP)
 end subroutine test_rho_eos
@@ -251,7 +263,7 @@ end subroutine test_p_f0_2
 
 subroutine test_temp_cv(tests)
     use units, only: si_temperature => unit_p00_p00_p00_p10
-    use cva, only: cv_type
+    use cva, only: AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -259,7 +271,12 @@ subroutine test_temp_cv(tests)
     type(si_temperature) :: temp
     
     ! 1 kg of mass
-    call cv%m%v%init_const(1.0_WP, 0)
+    call cv%m_1%v%init_const(1.0_WP, 0)
+    call cv%m_2%v%init_const(0.0_WP, 0)
+    
+    ! air
+    cv%gas_1 = AIR
+    cv%gas_2 = AIR
     
     ! moran_fundamentals_2008 table A-22, 300 K with 1 kg of mass
     call cv%e%v%init_const(214.07e3_WP, 0)
@@ -271,6 +288,7 @@ end subroutine test_temp_cv
 subroutine test_set(tests)
     use units, only: si_length          => unit_p10_p00_p00_p00, &
                      si_velocity        => unit_p10_p00_m10_p00, &
+                     unitless           => unit_p00_p00_p00_p00, &
                      si_mass            => unit_p00_p10_p00_p00, &
                      si_energy          => unit_p20_p10_m20_p00, &
                      si_area            => unit_p20_p00_p00_p00, &
@@ -288,6 +306,7 @@ subroutine test_set(tests)
     
     type(si_length)          :: x
     type(si_velocity)        :: x_dot
+    type(unitless)           :: y_1
     type(si_pressure)        :: p, p_cv
     type(si_temperature)     :: temp, temp_cv
     type(si_area)            :: csa
@@ -302,6 +321,7 @@ subroutine test_set(tests)
     
     call x%v%init_const(0.5_WP, 0)
     call x_dot%v%init_const(0.5_WP, 0)
+    call y_1%v%init_const(1.0_WP, 0)
     call p%v%init_const(2.0_WP*P_ATM, 0)
     call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 0)
     call csa%v%init_const(0.1_WP, 0)
@@ -311,7 +331,7 @@ subroutine test_set(tests)
     call k%v%init_const(10.0_WP, 0)
     call x_z%v%init_const(3.0_WP, 0)
     
-    call cv%set(x, x_dot, p, temp, csa, m_p, p_fs, p_fd, k, x_z)
+    call cv%set(x, x_dot, y_1, p, temp, csa, m_p, p_fs, p_fd, k, x_z, AIR, AIR)
     
     call tests%real_eq(cv%x%v%v, x%v%v, "set, x")
     call tests%real_eq(cv%x_dot%v%v, x_dot%v%v, "set, x_dot")
@@ -336,7 +356,8 @@ subroutine test_set(tests)
     call tests%real_eq(p_cv%v%v, p%v%v, "set, p")
     
     u = AIR%u(temp)
-    call tests%real_eq(cv%m%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, m", abs_tol=1.0e-6_WP)
+    call tests%real_eq(cv%m_1%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, m_1", abs_tol=1.0e-6_WP)
+    call tests%real_eq(cv%m_2%v%v, 0.0_WP, "set, m_2")
     call tests%real_eq(cv%e%v%v, u%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, e", abs_tol=1.0_WP)
 end subroutine test_set
 
@@ -409,7 +430,7 @@ end subroutine test_g_m_dot
     
 !    type(test_results_type), intent(in out) :: tests
     
-!    ! TODO: check dm_dot/ddp for dp = 0
+!    ! TODO: test to check that m_dot \varpropto \Delta p at small \Delta p
 !end subroutine test_m_dot
 
 end program test_cva

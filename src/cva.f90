@@ -36,22 +36,44 @@ real(WP), public, parameter :: RHO_ATM = 1.2250_WP           ! kg/m3
 ! based on first part of beater_pneumatic_2007 eq. 5.4
 real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 
+type, public :: gas_type
+    real(WP) :: gamma ! ratio of specific heats, unitless
+    real(WP) :: mm    ! molar mass, kg/mol
+    real(WP) :: p_c   ! critical pressure, Pa
+contains
+    procedure :: u => u_gas
+    procedure :: h => h_gas
+    procedure, private :: c_v => c_v_gas
+    procedure, private :: c_p => c_p_gas
+    procedure, private :: r => r_gas
+end type gas_type
+
+! Specific heat ratio of air at 300 K: moran_fundamentals_2008 table A-20
+! Molecular mass of air: <https://www.engineeringtoolbox.com/molecular-mass-air-d_679.html>
+! Critical pressure of air: moran_fundamentals_2008 table A-1
+type(gas_type), public, parameter :: AIR = gas_type(1.400_WP, 28.9647e-3_WP, 37.7e5_WP)
+
 type, public :: cv_type ! control volume
     ! time varying
     type(si_length)   :: x     ! location of piston/projectile
     type(si_velocity) :: x_dot ! velocity of piston/projectile
-    type(si_mass)     :: m     ! mass of gas in control volume
+    type(si_mass)     :: m_1   ! mass of gas 1 in control volume
+    type(si_mass)     :: m_2   ! mass of gas 2 in control volume
     type(si_energy)   :: e     ! energy of gas in control volume
     
     ! constants
-    type(si_area)         :: csa        ! cross-sectional area
-    type(si_inverse_mass) :: rm_p       ! reciprocal mass of piston/projectile
-    type(si_pressure)     :: p_fs, p_fd ! static and dynamic friction pressure
-    type(si_stiffness)    :: k          ! stiffness of spring attached to piston
-    type(si_length)       :: x_z        ! zero force location for spring
+    type(si_area)         :: csa          ! cross-sectional area
+    type(si_inverse_mass) :: rm_p         ! reciprocal mass of piston/projectile
+    type(si_pressure)     :: p_fs, p_fd   ! static and dynamic friction pressure
+    type(si_stiffness)    :: k            ! stiffness of spring attached to piston
+    type(si_length)       :: x_z          ! zero force location for spring
+    type(gas_type)        :: gas_1, gas_2 ! gas data
 contains
+    procedure :: p_eos
+    procedure :: rho_eos
     procedure :: p_f
     procedure :: p_f0
+    procedure :: r    => r_cv
     procedure :: temp => temp_cv
     procedure :: vol  => vol_cv
     procedure :: rho  => rho_cv
@@ -66,84 +88,11 @@ contains
     procedure :: m_dot
 end type con_type
 
-type, public :: gas_type
-    real(WP) :: gamma ! ratio of specific heats, unitless
-    real(WP) :: m     ! molecular mass, kg/mol
-    real(WP) :: p_c   ! critical pressure, Pa
-contains
-    procedure :: p => p_eos
-    procedure :: rho => rho_eos
-    procedure :: temp => temp_from_u
-    !procedure, private :: temp_eos
-    !procedure, private :: temp_from_u
-    !generic :: temp => temp_eos, temp_from_u
-    procedure :: u => u_gas
-    procedure :: h => h_gas
-    procedure, private :: c_v => c_v_gas
-    procedure, private :: c_p => c_p_gas
-    procedure, private :: r => r_gas
-end type gas_type
-
-! Specific heat ratio of air at 300 K: moran_fundamentals_2008 table A-20
-! Molecular mass of air: <https://www.engineeringtoolbox.com/molecular-mass-air-d_679.html>
-! Critical pressure of air: moran_fundamentals_2008 table A-1
-type(gas_type), public, parameter :: AIR = gas_type(1.400_WP, 28.9647e-3_WP, 37.7e5_WP)
-
 contains
 
-pure function p_eos(gas, rho, temp)
-    ! Calculate pressure using the equation of state.
-    
-    use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
-                     si_temperature   => unit_p00_p00_p00_p10, &
-                     si_specific_heat => unit_p20_p00_m20_m10
-    use checks, only: assert, assert_dimension
-    
-    class(gas_type), intent(in)       :: gas
-    type(si_mass_density), intent(in) :: rho
-    type(si_temperature), intent(in)  :: temp
-    type(si_pressure)                 :: p_eos
-    
-    integer :: n_d ! number of derivatives
-    
-    call assert(rho%v%v  > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
-    call assert(temp%v%v > 0.0_WP, "cva (p_eos): temp%v > 0 violated")
-    call assert_dimension(rho%v%d, temp%v%d)
-    
-    n_d   = size(rho%v%d)
-    p_eos = rho * gas%r(n_d) * temp
-    
-    call assert(p_eos%v%v > 0.0_WP, "cva (p_eos): p_eos%v > 0 violated")
-    call assert(p_eos%v%v < gas%p_c, "cva (p_eos): ideal gas law validity is questionable")
-end function p_eos
-
-pure function rho_eos(gas, p, temp)
-    ! Calculate density using the equation of state.
-    ! In the future, if an EOS more complex than the ideal gas law is used, it might make sense to calculate `rho_eos` from `p_eos`
-    ! with the Newton method.
-    
-    use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
-                     si_temperature   => unit_p00_p00_p00_p10
-    use checks, only: assert, assert_dimension
-    
-    class(gas_type), intent(in)      :: gas
-    type(si_pressure), intent(in)    :: p
-    type(si_temperature), intent(in) :: temp
-    
-    type(si_mass_density) :: rho_eos
-    
-    integer :: n_d ! number of derivatives
-    
-    call assert(p%v%v    > 0.0_WP, "cva (rho_eos): p%v > 0 violated")
-    call assert(p%v%v    < gas%p_c, "cva (rho_eos): ideal gas law validity is questionable")
-    call assert(temp%v%v > 0.0_WP, "cva (rho_eos): temp%v > 0 violated")
-    call assert_dimension(p%v%d, temp%v%d)
-    
-    n_d     = size(p%v%d)
-    rho_eos = p / (gas%r(n_d) * temp)
-    
-    call assert(rho_eos%v%v > 0.0_WP, "cva (rho_eos): rho_eos%v > 0 violated")
-end function rho_eos
+!!!!!!!!!!!!!!!!!!!!!!!!!!
+! methods for `gas_type` !
+!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 pure function u_gas(gas, temp)
     ! Constant specific heats assumed for now. Will improve later.
@@ -180,6 +129,8 @@ pure function h_gas(gas, temp)
 end function h_gas
 
 pure function r_gas(gas, n_d)
+    ! Gas constant for a *pure* gas.
+    
     use units, only: si_specific_heat => unit_p20_p00_m20_m10
     
     class(gas_type), intent(in) :: gas
@@ -187,7 +138,7 @@ pure function r_gas(gas, n_d)
     
     type(si_specific_heat) :: r_gas
     
-    call r_gas%v%init_const(R_BAR/gas%m, n_d)
+    call r_gas%v%init_const(R_BAR/gas%mm, n_d)
 end function r_gas
 
 pure function c_v_gas(gas, n_d)
@@ -220,19 +171,90 @@ pure function c_p_gas(gas, n_d)
     c_p_gas = gas%gamma * gas%r(n_d) / (gas%gamma - 1.0_WP)
 end function c_p_gas
 
-pure function temp_from_u(gas, u)
-    ! Constant specific heats assumed for now. Will improve later.
+!!!!!!!!!!!!!!!!!!!!!!!!!
+! methods for `cv_type` !
+!!!!!!!!!!!!!!!!!!!!!!!!!
+
+pure function p_eos(cv, rho, temp)
+    ! Calculate pressure using the equation of state.
     
-    use units, only: si_temperature     => unit_p00_p00_p00_p10, &
-                     si_specific_energy => unit_p20_p00_m20_p00
+    use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
+                     si_temperature   => unit_p00_p00_p00_p10, &
+                     si_specific_heat => unit_p20_p00_m20_m10
+    use checks, only: assert, assert_dimension
     
-    class(gas_type), intent(in)          :: gas
-    type(si_specific_energy), intent(in) :: u
+    class(cv_type), intent(in)        :: cv
+    type(si_mass_density), intent(in) :: rho
+    type(si_temperature), intent(in)  :: temp
+    type(si_pressure)                 :: p_eos
     
-    type(si_temperature) :: temp_from_u
+    integer :: n_d ! number of derivatives
     
-    temp_from_u = u / gas%c_v(size(u%v%d))
-end function temp_from_u
+    call assert(rho%v%v  > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
+    call assert(temp%v%v > 0.0_WP, "cva (p_eos): temp%v > 0 violated")
+    call assert_dimension(rho%v%d, temp%v%d)
+    
+    n_d   = size(rho%v%d)
+    p_eos = rho * cv%r() * temp
+    
+    call assert(p_eos%v%v > 0.0_WP, "cva (p_eos): p_eos%v > 0 violated")
+    ! TODO: call assert(p_eos%v%v < gas%p_c, "cva (p_eos): ideal gas law validity is questionable")
+end function p_eos
+
+pure function rho_eos(cv, p, temp)
+    ! Calculate density using the equation of state.
+    ! In the future, if an EOS more complex than the ideal gas law is used, it might make sense to calculate `rho_eos` from `p_eos`
+    ! with the Newton method.
+    
+    use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
+                     si_temperature   => unit_p00_p00_p00_p10
+    use checks, only: assert, assert_dimension
+    
+    class(cv_type), intent(in)       :: cv
+    type(si_pressure), intent(in)    :: p
+    type(si_temperature), intent(in) :: temp
+    
+    type(si_mass_density) :: rho_eos
+    
+    integer :: n_d ! number of derivatives
+    
+    call assert(p%v%v    > 0.0_WP, "cva (rho_eos): p%v > 0 violated")
+    ! TODO: call assert(p%v%v    < gas%p_c, "cva (rho_eos): ideal gas law validity is questionable")
+    call assert(temp%v%v > 0.0_WP, "cva (rho_eos): temp%v > 0 violated")
+    call assert_dimension(p%v%d, temp%v%d)
+    
+    n_d     = size(p%v%d)
+    rho_eos = p / (cv%r() * temp)
+    
+    call assert(rho_eos%v%v > 0.0_WP, "cva (rho_eos): rho_eos%v > 0 violated")
+end function rho_eos
+
+pure function r_cv(cv)
+    ! Gas constant for a gas *mixture* in a control volume.
+    ! Some of the units are intentionally wrong here.
+    ! This is done to avoid adding mol to the unit system, which would make compilation much slower.
+    
+    use units, only: si_specific_heat => unit_p20_p00_m20_m10
+    
+    class(cv_type), intent(in) :: cv
+    
+    type(si_specific_heat) :: r_cv
+    
+    integer        :: n_d
+    type(unitless) :: chi_1, chi_2 ! mole fractions for each gas
+    type(unitless) :: mm           ! molar mass (mol/kg), not actually unitless!
+    type(si_specific_heat) :: r_bar_ ! universal gas constant, which also doesn't have the same units as specific heat!
+    
+    n_d = size(cv%m_1%v%d)
+    
+    ! <https://en.wikipedia.org/wiki/Molar_mass#Average_molar_mass_of_mixtures>
+    chi_1 = cv%m_1 / (cv%m_1 + (cv%gas_1%mm/cv%gas_2%mm)*cv%m_2)
+    chi_2 = 1.0_WP - chi_1
+    mm    = chi_1*cv%gas_1%mm + chi_2*cv%gas_2%mm
+    
+    call r_bar_%v%init_const(R_BAR, n_d)
+    r_cv = r_bar_ / mm
+end function r_cv
 
 pure function temp_cv(cv)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
@@ -244,17 +266,19 @@ pure function temp_cv(cv)
     
     type(si_temperature) :: temp_cv
     
-    type(si_specific_energy) :: u
+    integer :: n_d
     
     ! Constant specific heats assumed for now. Will improve later.
     
-    call assert(cv%m%v%v > 0.0_WP, "cva (temp_cv): cv%m > 0 violated")
+    call assert(cv%m_1%v%v >= 0.0_WP, "cva (temp_cv): cv%m_1 >= 0 violated")
+    call assert(cv%m_2%v%v >= 0.0_WP, "cva (temp_cv): cv%m_2 >= 0 violated")
+    call assert((cv%m_1%v%v + cv%m_2%v%v) > 0.0_WP, "cva (temp_cv): cv%m_1 + cv%m_2 > 0 violated")
     call assert(cv%e%v%v > 0.0_WP, "cva (temp_cv): cv%e > 0 violated")
-    call assert_dimension(cv%e%v%d, cv%m%v%d)
+    call assert_dimension(cv%e%v%d, cv%m_1%v%d)
+    call assert_dimension(cv%e%v%d, cv%m_2%v%d)
     
-    u = cv%e / cv%m
-    
-    temp_cv = AIR%temp(u)
+    n_d     = size(cv%m_1%v%d)
+    temp_cv = cv%e / (cv%m_1*cv%gas_1%c_v(n_d) + cv%m_2*cv%gas_2%c_v(n_d))
     
     call assert(temp_cv%v%v > 0.0_WP, "cva (temp_cv): temp_cv > 0 violated")
 end function temp_cv
@@ -285,12 +309,12 @@ pure function rho_cv(cv)
     class(cv_type), intent(in) :: cv
     
     type(si_mass_density) :: rho_cv
-    type(si_volume)       :: vol
     
-    call assert(cv%m%v%v > 0.0_WP, "cva (rho_cv): cv%m > 0 violated")
+    call assert(cv%m_1%v%v >= 0.0_WP, "cva (rho_cv): cv%m_1 >= 0 violated")
+    call assert(cv%m_2%v%v >= 0.0_WP, "cva (rho_cv): cv%m_2 >= 0 violated")
+    call assert((cv%m_1%v%v + cv%m_2%v%v) > 0.0_WP, "cva (rho_cv): cv%m_1 + cv%m_2 > 0 violated")
     
-    vol    = cv%vol()
-    rho_cv = cv%m / vol
+    rho_cv = (cv%m_1 + cv%m_2) / cv%vol()
     
     call assert(rho_cv%v%v > 0.0_WP, "cva (rho_cv): rho_cv > 0 violated")
 end function rho_cv
@@ -310,12 +334,12 @@ pure function p_cv(cv)
     rho  = cv%rho()
     temp = cv%temp()
     
-    p_cv = AIR%p(rho, temp)
+    p_cv = cv%p_eos(rho, temp)
     
     call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated")
 end function p_cv
 
-pure subroutine set(cv, x, x_dot, p, temp, csa, m_p, p_fs, p_fd, k, x_z)
+pure subroutine set(cv, x, x_dot, y_1, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas_1, gas_2)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
                      si_mass            => unit_p00_p10_p00_p00
     use checks, only: assert, assert_dimension
@@ -325,26 +349,32 @@ pure subroutine set(cv, x, x_dot, p, temp, csa, m_p, p_fs, p_fd, k, x_z)
     ! time varying
     type(si_length), intent(in)      :: x     ! location of piston/projectile
     type(si_velocity), intent(in)    :: x_dot ! velocity of piston/projectile
+    type(unitless), intent(in)       :: y_1   ! mass fraction of gas 1
     type(si_pressure), intent(in)    :: p     ! pressure
     type(si_temperature), intent(in) :: temp  ! temperature
     
     ! constant
-    type(si_area), intent(in)      :: csa        ! cross-sectional area
-    type(si_mass), intent(in)      :: m_p        ! mass of piston/projectile
-    type(si_pressure), intent(in)  :: p_fs, p_fd ! static and dynamic friction pressure
-    type(si_stiffness), intent(in) :: k          ! stiffness of spring attached to piston
-    type(si_length), intent(in)    :: x_z        ! zero force location for spring
+    type(si_area), intent(in)      :: csa          ! cross-sectional area
+    type(si_mass), intent(in)      :: m_p          ! mass of piston/projectile
+    type(si_pressure), intent(in)  :: p_fs, p_fd   ! static and dynamic friction pressure
+    type(si_stiffness), intent(in) :: k            ! stiffness of spring attached to piston
+    type(si_length), intent(in)    :: x_z          ! zero force location for spring
+    type(gas_type), intent(in)     :: gas_1, gas_2 ! gas data
+    
+    type(si_mass) :: m_total
     
     cv%x     = x
     cv%x_dot = x_dot
     ! `p` and `temp` will be handled below
     
-    cv%csa  = csa
-    cv%rm_p = 1.0_WP/m_p ! reciprocal mass of piston/projectile
-    cv%p_fs = p_fs
-    cv%p_fd = p_fd
-    cv%k    = k
-    cv%x_z  = x_z
+    cv%csa   = csa
+    cv%rm_p  = 1.0_WP/m_p ! reciprocal mass of piston/projectile
+    cv%p_fs  = p_fs
+    cv%p_fd  = p_fd
+    cv%k     = k
+    cv%x_z   = x_z
+    cv%gas_1 = gas_1
+    cv%gas_2 = gas_2
     
     call assert(cv%x%v%v    >  0.0_WP, "cva (set): x > 0 violated")
     call assert(p%v%v       >  0.0_WP, "cva (set): p > 0 violated")
@@ -354,16 +384,26 @@ pure subroutine set(cv, x, x_dot, p, temp, csa, m_p, p_fs, p_fd, k, x_z)
     call assert(cv%p_fd%v%v >= 0.0_WP, "cva (set): p_fd > 0 violated")
     call assert(cv%k%v%v    >= 0.0_WP, "cva (set): k >= 0 violated")
     call assert(cv%x_z%v%v  >= 0.0_WP, "cva (set): x_z >= 0 violated")
+    ! TODO: assertions for `gas_1` and `gas_2`
     
-    cv%m = cv%vol() * AIR%rho(p, temp)
+    ! TODO: `rho_eos` requires that `m_1` and `m_2` are set to calculate mole fractions!
+    ! So I first set `m_1` and `m_2` to temporary values which will get the right mole fractions.
+    cv%m_1  = y_1*m_p
+    cv%m_2  = (1.0_WP - y_1)*m_p
+    m_total = cv%vol() * cv%rho_eos(p, temp)
+    cv%m_1  = y_1*m_total
+    cv%m_2  = (1.0_WP - y_1)*m_total
     
-    cv%e = cv%m * AIR%u(temp)
+    cv%e = cv%m_1*cv%gas_1%u(temp) + cv%m_2*cv%gas_2%u(temp)
     
-    call assert(cv%m%v%v > 0.0_WP, "cva (set): cv%m > 0 violated")
+    call assert(cv%m_1%v%v >= 0.0_WP, "cva (set): cv%m_1 >= 0 violated")
+    call assert(cv%m_2%v%v >= 0.0_WP, "cva (set): cv%m_2 >= 0 violated")
+    call assert((cv%m_1%v%v + cv%m_2%v%v) > 0.0_WP, "cva (set): cv%m_1 + cv%m_2 > 0 violated")
     call assert(cv%e%v%v > 0.0_WP, "cva (set): cv%e > 0 violated")
     
     call assert_dimension(cv%x%v%d, cv%x_dot%v%d)
-    call assert_dimension(cv%x%v%d, cv%m%v%d)
+    call assert_dimension(cv%x%v%d, cv%m_1%v%d)
+    call assert_dimension(cv%x%v%d, cv%m_2%v%d)
     call assert_dimension(cv%x%v%d, cv%e%v%d)
 end subroutine set
 
@@ -437,6 +477,10 @@ pure function p_f0(cv, p_fe)
         end if
     end function p_f0_high
 end function p_f0
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!
+! methods for `con_type` !
+!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 pure function smooth_min(x, y)
     ! Exponential from <https://iquilezles.org/articles/smin/>.
@@ -533,7 +577,7 @@ pure function m_dot(con, cv_from, cv_to)
     call assert(p_r%v%v <= 0.0_WP, "cva (m_dot): p_r <= 1 violated")
     
     m_dot = con%a_e * (cv_from%p() - g_m_dot(p_r) * cv_to%p()) &
-                * sqrt((1.0_WP - con%b) / (AIR%r(n_d) * cv_from%temp())) &
+                * sqrt((1.0_WP - con%b) / (cv_from%r() * cv_from%temp())) &
                 * sqrt(1.0_WP - f_m_dot(p_r, con%b))
 end function m_dot
 
