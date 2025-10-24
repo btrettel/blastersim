@@ -182,7 +182,7 @@ pure function m_total(cv)
     type(si_mass) :: m_total
     
     m_total = cv%m_1 + cv%m_2
-end  function m_total
+end function m_total
 
 pure function p_eos(cv, rho, temp)
     ! Calculate pressure using the equation of state.
@@ -244,6 +244,7 @@ pure function r_cv(cv)
     ! This is done to avoid adding mol to the unit system, which would make compilation much slower.
     
     use units, only: si_specific_heat => unit_p20_p00_m20_m10
+    use checks, only: assert
     
     class(cv_type), intent(in) :: cv
     
@@ -256,6 +257,8 @@ pure function r_cv(cv)
     
     n_d = size(cv%m_1%v%d)
     
+    call assert_mass_energy(cv, "r_cv")
+    
     ! <https://en.wikipedia.org/wiki/Molar_mass#Average_molar_mass_of_mixtures>
     chi_1 = cv%m_1 / (cv%m_1 + (cv%gas_1%mm/cv%gas_2%mm)*cv%m_2)
     chi_2 = 1.0_WP - chi_1
@@ -263,13 +266,15 @@ pure function r_cv(cv)
     
     call r_bar_%v%init_const(R_BAR, n_d)
     r_cv = r_bar_ / mm
+    
+    call assert(r_cv%v%v > 0.0_WP, "cva (r_cv): r_cv > 0 violated")
 end function r_cv
 
 pure function temp_cv(cv)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
                      si_specific_energy => unit_p20_p00_m20_p00, &
                      si_specific_heat   => unit_p20_p00_m20_m10
-    use checks, only: assert, assert_dimension
+    use checks, only: assert
     
     class(cv_type), intent(in) :: cv
     
@@ -279,12 +284,7 @@ pure function temp_cv(cv)
     
     ! Constant specific heats assumed for now. Will improve later.
     
-    call assert(cv%m_1%v%v >= 0.0_WP, "cva (temp_cv): cv%m_1 >= 0 violated")
-    call assert(cv%m_2%v%v >= 0.0_WP, "cva (temp_cv): cv%m_2 >= 0 violated")
-    call assert((cv%m_1%v%v + cv%m_2%v%v) > 0.0_WP, "cva (temp_cv): cv%m_1 + cv%m_2 > 0 violated")
-    call assert(cv%e%v%v > 0.0_WP, "cva (temp_cv): cv%e > 0 violated")
-    call assert_dimension(cv%e%v%d, cv%m_1%v%d)
-    call assert_dimension(cv%e%v%d, cv%m_2%v%d)
+    call assert_mass_energy(cv, "temp_cv")
     
     n_d     = size(cv%m_1%v%d)
     temp_cv = cv%e / (cv%m_1*cv%gas_1%c_v(n_d) + cv%m_2*cv%gas_2%c_v(n_d))
@@ -319,11 +319,9 @@ pure function rho_cv(cv)
     
     type(si_mass_density) :: rho_cv
     
-    call assert(cv%m_1%v%v >= 0.0_WP, "cva (rho_cv): cv%m_1 >= 0 violated")
-    call assert(cv%m_2%v%v >= 0.0_WP, "cva (rho_cv): cv%m_2 >= 0 violated")
-    call assert((cv%m_1%v%v + cv%m_2%v%v) > 0.0_WP, "cva (rho_cv): cv%m_1 + cv%m_2 > 0 violated")
+    call assert_mass_energy(cv, "rho_cv")
     
-    rho_cv = (cv%m_1 + cv%m_2) / cv%vol()
+    rho_cv = cv%m_total() / cv%vol()
     
     call assert(rho_cv%v%v > 0.0_WP, "cva (rho_cv): rho_cv > 0 violated")
 end function rho_cv
@@ -399,16 +397,15 @@ pure subroutine set(cv, x, x_dot, y_1, p, temp, csa, m_p, p_fs, p_fd, k, x_z, ga
     ! So I first set `m_1` and `m_2` to temporary values which will get the right mole fractions.
     cv%m_1  = y_1*m_p
     cv%m_2  = (1.0_WP - y_1)*m_p
+    ! `e` needs to be set to avoid an assertion error.
+    call cv%e%v%init_const(1.0_WP, 0)
     m_total = cv%vol() * cv%rho_eos(p, temp)
     cv%m_1  = y_1*m_total
     cv%m_2  = (1.0_WP - y_1)*m_total
     
     cv%e = cv%m_1*cv%gas_1%u(temp) + cv%m_2*cv%gas_2%u(temp)
     
-    call assert(cv%m_1%v%v >= 0.0_WP, "cva (set): cv%m_1 >= 0 violated")
-    call assert(cv%m_2%v%v >= 0.0_WP, "cva (set): cv%m_2 >= 0 violated")
-    call assert((cv%m_1%v%v + cv%m_2%v%v) > 0.0_WP, "cva (set): cv%m_1 + cv%m_2 > 0 violated")
-    call assert(cv%e%v%v > 0.0_WP, "cva (set): cv%e > 0 violated")
+    call assert_mass_energy(cv, "set")
     
     call assert_dimension(cv%x%v%d, cv%x_dot%v%d)
     call assert_dimension(cv%x%v%d, cv%m_1%v%d)
@@ -486,6 +483,23 @@ pure function p_f0(cv, p_fe)
         end if
     end function p_f0_high
 end function p_f0
+
+pure subroutine assert_mass_energy(cv, procedure_name)
+    ! Why not make this a type-bound operator?
+    ! That would make my assertion counting Python program not count these.
+    
+    use checks, only: assert, assert_dimension
+    
+    type(cv_type), intent(in)    :: cv
+    character(len=*), intent(in) :: procedure_name
+    
+    call assert(cv%m_1%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m_1 >= 0 violated")
+    call assert(cv%m_2%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m_2 >= 0 violated")
+    call assert((cv%m_1%v%v + cv%m_2%v%v) > 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m_total > 0 violated")
+    call assert(cv%e%v%v > 0.0_WP, "cva (" // trim(procedure_name) // "): cv%e > 0 violated")
+    call assert_dimension(cv%e%v%d, cv%m_1%v%d)
+    call assert_dimension(cv%e%v%d, cv%m_2%v%d)
+end subroutine assert_mass_energy
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!
 ! methods for `con_type` !

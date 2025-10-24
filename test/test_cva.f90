@@ -71,6 +71,7 @@ subroutine test_p_eos(tests)
     call temp%v%init_const(T_ATM, 0)
     call cv%m_1%v%init_const(1.0_WP, 0)
     call cv%m_2%v%init_const(0.0_WP, 0)
+    call cv%e%v%init_const(1.0_WP, 0)
     
     cv%gas_1 = AIR
     cv%gas_2 = AIR
@@ -98,6 +99,7 @@ subroutine test_rho_eos(tests)
     call temp%v%init_const(T_ATM, 0)
     call cv%m_1%v%init_const(1.0_WP, 0)
     call cv%m_2%v%init_const(0.0_WP, 0)
+    call cv%e%v%init_const(1.0_WP, 0)
     
     cv%gas_1 = AIR
     cv%gas_2 = AIR
