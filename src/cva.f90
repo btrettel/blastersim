@@ -71,6 +71,7 @@ contains
     procedure :: m_total
     procedure :: p_eos
     procedure :: rho_eos
+    procedure :: p_c
     procedure :: r    => r_cv
     procedure :: temp => temp_cv
     procedure :: vol  => vol_cv
@@ -211,7 +212,8 @@ pure function p_eos(cv, rho, temp)
     p_eos = rho * cv%r() * temp
     
     call assert(p_eos%v%v > 0.0_WP, "cva (p_eos): p_eos%v > 0 violated")
-    ! TODO: call assert(p_eos%v%v < gas%p_c, "cva (p_eos): ideal gas law validity is questionable")
+    
+    call assert(p_eos < cv%p_c(), "cva (p_eos): ideal gas law validity is questionable")
 end function p_eos
 
 pure function rho_eos(cv, p, temp)
@@ -231,9 +233,9 @@ pure function rho_eos(cv, p, temp)
     
     integer :: n_d ! number of derivatives
     
-    call assert(p%v%v    > 0.0_WP, "cva (rho_eos): p%v > 0 violated")
-    ! TODO: call assert(p%v%v    < gas%p_c, "cva (rho_eos): ideal gas law validity is questionable")
-    call assert(temp%v%v > 0.0_WP, "cva (rho_eos): temp%v > 0 violated")
+    call assert(p%v%v    > 0.0_WP,   "cva (rho_eos): p%v > 0 violated")
+    call assert(p        < cv%p_c(), "cva (rho_eos): ideal gas law validity is questionable")
+    call assert(temp%v%v > 0.0_WP,   "cva (rho_eos): temp%v > 0 violated")
     call assert_dimension(p%v%d, temp%v%d)
     
     n_d     = size(p%v%d)
@@ -241,6 +243,33 @@ pure function rho_eos(cv, p, temp)
     
     call assert(rho_eos%v%v > 0.0_WP, "cva (rho_eos): rho_eos%v > 0 violated")
 end function rho_eos
+
+pure function p_c(cv)
+    ! Estimate critical pressure of a mixture using Kay's rule.
+    ! <https://kyleniemeyer.github.io/computational-thermo/content/mixtures/mixtures.html>
+    
+    use checks, only: assert
+    
+    class(cv_type), intent(in) :: cv
+    
+    type(si_pressure) :: p_c
+    
+    integer           :: i, j
+    type(unitless)    :: chi ! mole fraction for gas in loop
+    type(si_mass)     :: denominator
+    type(si_pressure) :: p_ci
+    
+    call p_c%v%init_const(0.0_WP, size(cv%m(1)%v%d))
+    do i = 1, size(cv%m)
+        call denominator%v%init_const(0.0_WP, size(cv%m(1)%v%d))
+        do j = 1, size(cv%m)
+            denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm)
+        end do
+        chi = cv%m(i) / denominator
+        call p_ci%v%init_const(cv%gas(i)%p_c, size(cv%m(1)%v%d))
+        p_c = p_c + chi*p_ci
+    end do
+end function p_c
 
 pure function r_cv(cv)
     ! Gas constant for a gas *mixture* in a control volume.

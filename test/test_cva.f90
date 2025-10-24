@@ -15,6 +15,12 @@ type(test_results_type) :: tests
 
 call tests%start_tests("cva.nml")
 
+! TODO: Test `set` with `y_1 /= 1.0`
+! TODO: Test `r_cv` with gas mixture.
+! TODO: Test `p_cv` with gas mixture
+! TODO: Any other procedures to test with gas mixtures?
+! TODO: check that every procedure is tested
+
 call test_m_total(tests)
 call test_p_eos(tests)
 call test_rho_eos(tests)
