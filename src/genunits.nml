@@ -5,7 +5,7 @@ type_definition = "type(ad)"
 use_line        = "use prec, only: WP;use fmad, only: ad, sin, cos, tan, exp, log, tanh, atanh, abs, min, max, sqrt"
 kind_parameter  = "WP"
 module_name     = "units"
-max_n_units     = 100
+max_n_units     = 120
 
 !               m     kg    s     K
 min_exponents = -3.0, -1.0, -2.0, -1.0
@@ -101,6 +101,12 @@ e = 2.0, 0.0, -2.0, 0.0
 label = "si_specific_heat"
 !   m    kg   s     K
 e = 2.0, 0.0, -2.0, -1.0
+/
+
+&seed_unit
+label = "si_heat_capacity"
+!   m    kg   s     K
+e = 2.0, 1.0, -2.0, -1.0
 /
 
 &seed_unit

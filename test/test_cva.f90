@@ -45,8 +45,9 @@ subroutine test_m_total(tests)
     
     type(si_mass) :: m_total
     
-    call cv%m_1%v%init_const(1.0_WP, 0)
-    call cv%m_2%v%init_const(5.0_WP, 0)
+    allocate(cv%m(2))
+    call cv%m(1)%v%init_const(1.0_WP, 0)
+    call cv%m(2)%v%init_const(5.0_WP, 0)
     
     m_total = cv%m_total()
     
@@ -69,12 +70,12 @@ subroutine test_p_eos(tests)
     
     call rho%v%init_const(RHO_ATM, 0)
     call temp%v%init_const(T_ATM, 0)
-    call cv%m_1%v%init_const(1.0_WP, 0)
-    call cv%m_2%v%init_const(0.0_WP, 0)
+    allocate(cv%m(1))
+    call cv%m(1)%v%init_const(1.0_WP, 0)
     call cv%e%v%init_const(1.0_WP, 0)
     
-    cv%gas_1 = AIR
-    cv%gas_2 = AIR
+    allocate(cv%gas(1))
+    cv%gas(1) = AIR
     
     p = cv%p_eos(rho, temp)
     
@@ -97,12 +98,12 @@ subroutine test_rho_eos(tests)
     
     call p%v%init_const(P_ATM, 0)
     call temp%v%init_const(T_ATM, 0)
-    call cv%m_1%v%init_const(1.0_WP, 0)
-    call cv%m_2%v%init_const(0.0_WP, 0)
+    allocate(cv%m(1))
+    call cv%m(1)%v%init_const(1.0_WP, 0)
     call cv%e%v%init_const(1.0_WP, 0)
     
-    cv%gas_1 = AIR
-    cv%gas_2 = AIR
+    allocate(cv%gas(1))
+    cv%gas(1) = AIR
     
     rho = cv%rho_eos(p, temp)
     
@@ -293,12 +294,12 @@ subroutine test_temp_cv(tests)
     type(si_temperature) :: temp
     
     ! 1 kg of mass
-    call cv%m_1%v%init_const(1.0_WP, 0)
-    call cv%m_2%v%init_const(0.0_WP, 0)
+    allocate(cv%m(1))
+    call cv%m(1)%v%init_const(1.0_WP, 0)
     
     ! air
-    cv%gas_1 = AIR
-    cv%gas_2 = AIR
+    allocate(cv%gas(1))
+    cv%gas(1) = AIR
     
     ! moran_fundamentals_2008 table A-22, 300 K with 1 kg of mass
     call cv%e%v%init_const(214.07e3_WP, 0)
@@ -328,7 +329,7 @@ subroutine test_set(tests)
     
     type(si_length)          :: x
     type(si_velocity)        :: x_dot
-    type(unitless)           :: y_1
+    type(unitless)           :: y(1)
     type(si_pressure)        :: p, p_cv
     type(si_temperature)     :: temp, temp_cv
     type(si_area)            :: csa
@@ -343,7 +344,7 @@ subroutine test_set(tests)
     
     call x%v%init_const(0.5_WP, 0)
     call x_dot%v%init_const(0.5_WP, 0)
-    call y_1%v%init_const(1.0_WP, 0)
+    call y(1)%v%init_const(1.0_WP, 0)
     call p%v%init_const(2.0_WP*P_ATM, 0)
     call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 0)
     call csa%v%init_const(0.1_WP, 0)
@@ -353,7 +354,7 @@ subroutine test_set(tests)
     call k%v%init_const(10.0_WP, 0)
     call x_z%v%init_const(3.0_WP, 0)
     
-    call cv%set(x, x_dot, y_1, p, temp, csa, m_p, p_fs, p_fd, k, x_z, AIR, AIR)
+    call cv%set(x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, [AIR])
     
     call tests%real_eq(cv%x%v%v, x%v%v, "set, x")
     call tests%real_eq(cv%x_dot%v%v, x_dot%v%v, "set, x_dot")
@@ -378,8 +379,7 @@ subroutine test_set(tests)
     call tests%real_eq(p_cv%v%v, p%v%v, "set, p")
     
     u = AIR%u(temp)
-    call tests%real_eq(cv%m_1%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, m_1", abs_tol=1.0e-6_WP)
-    call tests%real_eq(cv%m_2%v%v, 0.0_WP, "set, m_2")
+    call tests%real_eq(cv%m(1)%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, m(1)", abs_tol=1.0e-6_WP)
     call tests%real_eq(cv%e%v%v, u%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, e", abs_tol=1.0_WP)
 end subroutine test_set
 

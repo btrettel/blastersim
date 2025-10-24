@@ -55,19 +55,18 @@ type(gas_type), public, parameter :: AIR = gas_type(1.400_WP, 28.9647e-3_WP, 37.
 
 type, public :: cv_type ! control volume
     ! time varying
-    type(si_length)   :: x     ! location of piston/projectile
-    type(si_velocity) :: x_dot ! velocity of piston/projectile
-    type(si_mass)     :: m_1   ! mass of gas 1 in control volume
-    type(si_mass)     :: m_2   ! mass of gas 2 in control volume
-    type(si_energy)   :: e     ! energy of gas in control volume
+    type(si_length)            :: x     ! location of piston/projectile
+    type(si_velocity)          :: x_dot ! velocity of piston/projectile
+    type(si_mass), allocatable :: m(:)  ! mass(es) of gas(es) in control volume
+    type(si_energy)            :: e     ! energy of gas in control volume
     
     ! constants
-    type(si_area)         :: csa          ! cross-sectional area
-    type(si_inverse_mass) :: rm_p         ! reciprocal mass of piston/projectile
-    type(si_pressure)     :: p_fs, p_fd   ! static and dynamic friction pressure
-    type(si_stiffness)    :: k            ! stiffness of spring attached to piston
-    type(si_length)       :: x_z          ! zero force location for spring
-    type(gas_type)        :: gas_1, gas_2 ! gas data
+    type(si_area)               :: csa        ! cross-sectional area
+    type(si_inverse_mass)       :: rm_p       ! reciprocal mass of piston/projectile
+    type(si_pressure)           :: p_fs, p_fd ! static and dynamic friction pressure
+    type(si_stiffness)          :: k          ! stiffness of spring attached to piston
+    type(si_length)             :: x_z        ! zero force location for spring
+    type(gas_type), allocatable :: gas(:)     ! gas data
 contains
     procedure :: m_total
     procedure :: p_eos
@@ -181,7 +180,12 @@ pure function m_total(cv)
     
     type(si_mass) :: m_total
     
-    m_total = cv%m_1 + cv%m_2
+    integer :: i
+    
+    call m_total%v%init_const(0.0_WP, size(cv%m(1)%v%d))
+    do i = 1, size(cv%m)
+        m_total = m_total + cv%m(i)
+    end do
 end function m_total
 
 pure function p_eos(cv, rho, temp)
@@ -250,19 +254,26 @@ pure function r_cv(cv)
     
     type(si_specific_heat) :: r_cv
     
-    integer        :: n_d
-    type(unitless) :: chi_1, chi_2 ! mole fractions for each gas
-    type(unitless) :: mm           ! molar mass (mol/kg), not actually unitless!
+    integer        :: n_d, i, j
+    type(unitless) :: chi ! mole fraction for gas in loop
+    type(unitless) :: mm  ! molar mass (mol/kg), not actually unitless!
+    type(si_mass)  :: denominator
     type(si_specific_heat) :: r_bar_ ! universal gas constant, which also doesn't have the same units as specific heat!
     
-    n_d = size(cv%m_1%v%d)
+    n_d = size(cv%m(1)%v%d)
     
     call assert_mass_energy(cv, "r_cv")
     
     ! <https://en.wikipedia.org/wiki/Molar_mass#Average_molar_mass_of_mixtures>
-    chi_1 = cv%m_1 / (cv%m_1 + (cv%gas_1%mm/cv%gas_2%mm)*cv%m_2)
-    chi_2 = 1.0_WP - chi_1
-    mm    = chi_1*cv%gas_1%mm + chi_2*cv%gas_2%mm
+    call mm%v%init_const(0.0_WP, size(cv%m(1)%v%d))
+    do i = 1, size(cv%m)
+        call denominator%v%init_const(0.0_WP, size(cv%m(1)%v%d))
+        do j = 1, size(cv%m)
+            denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm)
+        end do
+        chi = cv%m(i) / denominator
+        mm  = mm + chi*cv%gas(i)%mm
+    end do
     
     call r_bar_%v%init_const(R_BAR, n_d)
     r_cv = r_bar_ / mm
@@ -272,22 +283,27 @@ end function r_cv
 
 pure function temp_cv(cv)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
-                     si_specific_energy => unit_p20_p00_m20_p00, &
-                     si_specific_heat   => unit_p20_p00_m20_m10
+                     si_heat_capacity   => unit_p20_p10_m20_m10
     use checks, only: assert
     
     class(cv_type), intent(in) :: cv
     
     type(si_temperature) :: temp_cv
     
-    integer :: n_d
+    integer :: n_d, i
+    type(si_heat_capacity) :: heat_capacity
     
     ! Constant specific heats assumed for now. Will improve later.
     
     call assert_mass_energy(cv, "temp_cv")
     
-    n_d     = size(cv%m_1%v%d)
-    temp_cv = cv%e / (cv%m_1*cv%gas_1%c_v(n_d) + cv%m_2*cv%gas_2%c_v(n_d))
+    n_d = size(cv%m(1)%v%d)
+    call heat_capacity%v%init_const(0.0_WP, n_d)
+    do i = 1, size(cv%m)
+        heat_capacity = heat_capacity + cv%m(i)*cv%gas(i)%c_v(n_d)
+    end do
+    
+    temp_cv = cv%e / heat_capacity
     
     call assert(temp_cv%v%v > 0.0_WP, "cva (temp_cv): temp_cv > 0 violated")
 end function temp_cv
@@ -346,7 +362,7 @@ pure function p_cv(cv)
     call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated")
 end function p_cv
 
-pure subroutine set(cv, x, x_dot, y_1, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas_1, gas_2)
+pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
                      si_mass            => unit_p00_p10_p00_p00
     use checks, only: assert, assert_dimension
@@ -356,32 +372,32 @@ pure subroutine set(cv, x, x_dot, y_1, p, temp, csa, m_p, p_fs, p_fd, k, x_z, ga
     ! time varying
     type(si_length), intent(in)      :: x     ! location of piston/projectile
     type(si_velocity), intent(in)    :: x_dot ! velocity of piston/projectile
-    type(unitless), intent(in)       :: y_1   ! mass fraction of gas 1
+    type(unitless), intent(in)       :: y(:)  ! mass fractions of each gas
     type(si_pressure), intent(in)    :: p     ! pressure
     type(si_temperature), intent(in) :: temp  ! temperature
     
     ! constant
-    type(si_area), intent(in)      :: csa          ! cross-sectional area
-    type(si_mass), intent(in)      :: m_p          ! mass of piston/projectile
-    type(si_pressure), intent(in)  :: p_fs, p_fd   ! static and dynamic friction pressure
-    type(si_stiffness), intent(in) :: k            ! stiffness of spring attached to piston
-    type(si_length), intent(in)    :: x_z          ! zero force location for spring
-    type(gas_type), intent(in)     :: gas_1, gas_2 ! gas data
+    type(si_area), intent(in)      :: csa        ! cross-sectional area
+    type(si_mass), intent(in)      :: m_p        ! mass of piston/projectile
+    type(si_pressure), intent(in)  :: p_fs, p_fd ! static and dynamic friction pressure
+    type(si_stiffness), intent(in) :: k          ! stiffness of spring attached to piston
+    type(si_length), intent(in)    :: x_z        ! zero force location for spring
+    type(gas_type), intent(in)     :: gas(:)     ! gas data
     
+    integer       :: i
     type(si_mass) :: m_total
     
     cv%x     = x
     cv%x_dot = x_dot
     ! `p` and `temp` will be handled below
     
-    cv%csa   = csa
-    cv%rm_p  = 1.0_WP/m_p ! reciprocal mass of piston/projectile
-    cv%p_fs  = p_fs
-    cv%p_fd  = p_fd
-    cv%k     = k
-    cv%x_z   = x_z
-    cv%gas_1 = gas_1
-    cv%gas_2 = gas_2
+    cv%csa  = csa
+    cv%rm_p = 1.0_WP/m_p ! reciprocal mass of piston/projectile
+    cv%p_fs = p_fs
+    cv%p_fd = p_fd
+    cv%k    = k
+    cv%x_z  = x_z
+    cv%gas  = gas
     
     call assert(cv%x%v%v    >  0.0_WP, "cva (set): x > 0 violated")
     call assert(p%v%v       >  0.0_WP, "cva (set): p > 0 violated")
@@ -391,25 +407,34 @@ pure subroutine set(cv, x, x_dot, y_1, p, temp, csa, m_p, p_fs, p_fd, k, x_z, ga
     call assert(cv%p_fd%v%v >= 0.0_WP, "cva (set): p_fd > 0 violated")
     call assert(cv%k%v%v    >= 0.0_WP, "cva (set): k >= 0 violated")
     call assert(cv%x_z%v%v  >= 0.0_WP, "cva (set): x_z >= 0 violated")
-    ! TODO: assertions for `gas_1` and `gas_2`
     
-    ! TODO: `rho_eos` requires that `m_1` and `m_2` are set to calculate mole fractions!
-    ! So I first set `m_1` and `m_2` to temporary values which will get the right mole fractions.
-    cv%m_1  = y_1*m_p
-    cv%m_2  = (1.0_WP - y_1)*m_p
-    ! `e` needs to be set to avoid an assertion error.
+    call assert_dimension(y, cv%gas)
+    allocate(cv%m(size(y)))
+    do i = 1, size(y)
+        call assert(gas(i)%gamma > 1.0_WP, "cva (set): gas%gamma > 1 violated")
+        call assert(gas(i)%mm    > 0.0_WP, "cva (set): gas%mm > 0 violated")
+        call assert(gas(i)%mm    < 0.1_WP, "cva (set): gas%mm < 0.1 violated") ! to catch using g/mol by mistake
+        call assert(gas(i)%p_c   > 0.0_WP, "cva (set): gas%p_c > 0 violated") ! to catch using g/mol by mistake
+        
+        ! TODO
+        ! `rho_eos` requires that `m` is to calculate mole fractions!
+        ! So I first set `m` to temporary values which will get the right mole fractions.
+        cv%m(i) = y(i)*m_p
+    end do
+    
+    ! `e` needs to be set to a temporary value to avoid an assertion error.
     call cv%e%v%init_const(1.0_WP, 0)
     m_total = cv%vol() * cv%rho_eos(p, temp)
-    cv%m_1  = y_1*m_total
-    cv%m_2  = (1.0_WP - y_1)*m_total
     
-    cv%e = cv%m_1*cv%gas_1%u(temp) + cv%m_2*cv%gas_2%u(temp)
+    ! Now set `m` to the correct values and calculate `e`
+    call cv%e%v%init_const(0.0_WP, 0)
+    do i = 1, size(y)
+        cv%m(i) = y(i)*m_total
+        cv%e    = cv%e + cv%m(i)*cv%gas(i)%u(temp)
+    end do
     
     call assert_mass_energy(cv, "set")
-    
     call assert_dimension(cv%x%v%d, cv%x_dot%v%d)
-    call assert_dimension(cv%x%v%d, cv%m_1%v%d)
-    call assert_dimension(cv%x%v%d, cv%m_2%v%d)
     call assert_dimension(cv%x%v%d, cv%e%v%d)
 end subroutine set
 
@@ -493,12 +518,17 @@ pure subroutine assert_mass_energy(cv, procedure_name)
     type(cv_type), intent(in)    :: cv
     character(len=*), intent(in) :: procedure_name
     
-    call assert(cv%m_1%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m_1 >= 0 violated")
-    call assert(cv%m_2%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m_2 >= 0 violated")
-    call assert((cv%m_1%v%v + cv%m_2%v%v) > 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m_total > 0 violated")
+    integer :: i
+    type(si_mass) :: m_total
+    
+    do i = 1, size(cv%m)
+        call assert(cv%m(i)%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m >= 0 violated")
+        call assert_dimension(cv%e%v%d, cv%m(i)%v%d)
+    end do
+    
+    m_total = cv%m_total()
+    call assert(m_total%v%v > 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m_total > 0 violated")
     call assert(cv%e%v%v > 0.0_WP, "cva (" // trim(procedure_name) // "): cv%e > 0 violated")
-    call assert_dimension(cv%e%v%d, cv%m_1%v%d)
-    call assert_dimension(cv%e%v%d, cv%m_2%v%d)
 end subroutine assert_mass_energy
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!
