@@ -69,6 +69,7 @@ type, public :: cv_type ! control volume
     type(si_length)       :: x_z          ! zero force location for spring
     type(gas_type)        :: gas_1, gas_2 ! gas data
 contains
+    procedure :: m_total
     procedure :: p_eos
     procedure :: rho_eos
     procedure :: r    => r_cv
@@ -174,6 +175,14 @@ end function c_p_gas
 !!!!!!!!!!!!!!!!!!!!!!!!!
 ! methods for `cv_type` !
 !!!!!!!!!!!!!!!!!!!!!!!!!
+
+pure function m_total(cv)
+    class(cv_type), intent(in) :: cv
+    
+    type(si_mass) :: m_total
+    
+    m_total = cv%m_1 + cv%m_2
+end  function m_total
 
 pure function p_eos(cv, rho, temp)
     ! Calculate pressure using the equation of state.

@@ -15,6 +15,7 @@ type(test_results_type) :: tests
 
 call tests%start_tests("cva.nml")
 
+call test_m_total(tests)
 call test_p_eos(tests)
 call test_rho_eos(tests)
 call test_u_h(tests)
@@ -32,6 +33,25 @@ call test_g_m_dot(tests)
 call tests%end_tests()
 
 contains
+
+subroutine test_m_total(tests)
+    use units, only: si_mass => unit_p00_p10_p00_p00
+    use prec, only: WP
+    use cva, only: cv_type
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    type(cv_type) :: cv
+    
+    type(si_mass) :: m_total
+    
+    call cv%m_1%v%init_const(1.0_WP, 0)
+    call cv%m_2%v%init_const(5.0_WP, 0)
+    
+    m_total = cv%m_total()
+    
+    call tests%real_eq(m_total%v%v, 6.0_WP, "m_total")
+end subroutine test_m_total
 
 subroutine test_p_eos(tests)
     use units, only: si_mass_density => unit_m30_p10_p00_p00, &
