@@ -73,6 +73,7 @@ contains
     procedure :: rho_eos
     procedure :: p_c
     procedure :: y
+    procedure :: chi
     procedure :: r    => r_cv
     procedure :: temp => temp_cv
     procedure :: vol  => vol_cv
@@ -273,6 +274,10 @@ pure function p_c(cv)
 end function p_c
 
 pure function y(cv)
+    ! mass fractions
+    
+    use checks, only: assert
+    
     class(cv_type), intent(in) :: cv
     
     type(unitless) :: y(size(cv%m))
@@ -283,8 +288,36 @@ pure function y(cv)
     m_total = cv%m_total()
     do i = 1, size(cv%m)
         y(i) = cv%m(i) / m_total
+        call assert(y(i)%v%v >= 0.0_WP, "cva (y): y >= 0 violated")
+        call assert(y(i)%v%v <= 1.0_WP, "cva (y): y <= 1 violated")
     end do
 end function y
+
+pure function chi(cv)
+    ! mole fractions
+    
+    use checks, only: assert
+    
+    class(cv_type), intent(in) :: cv
+    
+    type(unitless) :: chi(size(cv%m))
+    
+    integer       :: i, j
+    type(si_mass) :: denominator
+    
+    call assert(size(cv%m) >= 1, "cva (chi): size(cv%m) >= 1 violated")
+    
+    do i = 1, size(cv%m)
+        call denominator%v%init_const(0.0_WP, size(cv%m(1)%v%d))
+        do j = 1, size(cv%m)
+            denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm)
+            call assert(denominator%v%v >= 0.0_WP, "cva (chi): denominator >= 0 violated")
+        end do
+        chi(i) = cv%m(i) / denominator
+        call assert(chi(i)%v%v >= 0.0_WP, "cva (chi): chi >= 0 violated")
+        call assert(chi(i)%v%v <= 1.0_WP, "cva (chi): chi <= 1 violated")
+    end do
+end function chi
 
 pure function r_cv(cv)
     ! Gas constant for a gas *mixture* in a control volume.

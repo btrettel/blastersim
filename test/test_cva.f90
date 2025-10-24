@@ -15,6 +15,7 @@ type(test_results_type) :: tests
 
 call tests%start_tests("cva.nml")
 
+! TODO: Change `cv%gas(2)` to something other than air for `test_m_total`.
 ! TODO: Test `set` with `size(y) > 1`
 ! TODO: Test `r_cv` with gas mixture.
 ! TODO: Test `p_c` with gas mixture
@@ -44,18 +45,22 @@ subroutine test_m_total(tests)
     use units, only: si_mass  => unit_p00_p10_p00_p00, &
                      unitless => unit_p00_p00_p00_p00
     use prec, only: WP
-    use cva, only: cv_type
+    use cva, only: AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
     
     type(cv_type) :: cv
     
     type(si_mass)  :: m_total
-    type(unitless) :: y(2)
+    type(unitless) :: y(2), chi(2)
     
     allocate(cv%m(2))
     call cv%m(1)%v%init_const(1.0_WP, 0)
     call cv%m(2)%v%init_const(5.0_WP, 0)
+    
+    allocate(cv%gas(2))
+    cv%gas(1) = AIR
+    cv%gas(2) = AIR
     
     m_total = cv%m_total()
     
@@ -64,6 +69,10 @@ subroutine test_m_total(tests)
     y = cv%y()
     call tests%real_eq(y(1)%v%v, 1.0_WP/6.0_WP, "y(1)")
     call tests%real_eq(y(2)%v%v, 5.0_WP/6.0_WP, "y(2)")
+    
+    chi = cv%chi()
+    call tests%real_eq(chi(1)%v%v, 1.0_WP/6.0_WP, "chi(1)")
+    call tests%real_eq(chi(2)%v%v, 5.0_WP/6.0_WP, "chi(2)")
 end subroutine test_m_total
 
 subroutine test_p_eos(tests)
