@@ -43,9 +43,9 @@ type, public :: gas_type
 contains
     procedure :: u => u_gas
     procedure :: h => h_gas
+    procedure, private :: r   => r_gas
     procedure, private :: c_v => c_v_gas
     procedure, private :: c_p => c_p_gas
-    procedure, private :: r => r_gas
 end type gas_type
 
 ! Specific heat ratio of air at 300 K: moran_fundamentals_2008 table A-20
@@ -71,14 +71,14 @@ type, public :: cv_type ! control volume
 contains
     procedure :: p_eos
     procedure :: rho_eos
-    procedure :: p_f
-    procedure :: p_f0
     procedure :: r    => r_cv
     procedure :: temp => temp_cv
     procedure :: vol  => vol_cv
     procedure :: rho  => rho_cv
     procedure :: p    => p_cv
     procedure :: set
+    procedure :: p_f
+    procedure :: p_f0
 end type cv_type
 
 type, public :: con_type ! connection between control volumes
