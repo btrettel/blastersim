@@ -72,6 +72,7 @@ contains
     procedure :: p_eos
     procedure :: rho_eos
     procedure :: p_c
+    procedure :: y
     procedure :: r    => r_cv
     procedure :: temp => temp_cv
     procedure :: vol  => vol_cv
@@ -270,6 +271,20 @@ pure function p_c(cv)
         p_c = p_c + chi*p_ci
     end do
 end function p_c
+
+pure function y(cv)
+    class(cv_type), intent(in) :: cv
+    
+    type(unitless) :: y(size(cv%m))
+    
+    integer       :: i
+    type(si_mass) :: m_total
+    
+    m_total = cv%m_total()
+    do i = 1, size(cv%m)
+        y(i) = cv%m(i) / m_total
+    end do
+end function y
 
 pure function r_cv(cv)
     ! Gas constant for a gas *mixture* in a control volume.

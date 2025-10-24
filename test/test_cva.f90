@@ -15,9 +15,9 @@ type(test_results_type) :: tests
 
 call tests%start_tests("cva.nml")
 
-! TODO: Test `set` with `y_1 /= 1.0`
+! TODO: Test `set` with `size(y) > 1`
 ! TODO: Test `r_cv` with gas mixture.
-! TODO: Test `p_cv` with gas mixture
+! TODO: Test `p_c` with gas mixture
 ! TODO: Any other procedures to test with gas mixtures?
 ! TODO: check that every procedure is tested
 
@@ -41,7 +41,8 @@ call tests%end_tests()
 contains
 
 subroutine test_m_total(tests)
-    use units, only: si_mass => unit_p00_p10_p00_p00
+    use units, only: si_mass  => unit_p00_p10_p00_p00, &
+                     unitless => unit_p00_p00_p00_p00
     use prec, only: WP
     use cva, only: cv_type
     
@@ -49,7 +50,8 @@ subroutine test_m_total(tests)
     
     type(cv_type) :: cv
     
-    type(si_mass) :: m_total
+    type(si_mass)  :: m_total
+    type(unitless) :: y(2)
     
     allocate(cv%m(2))
     call cv%m(1)%v%init_const(1.0_WP, 0)
@@ -58,6 +60,10 @@ subroutine test_m_total(tests)
     m_total = cv%m_total()
     
     call tests%real_eq(m_total%v%v, 6.0_WP, "m_total")
+    
+    y = cv%y()
+    call tests%real_eq(y(1)%v%v, 1.0_WP/6.0_WP, "y(1)")
+    call tests%real_eq(y(2)%v%v, 5.0_WP/6.0_WP, "y(2)")
 end subroutine test_m_total
 
 subroutine test_p_eos(tests)
