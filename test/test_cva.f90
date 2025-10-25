@@ -15,12 +15,10 @@ type(test_results_type) :: tests
 
 call tests%start_tests("cva.nml")
 
-! TODO: Any other procedures to test with gas mixtures?
-! TODO: check that every procedure is tested
-
 call test_m_total(tests)
 call test_p_eos(tests)
 call test_rho_eos(tests)
+call test_r_cv(tests)
 call test_u_h(tests)
 call test_p_f_1(tests)
 call test_p_f_2(tests)
@@ -41,7 +39,6 @@ contains
 subroutine test_m_total(tests)
     use units, only: si_mass  => unit_p00_p10_p00_p00, &
                      unitless => unit_p00_p00_p00_p00
-    use prec, only: WP
     use cva, only: AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -76,7 +73,6 @@ subroutine test_p_eos(tests)
     use units, only: si_mass_density => unit_m30_p10_p00_p00, &
                      si_temperature  => unit_p00_p00_p00_p10, &
                      si_pressure     => unit_m10_p10_m20_p00
-    use prec, only: WP
     use cva, only: P_ATM, T_ATM, RHO_ATM, AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -104,7 +100,6 @@ subroutine test_rho_eos(tests)
     use units, only: si_mass_density => unit_m30_p10_p00_p00, &
                      si_temperature  => unit_p00_p00_p00_p10, &
                      si_pressure     => unit_m10_p10_m20_p00
-    use prec, only: WP
     use cva, only: P_ATM, T_ATM, RHO_ATM, AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -128,10 +123,62 @@ subroutine test_rho_eos(tests)
     call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric", abs_tol=1.0e-3_WP)
 end subroutine test_rho_eos
 
+subroutine test_r_cv(tests)
+    ! Test using ambient air.
+    
+    use units, only: si_specific_heat => unit_p20_p00_m20_m10
+    use cva, only: gas_type, CO2, cv_type
+    use checks, only: assert, is_close
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    real(WP)               :: chi(4)
+    type(cv_type)          :: cv
+    type(si_specific_heat) :: r_cv
+    
+    type(gas_type) :: N2  = gas_type(gamma = 1.400_WP, &
+                                     u_0   = 28.01e-3_WP*6229.0e3_WP, &
+                                     h_0   = 28.01e-3_WP*8723.0e3_WP, &
+                                     mm    = 28.01e-3_WP, &
+                                     p_c   = 33.9e5_WP)
+    type(gas_type) :: O2  = gas_type(gamma = 1.395_WP, &
+                                     u_0   = 6242.0e3_WP, &
+                                     h_0   = 8736.0e3_WP, &
+                                     mm    = 32.0e-3_WP, &
+                                     p_c   = 50.5e5_WP)
+    
+    ! `gamma`, `u_0`, `h_0` from <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/Ar> ("Fluid Properties")
+    type(gas_type) :: AR  = gas_type(gamma = 0.52154_WP/0.31239_WP, &
+                                     u_0   = 155.90e3_WP, &
+                                     h_0   = 93.497e3_WP, &
+                                     mm    = 39.94e-3_WP, &
+                                     p_c   = 48.6e5_WP)
+    
+    chi(1) = 0.7808_WP ! N2
+    chi(2) = 0.2095_WP ! O2
+    chi(3) = 0.0093_WP ! Ar
+    chi(4) = 0.0004_WP ! CO2
+    
+    call assert(is_close(sum(chi), 1.0_WP), "test_cva (test_r_cv): chi array doesn't sum to 1")
+    
+    cv%gas = [N2, O2, AR, CO2]
+    
+    allocate(cv%m(4))
+    call cv%m(1)%v%init_const(chi(1)*cv%gas(1)%mm, 0)
+    call cv%m(2)%v%init_const(chi(2)*cv%gas(2)%mm, 0)
+    call cv%m(3)%v%init_const(chi(3)*cv%gas(3)%mm, 0)
+    call cv%m(4)%v%init_const(chi(4)*cv%gas(4)%mm, 0)
+    
+    ! Needed to avoid an assertion failing.
+    call cv%e%v%init_const(1.0_WP, 0)
+    
+    r_cv = cv%r()
+    call tests%real_eq(r_cv%v%v, 0.2870e3_WP, "cv%r for mixture", abs_tol=0.1_WP)
+end subroutine test_r_cv
+
 subroutine test_u_h(tests)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
                      si_specific_energy => unit_p20_p00_m20_p00
-    use prec, only: WP
     use cva, only: AIR
     
     type(test_results_type), intent(in out) :: tests
@@ -536,8 +583,6 @@ subroutine test_set_2(tests)
     ! Multiplied by 10 due to adjustment made above to avoid triggering ideal gas law validity check.
     p_c_cv = cv%p_c()
     call tests%real_eq(p_c_cv%v%v, 10.0_WP*41.33e5_WP, "set 2, p_c", abs_tol=1000.0_WP)
-    
-    ! TODO: Test `r_cv` with gas mixture
 end subroutine test_set_2
 
 subroutine test_smooth_min(tests)
