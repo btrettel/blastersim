@@ -22,6 +22,8 @@ On Windows you can type (if using jom):
 
     jom blastersim.exe
 
+Note that compilation of BlasterSim can be slow.
+
 Now a BlasterSim executable has been built and can be placed appropriately as discussed in the "From the binary" section.
 
 ## From Git

@@ -36,8 +36,12 @@ real(WP), public, parameter :: RHO_ATM = 1.2250_WP           ! kg/m3
 ! based on first part of beater_pneumatic_2007 eq. 5.4
 real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 
+real(WP), public, parameter :: TEMP_0 = 300.0_WP ! K, temperature that `gamma`, `u_0`, and `h_0` are taken at in `gas_type`
+
 type, public :: gas_type
     real(WP) :: gamma ! ratio of specific heats, unitless
+    real(WP) :: u_0   ! internal energy at `TEMP_0`, J/kg
+    real(WP) :: h_0   ! enthalphy at `TEMP_0`, J/kg
     real(WP) :: mm    ! molar mass, kg/mol
     real(WP) :: p_c   ! critical pressure, Pa
 contains
@@ -48,10 +52,20 @@ contains
     procedure, private :: c_p => c_p_gas
 end type gas_type
 
-! Specific heat ratio of air at 300 K: moran_fundamentals_2008 table A-20
-! Molecular mass of air: <https://www.engineeringtoolbox.com/molecular-mass-air-d_679.html>
-! Critical pressure of air: moran_fundamentals_2008 table A-1
-type(gas_type), public, parameter :: AIR = gas_type(1.400_WP, 28.9647e-3_WP, 37.7e5_WP)
+! Molecular mass and critical pressure: moran_fundamentals_2008 table A-1
+! Specific heat ratios: moran_fundamentals_2008 table A-20
+! Internal energy and enthalpy of air: moran_fundamentals_2008 table A-22
+! Internal energy and enthalpy of CO2: moran_fundamentals_2008 table A-23
+type(gas_type), public, parameter :: AIR = gas_type(gamma = 1.400_WP, &
+                                                    u_0   = 214.07e3_WP, &
+                                                    h_0   = 300.19e3_WP, &
+                                                    mm    = 28.97e-3_WP, &
+                                                    p_c   = 37.7e5_WP)
+type(gas_type), public, parameter :: CO2 = gas_type(gamma = 1.288_WP, &
+                                                    u_0   = 44.01e-3_WP*6939.0e3_WP, &
+                                                    h_0   = 44.01e-3_WP*9431.0e3_WP, &
+                                                    mm    = 44.01e-3_WP, &
+                                                    p_c   = 73.9e5_WP)
 
 type, public :: cv_type ! control volume
     ! time varying
@@ -106,12 +120,15 @@ pure function u_gas(gas, temp)
     class(gas_type), intent(in)      :: gas
     type(si_temperature), intent(in) :: temp
     
-    type(si_specific_energy) :: u_gas
+    type(si_specific_energy) :: u_gas, u_0
+    type(si_temperature)     :: temp_0_
     
     integer :: n_d ! number of derivatives
     
-    n_d   = size(temp%v%d)
-    u_gas = gas%c_v(n_d) * temp
+    n_d = size(temp%v%d)
+    call temp_0_%v%init_const(TEMP_0, n_d)
+    call u_0%v%init_const(gas%u_0, n_d)
+    u_gas = u_0 + gas%c_v(n_d) * (temp - temp_0_)
 end function u_gas
 
 pure function h_gas(gas, temp)
@@ -123,12 +140,15 @@ pure function h_gas(gas, temp)
     class(gas_type), intent(in)      :: gas
     type(si_temperature), intent(in) :: temp
     
-    type(si_specific_energy) :: h_gas
+    type(si_specific_energy) :: h_gas, h_0
+    type(si_temperature)     :: temp_0_
     
     integer :: n_d ! number of derivatives
     
-    n_d   = size(temp%v%d)
-    h_gas = gas%c_p(n_d) * temp
+    n_d = size(temp%v%d)
+    call temp_0_%v%init_const(TEMP_0, n_d)
+    call h_0%v%init_const(gas%h_0, n_d)
+    h_gas = h_0 + gas%c_p(n_d) * (temp - temp_0_)
 end function h_gas
 
 pure function r_gas(gas, n_d)
@@ -248,7 +268,7 @@ end function rho_eos
 
 pure function p_c(cv)
     ! Estimate critical pressure of a mixture using Kay's rule.
-    ! <https://kyleniemeyer.github.io/computational-thermo/content/mixtures/mixtures.html>
+    ! moran_fundamentals_2008 p. 613, eq. 11.97
     
     use checks, only: assert
     
@@ -339,7 +359,7 @@ pure function r_cv(cv)
     
     n_d = size(cv%m(1)%v%d)
     
-    call assert_mass_energy(cv, "r_cv")
+    call assert_mass(cv, "r_cv")
     
     ! <https://en.wikipedia.org/wiki/Molar_mass#Average_molar_mass_of_mixtures>
     call mm%v%init_const(0.0_WP, size(cv%m(1)%v%d))
@@ -360,7 +380,8 @@ end function r_cv
 
 pure function temp_cv(cv)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
-                     si_heat_capacity   => unit_p20_p10_m20_m10
+                     si_heat_capacity   => unit_p20_p10_m20_m10, &
+                     si_specific_energy => unit_p20_p00_m20_p00
     use checks, only: assert
     
     class(cv_type), intent(in) :: cv
@@ -368,19 +389,26 @@ pure function temp_cv(cv)
     type(si_temperature) :: temp_cv
     
     integer :: n_d, i
-    type(si_heat_capacity) :: heat_capacity
+    type(si_energy)          :: e_0
+    type(si_specific_energy) :: u_0
+    type(si_heat_capacity)   :: heat_capacity
+    type(si_temperature)     :: temp_0_
     
     ! Constant specific heats assumed for now. Will improve later.
     
-    call assert_mass_energy(cv, "temp_cv")
+    call assert_mass(cv, "temp_cv")
     
     n_d = size(cv%m(1)%v%d)
+    call e_0%v%init_const(0.0_WP, n_d)
     call heat_capacity%v%init_const(0.0_WP, n_d)
     do i = 1, size(cv%m)
+        call u_0%v%init_const(cv%gas(i)%u_0, n_d)
+        e_0           = e_0           + cv%m(i)*u_0
         heat_capacity = heat_capacity + cv%m(i)*cv%gas(i)%c_v(n_d)
     end do
     
-    temp_cv = cv%e / heat_capacity
+    call temp_0_%v%init_const(TEMP_0, n_d)
+    temp_cv = temp_0_ + (cv%e - e_0) / heat_capacity
     
     call assert(temp_cv%v%v > 0.0_WP, "cva (temp_cv): temp_cv > 0 violated")
 end function temp_cv
@@ -412,7 +440,7 @@ pure function rho_cv(cv)
     
     type(si_mass_density) :: rho_cv
     
-    call assert_mass_energy(cv, "rho_cv")
+    call assert_mass(cv, "rho_cv")
     
     rho_cv = cv%m_total() / cv%vol()
     
@@ -510,7 +538,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
         cv%e    = cv%e + cv%m(i)*cv%gas(i)%u(temp)
     end do
     
-    call assert_mass_energy(cv, "set")
+    call assert_mass(cv, "set")
     call assert_dimension(cv%x%v%d, cv%x_dot%v%d)
     call assert_dimension(cv%x%v%d, cv%e%v%d)
 end subroutine set
@@ -586,17 +614,20 @@ pure function p_f0(cv, p_fe)
     end function p_f0_high
 end function p_f0
 
-pure subroutine assert_mass_energy(cv, procedure_name)
+pure subroutine assert_mass(cv, procedure_name)
     ! Why not make this a type-bound operator?
     ! That would make my assertion counting Python program not count these.
     
+    use units, only: si_temperature => unit_p00_p00_p00_p10
     use checks, only: assert, assert_dimension
     
     type(cv_type), intent(in)    :: cv
     character(len=*), intent(in) :: procedure_name
     
-    integer :: i
+    integer       :: i
     type(si_mass) :: m_total
+    
+    call assert(len(trim(procedure_name)) > 0, "cva (assert_mass): procedure name should not be empty")
     
     do i = 1, size(cv%m)
         call assert(cv%m(i)%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m >= 0 violated")
@@ -605,8 +636,14 @@ pure subroutine assert_mass_energy(cv, procedure_name)
     
     m_total = cv%m_total()
     call assert(m_total%v%v > 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m_total > 0 violated")
-    call assert(cv%e%v%v > 0.0_WP, "cva (" // trim(procedure_name) // "): cv%e > 0 violated")
-end subroutine assert_mass_energy
+    
+    ! I would also check that `cv%e` is positive here, but...
+    ! Strictly speaking, the people making the thermodynamic tables might not have made internal energy always positive.
+    ! Given that, violating `cv%e > 0` might be okay.
+    ! So I'm making the assertion based on temperature as that should always be positive.
+    ! I can't put this assertion here because it would make this a recursive subroutine.
+    ! The assertion in `temp_cv` is sufficient.
+end subroutine assert_mass
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!
 ! methods for `con_type` !

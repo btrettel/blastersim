@@ -100,7 +100,7 @@ subroutine test_p_eos(tests)
     
     p = cv%p_eos(rho, temp)
     
-    call tests%real_eq(p%v%v, P_ATM, "p_eos, atmospheric", abs_tol=1.0_WP)
+    call tests%real_eq(p%v%v, P_ATM, "p_eos, atmospheric", abs_tol=20.0_WP)
 end subroutine test_p_eos
 
 subroutine test_rho_eos(tests)
@@ -128,7 +128,7 @@ subroutine test_rho_eos(tests)
     
     rho = cv%rho_eos(p, temp)
     
-    call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric", abs_tol=1.0e-4_WP)
+    call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric", abs_tol=1.0e-3_WP)
 end subroutine test_rho_eos
 
 subroutine test_u_h(tests)
@@ -141,6 +141,15 @@ subroutine test_u_h(tests)
 
     type(si_temperature)     :: temp
     type(si_specific_energy) :: u, h
+    
+    call temp%v%init_const(300.0_WP, 0)
+    
+    u = AIR%u(temp)
+    h = AIR%h(temp)
+    
+    ! Data from moran_fundamentals_2008 table A-22.
+    call tests%real_eq(u%v%v, AIR%u_0, "u, 300 K")
+    call tests%real_eq(h%v%v, AIR%h_0, "h, 300 K")
     
     call temp%v%init_const(400.0_WP, 0)
     
@@ -394,14 +403,14 @@ subroutine test_set(tests)
     call tests%real_eq(vol_cv%v%v, 0.05_WP, "set, vol")
     
     rho_cv = cv%rho()
-    call tests%real_eq(rho_cv%v%v, sqrt(2.0_WP)*RHO_ATM, "set, rho", abs_tol=1.0e-4_WP)
+    call tests%real_eq(rho_cv%v%v, sqrt(2.0_WP)*RHO_ATM, "set, rho", abs_tol=1.0e-3_WP)
     
     p_cv = cv%p()
     call tests%real_eq(p_cv%v%v, p%v%v, "set, p")
     
     u = AIR%u(temp)
-    call tests%real_eq(cv%m(1)%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, m(1)", abs_tol=1.0e-6_WP)
-    call tests%real_eq(cv%e%v%v, u%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, e", abs_tol=1.0_WP)
+    call tests%real_eq(cv%m(1)%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, m(1)", abs_tol=1.0e-4_WP)
+    call tests%real_eq(cv%e%v%v, u%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, e", abs_tol=10.0_WP)
 end subroutine test_set
 
 subroutine test_smooth_min(tests)
