@@ -272,7 +272,7 @@ pure function p_c(cv)
     ! Estimate critical pressure of a mixture using Kay's rule.
     ! moran_fundamentals_2008 p. 613, eq. 11.97
     
-    use checks, only: assert
+    use checks, only: assert, is_close
     
     class(cv_type), intent(in) :: cv
     
@@ -282,8 +282,10 @@ pure function p_c(cv)
     type(unitless)    :: chi ! mole fraction for gas in loop
     type(si_mass)     :: denominator
     type(si_pressure) :: p_ci
+    type(unitless)    :: chi_sum
     
     call p_c%v%init_const(0.0_WP, size(cv%m(1)%v%d))
+    call chi_sum%v%init_const(0.0_WP, size(cv%m(1)%v%d))
     do i = 1, size(cv%m)
         call denominator%v%init_const(0.0_WP, size(cv%m(1)%v%d))
         do j = 1, size(cv%m)
@@ -292,7 +294,10 @@ pure function p_c(cv)
         chi = cv%m(i) / denominator
         call p_ci%v%init_const(cv%gas(i)%p_c, size(cv%m(1)%v%d))
         p_c = p_c + chi*p_ci
+        chi_sum = chi_sum + chi
     end do
+    
+    call assert(is_close(chi_sum%v%v, 1.0_WP), "cva (p_c): chi does not sum to 1")
 end function p_c
 
 pure function y(cv)
@@ -357,7 +362,7 @@ pure function r_cv(cv)
     ! This is done to avoid adding mol to the unit system, which would make compilation much slower.
     
     use units, only: si_specific_heat => unit_p20_p00_m20_m10
-    use checks, only: assert
+    use checks, only: assert, is_close
     
     class(cv_type), intent(in) :: cv
     
@@ -368,6 +373,7 @@ pure function r_cv(cv)
     type(unitless) :: mm  ! molar mass (mol/kg), not actually unitless!
     type(si_mass)  :: denominator
     type(si_specific_heat) :: r_bar_ ! universal gas constant, which also doesn't have the same units as specific heat!
+    type(unitless) :: chi_sum
     
     n_d = size(cv%m(1)%v%d)
     
@@ -375,12 +381,14 @@ pure function r_cv(cv)
     
     ! <https://en.wikipedia.org/wiki/Molar_mass#Average_molar_mass_of_mixtures>
     call mm%v%init_const(0.0_WP, size(cv%m(1)%v%d))
+    call chi_sum%v%init_const(0.0_WP, size(cv%m(1)%v%d))
     do i = 1, size(cv%m)
         call denominator%v%init_const(0.0_WP, size(cv%m(1)%v%d))
         do j = 1, size(cv%m)
             denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm)
         end do
         chi = cv%m(i) / denominator
+        chi_sum = chi_sum + chi
         mm  = mm + chi*cv%gas(i)%mm
     end do
     
@@ -388,6 +396,7 @@ pure function r_cv(cv)
     r_cv = r_bar_ / mm
     
     call assert(r_cv%v%v > 0.0_WP, "cva (r_cv): r_cv > 0 violated")
+    call assert(is_close(chi_sum%v%v, 1.0_WP), "cva (r_cv): chi does not sum to 1")
 end function r_cv
 
 pure function temp_cv(cv)
@@ -539,7 +548,6 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
         call assert(gas(i)%mm    < 0.1_WP, "cva (set): gas%mm < 0.1 violated") ! to catch using g/mol by mistake
         call assert(gas(i)%p_c   > 0.0_WP, "cva (set): gas%p_c > 0 violated") ! to catch using g/mol by mistake
         
-        ! TODO
         ! `rho_eos` requires that `m` is to calculate mole fractions!
         ! So I first set `m` to temporary values which will get the right mole fractions.
         cv%m(i) = y(i)*m_p

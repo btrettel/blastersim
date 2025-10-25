@@ -15,8 +15,6 @@ type(test_results_type) :: tests
 
 call tests%start_tests("cva.nml")
 
-! TODO: Test `r_cv` with gas mixture.
-! TODO: Test `p_c` with gas mixture
 ! TODO: Any other procedures to test with gas mixtures?
 ! TODO: check that every procedure is tested
 
@@ -448,10 +446,10 @@ subroutine test_set_2(tests)
     type(si_length)      :: x
     type(si_velocity)    :: x_dot
     type(unitless)       :: y(2), chi_cv(2), y_cv(2)
-    type(si_pressure)    :: p, p_cv
+    type(si_pressure)    :: p, p_cv, p_c_cv
     type(si_temperature) :: temp, temp_cv
     type(si_area)        :: csa
-    type(si_mass)        :: m_p
+    type(si_mass)        :: m_p, m_total
     type(si_pressure)    :: p_fs, p_fd
     type(si_stiffness)   :: k
     type(si_length)      :: x_z
@@ -506,8 +504,14 @@ subroutine test_set_2(tests)
     
     call cv%set(x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
     
-    call tests%real_eq(cv%m(1)%v%v, m(1), "set 2, cv%m(1)")
-    call tests%real_eq(cv%m(2)%v%v, m(2), "set 2, cv%m(2)")
+    ! All the masses are slightly off. This is expected, as total mass is not an input here.
+    ! Pressure is the input setting the total mass, and it's only approximate.
+    call tests%real_eq(cv%m(1)%v%v, m(1), "set 2, cv%m(1)", abs_tol=1.0e-1_WP)
+    call tests%real_eq(cv%m(2)%v%v, m(2), "set 2, cv%m(2)", abs_tol=1.0e-1_WP)
+    m_total = cv%m_total()
+    call tests%real_eq(m_total%v%v, m(1) + m(2), "set 2, cv%m_total", abs_tol=1.0e-1_WP)
+    m_total = cv%vol() * cv%rho_eos(p, temp)
+    call tests%real_eq(m_total%v%v, m(1) + m(2), "set 2, alt m_total", abs_tol=1.0e-1_WP)
     
     ! p. 616: mole fractions, book is probably only accurate to 3 decimal points
     chi_cv = cv%chi()
@@ -527,6 +531,13 @@ subroutine test_set_2(tests)
     
     p_cv = cv%p()
     call tests%real_eq(p_cv%v%v, p%v%v, "set 2, p")
+    
+    ! p. 616: critical pressure
+    ! Multiplied by 10 due to adjustment made above to avoid triggering ideal gas law validity check.
+    p_c_cv = cv%p_c()
+    call tests%real_eq(p_c_cv%v%v, 10.0_WP*41.33e5_WP, "set 2, p_c", abs_tol=1000.0_WP)
+    
+    ! TODO: Test `r_cv` with gas mixture
 end subroutine test_set_2
 
 subroutine test_smooth_min(tests)
