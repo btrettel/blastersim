@@ -15,7 +15,6 @@ type(test_results_type) :: tests
 
 call tests%start_tests("cva.nml")
 
-! TODO: Change `cv%gas(2)` to something other than air for `test_m_total`.
 ! TODO: Test `set` with `size(y) > 1`
 ! TODO: Test `r_cv` with gas mixture.
 ! TODO: Test `p_c` with gas mixture
@@ -31,7 +30,8 @@ call test_p_f_2(tests)
 call test_p_f0_1(tests)
 call test_p_f0_2(tests)
 call test_temp_cv(tests)
-call test_set(tests)
+call test_set_1(tests)
+! TODO: call test_set_2(tests)
 call test_smooth_min(tests)
 call test_f_m_dot(tests)
 call test_g_m_dot(tests)
@@ -347,7 +347,7 @@ subroutine test_temp_cv(tests)
     call tests%real_eq(temp%v%v, 300.0_WP, "temp_cv (qualitative)", abs_tol=5.0_WP)
 end subroutine test_temp_cv
 
-subroutine test_set(tests)
+subroutine test_set_1(tests)
     use units, only: si_length          => unit_p10_p00_p00_p00, &
                      si_velocity        => unit_p10_p00_m10_p00, &
                      unitless           => unit_p00_p00_p00_p00, &
@@ -422,7 +422,74 @@ subroutine test_set(tests)
     u = AIR%u(temp)
     call tests%real_eq(cv%m(1)%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, m(1)", abs_tol=1.0e-4_WP)
     call tests%real_eq(cv%e%v%v, u%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, e", abs_tol=10.0_WP)
-end subroutine test_set
+end subroutine test_set_1
+
+!subroutine test_set_2(tests)
+!    ! Intended to test gas mixtures.
+!    ! Based on moran_fundamentals_2008 example 11.10, pp. 615--617.
+    
+!    use units, only: si_length          => unit_p10_p00_p00_p00, &
+!                     si_velocity        => unit_p10_p00_m10_p00, &
+!                     unitless           => unit_p00_p00_p00_p00, &
+!                     si_mass            => unit_p00_p10_p00_p00, &
+!                     si_energy          => unit_p20_p10_m20_p00, &
+!                     si_area            => unit_p20_p00_p00_p00, &
+!                     si_pressure        => unit_m10_p10_m20_p00, &
+!                     si_stiffness       => unit_p00_p10_m20_p00, &
+!                     si_volume          => unit_p30_p00_p00_p00, &
+!                     si_mass_density    => unit_m30_p10_p00_p00, &
+!                     si_temperature     => unit_p00_p00_p00_p10, &
+!                     si_specific_energy => unit_p20_p00_m20_p00
+!    use cva, only: TEMP_C_TO_K, gas_type, cv_type
+    
+!    type(test_results_type), intent(in out) :: tests
+
+!    type(cv_type) :: cv
+    
+!    type(si_length)          :: x
+!    type(si_velocity)        :: x_dot
+!    type(unitless)           :: y(2)
+!    type(si_pressure)        :: p, p_cv
+!    type(si_temperature)     :: temp, temp_cv
+!    type(si_area)            :: csa
+!    type(si_mass)            :: m_p
+!    type(si_pressure)        :: p_fs, p_fd
+!    type(si_stiffness)       :: k
+!    type(si_length)          :: x_z
+!    type(gas_type)           :: gas(2)
+!    type(si_specific_energy) :: u
+    
+!    type(si_volume)       :: vol_cv
+!    type(si_mass_density) :: rho_cv
+    
+!    ! TODO: > 0.18 kmol of methane (CH4) and 0.274 of butane (C4H10)
+!    call y(1)%v%init_const(_WP, 0)
+!    call y(2)%v%init_const(_WP, 0)
+!    gas(1) = gas_type(...)
+!    gas(2) = gas_type(...)
+    
+!    ! > volume of 0.241 m3
+!    call x%v%init_const(0.241_WP, 0)
+!    call csa%v%init_const(1.0_WP, 0)
+    
+!    ! > pressure is 68.9 bar
+!    call p%v%init_const(68.9e5, 0)
+    
+!    ! > temperature of 238 C
+!    call temp%v%init_const(TEMP_C_TO_K + 238, 0)
+    
+!    ! These are zeroed as they are irrelevant to this test.
+!    call x_dot%v%init_const(0.0_WP, 0)
+!    call m_p%v%init_const(0.0_WP, 0)
+!    call p_fs%v%init_const(0.0_WP, 0)
+!    call p_fd%v%init_const(0.0_WP, 0)
+!    call k%v%init_const(0.0_WP, 0)
+!    call x_z%v%init_const(0.0_WP, 0)
+    
+!    call cv%set(x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
+    
+    
+!end subroutine test_set_2
 
 subroutine test_smooth_min(tests)
     use units, only: unitless => unit_p00_p00_p00_p00

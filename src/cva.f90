@@ -36,6 +36,8 @@ real(WP), public, parameter :: RHO_ATM = 1.2250_WP           ! kg/m3
 ! based on first part of beater_pneumatic_2007 eq. 5.4
 real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 
+real(WP), public, parameter :: TEMP_C_TO_K = 273.15_WP ! K, temperature to add to convert from C to K
+
 real(WP), public, parameter :: TEMP_0 = 300.0_WP ! K, temperature that `gamma`, `u_0`, and `h_0` are taken at in `gas_type`
 
 type, public :: gas_type
@@ -296,47 +298,57 @@ end function p_c
 pure function y(cv)
     ! mass fractions
     
-    use checks, only: assert
+    use checks, only: assert, is_close
     
     class(cv_type), intent(in) :: cv
     
     type(unitless) :: y(size(cv%m))
     
-    integer       :: i
-    type(si_mass) :: m_total
+    integer        :: i
+    type(si_mass)  :: m_total
+    type(unitless) :: y_sum
     
+    call y_sum%v%init_const(0.0_WP, size(cv%m(1)%v%d))
     m_total = cv%m_total()
     do i = 1, size(cv%m)
-        y(i) = cv%m(i) / m_total
+        y(i)  = cv%m(i) / m_total
+        y_sum = y_sum + y(i)
         call assert(y(i)%v%v >= 0.0_WP, "cva (y): y >= 0 violated")
         call assert(y(i)%v%v <= 1.0_WP, "cva (y): y <= 1 violated")
     end do
+    
+    call assert(is_close(y_sum%v%v, 1.0_WP), "cva (y): y does not sum to 1")
 end function y
 
 pure function chi(cv)
     ! mole fractions
     
-    use checks, only: assert
+    use checks, only: assert, is_close
     
     class(cv_type), intent(in) :: cv
     
     type(unitless) :: chi(size(cv%m))
     
-    integer       :: i, j
-    type(si_mass) :: denominator
+    integer        :: i, j
+    type(si_mass)  :: denominator
+    type(unitless) :: chi_sum
     
     call assert(size(cv%m) >= 1, "cva (chi): size(cv%m) >= 1 violated")
     
+    call chi_sum%v%init_const(0.0_WP, size(cv%m(1)%v%d))
     do i = 1, size(cv%m)
         call denominator%v%init_const(0.0_WP, size(cv%m(1)%v%d))
         do j = 1, size(cv%m)
             denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm)
             call assert(denominator%v%v >= 0.0_WP, "cva (chi): denominator >= 0 violated")
         end do
-        chi(i) = cv%m(i) / denominator
+        chi(i)  = cv%m(i) / denominator
+        chi_sum = chi_sum + chi(i)
         call assert(chi(i)%v%v >= 0.0_WP, "cva (chi): chi >= 0 violated")
         call assert(chi(i)%v%v <= 1.0_WP, "cva (chi): chi <= 1 violated")
     end do
+    
+    call assert(is_close(chi_sum%v%v, 1.0_WP), "cva (chi): chi does not sum to 1")
 end function chi
 
 pure function r_cv(cv)
@@ -470,7 +482,7 @@ end function p_cv
 pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
                      si_mass            => unit_p00_p10_p00_p00
-    use checks, only: assert, assert_dimension
+    use checks, only: assert, assert_dimension, is_close
     
     class(cv_type), intent(in out) :: cv
     
@@ -489,8 +501,11 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
     type(si_length), intent(in)    :: x_z        ! zero force location for spring
     type(gas_type), intent(in)     :: gas(:)     ! gas data
     
-    integer       :: i
-    type(si_mass) :: m_total
+    integer        :: i, n_d
+    type(si_mass)  :: m_total
+    type(unitless) :: y_sum
+    
+    n_d = size(x%v%d)
     
     cv%x     = x
     cv%x_dot = x_dot
@@ -515,6 +530,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
     
     call assert_dimension(y, cv%gas)
     allocate(cv%m(size(y)))
+    call y_sum%v%init_const(0.0_WP, n_d)
     do i = 1, size(y)
         call assert(gas(i)%gamma > 1.0_WP, "cva (set): gas%gamma > 1 violated")
         call assert(gas(i)%mm    > 0.0_WP, "cva (set): gas%mm > 0 violated")
@@ -525,14 +541,18 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
         ! `rho_eos` requires that `m` is to calculate mole fractions!
         ! So I first set `m` to temporary values which will get the right mole fractions.
         cv%m(i) = y(i)*m_p
+        
+        y_sum = y_sum + y(i)
     end do
     
+    call assert(is_close(y_sum%v%v, 1.0_WP), "cva (set): mass fractions do not sum to 1")
+    
     ! `e` needs to be set to a temporary value to avoid an assertion error.
-    call cv%e%v%init_const(1.0_WP, 0)
+    call cv%e%v%init_const(1.0_WP, n_d)
     m_total = cv%vol() * cv%rho_eos(p, temp)
     
     ! Now set `m` to the correct values and calculate `e`
-    call cv%e%v%init_const(0.0_WP, 0)
+    call cv%e%v%init_const(0.0_WP, n_d)
     do i = 1, size(y)
         cv%m(i) = y(i)*m_total
         cv%e    = cv%e + cv%m(i)*cv%gas(i)%u(temp)
