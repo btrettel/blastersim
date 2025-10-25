@@ -159,6 +159,15 @@ subroutine test_u_h(tests)
     ! Data from moran_fundamentals_2008 table A-22.
     call tests%real_eq(u%v%v, 286.16e3_WP, "u, 400 K", abs_tol=1.0e3_WP)
     call tests%real_eq(h%v%v, 400.98e3_WP, "h, 400 K", abs_tol=1.0e3_WP)
+    
+    call temp%v%init_const(200.0_WP, 0)
+    
+    u = AIR%u(temp)
+    h = AIR%h(temp)
+    
+    ! Data from moran_fundamentals_2008 table A-22.
+    call tests%real_eq(u%v%v, 142.56e3_WP, "u, 200 K", abs_tol=1.0e3_WP)
+    call tests%real_eq(h%v%v, 199.97e3_WP, "h, 200 K", abs_tol=1.0e3_WP)
 end subroutine test_u_h
 
 subroutine test_p_f_1(tests)
@@ -402,12 +411,14 @@ subroutine test_set(tests)
     vol_cv = cv%vol()
     call tests%real_eq(vol_cv%v%v, 0.05_WP, "set, vol")
     
+    ! Not exact, based on multiple of ambient density for simplicity.
     rho_cv = cv%rho()
     call tests%real_eq(rho_cv%v%v, sqrt(2.0_WP)*RHO_ATM, "set, rho", abs_tol=1.0e-3_WP)
     
     p_cv = cv%p()
     call tests%real_eq(p_cv%v%v, p%v%v, "set, p")
     
+    ! Not exact, based on multiple of ambient density for simplicity.
     u = AIR%u(temp)
     call tests%real_eq(cv%m(1)%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, m(1)", abs_tol=1.0e-4_WP)
     call tests%real_eq(cv%e%v%v, u%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set, e", abs_tol=10.0_WP)
