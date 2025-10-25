@@ -505,6 +505,8 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
     type(si_mass)  :: m_total
     type(unitless) :: y_sum
     
+    call assert(m_p%v%v > 0.0_WP, "cva (set): m_p > 0 violated")
+    
     n_d = size(x%v%d)
     
     cv%x     = x
