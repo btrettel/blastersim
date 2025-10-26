@@ -23,20 +23,21 @@ private
 
 public :: smooth_min
 public :: f_m_dot, g_m_dot, m_dot
+public :: p_v_h2o
 
 ! <https://en.wikipedia.org/wiki/Gas_constant>
 real(WP), public, parameter :: R_BAR = 8.31446261815324_WP ! J/(mol*K)
 
+real(WP), public, parameter :: TEMP_C_TO_K = 273.15_WP ! K, temperature to add to convert from C to K
+
 ! <https://en.wikipedia.org/wiki/Density_of_air>
-real(WP), public, parameter :: P_ATM   = 101325.0_WP         ! Pa
-real(WP), public, parameter :: T_ATM   = 273.15_WP + 15.0_WP ! K
-real(WP), public, parameter :: RHO_ATM = 1.2250_WP           ! kg/m3
+real(WP), public, parameter :: P_ATM   = 101325.0_WP           ! Pa
+real(WP), public, parameter :: T_ATM   = TEMP_C_TO_K + 15.0_WP ! K
+real(WP), public, parameter :: RHO_ATM = 1.2250_WP             ! kg/m3
 
 ! pressure ratio laminar flow nominally starts at
 ! based on first part of beater_pneumatic_2007 eq. 5.4
 real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
-
-real(WP), public, parameter :: TEMP_C_TO_K = 273.15_WP ! K, temperature to add to convert from C to K
 
 real(WP), public, parameter :: TEMP_0 = 300.0_WP ! K, temperature that `gamma`, `u_0`, and `h_0` are taken at in `gas_type`
 
@@ -97,6 +98,16 @@ type(gas_type), public, parameter :: CO2     = gas_type(gamma = 1.288_WP, &
                                                         h_0   = 44.01e-3_WP*9431.0e3_WP, &
                                                         mm    = 44.01e-3_WP, &
                                                         p_c   = 73.9e5_WP)
+
+! Molecular mass and critical pressure of H2O: moran_fundamentals_2008 table A-1
+! Specific heat ratio of H2O: <https://en.wikipedia.org/wiki/Heat_capacity_ratio>
+! Internal energy and enthalpy of H2O: moran_fundamentals_2008 table A-23
+! TODO: Switch to stream tables for `u` and `h` if adding liquid water; see moran_thermodynamics_2008 pp. 666--667
+type(gas_type), public, parameter :: H2O     = gas_type(gamma = 1.330_WP, & ! at 20 C, not 300 K, but close enough
+                                                        u_0   = 18.02e-3_WP*7472.0e3_WP, &
+                                                        h_0   = 18.02e-3_WP*9966.0e3_WP, &
+                                                        mm    = 18.02e-3_WP, &
+                                                        p_c   = 220.9e5_WP)
 
 type, public :: cv_type ! control volume
     ! time varying
@@ -832,5 +843,34 @@ pure function m_dot(con, cv_from, cv_to)
                 * sqrt((1.0_WP - con%b) / (cv_from%r() * cv_from%temp())) &
                 * sqrt(1.0_WP - f_m_dot(p_r, con%b))
 end function m_dot
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! functions for air humidity !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+pure function p_v_h2o(temp)
+    ! Using the Antoine equation with NIST's parameters for the experiments of Stull, 1947.
+    ! Data ranges from 255.9 to 373.0 K. Probably okay to go a bit outside of those ranges.
+    ! <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/H2O/h1H2>
+    
+    use units, only: si_temperature => unit_p00_p00_p00_p10, &
+                     exp
+    
+    type(si_temperature), intent(in) :: temp
+    
+    type(si_pressure) :: p_v_h2o
+    
+    integer              :: n_d
+    type(si_pressure)    :: a
+    type(si_temperature) :: b, c
+    
+    n_d = size(temp%v%d)
+    
+    call a%v%init_const((10.0_WP**4.6543_WP)*1.0e5_WP, n_d)
+    call b%v%init_const(1435.264_WP*log(10.0_WP), n_d)
+    call c%v%init_const(-64.848_WP, n_d)
+    
+    p_v_h2o = a*exp(-b/(temp + c))
+end function p_v_h2o
 
 end module cva

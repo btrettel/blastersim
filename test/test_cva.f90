@@ -32,6 +32,7 @@ call test_smooth_min(tests)
 call test_f_m_dot(tests)
 call test_g_m_dot(tests)
 ! TODO: call test_m_dot(tests)
+call test_p_v_h2o(tests)
 
 call tests%end_tests()
 
@@ -706,5 +707,31 @@ end subroutine test_g_m_dot
     
 !    ! TODO: test to check that m_dot \varpropto \Delta p at small \Delta p
 !end subroutine test_m_dot
+
+subroutine test_p_v_h2o(tests)
+    use units, only: si_temperature => unit_p00_p00_p00_p10, &
+                     si_pressure    => unit_m10_p10_m20_p00
+    use cva, only: TEMP_C_TO_K, p_v_h2o
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    type(si_temperature) :: temp
+    type(si_pressure)    :: p_v
+    
+    ! Data from moran_fundamentals_2008 table A-2.
+    ! This won't match up exactly with the regression equation as it's a different data source.
+    
+    call temp%v%init_const(TEMP_C_TO_K + 0.01_WP, 0)
+    p_v = p_v_h2o(temp)
+    call tests%real_eq(p_v%v%v, 0.00611e5_WP, "water vapor pressure at 0.01 C", abs_tol=30.0_WP)
+    
+    call temp%v%init_const(TEMP_C_TO_K + 20.0_WP, 0)
+    p_v = p_v_h2o(temp)
+    call tests%real_eq(p_v%v%v, 0.02339e5_WP, "water vapor pressure at 20 C", abs_tol=10.0_WP)
+    
+    call temp%v%init_const(TEMP_C_TO_K + 50.0_WP, 0)
+    p_v = p_v_h2o(temp)
+    call tests%real_eq(p_v%v%v, 0.1235e5_WP, "water vapor pressure at 50 C", abs_tol=200.0_WP)
+end subroutine test_p_v_h2o
 
 end program test_cva
