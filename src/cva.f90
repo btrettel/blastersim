@@ -240,30 +240,60 @@ pure function p_eos(cv, rho, temp)
     call assert(p_eos < cv%p_c(), "cva (p_eos): ideal gas law validity is questionable")
 end function p_eos
 
-pure function rho_eos(cv, p, temp)
+pure function rho_eos(cv, p, temp, y)
     ! Calculate density using the equation of state.
     ! In the future, if an EOS more complex than the ideal gas law is used, it might make sense to calculate `rho_eos` from `p_eos`
     ! with the Newton method.
     
     use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
-                     si_temperature   => unit_p00_p00_p00_p10
-    use checks, only: assert, assert_dimension
+                     si_temperature   => unit_p00_p00_p00_p10, &
+                     si_specific_heat => unit_p20_p00_m20_m10
+    use checks, only: assert, assert_dimension, is_close
     
     class(cv_type), intent(in)       :: cv
     type(si_pressure), intent(in)    :: p
     type(si_temperature), intent(in) :: temp
+    type(unitless), intent(in)       :: y(:)
     
     type(si_mass_density) :: rho_eos
     
-    integer :: n_d ! number of derivatives
+    integer                :: n_d, i, j
+    type(unitless)         :: mm ! molar mass (mol/kg), not actually unitless!
+    type(si_specific_heat) :: r_bar_ ! universal gas constant, which also doesn't have the same units as specific heat!
+    type(unitless)         :: denominator, y_sum
+    type(si_specific_heat) :: r_cv
     
-    call assert(p%v%v    > 0.0_WP,   "cva (rho_eos): p%v > 0 violated")
-    call assert(p        < cv%p_c(), "cva (rho_eos): ideal gas law validity is questionable")
-    call assert(temp%v%v > 0.0_WP,   "cva (rho_eos): temp%v > 0 violated")
+    ! Don't check `p_c` here as that requires the masses.
+    
+    call assert(p%v%v    > 0.0_WP, "cva (rho_eos): p%v > 0 violated")
+    call assert(temp%v%v > 0.0_WP, "cva (rho_eos): temp%v > 0 violated")
+    call assert(size(y)  >= 1,     "cva (rho_eos): size(y) >= 1 violated")
     call assert_dimension(p%v%d, temp%v%d)
+    call assert_dimension(p%v%d, y(1)%v%d)
+    call assert_dimension(y, cv%gas)
     
-    n_d     = size(p%v%d)
-    rho_eos = p / (cv%r() * temp)
+    n_d = size(p%v%d)
+    
+    ! <https://en.wikipedia.org/wiki/Molar_mass#Average_molar_mass_of_mixtures>
+    ! Why not use the `r_cv` function? That is based around masses, and this is based around mass fractions.
+    ! In the `set` method, the masses are not yet available when this method is called.
+    call mm%v%init_const(0.0_WP, n_d)
+    call y_sum%v%init_const(0.0_WP, n_d)
+    do i = 1, size(y)
+        call denominator%v%init_const(0.0_WP, n_d)
+        do j = 1, size(y)
+            denominator = denominator + y(j)*(cv%gas(i)%mm/cv%gas(j)%mm)
+        end do
+        mm    = mm + y(i)*cv%gas(i)%mm/denominator
+        y_sum = y_sum + y(i)
+    end do
+    
+    call assert(is_close(y_sum%v%v, 1.0_WP), "cva (rho_eos): y does not sum to 1")
+    
+    call r_bar_%v%init_const(R_BAR, n_d)
+    r_cv = r_bar_ / mm
+    
+    rho_eos = p / (r_cv * temp)
     
     call assert(rho_eos%v%v > 0.0_WP, "cva (rho_eos): rho_eos%v > 0 violated")
 end function rho_eos
@@ -547,19 +577,12 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, gas
         call assert(gas(i)%mm    < 0.1_WP, "cva (set): gas%mm < 0.1 violated") ! to catch using g/mol by mistake
         call assert(gas(i)%p_c   > 0.0_WP, "cva (set): gas%p_c > 0 violated") ! to catch using g/mol by mistake
         
-        ! `rho_eos` requires that `m` is to calculate mole fractions!
-        ! So I first set `m` to temporary values which will get the right mole fractions.
-        ! TODO: Does this make the derivatives for `m_total` wrong?
-        cv%m(i) = y(i)*m_total
-        
         y_sum = y_sum + y(i)
     end do
     
     call assert(is_close(y_sum%v%v, 1.0_WP), "cva (set): mass fractions do not sum to 1")
     
-    ! `e` needs to be set to a temporary value to avoid an assertion error.
-    call cv%e%v%init_const(1.0_WP, n_d)
-    m_total = cv%vol() * cv%rho_eos(p, temp)
+    m_total = cv%vol() * cv%rho_eos(p, temp, y)
     
     ! Now set `m` to the correct values and calculate `e`
     call cv%e%v%init_const(0.0_WP, n_d)
@@ -571,6 +594,9 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, gas
     call assert_mass(cv, "set")
     call assert_dimension(cv%x%v%d, cv%x_dot%v%d)
     call assert_dimension(cv%x%v%d, cv%e%v%d)
+    
+    ! This is checked here and not in `rho_eos` as the masses are not defined when `rho_eos` is called.
+    call assert(p < cv%p_c(), "cva (set): ideal gas law validity is questionable")
 end subroutine set
 
 pure function p_f(cv, p_fe)

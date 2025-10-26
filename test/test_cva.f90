@@ -18,6 +18,7 @@ call tests%start_tests("cva.nml")
 call test_m_total(tests)
 call test_p_eos(tests)
 call test_rho_eos(tests)
+! TODO: test rho_eos with multiple gas species
 call test_r_cv(tests)
 call test_u_h(tests)
 call test_p_f_1(tests)
@@ -99,7 +100,8 @@ end subroutine test_p_eos
 subroutine test_rho_eos(tests)
     use units, only: si_mass_density => unit_m30_p10_p00_p00, &
                      si_temperature  => unit_p00_p00_p00_p10, &
-                     si_pressure     => unit_m10_p10_m20_p00
+                     si_pressure     => unit_m10_p10_m20_p00, &
+                     unitless        => unit_p00_p00_p00_p00
     use cva, only: P_ATM, T_ATM, RHO_ATM, AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -107,10 +109,12 @@ subroutine test_rho_eos(tests)
     type(si_mass_density) :: rho
     type(si_temperature)  :: temp
     type(si_pressure)     :: p
+    type(unitless)        :: y(1)
     type(cv_type)         :: cv
     
     call p%v%init_const(P_ATM, 0)
     call temp%v%init_const(T_ATM, 0)
+    call y%v%init_const(1.0_WP, 0)
     allocate(cv%m(1))
     call cv%m(1)%v%init_const(1.0_WP, 0)
     call cv%e%v%init_const(1.0_WP, 0)
@@ -118,23 +122,31 @@ subroutine test_rho_eos(tests)
     allocate(cv%gas(1))
     cv%gas(1) = AIR
     
-    rho = cv%rho_eos(p, temp)
-    
-    call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric", abs_tol=1.0e-3_WP)
+    rho = cv%rho_eos(p, temp, y)
+    call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric (1)", abs_tol=1.0e-3_WP)
 end subroutine test_rho_eos
 
 subroutine test_r_cv(tests)
     ! Test using ambient air.
+    ! Tests both the `r_cv` and `rho_eos`
     
-    use units, only: si_specific_heat => unit_p20_p00_m20_m10
-    use cva, only: gas_type, CO2, cv_type
+    use units, only: si_specific_heat => unit_p20_p00_m20_m10, &
+                     unitless         => unit_p00_p00_p00_p00, &
+                     si_mass_density  => unit_m30_p10_p00_p00, &
+                     si_temperature   => unit_p00_p00_p00_p10, &
+                     si_pressure      => unit_m10_p10_m20_p00
+    use cva, only: P_ATM, T_ATM, RHO_ATM, gas_type, CO2, cv_type
     use checks, only: assert, is_close
     
     type(test_results_type), intent(in out) :: tests
     
     real(WP)               :: chi(4)
+    type(unitless)         :: y(4)
     type(cv_type)          :: cv
     type(si_specific_heat) :: r_cv
+    type(si_mass_density)  :: rho
+    type(si_temperature)   :: temp
+    type(si_pressure)      :: p
     
     type(gas_type) :: N2  = gas_type(gamma = 1.400_WP, &
                                      u_0   = 28.01e-3_WP*6229.0e3_WP, &
@@ -169,11 +181,21 @@ subroutine test_r_cv(tests)
     call cv%m(3)%v%init_const(chi(3)*cv%gas(3)%mm, 0)
     call cv%m(4)%v%init_const(chi(4)*cv%gas(4)%mm, 0)
     
+    y(1) = cv%m(1) / (cv%m(1) + cv%m(2) + cv%m(3) + cv%m(4))
+    y(2) = cv%m(2) / (cv%m(1) + cv%m(2) + cv%m(3) + cv%m(4))
+    y(3) = cv%m(3) / (cv%m(1) + cv%m(2) + cv%m(3) + cv%m(4))
+    y(4) = cv%m(4) / (cv%m(1) + cv%m(2) + cv%m(3) + cv%m(4))
+    
     ! Needed to avoid an assertion failing.
     call cv%e%v%init_const(1.0_WP, 0)
     
     r_cv = cv%r()
     call tests%real_eq(r_cv%v%v, 0.2870e3_WP, "cv%r for mixture", abs_tol=0.1_WP)
+    
+    call p%v%init_const(P_ATM, 0)
+    call temp%v%init_const(T_ATM, 0)
+    rho = cv%rho_eos(p, temp, y)
+    call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric (2)", abs_tol=1.0e-3_WP)
 end subroutine test_r_cv
 
 subroutine test_u_h(tests)
@@ -559,7 +581,7 @@ subroutine test_set_2(tests)
     call tests%real_eq(cv%m(2)%v%v, m(2), "set 2, cv%m(2)", abs_tol=1.0e-1_WP)
     m_total = cv%m_total()
     call tests%real_eq(m_total%v%v, m(1) + m(2), "set 2, cv%m_total", abs_tol=1.0e-1_WP)
-    m_total = cv%vol() * cv%rho_eos(p, temp)
+    m_total = cv%vol() * cv%rho_eos(p, temp, y)
     call tests%real_eq(m_total%v%v, m(1) + m(2), "set 2, alt m_total", abs_tol=1.0e-1_WP)
     
     ! p. 616: mole fractions, book is probably only accurate to 3 decimal points
