@@ -25,7 +25,7 @@ public :: smooth_min
 public :: f_m_dot, g_m_dot, m_dot
 
 ! <https://en.wikipedia.org/wiki/Gas_constant>
-real(WP), private, parameter :: R_BAR = 8.31446261815324_WP ! J/(mol*K)
+real(WP), public, parameter :: R_BAR = 8.31446261815324_WP ! J/(mol*K)
 
 ! <https://en.wikipedia.org/wiki/Density_of_air>
 real(WP), public, parameter :: P_ATM   = 101325.0_WP         ! Pa
@@ -54,20 +54,49 @@ contains
     procedure, private :: c_p => c_p_gas
 end type gas_type
 
-! Molecular mass and critical pressure: moran_fundamentals_2008 table A-1
-! Specific heat ratios: moran_fundamentals_2008 table A-20
+! Molecular mass and critical pressure of air (consistent with dry air): moran_fundamentals_2008 table A-1
+! Specific heat ratio of air (consistent with dry air): moran_fundamentals_2008 table A-20
 ! Internal energy and enthalpy of air: moran_fundamentals_2008 table A-22
+type(gas_type), public, parameter :: DRY_AIR = gas_type(gamma = 1.400_WP, &
+                                                        u_0   = 214.07e3_WP, &
+                                                        h_0   = 300.19e3_WP, &
+                                                        mm    = 28.97e-3_WP, &
+                                                        p_c   = 37.7e5_WP)
+
+! Molecular mass and critical pressure of N2: moran_fundamentals_2008 table A-1
+! Specific heat ratio of N2: moran_fundamentals_2008 table A-20
+! Internal energy and enthalpy of N2: moran_fundamentals_2008 table A-23
+type(gas_type), public, parameter :: N2      = gas_type(gamma = 1.400_WP, &
+                                                        u_0   = 28.01e-3_WP*6229.0e3_WP, &
+                                                        h_0   = 28.01e-3_WP*8723.0e3_WP, &
+                                                        mm    = 28.01e-3_WP, &
+                                                        p_c   = 33.9e5_WP)
+
+! Molecular mass and critical pressure of O2: moran_fundamentals_2008 table A-1
+! Specific heat ratio of O2: moran_fundamentals_2008 table A-20
+! Internal energy and enthalpy of O2: moran_fundamentals_2008 table A-23
+type(gas_type), public, parameter :: O2      = gas_type(gamma = 1.395_WP, &
+                                                        u_0   = 6242.0e3_WP, &
+                                                        h_0   = 8736.0e3_WP, &
+                                                        mm    = 32.0e-3_WP, &
+                                                        p_c   = 50.5e5_WP)
+
+! Molecular mass and critical pressure of Ar: moran_fundamentals_2008 table A-1
+! `gamma`, `u_0`, `h_0` from <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/Ar> ("Fluid Properties")
+type(gas_type), public, parameter :: AR      = gas_type(gamma = 0.52154_WP/0.31239_WP, &
+                                                        u_0   = 155.90e3_WP, &
+                                                        h_0   = 93.497e3_WP, &
+                                                        mm    = 39.94e-3_WP, &
+                                                        p_c   = 48.6e5_WP)
+
+! Molecular mass and critical pressure of CO2: moran_fundamentals_2008 table A-1
+! Specific heat ratio of CO2: moran_fundamentals_2008 table A-20
 ! Internal energy and enthalpy of CO2: moran_fundamentals_2008 table A-23
-type(gas_type), public, parameter :: AIR = gas_type(gamma = 1.400_WP, &
-                                                    u_0   = 214.07e3_WP, &
-                                                    h_0   = 300.19e3_WP, &
-                                                    mm    = 28.97e-3_WP, &
-                                                    p_c   = 37.7e5_WP)
-type(gas_type), public, parameter :: CO2 = gas_type(gamma = 1.288_WP, &
-                                                    u_0   = 44.01e-3_WP*6939.0e3_WP, &
-                                                    h_0   = 44.01e-3_WP*9431.0e3_WP, &
-                                                    mm    = 44.01e-3_WP, &
-                                                    p_c   = 73.9e5_WP)
+type(gas_type), public, parameter :: CO2     = gas_type(gamma = 1.288_WP, &
+                                                        u_0   = 44.01e-3_WP*6939.0e3_WP, &
+                                                        h_0   = 44.01e-3_WP*9431.0e3_WP, &
+                                                        mm    = 44.01e-3_WP, &
+                                                        p_c   = 73.9e5_WP)
 
 type, public :: cv_type ! control volume
     ! time varying

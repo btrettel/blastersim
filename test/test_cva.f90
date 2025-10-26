@@ -18,9 +18,9 @@ call tests%start_tests("cva.nml")
 call test_m_total(tests)
 call test_p_eos(tests)
 call test_rho_eos(tests)
-! TODO: test rho_eos with multiple gas species
 call test_r_cv(tests)
 call test_u_h(tests)
+call test_p_c(tests)
 call test_p_f_1(tests)
 call test_p_f_2(tests)
 call test_p_f0_1(tests)
@@ -40,7 +40,7 @@ contains
 subroutine test_m_total(tests)
     use units, only: si_mass  => unit_p00_p10_p00_p00, &
                      unitless => unit_p00_p00_p00_p00
-    use cva, only: AIR, cv_type
+    use cva, only: DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
     
@@ -54,8 +54,8 @@ subroutine test_m_total(tests)
     call cv%m(2)%v%init_const(5.0_WP, 0)
     
     allocate(cv%gas(2))
-    cv%gas(1) = AIR
-    cv%gas(2) = AIR
+    cv%gas(1) = DRY_AIR
+    cv%gas(2) = DRY_AIR
     
     m_total = cv%m_total()
     
@@ -74,7 +74,7 @@ subroutine test_p_eos(tests)
     use units, only: si_mass_density => unit_m30_p10_p00_p00, &
                      si_temperature  => unit_p00_p00_p00_p10, &
                      si_pressure     => unit_m10_p10_m20_p00
-    use cva, only: P_ATM, T_ATM, RHO_ATM, AIR, cv_type
+    use cva, only: P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -90,7 +90,7 @@ subroutine test_p_eos(tests)
     call cv%e%v%init_const(1.0_WP, 0)
     
     allocate(cv%gas(1))
-    cv%gas(1) = AIR
+    cv%gas(1) = DRY_AIR
     
     p = cv%p_eos(rho, temp)
     
@@ -102,7 +102,7 @@ subroutine test_rho_eos(tests)
                      si_temperature  => unit_p00_p00_p00_p10, &
                      si_pressure     => unit_m10_p10_m20_p00, &
                      unitless        => unit_p00_p00_p00_p00
-    use cva, only: P_ATM, T_ATM, RHO_ATM, AIR, cv_type
+    use cva, only: P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -120,7 +120,7 @@ subroutine test_rho_eos(tests)
     call cv%e%v%init_const(1.0_WP, 0)
     
     allocate(cv%gas(1))
-    cv%gas(1) = AIR
+    cv%gas(1) = DRY_AIR
     
     rho = cv%rho_eos(p, temp, y)
     call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric (1)", abs_tol=1.0e-3_WP)
@@ -135,7 +135,7 @@ subroutine test_r_cv(tests)
                      si_mass_density  => unit_m30_p10_p00_p00, &
                      si_temperature   => unit_p00_p00_p00_p10, &
                      si_pressure      => unit_m10_p10_m20_p00
-    use cva, only: P_ATM, T_ATM, RHO_ATM, gas_type, CO2, cv_type
+    use cva, only: P_ATM, T_ATM, RHO_ATM, R_BAR, gas_type, DRY_AIR, N2, O2, AR, CO2, cv_type
     use checks, only: assert, is_close
     
     type(test_results_type), intent(in out) :: tests
@@ -148,24 +148,8 @@ subroutine test_r_cv(tests)
     type(si_temperature)   :: temp
     type(si_pressure)      :: p
     
-    type(gas_type) :: N2  = gas_type(gamma = 1.400_WP, &
-                                     u_0   = 28.01e-3_WP*6229.0e3_WP, &
-                                     h_0   = 28.01e-3_WP*8723.0e3_WP, &
-                                     mm    = 28.01e-3_WP, &
-                                     p_c   = 33.9e5_WP)
-    type(gas_type) :: O2  = gas_type(gamma = 1.395_WP, &
-                                     u_0   = 6242.0e3_WP, &
-                                     h_0   = 8736.0e3_WP, &
-                                     mm    = 32.0e-3_WP, &
-                                     p_c   = 50.5e5_WP)
-    
-    ! `gamma`, `u_0`, `h_0` from <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/Ar> ("Fluid Properties")
-    type(gas_type) :: AR  = gas_type(gamma = 0.52154_WP/0.31239_WP, &
-                                     u_0   = 155.90e3_WP, &
-                                     h_0   = 93.497e3_WP, &
-                                     mm    = 39.94e-3_WP, &
-                                     p_c   = 48.6e5_WP)
-    
+    ! Dry air
+    ! <https://en.wikipedia.org/wiki/Atmosphere_of_Earth>
     chi(1) = 0.7808_WP ! N2
     chi(2) = 0.2095_WP ! O2
     chi(3) = 0.0093_WP ! Ar
@@ -190,8 +174,10 @@ subroutine test_r_cv(tests)
     call cv%e%v%init_const(1.0_WP, 0)
     
     r_cv = cv%r()
-    call tests%real_eq(r_cv%v%v, 0.2870e3_WP, "cv%r for mixture", abs_tol=0.1_WP)
+    call tests%real_eq(r_cv%v%v, 0.2870e3_WP, "cv%r for mixture (moran_thermodynamics_2008 table 3.1)", abs_tol=0.1_WP)
+    call tests%real_eq(r_cv%v%v, R_BAR/DRY_AIR%mm, "cv%r for mixture (DRY_AIR)", abs_tol=0.1_WP)
     
+    ! Test for `rho_eos` with multiple gas species.
     call p%v%init_const(P_ATM, 0)
     call temp%v%init_const(T_ATM, 0)
     rho = cv%rho_eos(p, temp, y)
@@ -201,7 +187,7 @@ end subroutine test_r_cv
 subroutine test_u_h(tests)
     use units, only: si_temperature     => unit_p00_p00_p00_p10, &
                      si_specific_energy => unit_p20_p00_m20_p00
-    use cva, only: AIR
+    use cva, only: DRY_AIR
     
     type(test_results_type), intent(in out) :: tests
 
@@ -210,17 +196,17 @@ subroutine test_u_h(tests)
     
     call temp%v%init_const(300.0_WP, 0)
     
-    u = AIR%u(temp)
-    h = AIR%h(temp)
+    u = DRY_AIR%u(temp)
+    h = DRY_AIR%h(temp)
     
     ! Data from moran_fundamentals_2008 table A-22.
-    call tests%real_eq(u%v%v, AIR%u_0, "u, 300 K")
-    call tests%real_eq(h%v%v, AIR%h_0, "h, 300 K")
+    call tests%real_eq(u%v%v, DRY_AIR%u_0, "u, 300 K")
+    call tests%real_eq(h%v%v, DRY_AIR%h_0, "h, 300 K")
     
     call temp%v%init_const(400.0_WP, 0)
     
-    u = AIR%u(temp)
-    h = AIR%h(temp)
+    u = DRY_AIR%u(temp)
+    h = DRY_AIR%h(temp)
     
     ! Data from moran_fundamentals_2008 table A-22.
     call tests%real_eq(u%v%v, 286.16e3_WP, "u, 400 K", abs_tol=1.0e3_WP)
@@ -228,13 +214,58 @@ subroutine test_u_h(tests)
     
     call temp%v%init_const(200.0_WP, 0)
     
-    u = AIR%u(temp)
-    h = AIR%h(temp)
+    u = DRY_AIR%u(temp)
+    h = DRY_AIR%h(temp)
     
     ! Data from moran_fundamentals_2008 table A-22.
     call tests%real_eq(u%v%v, 142.56e3_WP, "u, 200 K", abs_tol=1.0e3_WP)
     call tests%real_eq(h%v%v, 199.97e3_WP, "h, 200 K", abs_tol=1.0e3_WP)
 end subroutine test_u_h
+
+subroutine test_p_c(tests)
+    ! Based on moran_fundamentals_2008 example 11.10, pp. 615--617.
+    
+    use units, only: si_pressure => unit_m10_p10_m20_p00
+    use cva, only: gas_type, cv_type
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_type)     :: cv
+    real(WP)          :: n(2), m(2)
+    type(si_pressure) :: p_c_cv
+    
+    allocate(cv%gas(2))
+    
+    ! > 0.18 kmol of methane (CH4) and 0.274 of butane (C4H10)
+    ! methane (CH4)
+    ! <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/CH4/h1H4> ("Fluid Properties" at 0.101325 MPa)
+    cv%gas(1) = gas_type(gamma = 2.2359_WP/1.7129_WP, &
+                         u_0   = 758.87e3_WP, &
+                         h_0   = 914.09e3_WP, &
+                         mm    = 16.04e-3_WP, & ! moran_fundamentals_2008 table A-1
+                         p_c   = 46.4e5_WP) ! moran_fundamentals_2008 table A-1
+    
+    ! butane (C4H10)
+    ! <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/C4H10/c1-3-4-2/h3-4H2%2C1-2H3> ("Fluid Properties" at 0.101325 MPa)
+    cv%gas(2) = gas_type(gamma = 1.7388_WP/1.5744_WP, &
+                         u_0   = 589.09e3_WP, &
+                         h_0   = 630.74e3_WP, &
+                         mm    = 58.12e-3_WP, & ! moran_fundamentals_2008 table A-1
+                         p_c   = 38.0e5_WP) ! moran_fundamentals_2008 table A-1
+    
+    n(1) = 0.18e3_WP
+    n(2) = 0.274e3_WP
+    m(1) = n(1)*cv%gas(1)%mm
+    m(2) = n(2)*cv%gas(2)%mm
+    
+    allocate(cv%m(2))
+    call cv%m(1)%v%init_const(m(1), 0)
+    call cv%m(2)%v%init_const(m(2), 0)
+    
+    ! p. 616: critical pressure
+    p_c_cv = cv%p_c()
+    call tests%real_eq(p_c_cv%v%v, 41.33e5_WP, "cv%p_c", abs_tol=50.0_WP)
+end subroutine test_p_c
 
 subroutine test_p_f_1(tests)
     use units, only: si_pressure => unit_m10_p10_m20_p00
@@ -391,7 +422,7 @@ end subroutine test_p_f0_2
 
 subroutine test_temp_cv(tests)
     use units, only: si_temperature => unit_p00_p00_p00_p10
-    use cva, only: AIR, cv_type
+    use cva, only: DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -404,7 +435,7 @@ subroutine test_temp_cv(tests)
     
     ! air
     allocate(cv%gas(1))
-    cv%gas(1) = AIR
+    cv%gas(1) = DRY_AIR
     
     ! moran_fundamentals_2008 table A-22, 300 K with 1 kg of mass
     call cv%e%v%init_const(214.07e3_WP, 0)
@@ -426,7 +457,7 @@ subroutine test_set_1(tests)
                      si_mass_density    => unit_m30_p10_p00_p00, &
                      si_temperature     => unit_p00_p00_p00_p10, &
                      si_specific_energy => unit_p20_p00_m20_p00
-    use cva, only: P_ATM, T_ATM, RHO_ATM, AIR, cv_type
+    use cva, only: P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -459,7 +490,7 @@ subroutine test_set_1(tests)
     call k%v%init_const(10.0_WP, 0)
     call x_z%v%init_const(3.0_WP, 0)
     
-    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, [AIR])
+    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR])
     
     call tests%real_eq(cv%x%v%v, x%v%v, "set 1, x")
     call tests%real_eq(cv%x_dot%v%v, x_dot%v%v, "set 1, x_dot")
@@ -485,7 +516,7 @@ subroutine test_set_1(tests)
     call tests%real_eq(p_cv%v%v, p%v%v, "set 1, p")
     
     ! Not exact, based on multiple of ambient density for simplicity.
-    u = AIR%u(temp)
+    u = DRY_AIR%u(temp)
     call tests%real_eq(cv%m(1)%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set 1, m(1)", abs_tol=1.0e-4_WP)
     call tests%real_eq(cv%e%v%v, u%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set 1, e", abs_tol=10.0_WP)
 end subroutine test_set_1
@@ -516,7 +547,7 @@ subroutine test_set_2(tests)
     type(si_length)       :: x
     type(si_velocity)     :: x_dot
     type(unitless)        :: y(2), chi_cv(2), y_cv(2)
-    type(si_pressure)     :: p, p_cv, p_c_cv
+    type(si_pressure)     :: p, p_cv
     type(si_temperature)  :: temp, temp_cv
     type(si_area)         :: csa
     type(si_inverse_mass) :: rm_p
@@ -529,7 +560,7 @@ subroutine test_set_2(tests)
     real(WP)        :: n(2), m(2)
     type(si_volume) :: vol_cv
     
-    ! TODO: > 0.18 kmol of methane (CH4) and 0.274 of butane (C4H10)
+    ! > 0.18 kmol of methane (CH4) and 0.274 of butane (C4H10)
     ! methane (CH4)
     ! <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/CH4/h1H4> ("Fluid Properties" at 0.101325 MPa)
     gas(1) = gas_type(gamma = 2.2359_WP/1.7129_WP, &
@@ -602,11 +633,6 @@ subroutine test_set_2(tests)
     
     p_cv = cv%p()
     call tests%real_eq(p_cv%v%v, p%v%v, "set 2, p")
-    
-    ! p. 616: critical pressure
-    ! Multiplied by 10 due to adjustment made above to avoid triggering ideal gas law validity check.
-    p_c_cv = cv%p_c()
-    call tests%real_eq(p_c_cv%v%v, 10.0_WP*41.33e5_WP, "set 2, p_c", abs_tol=1000.0_WP)
 end subroutine test_set_2
 
 subroutine test_smooth_min(tests)
