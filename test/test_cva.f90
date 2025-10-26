@@ -395,7 +395,7 @@ subroutine test_set_1(tests)
     use units, only: si_length          => unit_p10_p00_p00_p00, &
                      si_velocity        => unit_p10_p00_m10_p00, &
                      unitless           => unit_p00_p00_p00_p00, &
-                     si_mass            => unit_p00_p10_p00_p00, &
+                     si_inverse_mass    => unit_p00_m10_p00_p00, &
                      si_energy          => unit_p20_p10_m20_p00, &
                      si_area            => unit_p20_p00_p00_p00, &
                      si_pressure        => unit_m10_p10_m20_p00, &
@@ -416,7 +416,7 @@ subroutine test_set_1(tests)
     type(si_pressure)        :: p, p_cv
     type(si_temperature)     :: temp, temp_cv
     type(si_area)            :: csa
-    type(si_mass)            :: m_p
+    type(si_inverse_mass)    :: rm_p
     type(si_pressure)        :: p_fs, p_fd
     type(si_stiffness)       :: k
     type(si_length)          :: x_z
@@ -431,19 +431,19 @@ subroutine test_set_1(tests)
     call p%v%init_const(2.0_WP*P_ATM, 0)
     call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 0)
     call csa%v%init_const(0.1_WP, 0)
-    call m_p%v%init_const(0.5_WP, 0)
+    call rm_p%v%init_const(1.0_WP/0.5_WP, 0)
     call p_fs%v%init_const(0.2e5_WP, 0)
     call p_fd%v%init_const(0.1e5_WP, 0)
     call k%v%init_const(10.0_WP, 0)
     call x_z%v%init_const(3.0_WP, 0)
     
-    call cv%set(x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, [AIR])
+    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, [AIR])
     
     call tests%real_eq(cv%x%v%v, x%v%v, "set 1, x")
     call tests%real_eq(cv%x_dot%v%v, x_dot%v%v, "set 1, x_dot")
     ! no `p` or `temp` member variables
     call tests%real_eq(cv%csa%v%v, csa%v%v, "set 1, csa")
-    call tests%real_eq(cv%rm_p%v%v, 1.0_WP/m_p%v%v, "set 1, rm_p")
+    call tests%real_eq(cv%rm_p%v%v, rm_p%v%v, "set 1, rm_p")
     call tests%real_eq(cv%p_fs%v%v, p_fs%v%v, "set 1, p_fs")
     call tests%real_eq(cv%p_fd%v%v, p_fd%v%v, "set 1, p_fd")
     call tests%real_eq(cv%k%v%v, k%v%v, "set 1, k")
@@ -476,6 +476,7 @@ subroutine test_set_2(tests)
                      si_velocity        => unit_p10_p00_m10_p00, &
                      unitless           => unit_p00_p00_p00_p00, &
                      si_mass            => unit_p00_p10_p00_p00, &
+                     si_inverse_mass    => unit_p00_m10_p00_p00, &
                      si_energy          => unit_p20_p10_m20_p00, &
                      si_area            => unit_p20_p00_p00_p00, &
                      si_pressure        => unit_m10_p10_m20_p00, &
@@ -490,17 +491,18 @@ subroutine test_set_2(tests)
 
     type(cv_type) :: cv
     
-    type(si_length)      :: x
-    type(si_velocity)    :: x_dot
-    type(unitless)       :: y(2), chi_cv(2), y_cv(2)
-    type(si_pressure)    :: p, p_cv, p_c_cv
-    type(si_temperature) :: temp, temp_cv
-    type(si_area)        :: csa
-    type(si_mass)        :: m_p, m_total
-    type(si_pressure)    :: p_fs, p_fd
-    type(si_stiffness)   :: k
-    type(si_length)      :: x_z
-    type(gas_type)       :: gas(2)
+    type(si_length)       :: x
+    type(si_velocity)     :: x_dot
+    type(unitless)        :: y(2), chi_cv(2), y_cv(2)
+    type(si_pressure)     :: p, p_cv, p_c_cv
+    type(si_temperature)  :: temp, temp_cv
+    type(si_area)         :: csa
+    type(si_inverse_mass) :: rm_p
+    type(si_mass)         :: m_total
+    type(si_pressure)     :: p_fs, p_fd
+    type(si_stiffness)    :: k
+    type(si_length)       :: x_z
+    type(gas_type)        :: gas(2)
     
     real(WP)        :: n(2), m(2)
     type(si_volume) :: vol_cv
@@ -543,13 +545,13 @@ subroutine test_set_2(tests)
     
     ! These are set to basically random values as they are irrelevant to this test.
     call x_dot%v%init_const(0.0_WP, 0)
-    call m_p%v%init_const(1.0_WP, 0)
+    call rm_p%v%init_const(0.0_WP, 0)
     call p_fs%v%init_const(0.0_WP, 0)
     call p_fd%v%init_const(0.0_WP, 0)
     call k%v%init_const(0.0_WP, 0)
     call x_z%v%init_const(0.0_WP, 0)
     
-    call cv%set(x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
+    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, gas)
     
     ! All the masses are slightly off. This is expected, as total mass is not an input here.
     ! Pressure is the input setting the total mass, and it's only approximate.

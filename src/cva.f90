@@ -488,9 +488,9 @@ pure function p_cv(cv)
     call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated")
 end function p_cv
 
-pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
-    use units, only: si_temperature     => unit_p00_p00_p00_p10, &
-                     si_mass            => unit_p00_p10_p00_p00
+pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, gas)
+    use units, only: si_temperature => unit_p00_p00_p00_p10, &
+                     si_mass        => unit_p00_p10_p00_p00
     use checks, only: assert, assert_dimension, is_close
     
     class(cv_type), intent(in out) :: cv
@@ -503,18 +503,16 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
     type(si_temperature), intent(in) :: temp  ! temperature
     
     ! constant
-    type(si_area), intent(in)      :: csa        ! cross-sectional area
-    type(si_mass), intent(in)      :: m_p        ! mass of piston/projectile
-    type(si_pressure), intent(in)  :: p_fs, p_fd ! static and dynamic friction pressure
-    type(si_stiffness), intent(in) :: k          ! stiffness of spring attached to piston
-    type(si_length), intent(in)    :: x_z        ! zero force location for spring
-    type(gas_type), intent(in)     :: gas(:)     ! gas data
+    type(si_area), intent(in)         :: csa        ! cross-sectional area
+    type(si_inverse_mass), intent(in) :: rm_p       ! reciprocal mass of piston/projectile
+    type(si_pressure), intent(in)     :: p_fs, p_fd ! static and dynamic friction pressure
+    type(si_stiffness), intent(in)    :: k          ! stiffness of spring attached to piston
+    type(si_length), intent(in)       :: x_z        ! zero force location for spring
+    type(gas_type), intent(in)        :: gas(:)     ! gas data
     
     integer        :: i, n_d
     type(si_mass)  :: m_total
     type(unitless) :: y_sum
-    
-    call assert(m_p%v%v > 0.0_WP, "cva (set): m_p > 0 violated")
     
     n_d = size(x%v%d)
     
@@ -523,7 +521,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
     ! `p` and `temp` will be handled below
     
     cv%csa  = csa
-    cv%rm_p = 1.0_WP/m_p ! reciprocal mass of piston/projectile
+    cv%rm_p = rm_p
     cv%p_fs = p_fs
     cv%p_fd = p_fd
     cv%k    = k
@@ -542,6 +540,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
     call assert_dimension(y, cv%gas)
     allocate(cv%m(size(y)))
     call y_sum%v%init_const(0.0_WP, n_d)
+    call m_total%v%init_const(1.0_WP, n_d)
     do i = 1, size(y)
         call assert(gas(i)%gamma > 1.0_WP, "cva (set): gas%gamma > 1 violated")
         call assert(gas(i)%mm    > 0.0_WP, "cva (set): gas%mm > 0 violated")
@@ -550,7 +549,8 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, m_p, p_fs, p_fd, k, x_z, gas)
         
         ! `rho_eos` requires that `m` is to calculate mole fractions!
         ! So I first set `m` to temporary values which will get the right mole fractions.
-        cv%m(i) = y(i)*m_p
+        ! TODO: Does this make the derivatives for `m_total` wrong?
+        cv%m(i) = y(i)*m_total
         
         y_sum = y_sum + y(i)
     end do
