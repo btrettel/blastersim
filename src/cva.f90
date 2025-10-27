@@ -794,8 +794,7 @@ pure function f_m_dot(p_r, b)
 end function f_m_dot
 
 pure function g_m_dot(p_r)
-    ! See beater_pneumatic_2007 eq. 5.4
-    ! This is a replacement for the p_1 term, smoothly going between the various cases.
+    ! This is a multiplier on the `p_2` term, smoothly going between the various cases.
     
     use units, only: tanh
     use checks, only: assert
@@ -804,18 +803,14 @@ pure function g_m_dot(p_r)
     
     type(unitless) :: g_m_dot
     
-    type(unitless) :: p_rl_ ! scales used to make function differentiable
-    
     call assert(p_r%v%v >= 0.0_WP, "cva (g_m_dot): p_r >= 0 violated")
     call assert(p_r%v%v <= 1.0_WP, "cva (g_m_dot): p_r <= 1 violated")
-    
-    call p_rl_%v%init_const(P_RL, size(p_r%v%d)) ! based on first part of beater_pneumatic_2007 eq. 5.4
     
     if (p_r%v%v < P_RL) then
         call g_m_dot%v%init_const(0.0_WP, size(p_r%v%d))
     else
-        g_m_dot = 2.0_WP*((1.0_WP - p_r) / p_rl_)*((1.0_WP - p_r) / p_rl_)*((1.0_WP - p_r) / p_rl_) &
-                    - 3.0_WP*((1.0_WP - p_r) / p_rl_)*((1.0_WP - p_r) / p_rl_) + 1.0_WP
+        g_m_dot = 2.0_WP*((1.0_WP - p_r) / (1.0_WP - P_RL))*((1.0_WP - p_r) / (1.0_WP - P_RL))*((1.0_WP - p_r) / (1.0_WP - P_RL)) &
+                    - 3.0_WP*((1.0_WP - p_r) / (1.0_WP - P_RL))*((1.0_WP - p_r) / (1.0_WP - P_RL)) + 1.0_WP
     end if
     
     call assert(g_m_dot%v%v >= 0.0_WP, "cva (g_m_dot): g_m_dot >= 0 violated")

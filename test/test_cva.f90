@@ -679,23 +679,36 @@ end subroutine test_f_m_dot
 
 subroutine test_g_m_dot(tests)
     use units, only: unitless => unit_p00_p00_p00_p00
-    use cva, only: g_m_dot
+    use cva, only: P_RL, g_m_dot
     
     type(test_results_type), intent(in out) :: tests
     
     type(unitless) :: p_r, g
     
-    call p_r%v%init_const(0.0_WP, 0)
+    call p_r%v%init(0.0_WP, 1, 1)
     g = g_m_dot(p_r)
-    call tests%real_eq(g%v%v, 0.0_WP, "g_m_dot (1)")
+    call tests%real_eq(g%v%v, 0.0_WP, "g_m_dot (value, 1)")
+    call tests%real_eq(g%v%d(1), 0.0_WP, "g_m_dot (derivative, 1)")
     
-    call p_r%v%init_const(0.9_WP, 0)
+    call p_r%v%init(0.9_WP, 1, 1)
     g = g_m_dot(p_r)
-    call tests%real_eq(g%v%v, 0.0_WP, "g_m_dot (2)")
+    call tests%real_eq(g%v%v, 0.0_WP, "g_m_dot (value, 2)")
+    call tests%real_eq(g%v%d(1), 0.0_WP, "g_m_dot (derivative, 2)")
     
-    call p_r%v%init_const(1.0_WP, 0)
+    call p_r%v%init(P_RL, 1, 1)
     g = g_m_dot(p_r)
-    call tests%real_eq(g%v%v, 1.0_WP, "g_m_dot (3)")
+    call tests%real_eq(g%v%v, 0.0_WP, "g_m_dot (value, 3)")
+    call tests%real_eq(g%v%d(1), 0.0_WP, "g_m_dot (derivative, 3)")
+    
+    call p_r%v%init(0.5_WP*(P_RL + 1.0_WP), 1, 1)
+    g = g_m_dot(p_r)
+    call tests%real_eq(g%v%v, 0.5_WP, "g_m_dot (value, 4)", abs_tol=1.0e-12_WP)
+    call tests%real_eq(g%v%d(1), 3.0_WP/(2.0_WP*(1.0_WP - P_RL)), "g_m_dot (derivative, 4)")
+    
+    call p_r%v%init(1.0_WP, 1, 1)
+    g = g_m_dot(p_r)
+    call tests%real_eq(g%v%v, 1.0_WP, "g_m_dot (value, 5)")
+    call tests%real_eq(g%v%d(1), 0.0_WP, "g_m_dot (derivative, 5)")
 end subroutine test_g_m_dot
 
 ! TODO: Plot `g_m_dot` to test it.
@@ -760,11 +773,14 @@ subroutine test_m_dot_1(tests)
     
     m_dot_con = con%m_dot(cv_from, cv_to)
     
+    ! It is important that `m_dot` goes to zero at zero pressure difference, so this is exact.
     call tests%real_eq(m_dot_con%v%v, 0.0_WP, "m_dot, small delta_p, v")
     
+    ! This won't be exact due to the smoothing I applied.
+    ! The important part is that it is finite.
     d_m_dot_d_delta_p = con%a_e%v%v * sqrt((1.0_WP - con%b%v%v) / ((R_BAR/DRY_AIR%mm) * sqrt(2.0_WP)*T_ATM)) &
                             * sqrt(1.0_WP - ((P_RL - con%b%v%v) / (1.0_WP - con%b%v%v))**2)
-    call tests%real_eq(m_dot_con%v%d(1), d_m_dot_d_delta_p, "m_dot, small delta_p, d")
+    call tests%real_eq(m_dot_con%v%d(1), d_m_dot_d_delta_p, "m_dot, small delta_p, d", abs_tol=1.0e-3_WP)
 end subroutine test_m_dot_1
 
 ! TODO: do a test at a higher pressure differential for `m_dot`
