@@ -837,7 +837,7 @@ pure function m_dot(con, cv_from, cv_to)
     
     p_r = cv_to%p() / cv_from%p()
     call assert(p_r%v%v >  0.0_WP, "cva (m_dot): p_r > 0 violated")
-    call assert(p_r%v%v <= 0.0_WP, "cva (m_dot): p_r <= 1 violated")
+    call assert(p_r%v%v <= 1.0_WP, "cva (m_dot): p_r <= 1 violated")
     
     m_dot = con%a_e * (cv_from%p() - g_m_dot(p_r) * cv_to%p()) &
                 * sqrt((1.0_WP - con%b) / (cv_from%r() * cv_from%temp())) &

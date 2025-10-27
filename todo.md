@@ -1,4 +1,9 @@
 - test `m_dot`
+- adjacency matrix
+- RHS functions for RK4
+- `cv_system` type
+    - `type(cv_type), allocatable  :: cvs(:)`
+    - `type(con_type), allocatable :: cons(:, :)`
 
 ***
 
