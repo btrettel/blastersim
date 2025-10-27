@@ -773,13 +773,16 @@ pure function f_m_dot(p_r, b)
     ! This is a replacement for the ((p_2/p_1 - b)/(1-b))**2 term, smoothly going between the various cases.
     
     use units, only: tanh, square
-    use checks, only: assert_dimension
+    use checks, only: assert, assert_dimension
     
     type(unitless), intent(in) :: p_r, b
     
     type(unitless) :: f_m_dot
     
     type(unitless) :: p_rs, p_rl_ ! scales used to make function differentiable
+    
+    call assert(p_r%v%v >= 0.0_WP, "cva (f_m_dot): p_r >= 0 violated")
+    call assert(p_r%v%v <= 1.0_WP, "cva (f_m_dot): p_r <= 1 violated")
     
     call assert_dimension(p_r%v%d, b%v%d)
     
@@ -801,12 +804,19 @@ pure function g_m_dot(p_r)
     
     type(unitless) :: g_m_dot
     
-    type(unitless) :: p_rs, p_rl_ ! scales used to make function differentiable
+    type(unitless) :: p_rl_ ! scales used to make function differentiable
     
-    call p_rs%v%init_const((1.0_WP - P_RL) / 10.0_WP, size(p_r%v%d)) ! TODO: make `p_rs` a function of `dt`
+    call assert(p_r%v%v >= 0.0_WP, "cva (g_m_dot): p_r >= 0 violated")
+    call assert(p_r%v%v <= 1.0_WP, "cva (g_m_dot): p_r <= 1 violated")
+    
     call p_rl_%v%init_const(P_RL, size(p_r%v%d)) ! based on first part of beater_pneumatic_2007 eq. 5.4
     
-    g_m_dot = 0.5_WP * (1.0_WP + tanh((p_r - p_rl_) / p_rs))
+    if (p_r%v%v < P_RL) then
+        call g_m_dot%v%init_const(0.0_WP, size(p_r%v%d))
+    else
+        g_m_dot = 2.0_WP*((1.0_WP - p_r) / p_rl_)*((1.0_WP - p_r) / p_rl_)*((1.0_WP - p_r) / p_rl_) &
+                    - 3.0_WP*((1.0_WP - p_r) / p_rl_)*((1.0_WP - p_r) / p_rl_) + 1.0_WP
+    end if
     
     call assert(g_m_dot%v%v >= 0.0_WP, "cva (g_m_dot): g_m_dot >= 0 violated")
     call assert(g_m_dot%v%v <= 1.0_WP, "cva (g_m_dot): g_m_dot <= 1 violated")
@@ -836,7 +846,7 @@ pure function m_dot(con, cv_from, cv_to)
     n_d = size(con%a_e%v%d)
     
     p_r = cv_to%p() / cv_from%p()
-    call assert(p_r%v%v >  0.0_WP, "cva (m_dot): p_r > 0 violated")
+    call assert(p_r%v%v >= 0.0_WP, "cva (m_dot): p_r >= 0 violated")
     call assert(p_r%v%v <= 1.0_WP, "cva (m_dot): p_r <= 1 violated")
     
     m_dot = con%a_e * (cv_from%p() - g_m_dot(p_r) * cv_to%p()) &

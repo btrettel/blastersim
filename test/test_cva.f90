@@ -695,7 +695,7 @@ subroutine test_g_m_dot(tests)
     
     call p_r%v%init_const(1.0_WP, 0)
     g = g_m_dot(p_r)
-    call tests%real_eq(g%v%v, 1.0_WP, "g_m_dot (3)", abs_tol=1.0e-6_WP)
+    call tests%real_eq(g%v%v, 1.0_WP, "g_m_dot (3)")
 end subroutine test_g_m_dot
 
 ! TODO: Plot `g_m_dot` to test it.
@@ -727,7 +727,7 @@ subroutine test_m_dot_1(tests)
     type(si_length)          :: x
     type(si_velocity)        :: x_dot
     type(unitless)           :: y(1)
-    type(si_pressure)        :: p, p_print
+    type(si_pressure)        :: p
     type(si_temperature)     :: temp
     type(si_area)            :: csa
     type(si_inverse_mass)    :: rm_p
@@ -758,18 +758,12 @@ subroutine test_m_dot_1(tests)
     call cv_from%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR])
     call cv_to%set(x, x_dot, y, p - delta_p, temp, csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR])
     
-    p_print = cv_from%p()
-    print *, p_print%v%v
-    
-    p_print = cv_to%p()
-    print *, p_print%v%v
-    
     m_dot_con = con%m_dot(cv_from, cv_to)
     
     call tests%real_eq(m_dot_con%v%v, 0.0_WP, "m_dot, small delta_p, v")
     
     d_m_dot_d_delta_p = con%a_e%v%v * sqrt((1.0_WP - con%b%v%v) / ((R_BAR/DRY_AIR%mm) * sqrt(2.0_WP)*T_ATM)) &
-                            * sqrt(1.0_WP - ((P_RL - con%b%v%v) / (1.0_WP - con%b%v%v)))
+                            * sqrt(1.0_WP - ((P_RL - con%b%v%v) / (1.0_WP - con%b%v%v))**2)
     call tests%real_eq(m_dot_con%v%d(1), d_m_dot_d_delta_p, "m_dot, small delta_p, d")
 end subroutine test_m_dot_1
 
