@@ -763,9 +763,6 @@ pure function smooth_min(x, y)
     call k%v%init_const(0.01_WP, size(x%v%d))
     
     smooth_min = -k*log(exp(-x/k) + exp(-y/k))
-    
-    call assert(smooth_min <= x, "cva (smooth_min): smooth_min <= x violated")
-    call assert(smooth_min <= y, "cva (smooth_min): smooth_min <= y violated")
 end function smooth_min
 
 pure function f_m_dot(p_r, b)

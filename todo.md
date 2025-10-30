@@ -1,4 +1,3 @@
-- test `m_dot`
 - adjacency matrix
 - RHS functions for RK4
 - `cv_system` type
