@@ -141,11 +141,17 @@ contains
 end type cv_type
 
 type, public :: con_type ! connection between control volumes
+    logical        :: active
     type(si_area)  :: a_e ! effective area
     type(unitless) :: b   ! critical pressure ratio
 contains
     procedure :: m_dot
 end type con_type
+
+!type, public :: cv_system_type
+!    type(cv_type), allocatable  :: cvs(:)
+!    type(con_type), allocatable :: cons(:, :)
+!end type cv_system_type
 
 contains
 
@@ -833,6 +839,7 @@ pure function m_dot(con, cv_from, cv_to)
     
     call assert_dimension(con%a_e%v%d, con%b%v%d)
     
+    call assert(con%active, "cva (m_dot): connection must be active")
     call assert(cv_from%p() >= cv_to%p(), "cva (m_dot): cv_from%p >= cv_to%p violated")
     
     n_d = size(con%a_e%v%d)

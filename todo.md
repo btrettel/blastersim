@@ -3,6 +3,7 @@
 - `cv_system` type
     - `type(cv_type), allocatable  :: cvs(:)`
     - `type(con_type), allocatable :: cons(:, :)`
+- Add elevation angle
 
 ***
 
@@ -16,3 +17,4 @@
     - test_fmad.f90: `test_num_deriv`
 - Write program to generate namelist reader code, AD `d` indices, and fuzz testing bounds. (Part of FLT but for BlasterSim.)
     - Namelist/ad generator allows for disabling AD for some inputs. Perhaps a second AD namelist where variables can be set to .true. if you want AD. A UQ namelist could set the standard deviation. Combining all of this, you could make a UQ namelist where not defining something in the UQ namelist disables AD for that variable. Read the UQ namelist first, then the value namelist.
+- Readd `smooth_min` assertions including new one from Wikipedia including some extra gap for floating point error

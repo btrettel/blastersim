@@ -756,6 +756,7 @@ subroutine test_m_dot_1(tests)
     
     call delta_p%v%init(0.0_WP, 1, 1)
     
+    con%active = .true.
     call con%a_e%v%init_const(0.25_WP, 1)
     call con%b%v%init_const(0.5_WP, 1)
     
@@ -826,6 +827,7 @@ subroutine test_m_dot_2(tests)
     type(si_mass_flow_rate) :: m_dot_con
     real(WP) :: m_dot_con_, d_m_dot_d_p_r
     
+    con%active = .true.
     call con%a_e%v%init_const(0.25_WP, 1)
     call con%b%v%init_const(0.5_WP, 1)
     
@@ -902,6 +904,7 @@ subroutine test_m_dot_3(tests)
     type(si_mass_flow_rate) :: m_dot_con
     real(WP) :: m_dot_con_
     
+    con%active = .true.
     call con%a_e%v%init_const(0.25_WP, 1)
     call con%b%v%init_const(0.5_WP, 1)
     
