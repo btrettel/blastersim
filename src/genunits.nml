@@ -136,3 +136,9 @@ label = "si_volume"
 !   m    kg   s    K
 e = 3.0, 0.0, 0.0, 0.0
 /
+
+&seed_unit
+label = "si_acceleration"
+!   m    kg   s     K
+e = 1.0, 0.0, -2.0, 0.0
+/

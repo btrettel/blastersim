@@ -460,7 +460,7 @@ subroutine test_set_1(tests)
                      si_mass_density    => unit_m30_p10_p00_p00, &
                      si_temperature     => unit_p00_p00_p00_p10, &
                      si_specific_energy => unit_p20_p00_m20_p00
-    use cva, only: P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
+    use cva, only: P_ATM_ => P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -473,7 +473,7 @@ subroutine test_set_1(tests)
     type(si_temperature)     :: temp, temp_cv
     type(si_area)            :: csa
     type(si_inverse_mass)    :: rm_p
-    type(si_pressure)        :: p_fs, p_fd
+    type(si_pressure)        :: p_fs, p_fd, p_atm
     type(si_stiffness)       :: k
     type(si_length)          :: x_z
     type(si_specific_energy) :: u
@@ -484,16 +484,17 @@ subroutine test_set_1(tests)
     call x%v%init_const(0.5_WP, 0)
     call x_dot%v%init_const(0.5_WP, 0)
     call y(1)%v%init_const(1.0_WP, 0)
-    call p%v%init_const(2.0_WP*P_ATM, 0)
+    call p%v%init_const(2.0_WP*P_ATM_, 0)
     call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 0)
     call csa%v%init_const(0.1_WP, 0)
     call rm_p%v%init_const(1.0_WP/0.5_WP, 0)
     call p_fs%v%init_const(0.2e5_WP, 0)
     call p_fd%v%init_const(0.1e5_WP, 0)
+    call p_atm%v%init_const(P_ATM_, 0)
     call k%v%init_const(10.0_WP, 0)
     call x_z%v%init_const(3.0_WP, 0)
     
-    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR])
+    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
     
     call tests%real_eq(cv%x%v%v, x%v%v, "set 1, x")
     call tests%real_eq(cv%x_dot%v%v, x_dot%v%v, "set 1, x_dot")
@@ -502,6 +503,7 @@ subroutine test_set_1(tests)
     call tests%real_eq(cv%rm_p%v%v, rm_p%v%v, "set 1, rm_p")
     call tests%real_eq(cv%p_fs%v%v, p_fs%v%v, "set 1, p_fs")
     call tests%real_eq(cv%p_fd%v%v, p_fd%v%v, "set 1, p_fd")
+    call tests%real_eq(cv%p_atm%v%v, P_ATM_, "set 1, p_atm")
     call tests%real_eq(cv%k%v%v, k%v%v, "set 1, k")
     call tests%real_eq(cv%x_z%v%v, x_z%v%v, "set 1, x_z")
     
@@ -541,7 +543,7 @@ subroutine test_set_2(tests)
                      si_mass_density    => unit_m30_p10_p00_p00, &
                      si_temperature     => unit_p00_p00_p00_p10, &
                      si_specific_energy => unit_p20_p00_m20_p00
-    use cva, only: TEMP_C_TO_K, gas_type, cv_type
+    use cva, only: P_ATM_ => P_ATM, TEMP_C_TO_K, gas_type, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -555,7 +557,7 @@ subroutine test_set_2(tests)
     type(si_area)         :: csa
     type(si_inverse_mass) :: rm_p
     type(si_mass)         :: m_total
-    type(si_pressure)     :: p_fs, p_fd
+    type(si_pressure)     :: p_fs, p_fd, p_atm
     type(si_stiffness)    :: k
     type(si_length)       :: x_z
     type(gas_type)        :: gas(2)
@@ -604,10 +606,11 @@ subroutine test_set_2(tests)
     call rm_p%v%init_const(0.0_WP, 0)
     call p_fs%v%init_const(0.0_WP, 0)
     call p_fd%v%init_const(0.0_WP, 0)
+    call p_atm%v%init_const(P_ATM_, 0)
     call k%v%init_const(0.0_WP, 0)
     call x_z%v%init_const(0.0_WP, 0)
     
-    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, gas)
+    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas)
     
     ! All the masses are slightly off. This is expected, as total mass is not an input here.
     ! Pressure is the input setting the total mass, and it's only approximate.
@@ -732,7 +735,7 @@ subroutine test_m_dot_1(tests)
                      si_temperature     => unit_p00_p00_p00_p10, &
                      si_specific_energy => unit_p20_p00_m20_p00, &
                      si_mass_flow_rate  => unit_p00_p10_m10_p00
-    use cva, only: P_ATM, T_ATM, DRY_AIR, R_BAR, P_RL, cv_type, con_type
+    use cva, only: P_ATM_ => P_ATM, T_ATM, DRY_AIR, R_BAR, P_RL, cv_type, con_type
     
     type(test_results_type), intent(in out) :: tests
     
@@ -747,7 +750,7 @@ subroutine test_m_dot_1(tests)
     type(si_temperature)     :: temp
     type(si_area)            :: csa
     type(si_inverse_mass)    :: rm_p
-    type(si_pressure)        :: p_fs, p_fd
+    type(si_pressure)        :: p_fs, p_fd, p_atm
     type(si_stiffness)       :: k
     type(si_length)          :: x_z
     
@@ -763,17 +766,18 @@ subroutine test_m_dot_1(tests)
     call x%v%init_const(0.5_WP, 1)
     call x_dot%v%init_const(0.5_WP, 1)
     call y(1)%v%init_const(1.0_WP, 1)
-    call p%v%init_const(2.0_WP*P_ATM, 1)
+    call p%v%init_const(2.0_WP*P_ATM_, 1)
     call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 1)
     call csa%v%init_const(1.0_WP, 1)
     call rm_p%v%init_const(0.0_WP, 1)
     call p_fs%v%init_const(0.0_WP, 1)
     call p_fd%v%init_const(0.0_WP, 1)
+    call p_atm%v%init_const(P_ATM_, 1)
     call k%v%init_const(0.0_WP, 1)
     call x_z%v%init_const(0.0_WP, 1)
     
-    call cv_from%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR])
-    call cv_to%set(x, x_dot, y, p - delta_p, temp, csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR])
+    call cv_from%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv_to%set(x, x_dot, y, p - delta_p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
     
     m_dot_con = con%m_dot(cv_from, cv_to)
     
@@ -805,7 +809,7 @@ subroutine test_m_dot_2(tests)
                      si_temperature     => unit_p00_p00_p00_p10, &
                      si_specific_energy => unit_p20_p00_m20_p00, &
                      si_mass_flow_rate  => unit_p00_p10_m10_p00
-    use cva, only: P_ATM, T_ATM, DRY_AIR, R_BAR, P_RL, cv_type, con_type
+    use cva, only: P_ATM_ => P_ATM, T_ATM, DRY_AIR, R_BAR, P_RL, cv_type, con_type
     use checks, only: assert
     
     type(test_results_type), intent(in out) :: tests
@@ -820,7 +824,7 @@ subroutine test_m_dot_2(tests)
     type(si_temperature)     :: temp
     type(si_area)            :: csa
     type(si_inverse_mass)    :: rm_p
-    type(si_pressure)        :: p_fs, p_fd
+    type(si_pressure)        :: p_fs, p_fd, p_atm
     type(si_stiffness)       :: k
     type(si_length)          :: x_z
     
@@ -838,19 +842,20 @@ subroutine test_m_dot_2(tests)
     call x%v%init_const(0.5_WP, 1)
     call x_dot%v%init_const(0.5_WP, 1)
     call y(1)%v%init_const(1.0_WP, 1)
-    call p_in%v%init_const(2.0_WP*P_ATM, 1)
+    call p_in%v%init_const(2.0_WP*P_ATM_, 1)
     call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 1)
     call csa%v%init_const(1.0_WP, 1)
     call rm_p%v%init_const(0.0_WP, 1)
     call p_fs%v%init_const(0.0_WP, 1)
     call p_fd%v%init_const(0.0_WP, 1)
+    call p_atm%v%init_const(P_ATM_, 1)
     call k%v%init_const(0.0_WP, 1)
     call x_z%v%init_const(0.0_WP, 1)
     
     p_out = p_in*p_r
     
-    call cv_from%set(x, x_dot, y, p_in, temp, csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR])
-    call cv_to%set(x, x_dot, y, p_out, temp, csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR])
+    call cv_from%set(x, x_dot, y, p_in, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv_to%set(x, x_dot, y, p_out, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
     
     m_dot_con = con%m_dot(cv_from, cv_to)
     
@@ -882,7 +887,7 @@ subroutine test_m_dot_3(tests)
                      si_temperature     => unit_p00_p00_p00_p10, &
                      si_specific_energy => unit_p20_p00_m20_p00, &
                      si_mass_flow_rate  => unit_p00_p10_m10_p00
-    use cva, only: P_ATM, T_ATM, DRY_AIR, R_BAR, cv_type, con_type
+    use cva, only: P_ATM_ => P_ATM, T_ATM, DRY_AIR, R_BAR, cv_type, con_type
     use checks, only: assert
     
     type(test_results_type), intent(in out) :: tests
@@ -897,7 +902,7 @@ subroutine test_m_dot_3(tests)
     type(si_temperature)     :: temp
     type(si_area)            :: csa
     type(si_inverse_mass)    :: rm_p
-    type(si_pressure)        :: p_fs, p_fd
+    type(si_pressure)        :: p_fs, p_fd, p_atm
     type(si_stiffness)       :: k
     type(si_length)          :: x_z
     
@@ -914,19 +919,20 @@ subroutine test_m_dot_3(tests)
     call x%v%init_const(0.5_WP, 1)
     call x_dot%v%init_const(0.5_WP, 1)
     call y(1)%v%init_const(1.0_WP, 1)
-    call p_in%v%init_const(2.0_WP*P_ATM, 1)
+    call p_in%v%init_const(2.0_WP*P_ATM_, 1)
     call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 1)
     call csa%v%init_const(1.0_WP, 1)
     call rm_p%v%init_const(0.0_WP, 1)
     call p_fs%v%init_const(0.0_WP, 1)
     call p_fd%v%init_const(0.0_WP, 1)
+    call p_atm%v%init_const(P_ATM_, 1)
     call k%v%init_const(0.0_WP, 1)
     call x_z%v%init_const(0.0_WP, 1)
     
     p_out = p_in*p_r
     
-    call cv_from%set(x, x_dot, y, p_in, temp, csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR])
-    call cv_to%set(x, x_dot, y, p_out, temp, csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR])
+    call cv_from%set(x, x_dot, y, p_in, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv_to%set(x, x_dot, y, p_out, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
     
     m_dot_con = con%m_dot(cv_from, cv_to)
     

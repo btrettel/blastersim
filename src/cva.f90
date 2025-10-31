@@ -120,6 +120,7 @@ type, public :: cv_type ! control volume
     type(si_area)               :: csa        ! cross-sectional area
     type(si_inverse_mass)       :: rm_p       ! reciprocal mass of piston/projectile
     type(si_pressure)           :: p_fs, p_fd ! static and dynamic friction pressure
+    type(si_pressure)           :: p_atm      ! atmospheric pressure
     type(si_stiffness)          :: k          ! stiffness of spring attached to piston
     type(si_length)             :: x_z        ! zero force location for spring
     type(gas_type), allocatable :: gas(:)     ! gas data
@@ -148,10 +149,10 @@ contains
     procedure :: m_dot
 end type con_type
 
-!type, public :: cv_system_type
-!    type(cv_type), allocatable  :: cvs(:)
-!    type(con_type), allocatable :: cons(:, :)
-!end type cv_system_type
+type, public :: cv_system_type
+    type(cv_type), allocatable  :: cvs(:)
+    type(con_type), allocatable :: cons(:, :)
+end type cv_system_type
 
 contains
 
@@ -564,7 +565,7 @@ pure function p_cv(cv)
     call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated")
 end function p_cv
 
-pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, gas)
+pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas)
     use units, only: si_temperature => unit_p00_p00_p00_p10, &
                      si_mass        => unit_p00_p10_p00_p00
     use checks, only: assert, assert_dimension, is_close
@@ -582,6 +583,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, gas
     type(si_area), intent(in)         :: csa        ! cross-sectional area
     type(si_inverse_mass), intent(in) :: rm_p       ! reciprocal mass of piston/projectile
     type(si_pressure), intent(in)     :: p_fs, p_fd ! static and dynamic friction pressure
+    type(si_pressure), intent(in)     :: p_atm      ! atmospheric pressure
     type(si_stiffness), intent(in)    :: k          ! stiffness of spring attached to piston
     type(si_length), intent(in)       :: x_z        ! zero force location for spring
     type(gas_type), intent(in)        :: gas(:)     ! gas data
@@ -596,22 +598,24 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, k, x_z, gas
     cv%x_dot = x_dot
     ! `p` and `temp` will be handled below
     
-    cv%csa  = csa
-    cv%rm_p = rm_p
-    cv%p_fs = p_fs
-    cv%p_fd = p_fd
-    cv%k    = k
-    cv%x_z  = x_z
-    cv%gas  = gas
+    cv%csa   = csa
+    cv%rm_p  = rm_p
+    cv%p_fs  = p_fs
+    cv%p_fd  = p_fd
+    cv%p_atm = p_atm
+    cv%k     = k
+    cv%x_z   = x_z
+    cv%gas   = gas
     
-    call assert(cv%x%v%v    >  0.0_WP, "cva (set): x > 0 violated")
-    call assert(p%v%v       >  0.0_WP, "cva (set): p > 0 violated")
-    call assert(temp%v%v    >  0.0_WP, "cva (set): temp > 0 violated")
-    call assert(csa%v%v     >  0.0_WP, "cva (set): csa > 0 violated")
-    call assert(cv%p_fs%v%v >= 0.0_WP, "cva (set): p_fs > 0 violated")
-    call assert(cv%p_fd%v%v >= 0.0_WP, "cva (set): p_fd > 0 violated")
-    call assert(cv%k%v%v    >= 0.0_WP, "cva (set): k >= 0 violated")
-    call assert(cv%x_z%v%v  >= 0.0_WP, "cva (set): x_z >= 0 violated")
+    call assert(cv%x%v%v     >  0.0_WP, "cva (set): x > 0 violated")
+    call assert(p%v%v        >  0.0_WP, "cva (set): p > 0 violated")
+    call assert(temp%v%v     >  0.0_WP, "cva (set): temp > 0 violated")
+    call assert(csa%v%v      >  0.0_WP, "cva (set): csa > 0 violated")
+    call assert(cv%p_fs%v%v  >= 0.0_WP, "cva (set): p_fs >= 0 violated")
+    call assert(cv%p_fd%v%v  >= 0.0_WP, "cva (set): p_fd >= 0 violated")
+    call assert(cv%p_atm%v%v >  0.0_WP, "cva (set): p_atm > 0 violated")
+    call assert(cv%k%v%v     >= 0.0_WP, "cva (set): k >= 0 violated")
+    call assert(cv%x_z%v%v   >= 0.0_WP, "cva (set): x_z >= 0 violated")
     
     call assert_dimension(y, cv%gas)
     allocate(cv%m(size(y)))
@@ -715,6 +719,24 @@ pure function p_f0(cv, p_fe)
         end if
     end function p_f0_high
 end function p_f0
+
+!pure function d_x_d_t(cv)
+!    class(cv_type), intent(in) :: cv
+    
+!    type(si_velocity) :: d_x_d_t
+    
+!    d_x_d_t = cv%x_dot
+!end function d_x_d_t
+
+!pure function d_xdot_d_t(cv)
+!    use units, only: si_acceleration => unit_p10_p00_m20_p00
+    
+!    class(cv_type), intent(in) :: cv
+    
+!    type(si_acceleration) :: d_xdot_d_t
+    
+!    d_xdot_d_t = cv%csa*cv%rmp*(
+!end function d_x_d_t
 
 pure subroutine assert_mass(cv, procedure_name)
     ! Why not make this a type-bound operator?
