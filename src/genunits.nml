@@ -1,16 +1,16 @@
 &config
 output_file     = "src/units.f90"
-base_units      = "m", "kg", "s", "K"
+base_units      = "m", "kg", "s", "K", "mol"
 type_definition = "type(ad)"
 use_line        = "use prec, only: WP;use fmad, only: ad, sin, cos, tan, exp, log, tanh, atanh, abs, min, max, sqrt"
 kind_parameter  = "WP"
 module_name     = "units"
 max_n_units     = 120
 
-!               m     kg    s     K
-min_exponents = -3.0, -1.0, -2.0, -1.0
-max_exponents =  3.0,  1.0,  2.0,  1.0
-denominators  =    1,    1,    1,    1
+!               m     kg    s     K     mol
+min_exponents = -3.0, -1.0, -2.0, -1.0, -1.0
+max_exponents =  3.0,  2.0,  2.0,  1.0,  1.0
+denominators  =    1,    1,    1,    1,    1
 
 debug = .false.
 
@@ -22,123 +22,151 @@ intrinsics = .true.
 
 &seed_unit
 label = "unitless"
-!   m    kg   s    K
-e = 0.0, 0.0, 0.0, 0.0
+!   m    kg   s    K    mol
+e = 0.0, 0.0, 0.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$x_i$`
 label = "si_length"
-!   m    kg   s    K
-e = 1.0, 0.0, 0.0, 0.0
+!   m    kg   s    K    mol
+e = 1.0, 0.0, 0.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$\dot{x}_i$`
 label = "si_velocity"
-!   m    kg   s     K
-e = 1.0, 0.0, -1.0, 0.0
+!   m    kg   s     K    mol
+e = 1.0, 0.0, -1.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$A_i$`
 label = "si_area"
-!   m    kg   s    K
-e = 2.0, 0.0, 0.0, 0.0
+!   m    kg   s    K    mol
+e = 2.0, 0.0, 0.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$m_{\text{p}i}$`
 label = "si_mass"
-!   m    kg   s    K
-e = 0.0, 1.0, 0.0, 0.0
+!   m    kg   s    K    mol
+e = 0.0, 1.0, 0.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$1/m_{\text{p}i}$`
 label = "si_inverse_mass"
-!   m    kg    s    K
-e = 0.0, -1.0, 0.0, 0.0
+!   m    kg    s    K    mol
+e = 0.0, -1.0, 0.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$k_i$`
 label = "si_stiffness"
-!   m     kg  s     K
-e = 0.0, 1.0, -2.0, 0.0
+!   m     kg  s     K    mol
+e = 0.0, 1.0, -2.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$p_i$`
 label = "si_pressure"
-!   m     kg   s     K
-e = -1.0, 1.0, -2.0, 0.0
+!   m     kg   s     K    mol
+e = -1.0, 1.0, -2.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$\dot{m}$`
 label = "si_mass_flow_rate"
-!   m    kg   s     K
-e = 0.0, 1.0, -1.0, 0.0
+!   m    kg   s     K    mol
+e = 0.0, 1.0, -1.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$E$`
 label = "si_energy"
-!   m    kg   s     K
-e = 2.0, 1.0, -2.0, 0.0
+!   m    kg   s     K    mol
+e = 2.0, 1.0, -2.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$h$`
 label = "si_specific_energy"
-!   m    kg   s     K
-e = 2.0, 0.0, -2.0, 0.0
+!   m    kg   s     K    mol
+e = 2.0, 0.0, -2.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$c_v$`
 label = "si_specific_heat"
-!   m    kg   s     K
-e = 2.0, 0.0, -2.0, -1.0
-/
-
-&seed_unit
-label = "si_heat_capacity"
-!   m    kg   s     K
-e = 2.0, 1.0, -2.0, -1.0
+!   m    kg   s     K    mol
+e = 2.0, 0.0, -2.0, -1.0, 0.0
 /
 
 &seed_unit
 ! example: `$T_i$`
 label = "si_temperature"
-!   m    kg   s    K
-e = 0.0, 0.0, 0.0, 1.0
+!   m    kg   s    K    mol
+e = 0.0, 0.0, 0.0, 1.0, 0.0
 /
 
 &seed_unit
 ! example: `$\rho_i$`
 label = "si_mass_density"
-!   m     kg   s    K
-e = -3.0, 1.0, 0.0, 0.0
+!   m     kg   s    K    mol
+e = -3.0, 1.0, 0.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$t$`
 label = "si_time"
-!   m    kg   s    K
-e = 0.0, 0.0, 1.0, 0.0
+!   m    kg   s    K    mol
+e = 0.0, 0.0, 1.0, 0.0, 0.0
 /
 
 &seed_unit
 ! example: `$V$`
 label = "si_volume"
-!   m    kg   s    K
-e = 3.0, 0.0, 0.0, 0.0
+!   m    kg   s    K    mol
+e = 3.0, 0.0, 0.0, 0.0, 0.0
 /
 
 &seed_unit
-label = "si_acceleration"
-!   m    kg   s     K
-e = 1.0, 0.0, -2.0, 0.0
+! example: `$n$`
+label = "si_mole"
+!   m    kg   s    K    mol
+e = 0.0, 0.0, 0.0, 0.0, 1.0
+sterile = .true.
+/
+
+&seed_unit
+! example: `$\overline{R}$`
+label = "si_molar_gas_constant"
+!   m    kg   s     K     mol
+e = 2.0, 1.0, -2.0, -1.0, -1.0
+sterile = .true.
+/
+
+&seed_unit
+! example: `$M$`
+label = "si_molar_mass"
+!   m    kg   s    K    mol
+e = 0.0, 1.0, 0.0, 0.0, -1.0
+sterile = .true.
+/
+
+&seed_unit
+! needed because of $\rho \overline{R}$
+label = "intermediate_1"
+!   m     kg   s     K     mol
+e = -1.0, 2.0, -2.0, -1.0, -1.0
+sterile = .true.
+/
+
+&seed_unit
+! needed because of $\overline{R} T$
+label = "intermediate_2"
+!   m    kg   s     K    mol
+e = 2.0, 1.0, -2.0, 0.0, -1.0
+sterile = .true.
 /

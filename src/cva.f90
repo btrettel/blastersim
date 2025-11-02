@@ -8,16 +8,15 @@
 module cva
 
 use prec, only: WP
-use units, only: si_length       => unit_p10_p00_p00_p00, &
-                 si_velocity     => unit_p10_p00_m10_p00, &
-                 si_mass         => unit_p00_p10_p00_p00, &
-                 si_energy       => unit_p20_p10_m20_p00, &
-                 si_area         => unit_p20_p00_p00_p00, &
-                 si_inverse_mass => unit_p00_m10_p00_p00, &
-                 si_pressure     => unit_m10_p10_m20_p00, &
-                 unitless        => unit_p00_p00_p00_p00, &
-                 si_stiffness    => unit_p00_p10_m20_p00, &
-                 si_area         => unit_p20_p00_p00_p00
+use units, only: si_length       => unit_p10_p00_p00_p00_p00, &
+                 si_velocity     => unit_p10_p00_m10_p00_p00, &
+                 si_mass         => unit_p00_p10_p00_p00_p00, &
+                 si_energy       => unit_p20_p10_m20_p00_p00, &
+                 si_area         => unit_p20_p00_p00_p00_p00, &
+                 si_inverse_mass => unit_p00_m10_p00_p00_p00, &
+                 si_pressure     => unit_m10_p10_m20_p00_p00, &
+                 unitless        => unit_p00_p00_p00_p00_p00, &
+                 si_stiffness    => unit_p00_p10_m20_p00_p00
 implicit none
 private
 
@@ -163,8 +162,8 @@ contains
 pure function u_gas(gas, temp)
     ! Constant specific heats assumed for now. Will improve later.
     
-    use units, only: si_temperature     => unit_p00_p00_p00_p10, &
-                     si_specific_energy => unit_p20_p00_m20_p00
+    use units, only: si_temperature     => unit_p00_p00_p00_p10_p00, &
+                     si_specific_energy => unit_p20_p00_m20_p00_p00
     
     class(gas_type), intent(in)      :: gas
     type(si_temperature), intent(in) :: temp
@@ -183,8 +182,8 @@ end function u_gas
 pure function h_gas(gas, temp)
     ! Constant specific heats assumed for now. Will improve later.
     
-    use units, only: si_temperature     => unit_p00_p00_p00_p10, &
-                     si_specific_energy => unit_p20_p00_m20_p00
+    use units, only: si_temperature     => unit_p00_p00_p00_p10_p00, &
+                     si_specific_energy => unit_p20_p00_m20_p00_p00
     
     class(gas_type), intent(in)      :: gas
     type(si_temperature), intent(in) :: temp
@@ -203,7 +202,7 @@ end function h_gas
 pure function r_gas(gas, n_d)
     ! Gas constant for a *pure* gas.
     
-    use units, only: si_specific_heat => unit_p20_p00_m20_m10
+    use units, only: si_specific_heat => unit_p20_p00_m20_m10_p00
     
     class(gas_type), intent(in) :: gas
     integer, intent(in)         :: n_d ! number of derivatives
@@ -214,7 +213,7 @@ pure function r_gas(gas, n_d)
 end function r_gas
 
 pure function c_v_gas(gas, n_d)
-    use units, only: si_specific_heat => unit_p20_p00_m20_m10
+    use units, only: si_specific_heat => unit_p20_p00_m20_m10_p00
     use checks, only: assert
     
     class(gas_type), intent(in) :: gas
@@ -229,7 +228,7 @@ pure function c_v_gas(gas, n_d)
 end function c_v_gas
 
 pure function c_p_gas(gas, n_d)
-    use units, only: si_specific_heat => unit_p20_p00_m20_m10
+    use units, only: si_specific_heat => unit_p20_p00_m20_m10_p00
     use checks, only: assert
     
     class(gas_type), intent(in) :: gas
@@ -263,9 +262,9 @@ end function m_total
 pure function p_eos(cv, rho, temp)
     ! Calculate pressure using the equation of state.
     
-    use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
-                     si_temperature   => unit_p00_p00_p00_p10, &
-                     si_specific_heat => unit_p20_p00_m20_m10
+    use units, only: si_mass_density  => unit_m30_p10_p00_p00_p00, &
+                     si_temperature   => unit_p00_p00_p00_p10_p00, &
+                     si_specific_heat => unit_p20_p00_m20_m10_p00
     use checks, only: assert, assert_dimension
     
     class(cv_type), intent(in)        :: cv
@@ -292,9 +291,9 @@ pure function rho_eos(cv, p, temp, y)
     ! In the future, if an EOS more complex than the ideal gas law is used, it might make sense to calculate `rho_eos` from `p_eos`
     ! with the Newton method.
     
-    use units, only: si_mass_density  => unit_m30_p10_p00_p00, &
-                     si_temperature   => unit_p00_p00_p00_p10, &
-                     si_specific_heat => unit_p20_p00_m20_m10
+    use units, only: si_mass_density  => unit_m30_p10_p00_p00_p00, &
+                     si_temperature   => unit_p00_p00_p00_p10_p00, &
+                     si_specific_heat => unit_p20_p00_m20_m10_p00
     use checks, only: assert, assert_dimension, is_close
     
     class(cv_type), intent(in)       :: cv
@@ -438,7 +437,7 @@ pure function r_cv(cv)
     ! Some of the units are intentionally wrong here.
     ! This is done to avoid adding mol to the unit system, which would make compilation much slower.
     
-    use units, only: si_specific_heat => unit_p20_p00_m20_m10
+    use units, only: si_specific_heat => unit_p20_p00_m20_m10_p00
     use checks, only: assert, is_close
     
     class(cv_type), intent(in) :: cv
@@ -477,9 +476,9 @@ pure function r_cv(cv)
 end function r_cv
 
 pure function temp_cv(cv)
-    use units, only: si_temperature     => unit_p00_p00_p00_p10, &
-                     si_heat_capacity   => unit_p20_p10_m20_m10, &
-                     si_specific_energy => unit_p20_p00_m20_p00
+    use units, only: si_temperature     => unit_p00_p00_p00_p10_p00, &
+                     si_heat_capacity   => unit_p20_p10_m20_m10_p00, &
+                     si_specific_energy => unit_p20_p00_m20_p00_p00
     use checks, only: assert
     
     class(cv_type), intent(in) :: cv
@@ -512,9 +511,7 @@ pure function temp_cv(cv)
 end function temp_cv
 
 pure function vol_cv(cv)
-    use units, only: si_volume => unit_p30_p00_p00_p00, &
-                     si_length => unit_p10_p00_p00_p00, &
-                     si_area   => unit_p20_p00_p00_p00
+    use units, only: si_volume => unit_p30_p00_p00_p00_p00
     use checks, only: assert
     
     class(cv_type), intent(in) :: cv
@@ -530,8 +527,8 @@ pure function vol_cv(cv)
 end function vol_cv
 
 pure function rho_cv(cv)
-    use units, only: si_mass_density => unit_m30_p10_p00_p00, &
-                     si_volume       => unit_p30_p00_p00_p00
+    use units, only: si_mass_density => unit_m30_p10_p00_p00_p00, &
+                     si_volume       => unit_p30_p00_p00_p00_p00
     use checks, only: assert
     
     class(cv_type), intent(in) :: cv
@@ -546,8 +543,8 @@ pure function rho_cv(cv)
 end function rho_cv
 
 pure function p_cv(cv)
-    use units, only: si_mass_density => unit_m30_p10_p00_p00, &
-                     si_temperature  => unit_p00_p00_p00_p10
+    use units, only: si_mass_density => unit_m30_p10_p00_p00_p00, &
+                     si_temperature  => unit_p00_p00_p00_p10_p00
     use checks, only: assert
     
     class(cv_type), intent(in) :: cv
@@ -566,8 +563,7 @@ pure function p_cv(cv)
 end function p_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas)
-    use units, only: si_temperature => unit_p00_p00_p00_p10, &
-                     si_mass        => unit_p00_p10_p00_p00
+    use units, only: si_temperature => unit_p00_p00_p00_p10_p00
     use checks, only: assert, assert_dimension, is_close
     
     class(cv_type), intent(in out) :: cv
@@ -729,7 +725,7 @@ pure function d_x_d_t(cv)
 end function d_x_d_t
 
 pure function d_xdot_d_t(cv)
-    use units, only: si_acceleration => unit_p10_p00_m20_p00
+    use units, only: si_acceleration => unit_p10_p00_m20_p00_p00
     use checks, only: assert
     
     class(cv_type), intent(in) :: cv
@@ -749,7 +745,7 @@ pure subroutine assert_mass(cv, procedure_name)
     ! Why not make this a type-bound operator?
     ! That would make my assertion counting Python program not count these.
     
-    use units, only: si_temperature => unit_p00_p00_p00_p10
+    use units, only: si_temperature => unit_p00_p00_p00_p10_p00
     use checks, only: assert, assert_dimension
     
     type(cv_type), intent(in)    :: cv
@@ -853,8 +849,8 @@ pure function m_dot(con, cv_from, cv_to)
     ! Modified con flow rate model from beater_pneumatic_2007 ch. 5.
     ! Modified to be differentiable.
     
-    use units, only: si_mass_flow_rate => unit_p00_p10_m10_p00, &
-                     si_specific_heat  => unit_p20_p00_m20_m10, &
+    use units, only: si_mass_flow_rate => unit_p00_p10_m10_p00_p00, &
+                     si_specific_heat  => unit_p20_p00_m20_m10_p00, &
                      sqrt
     use checks, only: assert, assert_dimension
     
@@ -891,7 +887,7 @@ pure function p_v_h2o(temp)
     ! Data ranges from 255.9 to 373.0 K. Probably okay to go a bit outside of those ranges.
     ! <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/H2O/h1H2>
     
-    use units, only: si_temperature => unit_p00_p00_p00_p10, &
+    use units, only: si_temperature => unit_p00_p00_p00_p10_p00, &
                      exp
     
     type(si_temperature), intent(in) :: temp
