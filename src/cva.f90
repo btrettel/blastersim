@@ -291,9 +291,11 @@ pure function rho_eos(cv, p, temp, y)
     ! In the future, if an EOS more complex than the ideal gas law is used, it might make sense to calculate `rho_eos` from `p_eos`
     ! with the Newton method.
     
-    use units, only: si_mass_density  => unit_m30_p10_p00_p00_p00, &
-                     si_temperature   => unit_p00_p00_p00_p10_p00, &
-                     si_specific_heat => unit_p20_p00_m20_m10_p00
+    use units, only: si_mass_density       => unit_m30_p10_p00_p00_p00, &
+                     si_temperature        => unit_p00_p00_p00_p10_p00, &
+                     si_specific_heat      => unit_p20_p00_m20_m10_p00, &
+                     si_molar_mass         => unit_p00_p10_p00_p00_m10, &
+                     si_molar_gas_constant => unit_p20_p10_m20_m10_m10
     use checks, only: assert, assert_dimension, is_close
     
     class(cv_type), intent(in)       :: cv
@@ -303,11 +305,11 @@ pure function rho_eos(cv, p, temp, y)
     
     type(si_mass_density) :: rho_eos
     
-    integer                :: n_d, i, j
-    type(unitless)         :: mm ! molar mass (mol/kg), not actually unitless!
-    type(si_specific_heat) :: r_bar_ ! universal gas constant, which also doesn't have the same units as specific heat!
-    type(unitless)         :: denominator, y_sum
-    type(si_specific_heat) :: r_cv
+    integer                     :: n_d, i, j
+    type(si_molar_mass)         :: mm, gas_mm ! molar mass
+    type(si_molar_gas_constant) :: r_bar_ ! universal gas constant
+    type(unitless)              :: denominator, y_sum
+    type(si_specific_heat)      :: r_cv
     
     ! Don't check `p_c` here as that requires the masses.
     
@@ -330,7 +332,8 @@ pure function rho_eos(cv, p, temp, y)
         do j = 1, size(y)
             denominator = denominator + y(j)*(cv%gas(i)%mm/cv%gas(j)%mm)
         end do
-        mm    = mm + y(i)*cv%gas(i)%mm/denominator
+        call gas_mm%v%init_const(cv%gas(i)%mm, n_d)
+        mm    = mm + y(i)*gas_mm/denominator
         y_sum = y_sum + y(i)
     end do
     
@@ -437,19 +440,21 @@ pure function r_cv(cv)
     ! Some of the units are intentionally wrong here.
     ! This is done to avoid adding mol to the unit system, which would make compilation much slower.
     
-    use units, only: si_specific_heat => unit_p20_p00_m20_m10_p00
+    use units, only: si_specific_heat      => unit_p20_p00_m20_m10_p00, &
+                     si_molar_gas_constant => unit_p20_p10_m20_m10_m10, &
+                     si_molar_mass         => unit_p00_p10_p00_p00_m10
     use checks, only: assert, is_close
     
     class(cv_type), intent(in) :: cv
     
     type(si_specific_heat) :: r_cv
     
-    integer        :: n_d, i, j
-    type(unitless) :: chi ! mole fraction for gas in loop
-    type(unitless) :: mm  ! molar mass (mol/kg), not actually unitless!
-    type(si_mass)  :: denominator
-    type(si_specific_heat) :: r_bar_ ! universal gas constant, which also doesn't have the same units as specific heat!
-    type(unitless) :: chi_sum
+    integer                     :: n_d, i, j
+    type(unitless)              :: chi ! mole fraction for gas in loop
+    type(si_molar_mass)         :: mm, gas_mm ! molar mass
+    type(si_mass)               :: denominator
+    type(si_molar_gas_constant) :: r_bar_ ! universal gas constant
+    type(unitless)              :: chi_sum
     
     n_d = size(cv%m(1)%v%d)
     
@@ -465,7 +470,8 @@ pure function r_cv(cv)
         end do
         chi = cv%m(i) / denominator
         chi_sum = chi_sum + chi
-        mm  = mm + chi*cv%gas(i)%mm
+        call gas_mm%v%init_const(cv%gas(i)%mm, n_d)
+        mm  = mm + chi*gas_mm
     end do
     
     call r_bar_%v%init_const(R_BAR, n_d)
