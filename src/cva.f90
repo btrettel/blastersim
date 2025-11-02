@@ -720,23 +720,30 @@ pure function p_f0(cv, p_fe)
     end function p_f0_high
 end function p_f0
 
-!pure function d_x_d_t(cv)
-!    class(cv_type), intent(in) :: cv
+pure function d_x_d_t(cv)
+    class(cv_type), intent(in) :: cv
     
-!    type(si_velocity) :: d_x_d_t
+    type(si_velocity) :: d_x_d_t
     
-!    d_x_d_t = cv%x_dot
-!end function d_x_d_t
+    d_x_d_t = cv%x_dot
+end function d_x_d_t
 
-!pure function d_xdot_d_t(cv)
-!    use units, only: si_acceleration => unit_p10_p00_m20_p00
+pure function d_xdot_d_t(cv)
+    use units, only: si_acceleration => unit_p10_p00_m20_p00
+    use checks, only: assert
     
-!    class(cv_type), intent(in) :: cv
+    class(cv_type), intent(in) :: cv
     
-!    type(si_acceleration) :: d_xdot_d_t
+    type(si_acceleration) :: d_xdot_d_t
     
-!    d_xdot_d_t = cv%csa*cv%rmp*(
-!end function d_x_d_t
+    type(si_pressure) :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
+    
+    call assert(cv%csa%v%v > 0.0_WP, "cva (d_xdot_d_t): cv%csa > 0 violated")
+    
+    p_fe = cv%p() - cv%p_atm - (cv%k/cv%csa)*(cv%x - cv%x_z)
+    
+    d_xdot_d_t = cv%csa*cv%rm_p*(cv%p() - cv%p_atm - cv%p_f(p_fe)) - cv%k*cv%rm_p*(cv%x - cv%x_z)
+end function d_xdot_d_t
 
 pure subroutine assert_mass(cv, procedure_name)
     ! Why not make this a type-bound operator?
