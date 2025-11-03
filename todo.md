@@ -1,4 +1,4 @@
-- Test new functions.
+- Test `d_m_d_t` and `d_e_d_t`. Use fake numbers for `m_dots` and `h_dots`.
 - Calculate `m_dots` first, then pass into `d_m_d_t`.
 - From `m_dots`, calculate `h_dot`s, then pass into `d_e_d_t`.
 - RHS functions for RK4

@@ -28,12 +28,15 @@ call test_p_f0_2(tests)
 call test_temp_cv(tests)
 call test_set_1(tests)
 call test_set_2(tests)
+call test_rates(tests)
+
 call test_smooth_min(tests)
 call test_f_m_dot(tests)
 call test_g_m_dot(tests)
 call test_m_dot_1(tests)
 call test_m_dot_2(tests)
 call test_m_dot_3(tests)
+
 call test_p_v_h2o(tests)
 
 call tests%end_tests()
@@ -640,6 +643,61 @@ subroutine test_set_2(tests)
     p_cv = cv%p()
     call tests%real_eq(p_cv%v%v, p%v%v, "set 2, p")
 end subroutine test_set_2
+
+subroutine test_rates(tests)
+    use units, only: si_length           => unit_p10_p00_p00_p00_p00, &
+                     si_velocity         => unit_p10_p00_m10_p00_p00, &
+                     unitless            => unit_p00_p00_p00_p00_p00, &
+                     si_inverse_mass     => unit_p00_m10_p00_p00_p00, &
+                     si_energy           => unit_p20_p10_m20_p00_p00, &
+                     si_area             => unit_p20_p00_p00_p00_p00, &
+                     si_pressure         => unit_m10_p10_m20_p00_p00, &
+                     si_stiffness        => unit_p00_p10_m20_p00_p00, &
+                     si_volume           => unit_p30_p00_p00_p00_p00, &
+                     si_mass_density     => unit_m30_p10_p00_p00_p00, &
+                     si_temperature      => unit_p00_p00_p00_p10_p00, &
+                     si_specific_energy  => unit_p20_p00_m20_p00_p00, &
+                     si_acceleration     => unit_p10_p00_m20_p00_p00, &
+                     si_mass_flow_rate   => unit_p00_p10_m10_p00_p00, &
+                     si_energy_flow_rate => unit_p20_p10_m30_p00_p00
+    use cva, only: DRY_AIR, cv_type
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_type) :: cv
+    
+    type(si_length)          :: x
+    type(si_velocity)        :: x_dot, d_x_d_t
+    type(unitless)           :: y(1)
+    type(si_pressure)        :: p, p_fs, p_fd, p_atm
+    type(si_temperature)     :: temp
+    type(si_area)            :: csa
+    type(si_inverse_mass)    :: rm_p
+    type(si_stiffness)       :: k
+    type(si_length)          :: x_z
+    type(si_acceleration)    :: d_xdot_d_t
+    
+    call x%v%init_const(1.5_WP, 0)
+    call x_dot%v%init_const(10.0_WP, 0)
+    call y(1)%v%init_const(1.0_WP, 0)
+    call p%v%init_const(12.0e5_WP, 0)
+    call temp%v%init_const(300.0_WP, 0)
+    call csa%v%init_const(4.0_WP, 0)
+    call rm_p%v%init_const(1.0_WP/2.0_WP, 0)
+    call p_fs%v%init_const(2.0e5_WP, 0)
+    call p_fd%v%init_const(1.0e5_WP, 0)
+    call p_atm%v%init_const(1.0e5_WP, 0)
+    call k%v%init_const(1.0e6_WP, 0)
+    call x_z%v%init_const(0.5_WP, 0)
+    
+    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    
+    d_x_d_t = cv%d_x_d_t()
+    call tests%real_eq(d_x_d_t%v%v, x_dot%v%v, "cv%d_x_d_t")
+    
+    d_xdot_d_t = cv%d_xdot_d_t()
+    call tests%real_eq(d_xdot_d_t%v%v, 1.5e6_WP, "cv%d_xdot_d_t")
+end subroutine test_rates
 
 subroutine test_smooth_min(tests)
     use units, only: unitless => unit_p00_p00_p00_p00_p00

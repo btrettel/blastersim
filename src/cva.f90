@@ -138,6 +138,10 @@ contains
     procedure :: set
     procedure :: p_f
     procedure :: p_f0
+    procedure :: d_x_d_t
+    procedure :: d_xdot_d_t
+    procedure :: d_m_d_t
+    procedure :: d_e_d_t
 end type cv_type
 
 type, public :: con_type ! connection between control volumes
