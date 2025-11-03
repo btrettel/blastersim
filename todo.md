@@ -1,4 +1,6 @@
-- Calculate `m_dot`s first, then pass into `d_m_d_t` and `d_E_d_t`
+- Test new functions.
+- Calculate `m_dots` first, then pass into `d_m_d_t`.
+- From `m_dots`, calculate `h_dot`s, then pass into `d_e_d_t`.
 - RHS functions for RK4
 - Add elevation angle
 

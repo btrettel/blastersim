@@ -8,7 +8,7 @@ module_name     = "units"
 max_n_units     = 120
 
 !               m     kg    s     K     mol
-min_exponents = -3.0, -1.0, -2.0, -1.0, -1.0
+min_exponents = -3.0, -1.0, -3.0, -1.0, -1.0
 max_exponents =  3.0,  2.0,  2.0,  1.0,  1.0
 denominators  =    1,    1,    1,    1,    1
 
@@ -169,4 +169,11 @@ label = "intermediate_2"
 !   m    kg   s     K    mol
 e = 2.0, 1.0, -2.0, 0.0, -1.0
 sterile = .true.
+/
+
+&seed_unit
+! example: `$\dot{E}$`
+label = "si_energy_flow_rate"
+!   m    kg   s     K    mol
+e = 2.0, 1.0, -3.0, 0.0, 0.0
 /

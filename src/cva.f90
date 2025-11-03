@@ -330,7 +330,7 @@ pure function rho_eos(cv, p, temp, y)
     do i = 1, size(y)
         call denominator%v%init_const(0.0_WP, n_d)
         do j = 1, size(y)
-            denominator = denominator + y(j)*(cv%gas(i)%mm/cv%gas(j)%mm)
+            denominator = denominator + y(j)*(cv%gas(i)%mm/cv%gas(j)%mm) ! MAYBE: change so that the molar masses have units?
         end do
         call gas_mm%v%init_const(cv%gas(i)%mm, n_d)
         mm    = mm + y(i)*gas_mm/denominator
@@ -368,7 +368,7 @@ pure function p_c(cv)
     do i = 1, size(cv%m)
         call denominator%v%init_const(0.0_WP, size(cv%m(1)%v%d))
         do j = 1, size(cv%m)
-            denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm)
+            denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm) ! MAYBE: change so that the molar masses have units?
         end do
         chi = cv%m(i) / denominator
         call p_ci%v%init_const(cv%gas(i)%p_c, size(cv%m(1)%v%d))
@@ -423,7 +423,7 @@ pure function chi(cv)
     do i = 1, size(cv%m)
         call denominator%v%init_const(0.0_WP, size(cv%m(1)%v%d))
         do j = 1, size(cv%m)
-            denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm)
+            denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm) ! MAYBE: change so that the molar masses have units?
             call assert(denominator%v%v >= 0.0_WP, "cva (chi): denominator >= 0 violated")
         end do
         chi(i)  = cv%m(i) / denominator
@@ -466,7 +466,7 @@ pure function r_cv(cv)
     do i = 1, size(cv%m)
         call denominator%v%init_const(0.0_WP, size(cv%m(1)%v%d))
         do j = 1, size(cv%m)
-            denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm)
+            denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm) ! MAYBE: change so that the molar masses have units?
         end do
         chi = cv%m(i) / denominator
         chi_sum = chi_sum + chi
@@ -746,6 +746,53 @@ pure function d_xdot_d_t(cv)
     
     d_xdot_d_t = cv%csa*cv%rm_p*(cv%p() - cv%p_atm - cv%p_f(p_fe)) - cv%k*cv%rm_p*(cv%x - cv%x_z)
 end function d_xdot_d_t
+
+pure function d_m_d_t(cv, m_dots, i_cv)
+    use units, only: si_mass_flow_rate => unit_p00_p10_m10_p00_p00
+    use checks, only: assert, assert_dimension
+    
+    class(cv_type), intent(in)          :: cv
+    type(si_mass_flow_rate), intent(in) :: m_dots(:, :)
+    integer, intent(in)                 :: i_cv
+    
+    type(si_mass_flow_rate) :: d_m_d_t
+    
+    integer :: n_d, n_cv, j_cv
+    
+    call assert(size(m_dots, 1) == size(m_dots, 2), "cva (d_m_d_t): m_dots must be square")
+    call assert_dimension(m_dots(1, 1)%v%d, cv%x%v%d)
+    
+    n_d = size(cv%x%v%d)
+    call d_m_d_t%v%init_const(0.0_WP, n_d)
+    
+    n_cv = size(m_dots, 1)
+    do j_cv = 1, n_cv
+        d_m_d_t = d_m_d_t + m_dots(j_cv, i_cv) - m_dots(i_cv, j_cv)
+    end do
+end function d_m_d_t
+
+pure function d_e_d_t(cv, h_dots, i_cv)
+    use units, only: si_energy_flow_rate   => unit_p20_p10_m30_p00_p00
+    use checks, only: assert, assert_dimension
+    
+    class(cv_type), intent(in)            :: cv
+    type(si_energy_flow_rate), intent(in) :: h_dots(:, :)
+    integer, intent(in)                   :: i_cv
+    
+    type(si_energy_flow_rate) :: d_e_d_t
+    
+    integer :: n_cv, j_cv
+    
+    call assert(size(h_dots, 1) == size(h_dots, 2), "cva (d_e_d_t): h_dots must be square")
+    call assert_dimension(h_dots(1, 1)%v%d, cv%x%v%d)
+    
+    d_e_d_t = -cv%p() * cv%csa * cv%x_dot
+    
+    n_cv = size(h_dots, 1)
+    do j_cv = 1, n_cv
+        d_e_d_t = d_e_d_t + h_dots(j_cv, i_cv) - h_dots(i_cv, j_cv)
+    end do
+end function d_e_d_t
 
 pure subroutine assert_mass(cv, procedure_name)
     ! Why not make this a type-bound operator?
