@@ -666,16 +666,18 @@ subroutine test_rates(tests)
 
     type(cv_type) :: cv
     
-    type(si_length)          :: x
-    type(si_velocity)        :: x_dot, d_x_d_t
-    type(unitless)           :: y(1)
-    type(si_pressure)        :: p, p_fs, p_fd, p_atm
-    type(si_temperature)     :: temp
-    type(si_area)            :: csa
-    type(si_inverse_mass)    :: rm_p
-    type(si_stiffness)       :: k
-    type(si_length)          :: x_z
-    type(si_acceleration)    :: d_xdot_d_t
+    type(si_length)           :: x
+    type(si_velocity)         :: x_dot, d_x_d_t
+    type(unitless)            :: y(1)
+    type(si_pressure)         :: p, p_fs, p_fd, p_atm
+    type(si_temperature)      :: temp
+    type(si_area)             :: csa
+    type(si_inverse_mass)     :: rm_p
+    type(si_stiffness)        :: k
+    type(si_length)           :: x_z
+    type(si_acceleration)     :: d_xdot_d_t
+    type(si_mass_flow_rate)   :: m_dots(2, 2), d_m_d_t
+    type(si_energy_flow_rate) :: h_dots(2, 2), d_e_d_t
     
     call x%v%init_const(1.5_WP, 0)
     call x_dot%v%init_const(10.0_WP, 0)
@@ -697,6 +699,28 @@ subroutine test_rates(tests)
     
     d_xdot_d_t = cv%d_xdot_d_t()
     call tests%real_eq(d_xdot_d_t%v%v, 1.5e6_WP, "cv%d_xdot_d_t")
+    
+    call m_dots(1, 1)%v%init_const(0.0_WP, 0)
+    call m_dots(1, 2)%v%init_const(2.0_WP, 0)
+    call m_dots(2, 1)%v%init_const(0.0_WP, 0)
+    call m_dots(2, 2)%v%init_const(0.0_WP, 0)
+    
+    d_m_d_t = cv%d_m_d_t(m_dots, 1)
+    call tests%real_eq(d_m_d_t%v%v, -2.0_WP, "cv%d_m_d_t(1)")
+    
+    d_m_d_t = cv%d_m_d_t(m_dots, 2)
+    call tests%real_eq(d_m_d_t%v%v, 2.0_WP, "cv%d_m_d_t(2)")
+    
+    call h_dots(1, 1)%v%init_const(0.0_WP, 0)
+    call h_dots(1, 2)%v%init_const(0.0_WP, 0)
+    call h_dots(2, 1)%v%init_const(2.0e5_WP, 0)
+    call h_dots(2, 2)%v%init_const(0.0_WP, 0)
+    
+    d_e_d_t = cv%d_e_d_t(h_dots, 1)
+    call tests%real_eq(d_e_d_t%v%v, -p%v%v*csa%v%v*x_dot%v%v + 2.0e5_WP, "cv%d_e_d_t(1)")
+    
+    d_e_d_t = cv%d_e_d_t(h_dots, 2)
+    call tests%real_eq(d_e_d_t%v%v, -p%v%v*csa%v%v*x_dot%v%v - 2.0e5_WP, "cv%d_e_d_t(2)")
 end subroutine test_rates
 
 subroutine test_smooth_min(tests)

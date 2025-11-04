@@ -753,7 +753,7 @@ end function d_xdot_d_t
 
 pure function d_m_d_t(cv, m_dots, i_cv)
     use units, only: si_mass_flow_rate => unit_p00_p10_m10_p00_p00
-    use checks, only: assert, assert_dimension
+    use checks, only: assert, assert_dimension, is_close
     
     class(cv_type), intent(in)          :: cv
     type(si_mass_flow_rate), intent(in) :: m_dots(:, :)
@@ -771,13 +771,14 @@ pure function d_m_d_t(cv, m_dots, i_cv)
     
     n_cv = size(m_dots, 1)
     do j_cv = 1, n_cv
+        call assert(is_close(m_dots(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_m_d_t): mass can not flow from self to self")
         d_m_d_t = d_m_d_t + m_dots(j_cv, i_cv) - m_dots(i_cv, j_cv)
     end do
 end function d_m_d_t
 
 pure function d_e_d_t(cv, h_dots, i_cv)
     use units, only: si_energy_flow_rate   => unit_p20_p10_m30_p00_p00
-    use checks, only: assert, assert_dimension
+    use checks, only: assert, assert_dimension, is_close
     
     class(cv_type), intent(in)            :: cv
     type(si_energy_flow_rate), intent(in) :: h_dots(:, :)
@@ -794,6 +795,7 @@ pure function d_e_d_t(cv, h_dots, i_cv)
     
     n_cv = size(h_dots, 1)
     do j_cv = 1, n_cv
+        call assert(is_close(h_dots(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_e_d_t): energy can not flow from self to self")
         d_e_d_t = d_e_d_t + h_dots(j_cv, i_cv) - h_dots(i_cv, j_cv)
     end do
 end function d_e_d_t
