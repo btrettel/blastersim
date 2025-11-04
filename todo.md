@@ -1,6 +1,6 @@
+- Make functions to calculate `u` and `h` for control volume including mixture.
 - Calculate `m_dots` first, then pass into `d_m_d_t`.
 - From `m_dots`, calculate `h_dot`s, then pass into `d_e_d_t`.
-- RHS functions for RK4
 - Implement forward Euler
 
 ***
