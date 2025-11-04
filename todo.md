@@ -1,7 +1,7 @@
 - Calculate `m_dots` first, then pass into `d_m_d_t`.
 - From `m_dots`, calculate `h_dot`s, then pass into `d_e_d_t`.
 - RHS functions for RK4
-- Add elevation angle
+- Implement forward Euler
 
 ***
 
@@ -17,3 +17,4 @@
     - Namelist/ad generator allows for disabling AD for some inputs. Perhaps a second AD namelist where variables can be set to .true. if you want AD. A UQ namelist could set the standard deviation. Combining all of this, you could make a UQ namelist where not defining something in the UQ namelist disables AD for that variable. Read the UQ namelist first, then the value namelist.
 - Readd `smooth_min` assertions including new one from Wikipedia including some extra gap for floating point error
 - Functions to calculate input PE (spring and adiabatic compression) for efficiency calculation.
+- Add elevation angle

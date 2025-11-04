@@ -36,6 +36,7 @@ call test_g_m_dot(tests)
 call test_m_dot_1(tests)
 call test_m_dot_2(tests)
 call test_m_dot_3(tests)
+call test_m_dot_4(tests)
 
 call test_p_v_h2o(tests)
 
@@ -1023,6 +1024,70 @@ subroutine test_m_dot_3(tests)
     
     call tests%real_eq(m_dot_con%v%d(1), 0.0_WP, "m_dot, choked, d") !, abs_tol=1.0e-8_WP)
 end subroutine test_m_dot_3
+
+subroutine test_m_dot_4(tests)
+    ! Test inactive connection.
+    
+    use units, only: si_length          => unit_p10_p00_p00_p00_p00, &
+                     si_velocity        => unit_p10_p00_m10_p00_p00, &
+                     unitless           => unit_p00_p00_p00_p00_p00, &
+                     si_inverse_mass    => unit_p00_m10_p00_p00_p00, &
+                     si_energy          => unit_p20_p10_m20_p00_p00, &
+                     si_area            => unit_p20_p00_p00_p00_p00, &
+                     si_pressure        => unit_m10_p10_m20_p00_p00, &
+                     si_stiffness       => unit_p00_p10_m20_p00_p00, &
+                     si_volume          => unit_p30_p00_p00_p00_p00, &
+                     si_mass_density    => unit_m30_p10_p00_p00_p00, &
+                     si_temperature     => unit_p00_p00_p00_p10_p00, &
+                     si_specific_energy => unit_p20_p00_m20_p00_p00, &
+                     si_mass_flow_rate  => unit_p00_p10_m10_p00_p00
+    use cva, only: P_ATM_ => P_ATM, T_ATM, DRY_AIR, cv_type, con_type
+    use checks, only: assert
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    type(cv_type)  :: cv_from, cv_to
+    type(con_type) :: con
+    
+    type(si_length)          :: x
+    type(si_velocity)        :: x_dot
+    type(unitless)           :: y(1)
+    type(si_pressure)        :: p_in, p_out
+    type(si_temperature)     :: temp
+    type(si_area)            :: csa
+    type(si_inverse_mass)    :: rm_p
+    type(si_pressure)        :: p_fs, p_fd, p_atm
+    type(si_stiffness)       :: k
+    type(si_length)          :: x_z
+    
+    type(si_mass_flow_rate) :: m_dot_con
+    
+    con%active = .false.
+    call con%a_e%v%init_const(0.25_WP, 1)
+    call con%b%v%init_const(0.5_WP, 1)
+    
+    call x%v%init_const(0.5_WP, 1)
+    call x_dot%v%init_const(0.5_WP, 1)
+    call y(1)%v%init_const(1.0_WP, 1)
+    call p_in%v%init_const(2.0_WP*P_ATM_, 1)
+    call p_out%v%init_const(2.0_WP*P_ATM_, 1)
+    call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 1)
+    call csa%v%init_const(1.0_WP, 1)
+    call rm_p%v%init_const(0.0_WP, 1)
+    call p_fs%v%init_const(0.0_WP, 1)
+    call p_fd%v%init_const(0.0_WP, 1)
+    call p_atm%v%init_const(P_ATM_, 1)
+    call k%v%init_const(0.0_WP, 1)
+    call x_z%v%init_const(0.0_WP, 1)
+    
+    call cv_from%set(x, x_dot, y, p_in, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv_to%set(x, x_dot, y, p_out, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    
+    m_dot_con = con%m_dot(cv_from, cv_to)
+    
+    call tests%real_eq(m_dot_con%v%v, 0.0_WP, "m_dot, inactive, value")
+    call tests%real_eq(m_dot_con%v%d(1), 0.0_WP, "m_dot, inactive, derivative")
+end subroutine test_m_dot_4
 
 subroutine test_p_v_h2o(tests)
     use units, only: si_temperature => unit_p00_p00_p00_p10_p00, &

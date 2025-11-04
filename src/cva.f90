@@ -155,6 +155,8 @@ end type con_type
 type, public :: cv_system_type
     type(cv_type), allocatable  :: cvs(:)
     type(con_type), allocatable :: cons(:, :)
+!contains
+!    procedure :: calculate_flows
 end type cv_system_type
 
 contains
@@ -777,7 +779,7 @@ pure function d_m_d_t(cv, m_dots, i_cv)
 end function d_m_d_t
 
 pure function d_e_d_t(cv, h_dots, i_cv)
-    use units, only: si_energy_flow_rate   => unit_p20_p10_m30_p00_p00
+    use units, only: si_energy_flow_rate => unit_p20_p10_m30_p00_p00
     use checks, only: assert, assert_dimension, is_close
     
     class(cv_type), intent(in)            :: cv
@@ -799,6 +801,17 @@ pure function d_e_d_t(cv, h_dots, i_cv)
         d_e_d_t = d_e_d_t + h_dots(j_cv, i_cv) - h_dots(i_cv, j_cv)
     end do
 end function d_e_d_t
+
+!pure subroutine calculate_flows
+!    use units, only: si_mass_flow_rate   => unit_p00_p10_m10_p00_p00, &
+!                     si_energy_flow_rate => unit_p20_p10_m30_p00_p00
+    
+!    class(cv_system_type), intent(in)      :: cv_system
+!    type(si_mass_flow_rate), intent(out)   :: m_dots(:, :)
+!    type(si_energy_flow_rate), intent(out) :: h_dots(:, :)
+    
+    
+!end subroutine calculate_flows
 
 pure subroutine assert_mass(cv, procedure_name)
     ! Why not make this a type-bound operator?
@@ -923,18 +936,20 @@ pure function m_dot(con, cv_from, cv_to)
     
     call assert_dimension(con%a_e%v%d, con%b%v%d)
     
-    call assert(con%active, "cva (m_dot): connection must be active")
-    call assert(cv_from%p() >= cv_to%p(), "cva (m_dot): cv_from%p >= cv_to%p violated")
-    
-    n_d = size(con%a_e%v%d)
-    
-    p_r = cv_to%p() / cv_from%p()
-    call assert(p_r%v%v >= 0.0_WP, "cva (m_dot): p_r >= 0 violated")
-    call assert(p_r%v%v <= 1.0_WP, "cva (m_dot): p_r <= 1 violated")
-    
-    m_dot = con%a_e * (cv_from%p() - g_m_dot(p_r) * cv_to%p()) &
-                * sqrt((1.0_WP - con%b) / (cv_from%r() * cv_from%temp())) &
-                * sqrt(1.0_WP - f_m_dot(p_r, con%b))
+    if (con%active) then
+        call assert(cv_from%p() >= cv_to%p(), "cva (m_dot): cv_from%p >= cv_to%p violated")
+        
+        p_r = cv_to%p() / cv_from%p()
+        call assert(p_r%v%v >= 0.0_WP, "cva (m_dot): p_r >= 0 violated")
+        call assert(p_r%v%v <= 1.0_WP, "cva (m_dot): p_r <= 1 violated")
+        
+        m_dot = con%a_e * (cv_from%p() - g_m_dot(p_r) * cv_to%p()) &
+                    * sqrt((1.0_WP - con%b) / (cv_from%r() * cv_from%temp())) &
+                    * sqrt(1.0_WP - f_m_dot(p_r, con%b))
+    else
+        n_d = size(con%a_e%v%d)
+        call m_dot%v%init_const(0.0_WP, n_d)
+    end if
 end function m_dot
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
