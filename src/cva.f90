@@ -135,6 +135,8 @@ contains
     procedure :: vol  => vol_cv
     procedure :: rho  => rho_cv
     procedure :: p    => p_cv
+    procedure :: u    => u_cv
+    procedure :: h    => h_cv
     procedure :: set
     procedure :: p_f
     procedure :: p_f0
@@ -387,6 +389,8 @@ end function p_c
 
 pure function y(cv)
     ! mass fractions
+    ! Why not use `y` and `chi` to get mass and mole fractions in other procedures here?
+    ! Doing so frequently leads to weird run-time errors in gfortran.
     
     use checks, only: assert, is_close
     
@@ -412,6 +416,8 @@ end function y
 
 pure function chi(cv)
     ! mole fractions
+    ! Why not use `y` and `chi` to get mass and mole fractions in other procedures here?
+    ! Doing so frequently leads to weird run-time errors in gfortran.
     
     use checks, only: assert, is_close
     
@@ -573,6 +579,58 @@ pure function p_cv(cv)
     
     call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated")
 end function p_cv
+
+pure function u_cv(cv)
+    use units, only: si_specific_energy => unit_p20_p00_m20_p00_p00, &
+                     si_temperature     => unit_p00_p00_p00_p10_p00
+    use checks, only: assert
+    
+    class(cv_type), intent(in) :: cv
+    
+    type(si_specific_energy) :: u_cv
+    
+    integer              :: i
+    type(si_mass)        :: m_total
+    type(si_temperature) :: temp
+    
+    call assert_mass(cv, "u_cv")
+    
+    m_total = cv%m_total()
+    temp    = cv%temp()
+    
+    call u_cv%v%init_const(0.0_WP, size(cv%m(1)%v%d))
+    do i = 1, size(cv%m)
+        u_cv = u_cv + cv%m(i)*cv%gas(i)%u(temp)/m_total
+    end do
+    
+    call assert(u_cv%v%v > 0.0_WP, "cva (u_cv): u_cv > 0 violated")
+end function u_cv
+
+pure function h_cv(cv)
+    use units, only: si_specific_energy => unit_p20_p00_m20_p00_p00, &
+                     si_temperature     => unit_p00_p00_p00_p10_p00
+    use checks, only: assert
+    
+    class(cv_type), intent(in) :: cv
+    
+    type(si_specific_energy) :: h_cv
+    
+    integer              :: i
+    type(si_mass)        :: m_total
+    type(si_temperature) :: temp
+    
+    call assert_mass(cv, "h_cv")
+    
+    m_total = cv%m_total()
+    temp    = cv%temp()
+    
+    call h_cv%v%init_const(0.0_WP, size(cv%m(1)%v%d))
+    do i = 1, size(cv%m)
+        h_cv = h_cv + cv%m(i)*cv%gas(i)%h(temp)/m_total
+    end do
+    
+    call assert(h_cv%v%v > 0.0_WP, "cva (h_cv): h_cv > 0 violated")
+end function h_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas)
     use units, only: si_temperature => unit_p00_p00_p00_p10_p00

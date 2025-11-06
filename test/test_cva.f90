@@ -15,11 +15,12 @@ type(test_results_type) :: tests
 
 call tests%start_tests("cva.nml")
 
+call test_u_h(tests)
+
 call test_m_total(tests)
 call test_p_eos(tests)
 call test_rho_eos(tests)
 call test_r_cv(tests)
-call test_u_h(tests)
 call test_p_c(tests)
 call test_p_f_1(tests)
 call test_p_f_2(tests)
@@ -29,6 +30,7 @@ call test_temp_cv(tests)
 call test_set_1(tests)
 call test_set_2(tests)
 call test_rates(tests)
+call test_u_h_cv(tests)
 
 call test_smooth_min(tests)
 call test_f_m_dot(tests)
@@ -43,6 +45,44 @@ call test_p_v_h2o(tests)
 call tests%end_tests()
 
 contains
+
+subroutine test_u_h(tests)
+    use units, only: si_temperature     => unit_p00_p00_p00_p10_p00, &
+                     si_specific_energy => unit_p20_p00_m20_p00_p00
+    use cva, only: DRY_AIR
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(si_temperature)     :: temp
+    type(si_specific_energy) :: u, h
+    
+    call temp%v%init_const(300.0_WP, 0)
+    
+    u = DRY_AIR%u(temp)
+    h = DRY_AIR%h(temp)
+    
+    ! Data from moran_fundamentals_2008 table A-22.
+    call tests%real_eq(u%v%v, DRY_AIR%u_0, "u (gas), 300 K")
+    call tests%real_eq(h%v%v, DRY_AIR%h_0, "h (gas), 300 K")
+    
+    call temp%v%init_const(400.0_WP, 0)
+    
+    u = DRY_AIR%u(temp)
+    h = DRY_AIR%h(temp)
+    
+    ! Data from moran_fundamentals_2008 table A-22.
+    call tests%real_eq(u%v%v, 286.16e3_WP, "u (gas), 400 K", abs_tol=1.0e3_WP)
+    call tests%real_eq(h%v%v, 400.98e3_WP, "h (gas), 400 K", abs_tol=1.0e3_WP)
+    
+    call temp%v%init_const(200.0_WP, 0)
+    
+    u = DRY_AIR%u(temp)
+    h = DRY_AIR%h(temp)
+    
+    ! Data from moran_fundamentals_2008 table A-22.
+    call tests%real_eq(u%v%v, 142.56e3_WP, "u (gas), 200 K", abs_tol=1.0e3_WP)
+    call tests%real_eq(h%v%v, 199.97e3_WP, "h (gas), 200 K", abs_tol=1.0e3_WP)
+end subroutine test_u_h
 
 subroutine test_m_total(tests)
     use units, only: si_mass  => unit_p00_p10_p00_p00_p00, &
@@ -190,44 +230,6 @@ subroutine test_r_cv(tests)
     rho = cv%rho_eos(p, temp, y)
     call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric (2)", abs_tol=1.0e-3_WP)
 end subroutine test_r_cv
-
-subroutine test_u_h(tests)
-    use units, only: si_temperature     => unit_p00_p00_p00_p10_p00, &
-                     si_specific_energy => unit_p20_p00_m20_p00_p00
-    use cva, only: DRY_AIR
-    
-    type(test_results_type), intent(in out) :: tests
-
-    type(si_temperature)     :: temp
-    type(si_specific_energy) :: u, h
-    
-    call temp%v%init_const(300.0_WP, 0)
-    
-    u = DRY_AIR%u(temp)
-    h = DRY_AIR%h(temp)
-    
-    ! Data from moran_fundamentals_2008 table A-22.
-    call tests%real_eq(u%v%v, DRY_AIR%u_0, "u, 300 K")
-    call tests%real_eq(h%v%v, DRY_AIR%h_0, "h, 300 K")
-    
-    call temp%v%init_const(400.0_WP, 0)
-    
-    u = DRY_AIR%u(temp)
-    h = DRY_AIR%h(temp)
-    
-    ! Data from moran_fundamentals_2008 table A-22.
-    call tests%real_eq(u%v%v, 286.16e3_WP, "u, 400 K", abs_tol=1.0e3_WP)
-    call tests%real_eq(h%v%v, 400.98e3_WP, "h, 400 K", abs_tol=1.0e3_WP)
-    
-    call temp%v%init_const(200.0_WP, 0)
-    
-    u = DRY_AIR%u(temp)
-    h = DRY_AIR%h(temp)
-    
-    ! Data from moran_fundamentals_2008 table A-22.
-    call tests%real_eq(u%v%v, 142.56e3_WP, "u, 200 K", abs_tol=1.0e3_WP)
-    call tests%real_eq(h%v%v, 199.97e3_WP, "h, 200 K", abs_tol=1.0e3_WP)
-end subroutine test_u_h
 
 subroutine test_p_c(tests)
     ! Based on moran_fundamentals_2008 example 11.10, pp. 615--617.
@@ -723,6 +725,65 @@ subroutine test_rates(tests)
     d_e_d_t = cv%d_e_d_t(h_dots, 2)
     call tests%real_eq(d_e_d_t%v%v, -p%v%v*csa%v%v*x_dot%v%v - 2.0e5_WP, "cv%d_e_d_t(2)")
 end subroutine test_rates
+
+subroutine test_u_h_cv(tests)
+    use units, only: si_length           => unit_p10_p00_p00_p00_p00, &
+                     si_velocity         => unit_p10_p00_m10_p00_p00, &
+                     unitless            => unit_p00_p00_p00_p00_p00, &
+                     si_inverse_mass     => unit_p00_m10_p00_p00_p00, &
+                     si_energy           => unit_p20_p10_m20_p00_p00, &
+                     si_area             => unit_p20_p00_p00_p00_p00, &
+                     si_pressure         => unit_m10_p10_m20_p00_p00, &
+                     si_stiffness        => unit_p00_p10_m20_p00_p00, &
+                     si_volume           => unit_p30_p00_p00_p00_p00, &
+                     si_mass_density     => unit_m30_p10_p00_p00_p00, &
+                     si_temperature      => unit_p00_p00_p00_p10_p00, &
+                     si_specific_energy  => unit_p20_p00_m20_p00_p00
+    use cva, only: N2, H2O, cv_type
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_type) :: cv
+    
+    type(si_length)          :: x
+    type(si_velocity)        :: x_dot
+    type(unitless)           :: y(2)
+    type(si_pressure)        :: p, p_fs, p_fd, p_atm
+    type(si_temperature)     :: temp
+    type(si_area)            :: csa
+    type(si_inverse_mass)    :: rm_p
+    type(si_stiffness)       :: k
+    type(si_length)          :: x_z
+    type(si_specific_energy) :: u, h
+    
+    real(WP) :: u_exact, h_exact
+    
+    call x%v%init_const(1.5_WP, 0)
+    call x_dot%v%init_const(10.0_WP, 0)
+    call y(1)%v%init_const(0.25_WP, 0)
+    call y(2)%v%init_const(0.75_WP, 0)
+    call p%v%init_const(12.0e5_WP, 0)
+    call temp%v%init_const(300.0_WP, 0)
+    call csa%v%init_const(4.0_WP, 0)
+    call rm_p%v%init_const(1.0_WP/2.0_WP, 0)
+    call p_fs%v%init_const(2.0e5_WP, 0)
+    call p_fd%v%init_const(1.0e5_WP, 0)
+    call p_atm%v%init_const(1.0e5_WP, 0)
+    call k%v%init_const(1.0e6_WP, 0)
+    call x_z%v%init_const(0.5_WP, 0)
+    
+    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [N2, H2O])
+    
+    u_exact = y(1)%v%v*N2%u_0 + y(2)%v%v*H2O%u_0
+    h_exact = y(1)%v%v*N2%h_0 + y(2)%v%v*H2O%h_0
+    
+    u = cv%u()
+    h = cv%h()
+    
+    ! Data from moran_fundamentals_2008 table A-22.
+    call tests%real_eq(u%v%v, u_exact, "u (cv), 300 K")
+    call tests%real_eq(h%v%v, h_exact, "h (cv), 300 K")
+end subroutine test_u_h_cv
 
 subroutine test_smooth_min(tests)
     use units, only: unitless => unit_p00_p00_p00_p00_p00

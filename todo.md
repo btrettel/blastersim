@@ -1,4 +1,3 @@
-- Make functions to calculate `u` and `h` for control volume including mixture.
 - Calculate `m_dots` first, then pass into `d_m_d_t`.
 - From `m_dots`, calculate `h_dot`s, then pass into `d_e_d_t`.
 - Implement forward Euler
@@ -13,8 +12,7 @@
     - This is more complicated than I originally thought: Relative humidity from weather data is given at atmospheric conditions, not pressurized conditions. This means that as the air is compressed, the relative humidity decreases because the vapor pressure increases. So I need to model the compression process. Take ambient air at given relative humidity, and increase the pressure.
 - Property test to compare BlasterSim derivatives against numerical derivatives of BlasterSim input.
     - test_fmad.f90: `test_num_deriv`
-- Write program to generate namelist reader code, AD `d` indices, and fuzz testing bounds. (Part of FLT but for BlasterSim.)
-    - Namelist/ad generator allows for disabling AD for some inputs. Perhaps a second AD namelist where variables can be set to .true. if you want AD. A UQ namelist could set the standard deviation. Combining all of this, you could make a UQ namelist where not defining something in the UQ namelist disables AD for that variable. Read the UQ namelist first, then the value namelist.
 - Readd `smooth_min` assertions including new one from Wikipedia including some extra gap for floating point error
 - Functions to calculate input PE (spring and adiabatic compression) for efficiency calculation.
 - Add elevation angle
+- Add assertion for validity of lumped parameter approximation
