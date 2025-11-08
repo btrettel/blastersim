@@ -813,22 +813,29 @@ pure function d_e_d_t(cv, h_dots, i_cv)
     end do
 end function d_e_d_t
 
-pure subroutine calculate_flows(sys, m_dots, h_dots)
-    use checks, only: assert, assert_dimension
+pure subroutine calculate_flows(sys, m_dot, h_dot)
+    use checks, only: assert
     
     class(cv_system_type), intent(in)                   :: sys
-    type(si_mass_flow_rate), allocatable, intent(out)   :: m_dots(:, :)
-    type(si_energy_flow_rate), allocatable, intent(out) :: h_dots(:, :)
+    type(si_mass_flow_rate), allocatable, intent(out)   :: m_dot(:, :)
+    type(si_energy_flow_rate), allocatable, intent(out) :: h_dot(:, :)
     
     integer :: n_cv, i_from_cv, i_to_cv
     
-    n_cv = size(m_dots, 1)
-    allocate(m_dots(n_cv, n_cv))
-    allocate(h_dots(n_cv, n_cv))
+    call assert(size(sys%cv) == size(sys%con, 1), "cva (calculate_flows): inconsistent sys%cv and sys%con sizes")
+    
+    n_cv = size(sys%cv)
+    call assert(n_cv > 1, "cva (calculate_flows): there needs to be at least 2 control volumes to have flows")
+    
+    allocate(m_dot(n_cv, n_cv))
+    allocate(h_dot(n_cv, n_cv))
     do i_from_cv = 1, n_cv
         do i_to_cv = 1, n_cv
-            m_dots(i_from_cv, i_to_cv) = sys%con(i_from_cv, i_to_cv)%m_dot(sys%cv(i_from_cv), sys%cv(i_to_cv))
-            h_dots(i_from_cv, i_to_cv) = sys%cv(i_from_cv)%h() * m_dots(i_from_cv, i_to_cv)
+            if (i_from_cv == i_to_cv) call assert(.not. sys%con(i_from_cv, i_to_cv)%active, &
+                                                    "cva (calculate_flows): can't flow from self to self")
+            
+            m_dot(i_from_cv, i_to_cv) = sys%con(i_from_cv, i_to_cv)%m_dot(sys%cv(i_from_cv), sys%cv(i_to_cv))
+            h_dot(i_from_cv, i_to_cv) = sys%cv(i_from_cv)%h() * m_dot(i_from_cv, i_to_cv)
         end do
     end do
 end subroutine calculate_flows
@@ -947,9 +954,12 @@ pure function m_dot(con, cv_from, cv_to)
     integer        :: n_d
     type(unitless) :: p_r
     
-    call assert_dimension(con%a_e%v%d, con%b%v%d)
+    call assert_dimension(cv_from%x%v%d, cv_to%x%v%d)
     
     if (con%active) then
+        call assert_dimension(con%a_e%v%d, con%b%v%d)
+        call assert_dimension(cv_from%x%v%d, con%a_e%v%d)
+        
         call assert(cv_from%p() >= cv_to%p(), "cva (m_dot): cv_from%p >= cv_to%p violated")
         
         p_r = cv_to%p() / cv_from%p()
@@ -960,7 +970,7 @@ pure function m_dot(con, cv_from, cv_to)
                     * sqrt((1.0_WP - con%b) / (cv_from%r() * cv_from%temp())) &
                     * sqrt(1.0_WP - f_m_dot(p_r, con%b))
     else
-        n_d = size(con%a_e%v%d)
+        n_d = size(cv_from%x%v%d)
         call m_dot%v%init_const(0.0_WP, n_d)
     end if
 end function m_dot

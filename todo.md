@@ -1,6 +1,6 @@
-- Test `calculate_flows`
-- Calculate `m_dots` first, then pass into `d_m_d_t`.
-- From `m_dots`, calculate `h_dot`s, then pass into `d_e_d_t`.
+- Move `use checks, only: assert, assert_dimension` to top of cva.f90 and remove it from each procedure.
+- Calculate `m_dot` first, then pass into `d_m_d_t`.
+- From `m_dot`, calculate `h_dot`, then pass into `d_e_d_t`.
 - Implement forward Euler
 - Break cva.f90 into multiple modules? `gas_type` might work in its own module.
 - documentation
@@ -21,3 +21,6 @@
 - Add elevation angle
 - Add assertion for validity of lumped parameter approximation
 - Filling: isentropic vs. isothermal, pressure source is at
+- transonic corrections in the barrel
+- pressure gradient
+- Instead of `p_atm` in the force balance, allow for using another control volume's pressure.

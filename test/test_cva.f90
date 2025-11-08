@@ -41,6 +41,8 @@ call test_m_dot_2(tests)
 call test_m_dot_3(tests)
 call test_m_dot_4(tests)
 
+call test_calculate_flows(tests)
+
 call test_p_v_h2o(tests)
 
 call tests%end_tests()
@@ -1021,6 +1023,81 @@ subroutine test_m_dot_4(tests)
     call tests%real_eq(m_dot_con%v%v, 0.0_WP, "m_dot, inactive, value")
     call tests%real_eq(m_dot_con%v%d(1), 0.0_WP, "m_dot, inactive, derivative")
 end subroutine test_m_dot_4
+
+subroutine test_calculate_flows(tests)
+    use cva, only: P_ATM_ => P_ATM, R_BAR, DRY_AIR, cv_system_type
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_system_type) :: sys
+    
+    type(si_length)          :: x
+    type(si_velocity)        :: x_dot
+    type(unitless)           :: y(1), p_r
+    type(si_pressure)        :: p_in, p_out
+    type(si_temperature)     :: temp
+    type(si_area)            :: csa
+    type(si_inverse_mass)    :: rm_p
+    type(si_pressure)        :: p_fs, p_fd, p_atm
+    type(si_stiffness)       :: k
+    type(si_length)          :: x_z
+    real(WP)                 :: m_dot_12
+    type(si_specific_energy) :: h_1
+    
+    type(si_mass_flow_rate), allocatable   :: m_dot(:, :)
+    type(si_energy_flow_rate), allocatable :: h_dot(:, :)
+    
+    allocate(sys%cv(2))
+    allocate(sys%con(2, 2))
+    
+    sys%con(1, 1)%active = .false.
+    sys%con(2, 1)%active = .false.
+    sys%con(2, 2)%active = .false.
+    
+    sys%con(1, 2)%active = .true.
+    call sys%con(1, 2)%a_e%v%init_const(0.25_WP, 0)
+    call sys%con(1, 2)%b%v%init_const(0.5_WP, 0)
+    
+    call p_r%v%init_const(1.0e-6_WP, 0)
+    
+    call x%v%init_const(0.5_WP, 0)
+    call x_dot%v%init_const(0.5_WP, 0)
+    call y(1)%v%init_const(1.0_WP, 0)
+    call p_in%v%init_const(2.0_WP*P_ATM_, 0)
+    call temp%v%init_const(300.0_WP, 0)
+    call csa%v%init_const(1.0_WP, 0)
+    call rm_p%v%init_const(0.0_WP, 0)
+    call p_fs%v%init_const(0.0_WP, 0)
+    call p_fd%v%init_const(0.0_WP, 0)
+    call p_atm%v%init_const(P_ATM_, 0)
+    call k%v%init_const(0.0_WP, 0)
+    call x_z%v%init_const(0.0_WP, 0)
+    
+    p_out = p_in*p_r
+    
+    call sys%cv(1)%set(x, x_dot, y, p_in, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call sys%cv(2)%set(x, x_dot, y, p_out, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    
+    m_dot_12 = sys%con(1, 2)%a_e%v%v * p_in%v%v * sqrt((1.0_WP - sys%con(1, 2)%b%v%v)/((R_BAR/DRY_AIR%mm) * temp%v%v))
+    
+    call sys%calculate_flows(m_dot, h_dot)
+    
+    call tests%integer_eq(size(m_dot, 1), 2, "size(m_dot, 1)")
+    call tests%integer_eq(size(m_dot, 2), 2, "size(m_dot, 2)")
+    call tests%integer_eq(size(h_dot, 1), 2, "size(h_dot, 1)")
+    call tests%integer_eq(size(h_dot, 2), 2, "size(h_dot, 2)")
+    
+    call tests%real_eq(m_dot(1, 1)%v%v, 0.0_WP, "m_dots(1, 1)")
+    call tests%real_eq(m_dot(1, 2)%v%v, m_dot_12, "m_dots(1, 2)")
+    call tests%real_eq(m_dot(2, 1)%v%v, 0.0_WP, "m_dots(2, 1)")
+    call tests%real_eq(m_dot(2, 2)%v%v, 0.0_WP, "m_dots(2, 2)")
+    
+    h_1 = DRY_AIR%h(temp)
+    call tests%real_eq(h_dot(1, 1)%v%v, 0.0_WP, "h_dots(1, 1)")
+    call tests%real_eq(h_dot(1, 2)%v%v, h_1%v%v*m_dot_12, "h_dots(1, 2)")
+    call tests%real_eq(h_dot(2, 1)%v%v, 0.0_WP, "m_dots(2, 1)")
+    call tests%real_eq(h_dot(2, 2)%v%v, 0.0_WP, "m_dots(2, 2)")
+end subroutine test_calculate_flows
 
 subroutine test_p_v_h2o(tests)
     use cva, only: TEMP_C_TO_K, p_v_h2o
