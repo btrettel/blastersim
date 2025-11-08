@@ -9,6 +9,7 @@ module cva
 
 use prec, only: WP
 use units
+use checks, only: assert, assert_dimension, is_close
 implicit none
 private
 
@@ -205,8 +206,6 @@ pure function r_gas(gas, n_d)
 end function r_gas
 
 pure function c_v_gas(gas, n_d)
-    use checks, only: assert
-    
     class(gas_type), intent(in) :: gas
     integer, intent(in)         :: n_d ! number of derivatives
     
@@ -219,8 +218,6 @@ pure function c_v_gas(gas, n_d)
 end function c_v_gas
 
 pure function c_p_gas(gas, n_d)
-    use checks, only: assert
-    
     class(gas_type), intent(in) :: gas
     integer, intent(in)         :: n_d ! number of derivatives
     
@@ -252,8 +249,6 @@ end function m_total
 pure function p_eos(cv, rho, temp)
     ! Calculate pressure using the equation of state.
     
-    use checks, only: assert, assert_dimension
-    
     class(cv_type), intent(in)        :: cv
     type(si_mass_density), intent(in) :: rho
     type(si_temperature), intent(in)  :: temp
@@ -277,8 +272,6 @@ pure function rho_eos(cv, p, temp, y)
     ! Calculate density using the equation of state.
     ! In the future, if an EOS more complex than the ideal gas law is used, it might make sense to calculate `rho_eos` from `p_eos`
     ! with the Newton method.
-    
-    use checks, only: assert, assert_dimension, is_close
     
     class(cv_type), intent(in)       :: cv
     type(si_pressure), intent(in)    :: p
@@ -333,8 +326,6 @@ pure function p_c(cv)
     ! Estimate critical pressure of a mixture using Kay's rule.
     ! moran_fundamentals_2008 p. 613, eq. 11.97
     
-    use checks, only: assert, is_close
-    
     class(cv_type), intent(in) :: cv
     
     type(si_pressure) :: p_c
@@ -366,8 +357,6 @@ pure function y(cv)
     ! Why not use `y` and `chi` to get mass and mole fractions in other procedures here?
     ! Doing so frequently leads to weird run-time errors in gfortran.
     
-    use checks, only: assert, is_close
-    
     class(cv_type), intent(in) :: cv
     
     type(unitless) :: y(size(cv%m))
@@ -392,8 +381,6 @@ pure function chi(cv)
     ! mole fractions
     ! Why not use `y` and `chi` to get mass and mole fractions in other procedures here?
     ! Doing so frequently leads to weird run-time errors in gfortran.
-    
-    use checks, only: assert, is_close
     
     class(cv_type), intent(in) :: cv
     
@@ -425,8 +412,6 @@ pure function r_cv(cv)
     ! Gas constant for a gas *mixture* in a control volume.
     ! Some of the units are intentionally wrong here.
     ! This is done to avoid adding mol to the unit system, which would make compilation much slower.
-    
-    use checks, only: assert, is_close
     
     class(cv_type), intent(in) :: cv
     
@@ -465,8 +450,6 @@ pure function r_cv(cv)
 end function r_cv
 
 pure function temp_cv(cv)
-    use checks, only: assert
-    
     class(cv_type), intent(in) :: cv
     
     type(si_temperature) :: temp_cv
@@ -497,8 +480,6 @@ pure function temp_cv(cv)
 end function temp_cv
 
 pure function vol_cv(cv)
-    use checks, only: assert
-    
     class(cv_type), intent(in) :: cv
     
     type(si_volume) :: vol_cv
@@ -512,8 +493,6 @@ pure function vol_cv(cv)
 end function vol_cv
 
 pure function rho_cv(cv)
-    use checks, only: assert
-    
     class(cv_type), intent(in) :: cv
     
     type(si_mass_density) :: rho_cv
@@ -526,8 +505,6 @@ pure function rho_cv(cv)
 end function rho_cv
 
 pure function p_cv(cv)
-    use checks, only: assert
-    
     class(cv_type), intent(in) :: cv
     
     type(si_pressure) :: p_cv
@@ -544,8 +521,6 @@ pure function p_cv(cv)
 end function p_cv
 
 pure function u_cv(cv)
-    use checks, only: assert
-    
     class(cv_type), intent(in) :: cv
     
     type(si_specific_energy) :: u_cv
@@ -568,8 +543,6 @@ pure function u_cv(cv)
 end function u_cv
 
 pure function h_cv(cv)
-    use checks, only: assert
-    
     class(cv_type), intent(in) :: cv
     
     type(si_specific_energy) :: h_cv
@@ -592,8 +565,6 @@ pure function h_cv(cv)
 end function h_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas)
-    use checks, only: assert, assert_dimension, is_close
-    
     class(cv_type), intent(in out) :: cv
     
     ! time varying
@@ -676,8 +647,6 @@ end subroutine set
 pure function p_f(cv, p_fe)
     ! Returns pressure of friction.
     
-    use checks, only: assert
-    
     class(cv_type), intent(in)    :: cv
     type(si_pressure), intent(in) :: p_fe ! equilibrium pressure
     
@@ -698,8 +667,6 @@ end function p_f
 pure function p_f0(cv, p_fe)
     ! Returns actual static pressure of friction.
     ! `p_fs` is the *maximum* static pressure of friction.
-    
-    use checks, only: assert
     
     class(cv_type), intent(in)    :: cv
     type(si_pressure), intent(in) :: p_fe ! equilibrium pressure
@@ -729,8 +696,6 @@ pure function p_f0(cv, p_fe)
     contains
     
     pure function p_f0_high(p_fe, p_fs, p_s)
-        use checks, only: is_close
-        
         type(si_pressure), intent(in) :: p_fe, p_fs, p_s
         type(si_pressure) :: p_f0_high
         
@@ -751,8 +716,6 @@ pure function d_x_d_t(cv)
 end function d_x_d_t
 
 pure function d_xdot_d_t(cv)
-    use checks, only: assert
-    
     class(cv_type), intent(in) :: cv
     
     type(si_acceleration) :: d_xdot_d_t
@@ -767,8 +730,6 @@ pure function d_xdot_d_t(cv)
 end function d_xdot_d_t
 
 pure function d_m_d_t(cv, m_dots, i_cv)
-    use checks, only: assert, assert_dimension, is_close
-    
     class(cv_type), intent(in)          :: cv
     type(si_mass_flow_rate), intent(in) :: m_dots(:, :)
     integer, intent(in)                 :: i_cv
@@ -791,8 +752,6 @@ pure function d_m_d_t(cv, m_dots, i_cv)
 end function d_m_d_t
 
 pure function d_e_d_t(cv, h_dots, i_cv)
-    use checks, only: assert, assert_dimension, is_close
-    
     class(cv_type), intent(in)            :: cv
     type(si_energy_flow_rate), intent(in) :: h_dots(:, :)
     integer, intent(in)                   :: i_cv
@@ -814,8 +773,6 @@ pure function d_e_d_t(cv, h_dots, i_cv)
 end function d_e_d_t
 
 pure subroutine calculate_flows(sys, m_dot, h_dot)
-    use checks, only: assert
-    
     class(cv_system_type), intent(in)                   :: sys
     type(si_mass_flow_rate), allocatable, intent(out)   :: m_dot(:, :)
     type(si_energy_flow_rate), allocatable, intent(out) :: h_dot(:, :)
@@ -843,8 +800,6 @@ end subroutine calculate_flows
 pure subroutine assert_mass(cv, procedure_name)
     ! Why not make this a type-bound operator?
     ! That would make my assertion counting Python program not count these.
-    
-    use checks, only: assert, assert_dimension
     
     type(cv_type), intent(in)    :: cv
     character(len=*), intent(in) :: procedure_name
@@ -878,8 +833,6 @@ pure function smooth_min(x, y)
     ! Exponential from <https://iquilezles.org/articles/smin/>.
     ! Also see: <https://en.wikipedia.org/wiki/Smooth_maximum>
     
-    use checks, only: assert, assert_dimension
-    
     type(unitless), intent(in) :: x, y
     
     type(unitless) :: smooth_min
@@ -896,8 +849,6 @@ end function smooth_min
 pure function f_m_dot(p_r, b)
     ! See beater_pneumatic_2007 eq. 5.4
     ! This is a replacement for the ((p_2/p_1 - b)/(1-b))**2 term, smoothly going between the various cases.
-    
-    use checks, only: assert, assert_dimension
     
     type(unitless), intent(in) :: p_r, b
     
@@ -920,8 +871,6 @@ end function f_m_dot
 pure function g_m_dot(p_r)
     ! This is a multiplier on the `p_2` term, smoothly going between the various cases.
     
-    use checks, only: assert
-    
     type(unitless), intent(in) :: p_r
     
     type(unitless) :: g_m_dot
@@ -943,8 +892,6 @@ end function g_m_dot
 pure function m_dot(con, cv_from, cv_to)
     ! Modified con flow rate model from beater_pneumatic_2007 ch. 5.
     ! Modified to be differentiable.
-    
-    use checks, only: assert, assert_dimension
     
     class(con_type), intent(in) :: con
     type(cv_type), intent(in)   :: cv_from, cv_to

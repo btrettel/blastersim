@@ -1,4 +1,3 @@
-- Move `use checks, only: assert, assert_dimension` to top of cva.f90 and remove it from each procedure.
 - Calculate `m_dot` first, then pass into `d_m_d_t`.
 - From `m_dot`, calculate `h_dot`, then pass into `d_e_d_t`.
 - Implement forward Euler
