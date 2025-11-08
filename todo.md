@@ -1,9 +1,4 @@
-- Change genunits so that seed unit names are used for seed units, avoiding the need to constantly `use` parts of the units module.
-    - test_units_ad.f90
-    - test_units_fail_1.f90
-    - test_units_fail_2.f90
-    - test_units_fail_3.f90
-    - test_units_fail_4.f90
+- Test `calculate_flows`
 - Calculate `m_dots` first, then pass into `d_m_d_t`.
 - From `m_dots`, calculate `h_dot`s, then pass into `d_e_d_t`.
 - Implement forward Euler

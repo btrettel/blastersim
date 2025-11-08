@@ -149,8 +149,8 @@ end type con_type
 type, public :: cv_system_type
     type(cv_type), allocatable  :: cv(:)
     type(con_type), allocatable :: con(:, :)
-!contains
-!    procedure :: calculate_flows
+contains
+    procedure :: calculate_flows
 end type cv_system_type
 
 contains
@@ -813,25 +813,25 @@ pure function d_e_d_t(cv, h_dots, i_cv)
     end do
 end function d_e_d_t
 
-!pure subroutine calculate_flows(sys, m_dots, h_dots)
-!    use checks, only: assert, assert_dimension
+pure subroutine calculate_flows(sys, m_dots, h_dots)
+    use checks, only: assert, assert_dimension
     
-!    class(cv_system_type), intent(in)                   :: sys
-!    type(si_mass_flow_rate), allocatable, intent(out)   :: m_dots(:, :)
-!    type(si_energy_flow_rate), allocatable, intent(out) :: h_dots(:, :)
+    class(cv_system_type), intent(in)                   :: sys
+    type(si_mass_flow_rate), allocatable, intent(out)   :: m_dots(:, :)
+    type(si_energy_flow_rate), allocatable, intent(out) :: h_dots(:, :)
     
-!    integer :: n_cv, i_from_cv, i_to_cv
+    integer :: n_cv, i_from_cv, i_to_cv
     
-!    n_cv = size(m_dots, 1)
-!    allocate(m_dots(n_cv, n_cv))
-!    allocate(h_dots(n_cv, n_cv))
-!    do i_from_cv = 1, n_cv
-!        do i_to_cv = 1, n_cv
-!            m_dots(i_from_cv, i_to_cv) = sys%con(i_from_cv, i_to_cv)%m_dot(sys%cv(i_from_cv), sys%cv(i_to_cv))
-!            h_dots(i_from_cv, i_to_cv) = sys%cv(i_from_cv)%h() * m_dots(i_from_cv, i_to_cv)
-!        end do
-!    end do
-!end subroutine calculate_flows
+    n_cv = size(m_dots, 1)
+    allocate(m_dots(n_cv, n_cv))
+    allocate(h_dots(n_cv, n_cv))
+    do i_from_cv = 1, n_cv
+        do i_to_cv = 1, n_cv
+            m_dots(i_from_cv, i_to_cv) = sys%con(i_from_cv, i_to_cv)%m_dot(sys%cv(i_from_cv), sys%cv(i_to_cv))
+            h_dots(i_from_cv, i_to_cv) = sys%cv(i_from_cv)%h() * m_dots(i_from_cv, i_to_cv)
+        end do
+    end do
+end subroutine calculate_flows
 
 pure subroutine assert_mass(cv, procedure_name)
     ! Why not make this a type-bound operator?
