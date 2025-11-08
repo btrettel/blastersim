@@ -1,6 +1,15 @@
+- Change genunits so that seed unit names are used for seed units, avoiding the need to constantly `use` parts of the units module.
+    - test_units_ad.f90
+    - test_units_fail_1.f90
+    - test_units_fail_2.f90
+    - test_units_fail_3.f90
+    - test_units_fail_4.f90
 - Calculate `m_dots` first, then pass into `d_m_d_t`.
 - From `m_dots`, calculate `h_dot`s, then pass into `d_e_d_t`.
 - Implement forward Euler
+- Break cva.f90 into multiple modules? `gas_type` might work in its own module.
+- documentation
+- pneumatic validation case
 
 ***
 
@@ -16,3 +25,4 @@
 - Functions to calculate input PE (spring and adiabatic compression) for efficiency calculation.
 - Add elevation angle
 - Add assertion for validity of lumped parameter approximation
+- Filling: isentropic vs. isothermal, pressure source is at

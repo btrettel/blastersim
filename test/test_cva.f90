@@ -8,6 +8,7 @@
 program test_cva
 
 use prec, only: WP
+use units
 use unittest, only: test_results_type
 implicit none
 
@@ -47,8 +48,6 @@ call tests%end_tests()
 contains
 
 subroutine test_u_h(tests)
-    use units, only: si_temperature     => unit_p00_p00_p00_p10_p00, &
-                     si_specific_energy => unit_p20_p00_m20_p00_p00
     use cva, only: DRY_AIR
     
     type(test_results_type), intent(in out) :: tests
@@ -85,8 +84,6 @@ subroutine test_u_h(tests)
 end subroutine test_u_h
 
 subroutine test_m_total(tests)
-    use units, only: si_mass  => unit_p00_p10_p00_p00_p00, &
-                     unitless => unit_p00_p00_p00_p00_p00
     use cva, only: DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -118,9 +115,6 @@ subroutine test_m_total(tests)
 end subroutine test_m_total
 
 subroutine test_p_eos(tests)
-    use units, only: si_mass_density => unit_m30_p10_p00_p00_p00, &
-                     si_temperature  => unit_p00_p00_p00_p10_p00, &
-                     si_pressure     => unit_m10_p10_m20_p00_p00
     use cva, only: P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -145,10 +139,6 @@ subroutine test_p_eos(tests)
 end subroutine test_p_eos
 
 subroutine test_rho_eos(tests)
-    use units, only: si_mass_density => unit_m30_p10_p00_p00_p00, &
-                     si_temperature  => unit_p00_p00_p00_p10_p00, &
-                     si_pressure     => unit_m10_p10_m20_p00_p00, &
-                     unitless        => unit_p00_p00_p00_p00_p00
     use cva, only: P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -177,11 +167,6 @@ subroutine test_r_cv(tests)
     ! Test using ambient air.
     ! Tests both the `r_cv` and `rho_eos`
     
-    use units, only: si_specific_heat => unit_p20_p00_m20_m10_p00, &
-                     unitless         => unit_p00_p00_p00_p00_p00, &
-                     si_mass_density  => unit_m30_p10_p00_p00_p00, &
-                     si_temperature   => unit_p00_p00_p00_p10_p00, &
-                     si_pressure      => unit_m10_p10_m20_p00_p00
     use cva, only: P_ATM, T_ATM, RHO_ATM, R_BAR, gas_type, DRY_AIR, N2, O2, AR, CO2, cv_type
     use checks, only: assert, is_close
     
@@ -234,7 +219,6 @@ end subroutine test_r_cv
 subroutine test_p_c(tests)
     ! Based on moran_fundamentals_2008 example 11.10, pp. 615--617.
     
-    use units, only: si_pressure => unit_m10_p10_m20_p00_p00
     use cva, only: gas_type, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -277,7 +261,6 @@ subroutine test_p_c(tests)
 end subroutine test_p_c
 
 subroutine test_p_f_1(tests)
-    use units, only: si_pressure => unit_m10_p10_m20_p00_p00
     use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -336,7 +319,6 @@ subroutine test_p_f_1(tests)
 end subroutine test_p_f_1
 
 subroutine test_p_f_2(tests)
-    use units, only: si_pressure => unit_m10_p10_m20_p00_p00
     use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -360,7 +342,6 @@ subroutine test_p_f_2(tests)
 end subroutine test_p_f_2
 
 subroutine test_p_f0_1(tests)
-    use units, only: si_pressure => unit_m10_p10_m20_p00_p00
     use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -394,7 +375,6 @@ subroutine test_p_f0_1(tests)
 end subroutine test_p_f0_1
 
 subroutine test_p_f0_2(tests)
-    use units, only: si_pressure => unit_m10_p10_m20_p00_p00
     use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -430,7 +410,6 @@ end subroutine test_p_f0_2
 ! TODO: Plot `p_f0` to test it.
 
 subroutine test_temp_cv(tests)
-    use units, only: si_temperature => unit_p00_p00_p00_p10_p00
     use cva, only: DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -454,18 +433,6 @@ subroutine test_temp_cv(tests)
 end subroutine test_temp_cv
 
 subroutine test_set_1(tests)
-    use units, only: si_length          => unit_p10_p00_p00_p00_p00, &
-                     si_velocity        => unit_p10_p00_m10_p00_p00, &
-                     unitless           => unit_p00_p00_p00_p00_p00, &
-                     si_inverse_mass    => unit_p00_m10_p00_p00_p00, &
-                     si_energy          => unit_p20_p10_m20_p00_p00, &
-                     si_area            => unit_p20_p00_p00_p00_p00, &
-                     si_pressure        => unit_m10_p10_m20_p00_p00, &
-                     si_stiffness       => unit_p00_p10_m20_p00_p00, &
-                     si_volume          => unit_p30_p00_p00_p00_p00, &
-                     si_mass_density    => unit_m30_p10_p00_p00_p00, &
-                     si_temperature     => unit_p00_p00_p00_p10_p00, &
-                     si_specific_energy => unit_p20_p00_m20_p00_p00
     use cva, only: P_ATM_ => P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -536,19 +503,6 @@ subroutine test_set_2(tests)
     ! Intended to test gas mixtures.
     ! Based on moran_fundamentals_2008 example 11.10, pp. 615--617.
     
-    use units, only: si_length          => unit_p10_p00_p00_p00_p00, &
-                     si_velocity        => unit_p10_p00_m10_p00_p00, &
-                     unitless           => unit_p00_p00_p00_p00_p00, &
-                     si_mass            => unit_p00_p10_p00_p00_p00, &
-                     si_inverse_mass    => unit_p00_m10_p00_p00_p00, &
-                     si_energy          => unit_p20_p10_m20_p00_p00, &
-                     si_area            => unit_p20_p00_p00_p00_p00, &
-                     si_pressure        => unit_m10_p10_m20_p00_p00, &
-                     si_stiffness       => unit_p00_p10_m20_p00_p00, &
-                     si_volume          => unit_p30_p00_p00_p00_p00, &
-                     si_mass_density    => unit_m30_p10_p00_p00_p00, &
-                     si_temperature     => unit_p00_p00_p00_p10_p00, &
-                     si_specific_energy => unit_p20_p00_m20_p00_p00
     use cva, only: P_ATM_ => P_ATM, TEMP_C_TO_K, gas_type, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -648,21 +602,6 @@ subroutine test_set_2(tests)
 end subroutine test_set_2
 
 subroutine test_rates(tests)
-    use units, only: si_length           => unit_p10_p00_p00_p00_p00, &
-                     si_velocity         => unit_p10_p00_m10_p00_p00, &
-                     unitless            => unit_p00_p00_p00_p00_p00, &
-                     si_inverse_mass     => unit_p00_m10_p00_p00_p00, &
-                     si_energy           => unit_p20_p10_m20_p00_p00, &
-                     si_area             => unit_p20_p00_p00_p00_p00, &
-                     si_pressure         => unit_m10_p10_m20_p00_p00, &
-                     si_stiffness        => unit_p00_p10_m20_p00_p00, &
-                     si_volume           => unit_p30_p00_p00_p00_p00, &
-                     si_mass_density     => unit_m30_p10_p00_p00_p00, &
-                     si_temperature      => unit_p00_p00_p00_p10_p00, &
-                     si_specific_energy  => unit_p20_p00_m20_p00_p00, &
-                     si_acceleration     => unit_p10_p00_m20_p00_p00, &
-                     si_mass_flow_rate   => unit_p00_p10_m10_p00_p00, &
-                     si_energy_flow_rate => unit_p20_p10_m30_p00_p00
     use cva, only: DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -727,18 +666,6 @@ subroutine test_rates(tests)
 end subroutine test_rates
 
 subroutine test_u_h_cv(tests)
-    use units, only: si_length           => unit_p10_p00_p00_p00_p00, &
-                     si_velocity         => unit_p10_p00_m10_p00_p00, &
-                     unitless            => unit_p00_p00_p00_p00_p00, &
-                     si_inverse_mass     => unit_p00_m10_p00_p00_p00, &
-                     si_energy           => unit_p20_p10_m20_p00_p00, &
-                     si_area             => unit_p20_p00_p00_p00_p00, &
-                     si_pressure         => unit_m10_p10_m20_p00_p00, &
-                     si_stiffness        => unit_p00_p10_m20_p00_p00, &
-                     si_volume           => unit_p30_p00_p00_p00_p00, &
-                     si_mass_density     => unit_m30_p10_p00_p00_p00, &
-                     si_temperature      => unit_p00_p00_p00_p10_p00, &
-                     si_specific_energy  => unit_p20_p00_m20_p00_p00
     use cva, only: N2, H2O, cv_type
     
     type(test_results_type), intent(in out) :: tests
@@ -786,7 +713,6 @@ subroutine test_u_h_cv(tests)
 end subroutine test_u_h_cv
 
 subroutine test_smooth_min(tests)
-    use units, only: unitless => unit_p00_p00_p00_p00_p00
     use cva, only: smooth_min
     
     type(test_results_type), intent(in out) :: tests
@@ -805,7 +731,6 @@ subroutine test_smooth_min(tests)
 end subroutine test_smooth_min
 
 subroutine test_f_m_dot(tests)
-    use units, only: unitless => unit_p00_p00_p00_p00_p00
     use cva, only: f_m_dot
     
     type(test_results_type), intent(in out) :: tests
@@ -827,7 +752,6 @@ end subroutine test_f_m_dot
 ! TODO: Plot `f_m_dot` to test it.
 
 subroutine test_g_m_dot(tests)
-    use units, only: unitless => unit_p00_p00_p00_p00_p00
     use cva, only: P_RL, g_m_dot
     
     type(test_results_type), intent(in out) :: tests
@@ -866,19 +790,6 @@ subroutine test_m_dot_1(tests)
     ! Test to check that $\dot{m} \varpropto \Delta p$ at small $\Delta p$.
     ! Tests the laminar branch (`cv_from%p()/cv_to%p() >= P_RL`).
     
-    use units, only: si_length          => unit_p10_p00_p00_p00_p00, &
-                     si_velocity        => unit_p10_p00_m10_p00_p00, &
-                     unitless           => unit_p00_p00_p00_p00_p00, &
-                     si_inverse_mass    => unit_p00_m10_p00_p00_p00, &
-                     si_energy          => unit_p20_p10_m20_p00_p00, &
-                     si_area            => unit_p20_p00_p00_p00_p00, &
-                     si_pressure        => unit_m10_p10_m20_p00_p00, &
-                     si_stiffness       => unit_p00_p10_m20_p00_p00, &
-                     si_volume          => unit_p30_p00_p00_p00_p00, &
-                     si_mass_density    => unit_m30_p10_p00_p00_p00, &
-                     si_temperature     => unit_p00_p00_p00_p10_p00, &
-                     si_specific_energy => unit_p20_p00_m20_p00_p00, &
-                     si_mass_flow_rate  => unit_p00_p10_m10_p00_p00
     use cva, only: P_ATM_ => P_ATM, T_ATM, DRY_AIR, R_BAR, P_RL, cv_type, con_type
     
     type(test_results_type), intent(in out) :: tests
@@ -940,19 +851,6 @@ end subroutine test_m_dot_1
 subroutine test_m_dot_2(tests)
     ! Tests the subsonic branch (`P_RL > cv_from%p()/cv_to%p() > b`).
     
-    use units, only: si_length          => unit_p10_p00_p00_p00_p00, &
-                     si_velocity        => unit_p10_p00_m10_p00_p00, &
-                     unitless           => unit_p00_p00_p00_p00_p00, &
-                     si_inverse_mass    => unit_p00_m10_p00_p00_p00, &
-                     si_energy          => unit_p20_p10_m20_p00_p00, &
-                     si_area            => unit_p20_p00_p00_p00_p00, &
-                     si_pressure        => unit_m10_p10_m20_p00_p00, &
-                     si_stiffness       => unit_p00_p10_m20_p00_p00, &
-                     si_volume          => unit_p30_p00_p00_p00_p00, &
-                     si_mass_density    => unit_m30_p10_p00_p00_p00, &
-                     si_temperature     => unit_p00_p00_p00_p10_p00, &
-                     si_specific_energy => unit_p20_p00_m20_p00_p00, &
-                     si_mass_flow_rate  => unit_p00_p10_m10_p00_p00
     use cva, only: P_ATM_ => P_ATM, T_ATM, DRY_AIR, R_BAR, P_RL, cv_type, con_type
     use checks, only: assert
     
@@ -1018,19 +916,6 @@ end subroutine test_m_dot_2
 subroutine test_m_dot_3(tests)
     ! Tests the choked branch (`cv_from%p()/cv_to%p() <= b`).
     
-    use units, only: si_length          => unit_p10_p00_p00_p00_p00, &
-                     si_velocity        => unit_p10_p00_m10_p00_p00, &
-                     unitless           => unit_p00_p00_p00_p00_p00, &
-                     si_inverse_mass    => unit_p00_m10_p00_p00_p00, &
-                     si_energy          => unit_p20_p10_m20_p00_p00, &
-                     si_area            => unit_p20_p00_p00_p00_p00, &
-                     si_pressure        => unit_m10_p10_m20_p00_p00, &
-                     si_stiffness       => unit_p00_p10_m20_p00_p00, &
-                     si_volume          => unit_p30_p00_p00_p00_p00, &
-                     si_mass_density    => unit_m30_p10_p00_p00_p00, &
-                     si_temperature     => unit_p00_p00_p00_p10_p00, &
-                     si_specific_energy => unit_p20_p00_m20_p00_p00, &
-                     si_mass_flow_rate  => unit_p00_p10_m10_p00_p00
     use cva, only: P_ATM_ => P_ATM, T_ATM, DRY_AIR, R_BAR, cv_type, con_type
     use checks, only: assert
     
@@ -1089,19 +974,6 @@ end subroutine test_m_dot_3
 subroutine test_m_dot_4(tests)
     ! Test inactive connection.
     
-    use units, only: si_length          => unit_p10_p00_p00_p00_p00, &
-                     si_velocity        => unit_p10_p00_m10_p00_p00, &
-                     unitless           => unit_p00_p00_p00_p00_p00, &
-                     si_inverse_mass    => unit_p00_m10_p00_p00_p00, &
-                     si_energy          => unit_p20_p10_m20_p00_p00, &
-                     si_area            => unit_p20_p00_p00_p00_p00, &
-                     si_pressure        => unit_m10_p10_m20_p00_p00, &
-                     si_stiffness       => unit_p00_p10_m20_p00_p00, &
-                     si_volume          => unit_p30_p00_p00_p00_p00, &
-                     si_mass_density    => unit_m30_p10_p00_p00_p00, &
-                     si_temperature     => unit_p00_p00_p00_p10_p00, &
-                     si_specific_energy => unit_p20_p00_m20_p00_p00, &
-                     si_mass_flow_rate  => unit_p00_p10_m10_p00_p00
     use cva, only: P_ATM_ => P_ATM, T_ATM, DRY_AIR, cv_type, con_type
     use checks, only: assert
     
@@ -1151,8 +1023,6 @@ subroutine test_m_dot_4(tests)
 end subroutine test_m_dot_4
 
 subroutine test_p_v_h2o(tests)
-    use units, only: si_temperature => unit_p00_p00_p00_p10_p00, &
-                     si_pressure    => unit_m10_p10_m20_p00_p00
     use cva, only: TEMP_C_TO_K, p_v_h2o
     
     type(test_results_type), intent(in out) :: tests

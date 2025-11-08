@@ -41,6 +41,13 @@ e = 1.0, 0.0, -1.0, 0.0, 0.0
 /
 
 &seed_unit
+! example: `$\ddot{x}_i$`
+label = "si_acceleration"
+!   m    kg   s     K    mol
+e = 1.0, 0.0, -2.0, 0.0, 0.0
+/
+
+&seed_unit
 ! example: `$A_i$`
 label = "si_area"
 !   m    kg   s    K    mol
@@ -104,6 +111,12 @@ e = 2.0, 0.0, -2.0, -1.0, 0.0
 /
 
 &seed_unit
+label = "si_heat_capacity"
+!   m    kg   s     K    mol
+e = 2.0, 1.0, -2.0, -1.0, 0.0
+/
+
+&seed_unit
 ! example: `$T_i$`
 label = "si_temperature"
 !   m    kg   s    K    mol
@@ -132,6 +145,13 @@ e = 3.0, 0.0, 0.0, 0.0, 0.0
 /
 
 &seed_unit
+! example: `$\dot{E}$`
+label = "si_energy_flow_rate"
+!   m    kg   s     K    mol
+e = 2.0, 1.0, -3.0, 0.0, 0.0
+/
+
+&seed_unit
 ! example: `$n$`
 label = "si_mole"
 !   m    kg   s    K    mol
@@ -157,23 +177,23 @@ sterile = .true.
 
 &seed_unit
 ! needed because of $\rho \overline{R}$
-label = "intermediate_1"
 !   m     kg   s     K     mol
 e = -1.0, 2.0, -2.0, -1.0, -1.0
-sterile = .true.
+sterile  = .true.
+no_label = .true.
 /
 
 &seed_unit
 ! needed because of $\overline{R} T$
-label = "intermediate_2"
 !   m    kg   s     K    mol
 e = 2.0, 1.0, -2.0, 0.0, -1.0
-sterile = .true.
+sterile  = .true.
+no_label = .true.
 /
 
 &seed_unit
-! example: `$\dot{E}$`
-label = "si_energy_flow_rate"
-!   m    kg   s     K    mol
-e = 2.0, 1.0, -3.0, 0.0, 0.0
+! needed because of $\rho R$
+!   m     kg   s     K     mol
+e = -1.0, 1.0, -2.0, -1.0, 0.0
+no_label = .true.
 /
