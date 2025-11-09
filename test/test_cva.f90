@@ -506,7 +506,8 @@ subroutine test_set_2(tests)
     ! Intended to test gas mixtures.
     ! Based on moran_fundamentals_2008 example 11.10, pp. 615--617.
     
-    use cva, only: P_ATM_ => P_ATM, TEMP_C_TO_K, gas_type, cv_type
+    use cva, only: X_STOP_DEFAULT, P_ATM_ => P_ATM, TEMP_C_TO_K, gas_type, cv_type
+    use checks, only: assert, is_close
     
     type(test_results_type), intent(in out) :: tests
 
@@ -522,7 +523,7 @@ subroutine test_set_2(tests)
     type(si_mass)         :: m_total
     type(si_pressure)     :: p_fs, p_fd, p_atm
     type(si_stiffness)    :: k
-    type(si_length)       :: x_z
+    type(si_length)       :: x_z, x_stop
     type(gas_type)        :: gas(2)
     
     real(WP)        :: n(2), m(2)
@@ -572,8 +573,10 @@ subroutine test_set_2(tests)
     call p_atm%v%init_const(P_ATM_, 0)
     call k%v%init_const(0.0_WP, 0)
     call x_z%v%init_const(0.0_WP, 0)
+    call x_stop%v%init_const(1.0_WP, 0) ! to test non-default `x_stop`
+    call assert(.not. is_close(x_stop%v%v, X_STOP_DEFAULT), "x_stop must not equal the default for this test")
     
-    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas)
+    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas, x_stop)
     
     ! All the masses are slightly off. This is expected, as total mass is not an input here.
     ! Pressure is the input setting the total mass, and it's only approximate.
@@ -602,6 +605,8 @@ subroutine test_set_2(tests)
     
     p_cv = cv%p()
     call tests%real_eq(p_cv%v%v, p%v%v, "set 2, p")
+    
+    call tests%real_eq(cv%x_stop%v%v, 1.0_WP, "set 2, x_stop")
 end subroutine test_set_2
 
 subroutine test_rates(tests)
