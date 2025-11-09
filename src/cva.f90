@@ -24,9 +24,9 @@ real(WP), public, parameter :: R_BAR = 8.31446261815324_WP ! J/(mol*K)
 real(WP), public, parameter :: TEMP_C_TO_K = 273.15_WP ! K, temperature to add to convert from C to K
 
 ! <https://en.wikipedia.org/wiki/Density_of_air>
-real(WP), public, parameter :: P_ATM   = 101325.0_WP           ! Pa
-real(WP), public, parameter :: T_ATM   = TEMP_C_TO_K + 15.0_WP ! K
-real(WP), public, parameter :: RHO_ATM = 1.2250_WP             ! kg/m3
+real(WP), public, parameter :: P_ATM    = 101325.0_WP           ! Pa
+real(WP), public, parameter :: TEMP_ATM = TEMP_C_TO_K + 15.0_WP ! K
+real(WP), public, parameter :: RHO_ATM  = 1.2250_WP             ! kg/m3
 
 ! pressure ratio laminar flow nominally starts at
 ! based on first part of beater_pneumatic_2007 eq. 5.4
@@ -155,7 +155,6 @@ end type con_type
 type, public :: cv_system_type
     type(cv_type), allocatable  :: cv(:)
     type(con_type), allocatable :: con(:, :)
-    type(si_time)               :: t_stop ! time where simulation will stop
 contains
     procedure :: calculate_flows
 end type cv_system_type
@@ -972,6 +971,7 @@ subroutine run(sys_start, sys_end)
     
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp
     
+    type(si_time) :: t_stop ! time where simulation will stop
     integer       :: n_d, n_cv, i_cv
     type(si_time) :: t, dt
     logical       :: run_sim
@@ -981,6 +981,7 @@ subroutine run(sys_start, sys_end)
     n_d = size(sys_old%cv(1)%x%v%d)
     call t%v%init_const(0.0_WP, n_d)
     call dt%v%init_const(1.0e-6_WP, n_d)
+    call t_stop%v%init_const(T_STOP_DEFAULT, n_d)
     
     n_cv = size(sys_old%cv)
     
@@ -993,7 +994,7 @@ subroutine run(sys_start, sys_end)
         call time_step(sys_old, dt, sys_new)
         t = t + dt
         
-        if (t >= sys_new%t_stop) run_sim = .false.
+        if (t >= t_stop) run_sim = .false.
         
         do i_cv = 1, n_cv
             if (sys_new%cv(i_cv)%x >= sys_new%cv(i_cv)%x_stop) run_sim = .false.

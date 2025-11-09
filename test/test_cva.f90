@@ -42,6 +42,7 @@ call test_m_dot_3(tests)
 call test_m_dot_4(tests)
 
 call test_calculate_flows(tests)
+call test_2010_08_07()
 
 call test_p_v_h2o(tests)
 
@@ -117,7 +118,7 @@ subroutine test_m_total(tests)
 end subroutine test_m_total
 
 subroutine test_p_eos(tests)
-    use cva, only: P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
+    use cva, only: P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -127,7 +128,7 @@ subroutine test_p_eos(tests)
     type(cv_type)         :: cv
     
     call rho%v%init_const(RHO_ATM, 0)
-    call temp%v%init_const(T_ATM, 0)
+    call temp%v%init_const(TEMP_ATM, 0)
     allocate(cv%m(1))
     call cv%m(1)%v%init_const(1.0_WP, 0)
     call cv%e%v%init_const(1.0_WP, 0)
@@ -141,7 +142,7 @@ subroutine test_p_eos(tests)
 end subroutine test_p_eos
 
 subroutine test_rho_eos(tests)
-    use cva, only: P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
+    use cva, only: P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -152,7 +153,7 @@ subroutine test_rho_eos(tests)
     type(cv_type)         :: cv
     
     call p%v%init_const(P_ATM, 0)
-    call temp%v%init_const(T_ATM, 0)
+    call temp%v%init_const(TEMP_ATM, 0)
     call y%v%init_const(1.0_WP, 0)
     allocate(cv%m(1))
     call cv%m(1)%v%init_const(1.0_WP, 0)
@@ -169,7 +170,7 @@ subroutine test_r_cv(tests)
     ! Test using ambient air.
     ! Tests both the `r_cv` and `rho_eos`
     
-    use cva, only: P_ATM, T_ATM, RHO_ATM, R_BAR, gas_type, DRY_AIR, N2, O2, AR, CO2, cv_type
+    use cva, only: P_ATM, TEMP_ATM, RHO_ATM, R_BAR, gas_type, DRY_AIR, N2, O2, AR, CO2, cv_type
     use checks, only: assert, is_close
     
     type(test_results_type), intent(in out) :: tests
@@ -213,7 +214,7 @@ subroutine test_r_cv(tests)
     
     ! Test for `rho_eos` with multiple gas species.
     call p%v%init_const(P_ATM, 0)
-    call temp%v%init_const(T_ATM, 0)
+    call temp%v%init_const(TEMP_ATM, 0)
     rho = cv%rho_eos(p, temp, y)
     call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric (2)", abs_tol=1.0e-3_WP)
 end subroutine test_r_cv
@@ -435,7 +436,7 @@ subroutine test_temp_cv(tests)
 end subroutine test_temp_cv
 
 subroutine test_set_1(tests)
-    use cva, only: X_STOP_DEFAULT, P_ATM_ => P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
+    use cva, only: X_STOP_DEFAULT, P_ATM_ => P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -460,7 +461,7 @@ subroutine test_set_1(tests)
     call x_dot%v%init_const(0.5_WP, 0)
     call y(1)%v%init_const(1.0_WP, 0)
     call p%v%init_const(2.0_WP*P_ATM_, 0)
-    call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 0)
+    call temp%v%init_const(sqrt(2.0_WP)*TEMP_ATM, 0)
     call csa%v%init_const(0.1_WP, 0)
     call rm_p%v%init_const(1.0_WP/0.5_WP, 0)
     call p_fs%v%init_const(0.2e5_WP, 0)
@@ -798,7 +799,7 @@ subroutine test_m_dot_1(tests)
     ! Test to check that $\dot{m} \varpropto \Delta p$ at small $\Delta p$.
     ! Tests the laminar branch (`cv_from%p()/cv_to%p() >= P_RL`).
     
-    use cva, only: P_ATM_ => P_ATM, T_ATM, DRY_AIR, R_BAR, P_RL, cv_type, con_type
+    use cva, only: P_ATM_ => P_ATM, TEMP_ATM, DRY_AIR, R_BAR, P_RL, cv_type, con_type
     
     type(test_results_type), intent(in out) :: tests
     
@@ -830,7 +831,7 @@ subroutine test_m_dot_1(tests)
     call x_dot%v%init_const(0.5_WP, 1)
     call y(1)%v%init_const(1.0_WP, 1)
     call p%v%init_const(2.0_WP*P_ATM_, 1)
-    call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 1)
+    call temp%v%init_const(sqrt(2.0_WP)*TEMP_ATM, 1)
     call csa%v%init_const(1.0_WP, 1)
     call rm_p%v%init_const(0.0_WP, 1)
     call p_fs%v%init_const(0.0_WP, 1)
@@ -849,7 +850,7 @@ subroutine test_m_dot_1(tests)
     
     ! This won't be exact due to the smoothing I applied.
     ! The important part is that it is finite.
-    d_m_dot_d_delta_p = con%a_e%v%v * sqrt((1.0_WP - con%b%v%v) / ((R_BAR/DRY_AIR%mm) * sqrt(2.0_WP)*T_ATM)) &
+    d_m_dot_d_delta_p = con%a_e%v%v * sqrt((1.0_WP - con%b%v%v) / ((R_BAR/DRY_AIR%mm) * sqrt(2.0_WP)*TEMP_ATM)) &
                             * sqrt(1.0_WP - ((P_RL - con%b%v%v) / (1.0_WP - con%b%v%v))**2)
     call tests%real_eq(m_dot_con%v%d(1), d_m_dot_d_delta_p, "m_dot, small delta_p, d", abs_tol=1.0e-3_WP)
 end subroutine test_m_dot_1
@@ -859,7 +860,7 @@ end subroutine test_m_dot_1
 subroutine test_m_dot_2(tests)
     ! Tests the subsonic branch (`P_RL > cv_from%p()/cv_to%p() > b`).
     
-    use cva, only: P_ATM_ => P_ATM, T_ATM, DRY_AIR, R_BAR, P_RL, cv_type, con_type
+    use cva, only: P_ATM_ => P_ATM, TEMP_ATM, DRY_AIR, R_BAR, P_RL, cv_type, con_type
     use checks, only: assert
     
     type(test_results_type), intent(in out) :: tests
@@ -893,7 +894,7 @@ subroutine test_m_dot_2(tests)
     call x_dot%v%init_const(0.5_WP, 1)
     call y(1)%v%init_const(1.0_WP, 1)
     call p_in%v%init_const(2.0_WP*P_ATM_, 1)
-    call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 1)
+    call temp%v%init_const(sqrt(2.0_WP)*TEMP_ATM, 1)
     call csa%v%init_const(1.0_WP, 1)
     call rm_p%v%init_const(0.0_WP, 1)
     call p_fs%v%init_const(0.0_WP, 1)
@@ -924,7 +925,7 @@ end subroutine test_m_dot_2
 subroutine test_m_dot_3(tests)
     ! Tests the choked branch (`cv_from%p()/cv_to%p() <= b`).
     
-    use cva, only: P_ATM_ => P_ATM, T_ATM, DRY_AIR, R_BAR, cv_type, con_type
+    use cva, only: P_ATM_ => P_ATM, TEMP_ATM, DRY_AIR, R_BAR, cv_type, con_type
     use checks, only: assert
     
     type(test_results_type), intent(in out) :: tests
@@ -957,7 +958,7 @@ subroutine test_m_dot_3(tests)
     call x_dot%v%init_const(0.5_WP, 1)
     call y(1)%v%init_const(1.0_WP, 1)
     call p_in%v%init_const(2.0_WP*P_ATM_, 1)
-    call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 1)
+    call temp%v%init_const(sqrt(2.0_WP)*TEMP_ATM, 1)
     call csa%v%init_const(1.0_WP, 1)
     call rm_p%v%init_const(0.0_WP, 1)
     call p_fs%v%init_const(0.0_WP, 1)
@@ -982,7 +983,7 @@ end subroutine test_m_dot_3
 subroutine test_m_dot_4(tests)
     ! Test inactive connection.
     
-    use cva, only: P_ATM_ => P_ATM, T_ATM, DRY_AIR, cv_type, con_type
+    use cva, only: P_ATM_ => P_ATM, TEMP_ATM, DRY_AIR, cv_type, con_type
     use checks, only: assert
     
     type(test_results_type), intent(in out) :: tests
@@ -1012,7 +1013,7 @@ subroutine test_m_dot_4(tests)
     call y(1)%v%init_const(1.0_WP, 1)
     call p_in%v%init_const(2.0_WP*P_ATM_, 1)
     call p_out%v%init_const(2.0_WP*P_ATM_, 1)
-    call temp%v%init_const(sqrt(2.0_WP)*T_ATM, 1)
+    call temp%v%init_const(sqrt(2.0_WP)*TEMP_ATM, 1)
     call csa%v%init_const(1.0_WP, 1)
     call rm_p%v%init_const(0.0_WP, 1)
     call p_fs%v%init_const(0.0_WP, 1)
@@ -1104,6 +1105,80 @@ subroutine test_calculate_flows(tests)
     call tests%real_eq(h_dot(2, 1)%v%v, 0.0_WP, "m_dots(2, 1)")
     call tests%real_eq(h_dot(2, 2)%v%v, 0.0_WP, "m_dots(2, 2)")
 end subroutine test_calculate_flows
+
+subroutine test_2010_08_07
+    use cva, only: DRY_AIR, cv_system_type
+    use prec, only: PI
+    use checks, only: assert
+
+    type(cv_system_type) :: sys
+    
+    type(si_length)          :: x_1, x_2, d_1, d_2, x_stop_2
+    type(si_velocity)        :: x_dot
+    type(unitless)           :: y(1)
+    type(si_pressure)        :: p_atm, p_1, p_2, p_fs_1, p_fd_1, p_fs_2, p_fd_2
+    type(si_temperature)     :: temp_atm, temp_1, temp_2
+    type(si_area)            :: csa_1, csa_2
+    type(si_inverse_mass)    :: rm_p_1, rm_p_2
+    type(si_stiffness)       :: k
+    type(si_length)          :: x_z
+    type(si_volume)          :: vol_1, vol_d
+    
+    allocate(sys%cv(2))
+    allocate(sys%con(2, 2))
+    
+    sys%con(1, 1)%active = .false.
+    sys%con(2, 1)%active = .false.
+    sys%con(2, 2)%active = .false.
+    
+    sys%con(1, 2)%active = .true.
+    call sys%con(1, 2)%a_e%v%init_const(0.25_WP, 0)
+    call sys%con(1, 2)%b%v%init_const(0.5_WP, 0)
+    
+    ! The same for every control volume.
+    call x_dot%v%init_const(0.0_WP, 0)
+    call y(1)%v%init_const(1.0_WP, 0)
+    call p_atm%v%init_const(101350.0_WP, 0)
+    call temp_atm%v%init_const(302.6_WP, 0)
+    call k%v%init_const(0.0_WP, 0)
+    call x_z%v%init_const(0.0_WP, 0)
+    
+    ! 1: chamber
+    ! Appears to be constructed about 6 inches of 3/8" NPT threaded steel nipple from the photo I have.
+    ! I guess I bought the pipe from Home Depot or Lowes as it doesn't appear on my old McMaster-Carr orders.
+    ! Seems to be similar to <https://www.mcmaster.com/4830K158>.
+    
+    call d_1%v%init_const(0.493_WP*2.54e-2_WP, 0)
+    csa_1 = (PI/4.0_WP)*square(d_1)
+    call vol_1%v%init_const(1.1_WP*16.387e-6_WP, 0)
+    x_1 = vol_1/csa_1
+    call assert(x_1%v%v > (5.0_WP*2.54e-2_WP), "x_1 should be at least 5 inches")
+    call assert(x_1%v%v < (8.0_WP*2.54e-2_WP), "x_1 should be less than 8 inches")
+    call p_1%v%init_const(70.0_WP*6894.8_WP, 0)
+    p_1 = p_1 + p_atm
+    temp_1 = temp_atm ! TODO: update this after adding isentropic filling
+    call rm_p_1%v%init_const(0.0_WP, 0) ! immobile
+    call p_fs_1%v%init_const(0.0_WP, 0)
+    call p_fd_1%v%init_const(0.0_WP, 0)
+    
+    call sys%cv(1)%set(x_1, x_dot, y, p_1, temp_1, csa_1, rm_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR])
+    
+    ! 2: barrel
+    
+    call d_2%v%init_const(0.527_WP*2.54e-2_WP, 0)
+    csa_2 = (PI/4.0_WP)*square(d_2)
+    call vol_d%v%init_const(1.1_WP*16.387e-6_WP, 0)
+    x_2 = vol_d/csa_2
+    p_2    = p_atm
+    temp_2 = temp_atm
+    call rm_p_2%v%init_const(1.0_WP/0.98e-3_WP, 0)
+    call p_fs_2%v%init_const(0.5_WP*6894.8_WP, 0) ! estimate
+    call p_fd_2%v%init_const(0.0_WP, 0)
+    call x_stop_2%v%init_const(12.0_WP*2.54e-2_WP, 0)
+    x_stop_2 = x_stop_2 + x_2
+    
+    call sys%cv(2)%set(x_2, x_dot, y, p_2, temp_2, csa_2, rm_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, [DRY_AIR], x_stop_2)
+end subroutine test_2010_08_07
 
 subroutine test_p_v_h2o(tests)
     use cva, only: TEMP_C_TO_K, p_v_h2o

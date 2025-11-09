@@ -1,3 +1,11 @@
+- convert.f90
+    - `PSI_TO_PA`
+    - `IN_TO_M`
+    - `IN3_TO_M3`
+    - Convenience setters
+        - psi
+        - in
+- Filling: isentropic vs. isothermal
 - Run full simulation loop.
 - Interpolate `sys` to `x_stop` or `t_stop`.
 - Break cva.f90 into multiple modules? `gas_type` might work in its own module.
@@ -18,7 +26,6 @@
 - Functions to calculate input PE (spring and adiabatic compression) for efficiency calculation.
 - Add elevation angle
 - Add assertion for validity of lumped parameter approximation
-- Filling: isentropic vs. isothermal, pressure source is at
 - transonic corrections in the barrel
 - pressure gradient
 - Instead of `p_atm` in the force balance, allow for using another control volume's pressure.
