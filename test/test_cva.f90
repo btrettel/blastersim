@@ -42,7 +42,7 @@ call test_m_dot_3(tests)
 call test_m_dot_4(tests)
 
 call test_calculate_flows(tests)
-call test_2010_08_07()
+call test_2010_08_07(tests)
 
 call test_p_v_h2o(tests)
 
@@ -1106,12 +1106,16 @@ subroutine test_calculate_flows(tests)
     call tests%real_eq(h_dot(2, 2)%v%v, 0.0_WP, "m_dots(2, 2)")
 end subroutine test_calculate_flows
 
-subroutine test_2010_08_07
-    use cva, only: DRY_AIR, cv_system_type, run
+subroutine test_2010_08_07(tests)
+    use cva, only: DRY_AIR, cv_system_type, run_status_type, run
     use prec, only: PI
     use checks, only: assert
+    
+    type(test_results_type), intent(in out) :: tests
 
     type(cv_system_type), allocatable :: sys_start, sys_end
+    
+    type(run_status_type) :: status
     
     type(si_length)          :: d_e, x_1, x_2, d_1, d_2, x_stop_2
     type(si_velocity)        :: x_dot
@@ -1181,9 +1185,11 @@ subroutine test_2010_08_07
     
     call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_2, csa_2, rm_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, [DRY_AIR], x_stop_2)
     
-    call run(sys_start, sys_end)
+    call run(sys_start, sys_end, status)
     
     print *, sys_end%cv(2)%x_dot%v%v
+    
+    call tests%integer_eq(status%rc, 0, "test_2010_08_07, status%rc")
 end subroutine test_2010_08_07
 
 subroutine test_p_v_h2o(tests)

@@ -159,6 +159,13 @@ contains
     procedure :: calculate_flows
 end type cv_system_type
 
+type, public :: run_status_type
+    integer       :: rc
+    type(si_time) :: t
+    integer, allocatable  :: i_cv(:) ! control volume(s) with associated error
+    real(WP), allocatable :: data(:) ! additional error data
+end type run_status_type
+
 contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1033,7 +1040,6 @@ pure subroutine time_step(sys_old, dt, sys_new)
     end do
     
     ! Put it all together.
-    
     sys_new = sys_old
     do i_cv = 1, n_cv
         sys_new%cv(i_cv)%x     = sys_old%cv(i_cv)%x &
@@ -1049,18 +1055,16 @@ pure subroutine time_step(sys_old, dt, sys_new)
     end do
 end subroutine time_step
 
-subroutine run(sys_start, sys_end)
-    use, intrinsic :: iso_fortran_env, only: OUTPUT_UNIT
-    
+subroutine run(sys_start, sys_end, status)
     type(cv_system_type), allocatable, intent(in)  :: sys_start
     type(cv_system_type), allocatable, intent(out) :: sys_end
+    type(run_status_type), intent(out)             :: status
     
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp
     
     type(si_time) :: t_stop ! time where simulation will stop
-    integer       :: n_d, n_cv, i_cv
+    integer       :: n_d, n_cv, i_cv!, j_cv
     type(si_time) :: t, dt
-    logical       :: run_sim
     
     sys_old = sys_start
     
@@ -1071,27 +1075,42 @@ subroutine run(sys_start, sys_end)
     
     n_cv = size(sys_old%cv)
     
-    run_sim = .true.
-    do
-        if (.not. run_sim) exit
-        
-        !write(unit=OUTPUT_UNIT, fmt=*) t%v%v
-        
+    time_loop: do
         call time_step(sys_old, dt, sys_new)
         t = t + dt
-        
-        if (t >= t_stop) run_sim = .false.
-        
-        do i_cv = 1, n_cv
-            if (sys_new%cv(i_cv)%x >= sys_new%cv(i_cv)%x_stop) run_sim = .false.
-        end do
         
         call move_alloc(from=sys_old,  to=sys_temp)
         call move_alloc(from=sys_new,  to=sys_old)
         call move_alloc(from=sys_temp, to=sys_new)
-    end do
+        
+        if (t >= t_stop) then
+            status%rc = 1
+            exit time_loop
+        end if
+        
+        do i_cv = 1, n_cv
+            if (sys_new%cv(i_cv)%x >= sys_new%cv(i_cv)%x_stop) then
+                status%rc = 0
+                allocate(status%i_cv(1))
+                status%i_cv(1) = i_cv
+                exit time_loop
+            end if
+            
+!            if (sys_new%cv(i_cv)%m%v%v <= 0.0_WP) then
+!                status%rc = 2
+!                allocate(status%i_cv(1))
+!                status%i_cv(1) = i_cv
+!                allocate(status%data(n_cv))
+!                do j_cv = 1, n_cv
+!                    status%data(j_cv) = sys_new%cv(j_cv)%m%v%v
+!                end do
+!                exit time_loop
+!            end if
+        end do
+    end do time_loop
     
     sys_end = sys_old
+    status%t = t
 end subroutine run
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
