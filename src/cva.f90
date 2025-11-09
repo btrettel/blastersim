@@ -140,9 +140,16 @@ contains
     procedure :: p_f0
     procedure :: d_x_d_t
     procedure :: d_xdot_d_t
-    procedure :: d_m_d_t
+    procedure :: d_m_k_d_t
     procedure :: d_e_d_t
 end type cv_type
+
+type :: cv_delta_type
+    type(si_length)            :: x     ! delta of location of piston/projectile
+    type(si_velocity)          :: x_dot ! delta of velocity of piston/projectile
+    type(si_mass), allocatable :: m(:)  ! delta of mass(es) of gas(es) in control volume
+    type(si_energy)            :: e     ! delta of energy of gas in control volume
+end type cv_delta_type
 
 type, public :: con_type ! connection between control volumes
     logical        :: active
@@ -749,27 +756,29 @@ pure function d_xdot_d_t(cv)
     d_xdot_d_t = cv%csa*cv%rm_p*(cv%p() - cv%p_atm - cv%p_f(p_fe)) - cv%k*cv%rm_p*(cv%x - cv%x_z)
 end function d_xdot_d_t
 
-pure function d_m_d_t(cv, m_dot, i_cv)
+pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
     class(cv_type), intent(in)          :: cv
     type(si_mass_flow_rate), intent(in) :: m_dot(:, :)
-    integer, intent(in)                 :: i_cv
+    integer, intent(in)                 :: k_gas, i_cv
     
-    type(si_mass_flow_rate) :: d_m_d_t
+    type(si_mass_flow_rate) :: d_m_k_d_t
     
     integer :: n_d, n_cv, j_cv
+    type(unitless) :: y_k
     
-    call assert(size(m_dot, 1) == size(m_dot, 2), "cva (d_m_d_t): m_dots must be square")
+    call assert(size(m_dot, 1) == size(m_dot, 2), "cva (d_m_k_d_t): m_dots must be square")
     call assert_dimension(m_dot(1, 1)%v%d, cv%x%v%d)
     
     n_d = size(cv%x%v%d)
-    call d_m_d_t%v%init_const(0.0_WP, n_d)
+    call d_m_k_d_t%v%init_const(0.0_WP, n_d)
     
     n_cv = size(m_dot, 1)
+    y_k  = cv%m(k_gas) / cv%m_total()
     do j_cv = 1, n_cv
-        call assert(is_close(m_dot(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_m_d_t): mass can not flow from self to self")
-        d_m_d_t = d_m_d_t + m_dot(j_cv, i_cv) - m_dot(i_cv, j_cv)
+        call assert(is_close(m_dot(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_m_k_d_t): mass can not flow from self to self")
+        d_m_k_d_t = d_m_k_d_t + y_k*m_dot(j_cv, i_cv) - y_k*m_dot(i_cv, j_cv)
     end do
-end function d_m_d_t
+end function d_m_k_d_t
 
 pure function d_e_d_t(cv, h_dot, i_cv)
     class(cv_type), intent(in)            :: cv
@@ -956,100 +965,122 @@ pure subroutine time_step(sys_old, dt, sys_new)
     type(cv_system_type), allocatable      :: sys_2, sys_3, sys_4
     type(si_mass_flow_rate), allocatable   :: m_dot_1(:, :), m_dot_2(:, :), m_dot_3(:, :), m_dot_4(:, :)
     type(si_energy_flow_rate), allocatable :: h_dot_1(:, :), h_dot_2(:, :), h_dot_3(:, :), h_dot_4(:, :)
-    type(si_length), allocatable   :: dx_1(:), dx_2(:), dx_3(:), dx_4(:)
-    type(si_velocity), allocatable :: dx_dot_1(:), dx_dot_2(:), dx_dot_3(:), dx_dot_4(:)
-    type(si_mass), allocatable     :: dm_1(:), dm_2(:), dm_3(:), dm_4(:)
-    type(si_energy), allocatable   :: de_1(:), de_2(:), de_3(:), de_4(:)
     
-    integer :: i_cv, n_cv
+    type(cv_delta_type), allocatable :: cv_delta_1(:), cv_delta_2(:), cv_delta_3(:), cv_delta_4(:)
     
-    n_cv = size(sys_old%cv)
+    integer :: i_cv, n_cv, k_gas, n_gas
     
-    allocate(dx_1(n_cv))
-    allocate(dx_2(n_cv))
-    allocate(dx_3(n_cv))
-    allocate(dx_4(n_cv))
-    allocate(dx_dot_1(n_cv))
-    allocate(dx_dot_2(n_cv))
-    allocate(dx_dot_3(n_cv))
-    allocate(dx_dot_4(n_cv))
-    allocate(dm_1(n_cv))
-    allocate(dm_2(n_cv))
-    allocate(dm_3(n_cv))
-    allocate(dm_4(n_cv))
-    allocate(de_1(n_cv))
-    allocate(de_2(n_cv))
-    allocate(de_3(n_cv))
-    allocate(de_4(n_cv))
+    n_cv  = size(sys_old%cv)
+    n_gas = size(sys_old%cv(1)%m)
+    
+    allocate(cv_delta_1(n_cv))
+    allocate(cv_delta_2(n_cv))
+    allocate(cv_delta_3(n_cv))
+    allocate(cv_delta_4(n_cv))
+    
+    do i_cv = 1, n_cv
+        allocate(cv_delta_1(i_cv)%m(n_gas))
+        allocate(cv_delta_2(i_cv)%m(n_gas))
+        allocate(cv_delta_3(i_cv)%m(n_gas))
+        allocate(cv_delta_4(i_cv)%m(n_gas))
+    end do
     
     ! stage 1
     call sys_old%calculate_flows(m_dot_1, h_dot_1)
     do i_cv = 1, n_cv
-        dx_1(i_cv)     = dt*d_x_d_t(sys_old%cv(i_cv))
-        dx_dot_1(i_cv) = dt*d_xdot_d_t(sys_old%cv(i_cv))
-        dm_1(i_cv)     = dt*d_m_d_t(sys_old%cv(i_cv), m_dot_1, i_cv)
-        de_1(i_cv)     = dt*d_e_d_t(sys_old%cv(i_cv), h_dot_1, i_cv)
+        cv_delta_1(i_cv)%x     = dt*d_x_d_t(sys_old%cv(i_cv))
+        cv_delta_1(i_cv)%x_dot = dt*d_xdot_d_t(sys_old%cv(i_cv))
+        cv_delta_1(i_cv)%e     = dt*d_e_d_t(sys_old%cv(i_cv), h_dot_1, i_cv)
+        do k_gas = 1, n_gas
+            cv_delta_1(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys_old%cv(i_cv), m_dot_1, k_gas, i_cv)
+        end do
     end do
     
     ! stage 2
     sys_2 = sys_old
     do i_cv = 1, n_cv
-        sys_2%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + 0.5_WP*dx_1(i_cv)
-        sys_2%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + 0.5_WP*dx_dot_1(i_cv)
-        sys_2%cv(i_cv)%m     = sys_old%cv(i_cv)%m     + 0.5_WP*dm_1(i_cv)
-        sys_2%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + 0.5_WP*de_1(i_cv)
+        sys_2%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + 0.5_WP*cv_delta_1(i_cv)%x
+        sys_2%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + 0.5_WP*cv_delta_1(i_cv)%x_dot
+        sys_2%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + 0.5_WP*cv_delta_1(i_cv)%e
+        do k_gas = 1, n_gas
+            sys_2%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + 0.5_WP*cv_delta_1(i_cv)%m(k_gas)
+        end do
     end do
     call sys_2%calculate_flows(m_dot_2, h_dot_2)
     do i_cv = 1, n_cv
-        dx_2(i_cv)     = dt*d_x_d_t(sys_2%cv(i_cv))
-        dx_dot_2(i_cv) = dt*d_xdot_d_t(sys_2%cv(i_cv))
-        dm_2(i_cv)     = dt*d_m_d_t(sys_2%cv(i_cv), m_dot_2, i_cv)
-        de_2(i_cv)     = dt*d_e_d_t(sys_2%cv(i_cv), h_dot_2, i_cv)
+        cv_delta_2(i_cv)%x     = dt*d_x_d_t(sys_2%cv(i_cv))
+        cv_delta_2(i_cv)%x_dot = dt*d_xdot_d_t(sys_2%cv(i_cv))
+        cv_delta_2(i_cv)%e     = dt*d_e_d_t(sys_2%cv(i_cv), h_dot_2, i_cv)
+        do k_gas = 1, n_gas
+            cv_delta_2(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys_2%cv(i_cv), m_dot_2, k_gas, i_cv)
+        end do
     end do
     
     ! stage 3
     sys_3 = sys_old
     do i_cv = 1, n_cv
-        sys_3%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + 0.5_WP*dx_2(i_cv)
-        sys_3%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + 0.5_WP*dx_dot_2(i_cv)
-        sys_3%cv(i_cv)%m     = sys_old%cv(i_cv)%m     + 0.5_WP*dm_2(i_cv)
-        sys_3%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + 0.5_WP*de_2(i_cv)
+        sys_3%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + 0.5_WP*cv_delta_2(i_cv)%x
+        sys_3%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + 0.5_WP*cv_delta_2(i_cv)%x_dot
+        sys_3%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + 0.5_WP*cv_delta_2(i_cv)%e
+        do k_gas = 1, n_gas
+            sys_3%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + 0.5_WP*cv_delta_2(i_cv)%m(k_gas)
+        end do
     end do
     call sys_3%calculate_flows(m_dot_3, h_dot_3)
     do i_cv = 1, n_cv
-        dx_3(i_cv)     = dt*d_x_d_t(sys_3%cv(i_cv))
-        dx_dot_3(i_cv) = dt*d_xdot_d_t(sys_3%cv(i_cv))
-        dm_3(i_cv)     = dt*d_m_d_t(sys_3%cv(i_cv), m_dot_3, i_cv)
-        de_3(i_cv)     = dt*d_e_d_t(sys_3%cv(i_cv), h_dot_3, i_cv)
+        cv_delta_3(i_cv)%x     = dt*d_x_d_t(sys_3%cv(i_cv))
+        cv_delta_3(i_cv)%x_dot = dt*d_xdot_d_t(sys_3%cv(i_cv))
+        cv_delta_3(i_cv)%e     = dt*d_e_d_t(sys_3%cv(i_cv), h_dot_3, i_cv)
+        do k_gas = 1, n_gas
+            cv_delta_3(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys_3%cv(i_cv), m_dot_3, k_gas, i_cv)
+        end do
     end do
     
     ! stage 4
     sys_4 = sys_old
     do i_cv = 1, n_cv
-        sys_4%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + dx_3(i_cv)
-        sys_4%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + dx_dot_3(i_cv)
-        sys_4%cv(i_cv)%m     = sys_old%cv(i_cv)%m     + dm_3(i_cv)
-        sys_4%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + de_3(i_cv)
+        sys_4%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + cv_delta_3(i_cv)%x
+        sys_4%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + cv_delta_3(i_cv)%x_dot
+        sys_4%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + cv_delta_3(i_cv)%e
+        do k_gas = 1, n_gas
+            sys_4%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + cv_delta_3(i_cv)%m(k_gas)
+        end do
     end do
     call sys_4%calculate_flows(m_dot_4, h_dot_4)
     do i_cv = 1, n_cv
-        dx_4(i_cv)     = dt*d_x_d_t(sys_4%cv(i_cv))
-        dx_dot_4(i_cv) = dt*d_xdot_d_t(sys_4%cv(i_cv))
-        dm_4(i_cv)     = dt*d_m_d_t(sys_4%cv(i_cv), m_dot_4, i_cv)
-        de_4(i_cv)     = dt*d_e_d_t(sys_4%cv(i_cv), h_dot_4, i_cv)
+        cv_delta_4(i_cv)%x     = dt*d_x_d_t(sys_4%cv(i_cv))
+        cv_delta_4(i_cv)%x_dot = dt*d_xdot_d_t(sys_4%cv(i_cv))
+        cv_delta_4(i_cv)%e     = dt*d_e_d_t(sys_4%cv(i_cv), h_dot_4, i_cv)
+        do k_gas = 1, n_gas
+            cv_delta_4(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys_4%cv(i_cv), m_dot_4, k_gas, i_cv)
+        end do
     end do
     
     ! Put it all together.
     sys_new = sys_old
     do i_cv = 1, n_cv
-        sys_new%cv(i_cv)%x     = sys_old%cv(i_cv)%x &
-                                    + (dx_1(i_cv)     + 2.0_WP*dx_2(i_cv)     + 2.0_WP*dx_3(i_cv)     + dx_4(i_cv)    )/6.0_WP
-        sys_new%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot &
-                                    + (dx_dot_1(i_cv) + 2.0_WP*dx_dot_2(i_cv) + 2.0_WP*dx_dot_3(i_cv) + dx_dot_4(i_cv))/6.0_WP
-        sys_new%cv(i_cv)%m     = sys_old%cv(i_cv)%m &
-                                    + (dm_1(i_cv)     + 2.0_WP*dm_2(i_cv)     + 2.0_WP*dm_3(i_cv)     + dm_4(i_cv)    )/6.0_WP
-        sys_new%cv(i_cv)%e     = sys_old%cv(i_cv)%e &
-                                    + (de_1(i_cv)     + 2.0_WP*de_2(i_cv)     + 2.0_WP*de_3(i_cv)     + de_4(i_cv)    )/6.0_WP
+        sys_new%cv(i_cv)%x     = sys_old%cv(i_cv)%x + (cv_delta_1(i_cv)%x &
+                                                        + 2.0_WP*cv_delta_2(i_cv)%x &
+                                                        + 2.0_WP*cv_delta_3(i_cv)%x &
+                                                        + cv_delta_4(i_cv)%x &
+                                                        )/6.0_WP
+        sys_new%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + (cv_delta_1(i_cv)%x_dot &
+                                                        + 2.0_WP*cv_delta_2(i_cv)%x_dot &
+                                                        + 2.0_WP*cv_delta_3(i_cv)%x_dot &
+                                                        + cv_delta_4(i_cv)%x_dot &
+                                                        )/6.0_WP
+        sys_new%cv(i_cv)%e     = sys_old%cv(i_cv)%e + (cv_delta_1(i_cv)%e &
+                                                        + 2.0_WP*cv_delta_2(i_cv)%e &
+                                                        + 2.0_WP*cv_delta_3(i_cv)%e &
+                                                        + cv_delta_4(i_cv)%e &
+                                                        )/6.0_WP
+        do k_gas = 1, n_gas
+            sys_new%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + (cv_delta_1(i_cv)%m(k_gas) &
+                                                                        + 2.0_WP*cv_delta_2(i_cv)%m(k_gas) &
+                                                                        + 2.0_WP*cv_delta_3(i_cv)%m(k_gas) &
+                                                                        + cv_delta_4(i_cv)%m(k_gas) &
+                                                                        )/6.0_WP
+        end do
         
         call assert_mass(sys_new%cv(i_cv), "time_step")
     end do
@@ -1063,8 +1094,9 @@ subroutine run(sys_start, sys_end, status)
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp
     
     type(si_time) :: t_stop ! time where simulation will stop
-    integer       :: n_d, n_cv, i_cv!, j_cv
+    integer       :: n_d, n_cv, i_cv, j_cv, n_bad_cv
     type(si_time) :: t, dt
+    type(si_mass) :: m_total_i, m_total_j
     
     sys_old = sys_start
     
@@ -1096,16 +1128,27 @@ subroutine run(sys_start, sys_end, status)
                 exit time_loop
             end if
             
-!            if (sys_new%cv(i_cv)%m%v%v <= 0.0_WP) then
-!                status%rc = 2
-!                allocate(status%i_cv(1))
-!                status%i_cv(1) = i_cv
-!                allocate(status%data(n_cv))
-!                do j_cv = 1, n_cv
-!                    status%data(j_cv) = sys_new%cv(j_cv)%m%v%v
-!                end do
-!                exit time_loop
-!            end if
+            m_total_i = sys_new%cv(i_cv)%m_total()
+            if (m_total_i%v%v <= 0.0_WP) then
+                status%rc = 2
+                
+                allocate(status%data(n_cv))
+                n_bad_cv = 0
+                do j_cv = 1, n_cv
+                    m_total_j = sys_new%cv(j_cv)%m_total()
+                    status%data(j_cv) = m_total_j%v%v
+                end do
+                call assert(n_bad_cv >= 1, "cva (run): number of bad control volumes should be 1 or more here")
+                
+                allocate(status%i_cv(n_bad_cv))
+                n_bad_cv = 0
+                do j_cv = 1, n_cv
+                    n_bad_cv = n_bad_cv + 1
+                    status%i_cv(n_bad_cv) = j_cv
+                end do
+                
+                exit time_loop
+            end if
         end do
     end do time_loop
     

@@ -17,8 +17,6 @@
     - `rc = 1` for hitting time limit
     - `rc = 2` for negative mass
     - test each `rc` code for `run`
-- `run_rc_type`
-    - Have return code and CV number that is the problem to make better error messages.
 - `config_type`
     - `id` for CSV file name
     - whether to enable CSV output or not
