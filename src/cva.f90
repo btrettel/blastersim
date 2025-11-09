@@ -946,20 +946,104 @@ pure subroutine time_step(sys_old, dt, sys_new)
     type(si_time), intent(in)                      :: dt
     type(cv_system_type), allocatable, intent(out) :: sys_new
     
-    type(si_mass_flow_rate), allocatable   :: m_dot(:, :)
-    type(si_energy_flow_rate), allocatable :: h_dot(:, :)
+    type(cv_system_type), allocatable      :: sys_2, sys_3, sys_4
+    type(si_mass_flow_rate), allocatable   :: m_dot_1(:, :), m_dot_2(:, :), m_dot_3(:, :), m_dot_4(:, :)
+    type(si_energy_flow_rate), allocatable :: h_dot_1(:, :), h_dot_2(:, :), h_dot_3(:, :), h_dot_4(:, :)
+    type(si_length), allocatable   :: dx_1(:), dx_2(:), dx_3(:), dx_4(:)
+    type(si_velocity), allocatable :: dx_dot_1(:), dx_dot_2(:), dx_dot_3(:), dx_dot_4(:)
+    type(si_mass), allocatable     :: dm_1(:), dm_2(:), dm_3(:), dm_4(:)
+    type(si_energy), allocatable   :: de_1(:), de_2(:), de_3(:), de_4(:)
     
     integer :: i_cv, n_cv
     
     n_cv = size(sys_old%cv)
     
-    sys_new = sys_old
-    call sys_old%calculate_flows(m_dot, h_dot)
+    allocate(dx_1(n_cv))
+    allocate(dx_2(n_cv))
+    allocate(dx_3(n_cv))
+    allocate(dx_4(n_cv))
+    allocate(dx_dot_1(n_cv))
+    allocate(dx_dot_2(n_cv))
+    allocate(dx_dot_3(n_cv))
+    allocate(dx_dot_4(n_cv))
+    allocate(dm_1(n_cv))
+    allocate(dm_2(n_cv))
+    allocate(dm_3(n_cv))
+    allocate(dm_4(n_cv))
+    allocate(de_1(n_cv))
+    allocate(de_2(n_cv))
+    allocate(de_3(n_cv))
+    allocate(de_4(n_cv))
+    
+    ! stage 1
+    call sys_old%calculate_flows(m_dot_1, h_dot_1)
     do i_cv = 1, n_cv
-        sys_new%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + dt*d_x_d_t(sys_old%cv(i_cv))
-        sys_new%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + dt*d_xdot_d_t(sys_old%cv(i_cv))
-        sys_new%cv(i_cv)%m     = sys_old%cv(i_cv)%m     + dt*d_m_d_t(sys_old%cv(i_cv), m_dot, i_cv)
-        sys_new%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + dt*d_e_d_t(sys_old%cv(i_cv), h_dot, i_cv)
+        dx_1(i_cv)     = dt*d_x_d_t(sys_old%cv(i_cv))
+        dx_dot_1(i_cv) = dt*d_xdot_d_t(sys_old%cv(i_cv))
+        dm_1(i_cv)     = dt*d_m_d_t(sys_old%cv(i_cv), m_dot_1, i_cv)
+        de_1(i_cv)     = dt*d_e_d_t(sys_old%cv(i_cv), h_dot_1, i_cv)
+    end do
+    
+    ! stage 2
+    sys_2 = sys_old
+    do i_cv = 1, n_cv
+        sys_2%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + 0.5_WP*dx_1(i_cv)
+        sys_2%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + 0.5_WP*dx_dot_1(i_cv)
+        sys_2%cv(i_cv)%m     = sys_old%cv(i_cv)%m     + 0.5_WP*dm_1(i_cv)
+        sys_2%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + 0.5_WP*de_1(i_cv)
+    end do
+    call sys_2%calculate_flows(m_dot_2, h_dot_2)
+    do i_cv = 1, n_cv
+        dx_2(i_cv)     = dt*d_x_d_t(sys_2%cv(i_cv))
+        dx_dot_2(i_cv) = dt*d_xdot_d_t(sys_2%cv(i_cv))
+        dm_2(i_cv)     = dt*d_m_d_t(sys_2%cv(i_cv), m_dot_2, i_cv)
+        de_2(i_cv)     = dt*d_e_d_t(sys_2%cv(i_cv), h_dot_2, i_cv)
+    end do
+    
+    ! stage 3
+    sys_3 = sys_old
+    do i_cv = 1, n_cv
+        sys_3%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + 0.5_WP*dx_2(i_cv)
+        sys_3%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + 0.5_WP*dx_dot_2(i_cv)
+        sys_3%cv(i_cv)%m     = sys_old%cv(i_cv)%m     + 0.5_WP*dm_2(i_cv)
+        sys_3%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + 0.5_WP*de_2(i_cv)
+    end do
+    call sys_3%calculate_flows(m_dot_3, h_dot_3)
+    do i_cv = 1, n_cv
+        dx_3(i_cv)     = dt*d_x_d_t(sys_3%cv(i_cv))
+        dx_dot_3(i_cv) = dt*d_xdot_d_t(sys_3%cv(i_cv))
+        dm_3(i_cv)     = dt*d_m_d_t(sys_3%cv(i_cv), m_dot_3, i_cv)
+        de_3(i_cv)     = dt*d_e_d_t(sys_3%cv(i_cv), h_dot_3, i_cv)
+    end do
+    
+    ! stage 4
+    sys_4 = sys_old
+    do i_cv = 1, n_cv
+        sys_4%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + dx_3(i_cv)
+        sys_4%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + dx_dot_3(i_cv)
+        sys_4%cv(i_cv)%m     = sys_old%cv(i_cv)%m     + dm_3(i_cv)
+        sys_4%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + de_3(i_cv)
+    end do
+    call sys_4%calculate_flows(m_dot_4, h_dot_4)
+    do i_cv = 1, n_cv
+        dx_4(i_cv)     = dt*d_x_d_t(sys_4%cv(i_cv))
+        dx_dot_4(i_cv) = dt*d_xdot_d_t(sys_4%cv(i_cv))
+        dm_4(i_cv)     = dt*d_m_d_t(sys_4%cv(i_cv), m_dot_4, i_cv)
+        de_4(i_cv)     = dt*d_e_d_t(sys_4%cv(i_cv), h_dot_4, i_cv)
+    end do
+    
+    ! Put it all together.
+    
+    sys_new = sys_old
+    do i_cv = 1, n_cv
+        sys_new%cv(i_cv)%x     = sys_old%cv(i_cv)%x &
+                                    + (dx_1(i_cv)     + 2.0_WP*dx_2(i_cv)     + 2.0_WP*dx_3(i_cv)     + dx_4(i_cv)    )/6.0_WP
+        sys_new%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot &
+                                    + (dx_dot_1(i_cv) + 2.0_WP*dx_dot_2(i_cv) + 2.0_WP*dx_dot_3(i_cv) + dx_dot_4(i_cv))/6.0_WP
+        sys_new%cv(i_cv)%m     = sys_old%cv(i_cv)%m &
+                                    + (dm_1(i_cv)     + 2.0_WP*dm_2(i_cv)     + 2.0_WP*dm_3(i_cv)     + dm_4(i_cv)    )/6.0_WP
+        sys_new%cv(i_cv)%e     = sys_old%cv(i_cv)%e &
+                                    + (de_1(i_cv)     + 2.0_WP*de_2(i_cv)     + 2.0_WP*de_3(i_cv)     + de_4(i_cv)    )/6.0_WP
         
         call assert_mass(sys_new%cv(i_cv), "time_step")
     end do

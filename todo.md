@@ -6,11 +6,26 @@
         - psi
         - in
 - Filling: isentropic vs. isothermal
-- Run full simulation loop.
+- Validation test for full simulation loop.
 - Interpolate `sys` to `x_stop` or `t_stop`.
 - Break cva.f90 into multiple modules? `gas_type` might work in its own module.
 - documentation
 - pneumatic validation case
+    - test that `x = 0` and `x_dot = 0` for CV 1
+- Add `t_end` and `rc` to `run`
+    - `rc = 0` for success (output CV number that triggered termination)
+    - `rc = 1` for hitting time limit
+    - `rc = 2` for negative mass
+    - test each `rc` code for `run`
+- `run_rc_type`
+    - Have return code and CV number that is the problem to make better error messages.
+- `config_type`
+    - `id` for CSV file name
+    - whether to enable CSV output or not
+- CSV file output in `run`
+    - `write_csv_header(sys, csv_filename)`
+    - `write_csv_row(sys, csv_filename)`
+        - Calculate flow rates for the current time step in there.
 
 ***
 
@@ -29,3 +44,5 @@
 - transonic corrections in the barrel
 - pressure gradient
 - Instead of `p_atm` in the force balance, allow for using another control volume's pressure.
+- Error messages:
+    - When mass goes negative, suggest that perhaps their effective area is too large.
