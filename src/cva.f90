@@ -742,46 +742,46 @@ pure function d_xdot_d_t(cv)
     d_xdot_d_t = cv%csa*cv%rm_p*(cv%p() - cv%p_atm - cv%p_f(p_fe)) - cv%k*cv%rm_p*(cv%x - cv%x_z)
 end function d_xdot_d_t
 
-pure function d_m_d_t(cv, m_dots, i_cv)
+pure function d_m_d_t(cv, m_dot, i_cv)
     class(cv_type), intent(in)          :: cv
-    type(si_mass_flow_rate), intent(in) :: m_dots(:, :)
+    type(si_mass_flow_rate), intent(in) :: m_dot(:, :)
     integer, intent(in)                 :: i_cv
     
     type(si_mass_flow_rate) :: d_m_d_t
     
     integer :: n_d, n_cv, j_cv
     
-    call assert(size(m_dots, 1) == size(m_dots, 2), "cva (d_m_d_t): m_dots must be square")
-    call assert_dimension(m_dots(1, 1)%v%d, cv%x%v%d)
+    call assert(size(m_dot, 1) == size(m_dot, 2), "cva (d_m_d_t): m_dots must be square")
+    call assert_dimension(m_dot(1, 1)%v%d, cv%x%v%d)
     
     n_d = size(cv%x%v%d)
     call d_m_d_t%v%init_const(0.0_WP, n_d)
     
-    n_cv = size(m_dots, 1)
+    n_cv = size(m_dot, 1)
     do j_cv = 1, n_cv
-        call assert(is_close(m_dots(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_m_d_t): mass can not flow from self to self")
-        d_m_d_t = d_m_d_t + m_dots(j_cv, i_cv) - m_dots(i_cv, j_cv)
+        call assert(is_close(m_dot(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_m_d_t): mass can not flow from self to self")
+        d_m_d_t = d_m_d_t + m_dot(j_cv, i_cv) - m_dot(i_cv, j_cv)
     end do
 end function d_m_d_t
 
-pure function d_e_d_t(cv, h_dots, i_cv)
+pure function d_e_d_t(cv, h_dot, i_cv)
     class(cv_type), intent(in)            :: cv
-    type(si_energy_flow_rate), intent(in) :: h_dots(:, :)
+    type(si_energy_flow_rate), intent(in) :: h_dot(:, :)
     integer, intent(in)                   :: i_cv
     
     type(si_energy_flow_rate) :: d_e_d_t
     
     integer :: n_cv, j_cv
     
-    call assert(size(h_dots, 1) == size(h_dots, 2), "cva (d_e_d_t): h_dots must be square")
-    call assert_dimension(h_dots(1, 1)%v%d, cv%x%v%d)
+    call assert(size(h_dot, 1) == size(h_dot, 2), "cva (d_e_d_t): h_dots must be square")
+    call assert_dimension(h_dot(1, 1)%v%d, cv%x%v%d)
     
     d_e_d_t = -cv%p() * cv%csa * cv%x_dot
     
-    n_cv = size(h_dots, 1)
+    n_cv = size(h_dot, 1)
     do j_cv = 1, n_cv
-        call assert(is_close(h_dots(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_e_d_t): energy can not flow from self to self")
-        d_e_d_t = d_e_d_t + h_dots(j_cv, i_cv) - h_dots(i_cv, j_cv)
+        call assert(is_close(h_dot(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_e_d_t): energy can not flow from self to self")
+        d_e_d_t = d_e_d_t + h_dot(j_cv, i_cv) - h_dot(i_cv, j_cv)
     end do
 end function d_e_d_t
 
@@ -942,9 +942,9 @@ end subroutine calculate_flows
 pure subroutine time_step(sys_old, dt, sys_new)
     ! Advances by one time step.
     
-    type(cv_system_type), intent(in)  :: sys_old
-    type(si_time), intent(in)         :: dt
-    type(cv_system_type), intent(out) :: sys_new
+    type(cv_system_type), allocatable, intent(in)  :: sys_old
+    type(si_time), intent(in)                      :: dt
+    type(cv_system_type), allocatable, intent(out) :: sys_new
     
     type(si_mass_flow_rate), allocatable   :: m_dot(:, :)
     type(si_energy_flow_rate), allocatable :: h_dot(:, :)
@@ -960,14 +960,16 @@ pure subroutine time_step(sys_old, dt, sys_new)
         sys_new%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + dt*d_xdot_d_t(sys_old%cv(i_cv))
         sys_new%cv(i_cv)%m     = sys_old%cv(i_cv)%m     + dt*d_m_d_t(sys_old%cv(i_cv), m_dot, i_cv)
         sys_new%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + dt*d_e_d_t(sys_old%cv(i_cv), h_dot, i_cv)
+        
+        call assert_mass(sys_new%cv(i_cv), "time_step")
     end do
 end subroutine time_step
 
 subroutine run(sys_start, sys_end)
     use, intrinsic :: iso_fortran_env, only: OUTPUT_UNIT
     
-    type(cv_system_type), intent(in)  :: sys_start
-    type(cv_system_type), intent(out) :: sys_end
+    type(cv_system_type), allocatable, intent(in)  :: sys_start
+    type(cv_system_type), allocatable, intent(out) :: sys_end
     
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp
     
@@ -989,7 +991,7 @@ subroutine run(sys_start, sys_end)
     do
         if (.not. run_sim) exit
         
-        write(unit=OUTPUT_UNIT, fmt=*) t%v%v
+        !write(unit=OUTPUT_UNIT, fmt=*) t%v%v
         
         call time_step(sys_old, dt, sys_new)
         t = t + dt
@@ -1004,6 +1006,8 @@ subroutine run(sys_start, sys_end)
         call move_alloc(from=sys_new,  to=sys_old)
         call move_alloc(from=sys_temp, to=sys_new)
     end do
+    
+    sys_end = sys_old
 end subroutine run
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

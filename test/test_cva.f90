@@ -1107,13 +1107,13 @@ subroutine test_calculate_flows(tests)
 end subroutine test_calculate_flows
 
 subroutine test_2010_08_07
-    use cva, only: DRY_AIR, cv_system_type
+    use cva, only: DRY_AIR, cv_system_type, run
     use prec, only: PI
     use checks, only: assert
 
-    type(cv_system_type) :: sys
+    type(cv_system_type), allocatable :: sys_start, sys_end
     
-    type(si_length)          :: x_1, x_2, d_1, d_2, x_stop_2
+    type(si_length)          :: d_e, x_1, x_2, d_1, d_2, x_stop_2
     type(si_velocity)        :: x_dot
     type(unitless)           :: y(1)
     type(si_pressure)        :: p_atm, p_1, p_2, p_fs_1, p_fd_1, p_fs_2, p_fd_2
@@ -1124,16 +1124,18 @@ subroutine test_2010_08_07
     type(si_length)          :: x_z
     type(si_volume)          :: vol_1, vol_d
     
-    allocate(sys%cv(2))
-    allocate(sys%con(2, 2))
+    allocate(sys_start)
+    allocate(sys_start%cv(2))
+    allocate(sys_start%con(2, 2))
     
-    sys%con(1, 1)%active = .false.
-    sys%con(2, 1)%active = .false.
-    sys%con(2, 2)%active = .false.
+    sys_start%con(1, 1)%active = .false.
+    sys_start%con(2, 1)%active = .false.
+    sys_start%con(2, 2)%active = .false.
     
-    sys%con(1, 2)%active = .true.
-    call sys%con(1, 2)%a_e%v%init_const(0.25_WP, 0)
-    call sys%con(1, 2)%b%v%init_const(0.5_WP, 0)
+    sys_start%con(1, 2)%active = .true.
+    call d_e%v%init_const(0.125_WP*2.54e-2_WP, 0)
+    sys_start%con(1, 2)%a_e = (PI/4.0_WP)*square(d_e)
+    call sys_start%con(1, 2)%b%v%init_const(0.5_WP, 0)
     
     ! The same for every control volume.
     call x_dot%v%init_const(0.0_WP, 0)
@@ -1161,7 +1163,7 @@ subroutine test_2010_08_07
     call p_fs_1%v%init_const(0.0_WP, 0)
     call p_fd_1%v%init_const(0.0_WP, 0)
     
-    call sys%cv(1)%set(x_1, x_dot, y, p_1, temp_1, csa_1, rm_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR])
+    call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp_1, csa_1, rm_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR])
     
     ! 2: barrel
     
@@ -1177,7 +1179,11 @@ subroutine test_2010_08_07
     call x_stop_2%v%init_const(12.0_WP*2.54e-2_WP, 0)
     x_stop_2 = x_stop_2 + x_2
     
-    call sys%cv(2)%set(x_2, x_dot, y, p_2, temp_2, csa_2, rm_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, [DRY_AIR], x_stop_2)
+    call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_2, csa_2, rm_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, [DRY_AIR], x_stop_2)
+    
+    call run(sys_start, sys_end)
+    
+    print *, sys_end%cv(2)%x_dot%v%v
 end subroutine test_2010_08_07
 
 subroutine test_p_v_h2o(tests)
