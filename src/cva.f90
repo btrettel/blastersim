@@ -15,7 +15,7 @@ private
 
 public :: smooth_min
 public :: f_m_dot, g_m_dot, m_dot
-public :: time_step
+public :: time_step, run
 public :: p_v_h2o
 
 ! <https://en.wikipedia.org/wiki/Gas_constant>
@@ -963,6 +963,47 @@ pure subroutine time_step(sys_old, dt, sys_new)
         sys_new%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + dt*d_e_d_t(sys_old%cv(i_cv), h_dot, i_cv)
     end do
 end subroutine time_step
+
+subroutine run(sys_start, sys_end)
+    use, intrinsic :: iso_fortran_env, only: OUTPUT_UNIT
+    
+    type(cv_system_type), intent(in)  :: sys_start
+    type(cv_system_type), intent(out) :: sys_end
+    
+    type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp
+    
+    integer       :: n_d, n_cv, i_cv
+    type(si_time) :: t, dt
+    logical       :: run_sim
+    
+    sys_old = sys_start
+    
+    n_d = size(sys_old%cv(1)%x%v%d)
+    call t%v%init_const(0.0_WP, n_d)
+    call dt%v%init_const(1.0e-6_WP, n_d)
+    
+    n_cv = size(sys_old%cv)
+    
+    run_sim = .true.
+    do
+        if (.not. run_sim) exit
+        
+        write(unit=OUTPUT_UNIT, fmt=*) t%v%v
+        
+        call time_step(sys_old, dt, sys_new)
+        t = t + dt
+        
+        if (t >= sys_new%t_stop) run_sim = .false.
+        
+        do i_cv = 1, n_cv
+            if (sys_new%cv(i_cv)%x >= sys_new%cv(i_cv)%x_stop) run_sim = .false.
+        end do
+        
+        call move_alloc(from=sys_old,  to=sys_temp)
+        call move_alloc(from=sys_new,  to=sys_old)
+        call move_alloc(from=sys_temp, to=sys_new)
+    end do
+end subroutine run
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! functions for air humidity !

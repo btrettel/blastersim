@@ -1,4 +1,3 @@
-- Add `x_stop` to `set`.
 - Run full simulation loop.
 - Interpolate `sys` to `x_stop` or `t_stop`.
 - Break cva.f90 into multiple modules? `gas_type` might work in its own module.
