@@ -435,7 +435,7 @@ subroutine test_temp_cv(tests)
 end subroutine test_temp_cv
 
 subroutine test_set_1(tests)
-    use cva, only: P_ATM_ => P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
+    use cva, only: X_STOP_DEFAULT, P_ATM_ => P_ATM, T_ATM, RHO_ATM, DRY_AIR, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -481,6 +481,7 @@ subroutine test_set_1(tests)
     call tests%real_eq(cv%p_atm%v%v, P_ATM_, "set 1, p_atm")
     call tests%real_eq(cv%k%v%v, k%v%v, "set 1, k")
     call tests%real_eq(cv%x_z%v%v, x_z%v%v, "set 1, x_z")
+    call tests%real_eq(cv%x_stop%v%v, X_STOP_DEFAULT, "set 1, x_stop")
     
     temp_cv = cv%temp()
     call tests%real_eq(temp_cv%v%v, temp%v%v, "set 1, temp")

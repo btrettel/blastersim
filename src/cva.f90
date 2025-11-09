@@ -15,6 +15,7 @@ private
 
 public :: smooth_min
 public :: f_m_dot, g_m_dot, m_dot
+public :: time_step
 public :: p_v_h2o
 
 ! <https://en.wikipedia.org/wiki/Gas_constant>
@@ -32,6 +33,9 @@ real(WP), public, parameter :: RHO_ATM = 1.2250_WP             ! kg/m3
 real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 
 real(WP), public, parameter :: TEMP_0 = 300.0_WP ! K, temperature that `gamma`, `u_0`, and `h_0` are taken at in `gas_type`
+
+real(WP), public, parameter :: X_STOP_DEFAULT = 1.0e3_WP ! m (If you have a barrel that's a km long, that's probably wrong.)
+real(WP), public, parameter :: T_STOP_DEFAULT = 0.5_WP   ! s
 
 type, public :: gas_type
     real(WP) :: gamma ! ratio of specific heats, unitless
@@ -116,6 +120,7 @@ type, public :: cv_type ! control volume
     type(si_stiffness)          :: k          ! stiffness of spring attached to piston
     type(si_length)             :: x_z        ! zero force location for spring
     type(gas_type), allocatable :: gas(:)     ! gas data
+    type(si_length)             :: x_stop     ! `x` location where simulation will stop
 contains
     procedure :: m_total
     procedure :: p_eos
@@ -150,6 +155,7 @@ end type con_type
 type, public :: cv_system_type
     type(cv_type), allocatable  :: cv(:)
     type(con_type), allocatable :: con(:, :)
+    type(si_time)               :: t_stop ! time where simulation will stop
 contains
     procedure :: calculate_flows
 end type cv_system_type
@@ -564,7 +570,7 @@ pure function h_cv(cv)
     call assert(h_cv%v%v > 0.0_WP, "cva (h_cv): h_cv > 0 violated")
 end function h_cv
 
-pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas)
+pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas, x_stop)
     class(cv_type), intent(in out) :: cv
     
     ! time varying
@@ -582,6 +588,8 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x
     type(si_stiffness), intent(in)    :: k          ! stiffness of spring attached to piston
     type(si_length), intent(in)       :: x_z        ! zero force location for spring
     type(gas_type), intent(in)        :: gas(:)     ! gas data
+    
+    type(si_length), intent(in), optional :: x_stop ! `x` location where simulation will stop
     
     integer        :: i, n_d
     type(si_mass)  :: m_total
@@ -601,6 +609,12 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x
     cv%k     = k
     cv%x_z   = x_z
     cv%gas   = gas
+    
+    if (present(x_stop)) then
+        cv%x_stop = x_stop
+    else
+        call cv%x_stop%v%init_const(X_STOP_DEFAULT, n_d)
+    end if
     
     call assert(cv%x%v%v     >  0.0_WP, "cva (set): x > 0 violated")
     call assert(p%v%v        >  0.0_WP, "cva (set): p > 0 violated")
@@ -772,31 +786,6 @@ pure function d_e_d_t(cv, h_dots, i_cv)
     end do
 end function d_e_d_t
 
-pure subroutine calculate_flows(sys, m_dot, h_dot)
-    class(cv_system_type), intent(in)                   :: sys
-    type(si_mass_flow_rate), allocatable, intent(out)   :: m_dot(:, :)
-    type(si_energy_flow_rate), allocatable, intent(out) :: h_dot(:, :)
-    
-    integer :: n_cv, i_from_cv, i_to_cv
-    
-    call assert(size(sys%cv) == size(sys%con, 1), "cva (calculate_flows): inconsistent sys%cv and sys%con sizes")
-    
-    n_cv = size(sys%cv)
-    call assert(n_cv > 1, "cva (calculate_flows): there needs to be at least 2 control volumes to have flows")
-    
-    allocate(m_dot(n_cv, n_cv))
-    allocate(h_dot(n_cv, n_cv))
-    do i_from_cv = 1, n_cv
-        do i_to_cv = 1, n_cv
-            if (i_from_cv == i_to_cv) call assert(.not. sys%con(i_from_cv, i_to_cv)%active, &
-                                                    "cva (calculate_flows): can't flow from self to self")
-            
-            m_dot(i_from_cv, i_to_cv) = sys%con(i_from_cv, i_to_cv)%m_dot(sys%cv(i_from_cv), sys%cv(i_to_cv))
-            h_dot(i_from_cv, i_to_cv) = sys%cv(i_from_cv)%h() * m_dot(i_from_cv, i_to_cv)
-        end do
-    end do
-end subroutine calculate_flows
-
 pure subroutine assert_mass(cv, procedure_name)
     ! Why not make this a type-bound operator?
     ! That would make my assertion counting Python program not count these.
@@ -921,6 +910,59 @@ pure function m_dot(con, cv_from, cv_to)
         call m_dot%v%init_const(0.0_WP, n_d)
     end if
 end function m_dot
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! methods for control volume systems !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+pure subroutine calculate_flows(sys, m_dot, h_dot)
+    class(cv_system_type), intent(in)                   :: sys
+    type(si_mass_flow_rate), allocatable, intent(out)   :: m_dot(:, :)
+    type(si_energy_flow_rate), allocatable, intent(out) :: h_dot(:, :)
+    
+    integer :: n_cv, i_from_cv, i_to_cv
+    
+    call assert(size(sys%cv) == size(sys%con, 1), "cva (calculate_flows): inconsistent sys%cv and sys%con sizes")
+    
+    n_cv = size(sys%cv)
+    call assert(n_cv > 1, "cva (calculate_flows): there needs to be at least 2 control volumes to have flows")
+    
+    allocate(m_dot(n_cv, n_cv))
+    allocate(h_dot(n_cv, n_cv))
+    do i_from_cv = 1, n_cv
+        do i_to_cv = 1, n_cv
+            if (i_from_cv == i_to_cv) call assert(.not. sys%con(i_from_cv, i_to_cv)%active, &
+                                                    "cva (calculate_flows): can't flow from self to self")
+            
+            m_dot(i_from_cv, i_to_cv) = sys%con(i_from_cv, i_to_cv)%m_dot(sys%cv(i_from_cv), sys%cv(i_to_cv))
+            h_dot(i_from_cv, i_to_cv) = sys%cv(i_from_cv)%h() * m_dot(i_from_cv, i_to_cv)
+        end do
+    end do
+end subroutine calculate_flows
+
+pure subroutine time_step(sys_old, dt, sys_new)
+    ! Advances by one time step.
+    
+    type(cv_system_type), intent(in)  :: sys_old
+    type(si_time), intent(in)         :: dt
+    type(cv_system_type), intent(out) :: sys_new
+    
+    type(si_mass_flow_rate), allocatable   :: m_dot(:, :)
+    type(si_energy_flow_rate), allocatable :: h_dot(:, :)
+    
+    integer :: i_cv, n_cv
+    
+    n_cv = size(sys_old%cv)
+    
+    sys_new = sys_old
+    call sys_old%calculate_flows(m_dot, h_dot)
+    do i_cv = 1, n_cv
+        sys_new%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + dt*d_x_d_t(sys_old%cv(i_cv))
+        sys_new%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + dt*d_xdot_d_t(sys_old%cv(i_cv))
+        sys_new%cv(i_cv)%m     = sys_old%cv(i_cv)%m     + dt*d_m_d_t(sys_old%cv(i_cv), m_dot, i_cv)
+        sys_new%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + dt*d_e_d_t(sys_old%cv(i_cv), h_dot, i_cv)
+    end do
+end subroutine time_step
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! functions for air humidity !

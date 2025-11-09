@@ -1,6 +1,6 @@
-- Calculate `m_dot` first, then pass into `d_m_d_t`.
-- From `m_dot`, calculate `h_dot`, then pass into `d_e_d_t`.
-- Implement forward Euler
+- Add `x_stop` to `set`.
+- Run full simulation loop.
+- Interpolate `sys` to `x_stop` or `t_stop`.
 - Break cva.f90 into multiple modules? `gas_type` might work in its own module.
 - documentation
 - pneumatic validation case
