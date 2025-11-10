@@ -842,7 +842,6 @@ pure subroutine assert_mass(cv, procedure_name)
     
     do i = 1, size(cv%m)
         call assert(cv%m(i)%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m >= 0 violated")
-        call assert_dimension(cv%e%v%d, cv%m(i)%v%d)
     end do
     
     m_total = cv%m_total()

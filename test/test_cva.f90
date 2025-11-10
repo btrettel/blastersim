@@ -268,8 +268,6 @@ subroutine test_gamma_cv(tests)
     call cv%m(2)%v%init_const(1.0_WP, 0)
     call temp%v%init_const(300.0_WP, 0)
     
-    cv%e = cv%m(1)*cv%gas(1)%u(temp) + cv%m(2)*cv%gas(2)%u(temp)
-    
     gamma_cv = cv%gamma()
     ! `AR` specific heat values from NIST; see where `AR` is defined.
     ! CO2 specific heat values from moran_fundamentals_2008 table A-20 at 300 K.
@@ -284,9 +282,9 @@ subroutine test_p_c(tests)
     
     type(test_results_type), intent(in out) :: tests
 
-    type(cv_type)          :: cv
-    real(WP)               :: n(2), m(2)
-    type(si_pressure)      :: p_c_cv
+    type(cv_type)     :: cv
+    real(WP)          :: n(2), m(2)
+    type(si_pressure) :: p_c_cv
     
     allocate(cv%gas(2))
     
