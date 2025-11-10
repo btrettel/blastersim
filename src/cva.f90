@@ -584,25 +584,24 @@ pure function h_cv(cv)
     call assert(h_cv%v%v > 0.0_WP, "cva (h_cv): h_cv > 0 violated")
 end function h_cv
 
-pure function gamma_cv(cv)
+pure function gamma_cv(cv, y)
     class(cv_type), intent(in) :: cv
+    type(unitless), intent(in) :: y(:)
     
     type(unitless) :: gamma_cv
     
     integer                :: n_d, i
-    type(si_mass)          :: m_total
     type(si_specific_heat) :: c_p_cv, c_v_cv
     
-    call assert_mass(cv, "gamma_cv")
+    call assert_dimension(y, cv%gas)
     
-    n_d     = size(cv%m(1)%v%d)
-    m_total = cv%m_total()
+    n_d = size(y(1)%v%d)
     
     call c_p_cv%v%init_const(0.0_WP, n_d)
     call c_v_cv%v%init_const(0.0_WP, n_d)
-    do i = 1, size(cv%m)
-        c_p_cv = c_p_cv + cv%m(i)*cv%gas(i)%c_p(n_d)/m_total
-        c_v_cv = c_v_cv + cv%m(i)*cv%gas(i)%c_v(n_d)/m_total
+    do i = 1, size(y)
+        c_p_cv = c_p_cv + y(i)*cv%gas(i)%c_p(n_d)
+        c_v_cv = c_v_cv + y(i)*cv%gas(i)%c_v(n_d)
     end do
     
     gamma_cv = c_p_cv / c_v_cv
@@ -610,15 +609,15 @@ pure function gamma_cv(cv)
     call assert(gamma_cv%v%v > 1.0_WP, "cva (gamma_cv): gamma_cv > 1 violated")
 end function gamma_cv
 
-pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas, x_stop)
+pure subroutine set(cv, x, x_dot, y, p, temp_atm, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas, x_stop, isentropic_filling)
     class(cv_type), intent(in out) :: cv
     
     ! time varying
-    type(si_length), intent(in)      :: x     ! location of piston/projectile
-    type(si_velocity), intent(in)    :: x_dot ! velocity of piston/projectile
-    type(unitless), intent(in)       :: y(:)  ! mass fractions of each gas
-    type(si_pressure), intent(in)    :: p     ! pressure
-    type(si_temperature), intent(in) :: temp  ! temperature
+    type(si_length), intent(in)      :: x        ! location of piston/projectile
+    type(si_velocity), intent(in)    :: x_dot    ! velocity of piston/projectile
+    type(unitless), intent(in)       :: y(:)     ! mass fractions of each gas
+    type(si_pressure), intent(in)    :: p        ! pressure
+    type(si_temperature), intent(in) :: temp_atm ! atmospheric temperature
     
     ! constant
     type(si_area), intent(in)         :: csa        ! cross-sectional area
@@ -630,10 +629,13 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x
     type(gas_type), intent(in)        :: gas(:)     ! gas data
     
     type(si_length), intent(in), optional :: x_stop ! `x` location where simulation will stop
+    logical, intent(in), optional         :: isentropic_filling
     
-    integer        :: i, n_d
-    type(si_mass)  :: m_total
-    type(unitless) :: y_sum
+    integer              :: i, n_d
+    type(si_temperature) :: temp
+    type(si_mass)        :: m_total
+    type(unitless)       :: gamma_cv, y_sum
+    logical              :: isentropic_filling_
     
     n_d = size(x%v%d)
     
@@ -656,9 +658,15 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x
         call cv%x_stop%v%init_const(X_STOP_DEFAULT, n_d)
     end if
     
+    if (present(isentropic_filling)) then
+        isentropic_filling_ = isentropic_filling
+    else
+        isentropic_filling_ = .false.
+    end if
+    
     call assert(cv%x%v%v     >  0.0_WP, "cva (set): x > 0 violated")
     call assert(p%v%v        >  0.0_WP, "cva (set): p > 0 violated")
-    call assert(temp%v%v     >  0.0_WP, "cva (set): temp > 0 violated")
+    call assert(temp_atm%v%v >  0.0_WP, "cva (set): temp > 0 violated")
     call assert(csa%v%v      >  0.0_WP, "cva (set): csa > 0 violated")
     call assert(cv%p_fs%v%v  >= 0.0_WP, "cva (set): p_fs >= 0 violated")
     call assert(cv%p_fd%v%v  >= 0.0_WP, "cva (set): p_fd >= 0 violated")
@@ -681,9 +689,18 @@ pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x
     
     call assert(is_close(y_sum%v%v, 1.0_WP), "cva (set): mass fractions do not sum to 1")
     
+    ! Get correct temperature depending on how the chamber is filled.
+    if (isentropic_filling_) then
+        gamma_cv = cv%gamma(y)
+        temp = temp_atm * ((p / p_atm)**((gamma_cv - 1.0_WP)/gamma_cv))
+    else
+        ! isothermal
+        temp = temp_atm
+    end if
+    
     m_total = cv%vol() * cv%rho_eos(p, temp, y)
     
-    ! Now set `m` to the correct values and calculate `e`
+    ! Now set `m` and `e`
     call cv%e%v%init_const(0.0_WP, n_d)
     do i = 1, size(y)
         cv%m(i) = y(i)*m_total

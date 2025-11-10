@@ -1,4 +1,4 @@
-- Filling: isentropic vs. isothermal
+- Test isentropic filling
 - Interpolate `sys` to `x_stop` for `rc = 0`.
 - convert.f90
     - `PSI_TO_PA`

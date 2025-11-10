@@ -3,7 +3,7 @@
 ! Preprocessor: none
 ! Author: Ben Trettel (<http://trettel.us/>)
 ! Project: [BlasterSim](https://github.com/btrettel/blastersim)
-! License: [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
+! License: [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html)
 
 module fmad
 
@@ -35,8 +35,8 @@ contains
     procedure, private :: ad_ad_divide, ad_real_divide
     procedure, private, pass(ad_right) :: real_ad_divide
     generic, public :: operator(/) => ad_ad_divide, ad_real_divide, real_ad_divide
-    procedure, private :: ad_real_exponentiate, ad_integer_exponentiate
-    generic, public :: operator(**) => ad_real_exponentiate, ad_integer_exponentiate
+    procedure, private :: ad_real_exponentiate, ad_integer_exponentiate, ad_ad_exponentiate
+    generic, public :: operator(**) => ad_real_exponentiate, ad_integer_exponentiate, ad_ad_exponentiate
     procedure, private :: lt_ad
     generic, public :: operator(<) => lt_ad
     procedure, private :: le_ad
@@ -381,7 +381,24 @@ elemental function ad_integer_exponentiate(ad_in, integer_in)
     ad_integer_exponentiate%d = real(integer_in, WP)*(ad_in%v**(integer_in - 1))*ad_in%d
 end function ad_integer_exponentiate
 
-! No `rd**rd` as that's not likely to happen in CFD.
+elemental function ad_ad_exponentiate(ad_left, ad_right)
+    use checks, only: is_close
+    
+    ! Exponentiates an `ad` by a `ad`.
+    
+    class(ad), intent(in) :: ad_left
+    class(ad), intent(in) :: ad_right
+    
+    type(ad) :: ad_ad_exponentiate
+    
+    call assert(.not. (is_close(ad_left%v, 0.0_WP) .and. (ad_right%v <= 0.0_WP)), &
+                    "fmad (ad_ad_exponentiate): exponent is negative or zero and argument is zero")
+    call assert(allocated(ad_left%d), "fmad (ad_ad_exponentiate): ad_left%d must be allocated")
+    call assert(allocated(ad_right%d), "fmad (ad_ad_exponentiate): ad_right%d must be allocated")
+    
+    ad_ad_exponentiate%v = ad_left%v**ad_right%v
+    ad_ad_exponentiate%d = (ad_left%v**ad_right%v) * (log(ad_left%v)*ad_right%d + ad_right%v*ad_left%d/ad_left%v)
+end function ad_ad_exponentiate
 
 elemental function lt_ad(ad_left, ad_right)
     class(ad), intent(in) :: ad_left

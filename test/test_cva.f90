@@ -244,7 +244,7 @@ subroutine test_r_cv(tests)
     rho = cv%rho_eos(p, temp, y)
     call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric (2)", abs_tol=1.0e-3_WP)
     
-    gamma_cv = cv%gamma()
+    gamma_cv = cv%gamma(y)
     call tests%real_eq(gamma_cv%v%v, DRY_AIR%gamma, "cv%gamma for mixture (1)", abs_tol=0.5e-3_WP)
 end subroutine test_r_cv
 
@@ -255,7 +255,7 @@ subroutine test_gamma_cv(tests)
 
     type(cv_type)        :: cv
     type(si_temperature) :: temp
-    type(unitless)       :: gamma_cv
+    type(unitless)       :: y(2), gamma_cv
     real(WP)             :: gamma_expected
     
     allocate(cv%gas(2))
@@ -264,11 +264,11 @@ subroutine test_gamma_cv(tests)
     cv%gas(1) = AR
     cv%gas(2) = CO2
     
-    call cv%m(1)%v%init_const(1.0_WP, 0)
-    call cv%m(2)%v%init_const(1.0_WP, 0)
+    call y(1)%v%init_const(0.5_WP, 0)
+    call y(2)%v%init_const(0.5_WP, 0)
     call temp%v%init_const(300.0_WP, 0)
     
-    gamma_cv = cv%gamma()
+    gamma_cv = cv%gamma(y)
     ! `AR` specific heat values from NIST; see where `AR` is defined.
     ! CO2 specific heat values from moran_fundamentals_2008 table A-20 at 300 K.
     gamma_expected = (0.52154_WP + 0.846_WP) / (0.31239_WP + 0.657_WP)
