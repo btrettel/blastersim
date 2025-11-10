@@ -17,6 +17,7 @@ type(test_results_type) :: tests
 call tests%start_tests("cva.nml")
 
 call test_u_h(tests)
+call test_c_p_c_v(tests)
 
 call test_m_total(tests)
 call test_p_eos(tests)
@@ -32,6 +33,7 @@ call test_set_1(tests)
 call test_set_2(tests)
 call test_rates(tests)
 call test_u_h_cv(tests)
+call test_gamma_cv(tests)
 
 call test_smooth_min(tests)
 call test_f_m_dot(tests)
@@ -85,6 +87,29 @@ subroutine test_u_h(tests)
     call tests%real_eq(u%v%v, 142.56e3_WP, "u (gas), 200 K", abs_tol=1.0e3_WP)
     call tests%real_eq(h%v%v, 199.97e3_WP, "h (gas), 200 K", abs_tol=1.0e3_WP)
 end subroutine test_u_h
+
+subroutine test_c_p_c_v(tests)
+    use cva, only: DRY_AIR, AR
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(si_specific_heat) :: c_p, c_v
+    
+    c_p = DRY_AIR%c_p(0)
+    c_v = DRY_AIR%c_v(0)
+    
+    ! Data from moran_fundamentals_2008 table A-20.
+    call tests%real_eq(c_p%v%v, 1.005e3_WP, "c_p (DRY_AIR), 300 K", abs_tol=1.0_WP)
+    call tests%real_eq(c_v%v%v, 0.718e3_WP, "c_v (DRY_AIR), 300 K", abs_tol=1.0_WP)
+    
+    c_p = AR%c_p(0)
+    c_v = AR%c_v(0)
+    
+    ! See `AR` in cva.f90 for the source of these values.
+    ! The NIST data seems to be less consistent with ideal gas equations than moran_fundamentals_2008's data.
+    call tests%real_eq(c_p%v%v, 0.52154e3_WP, "c_p (AR), 300 K", abs_tol=3.0_WP)
+    call tests%real_eq(c_v%v%v, 0.31239e3_WP, "c_v (AR), 300 K", abs_tol=2.0_WP)
+end subroutine test_c_p_c_v
 
 subroutine test_m_total(tests)
     use cva, only: DRY_AIR, cv_type
@@ -182,6 +207,7 @@ subroutine test_r_cv(tests)
     type(si_mass_density)  :: rho
     type(si_temperature)   :: temp
     type(si_pressure)      :: p
+    type(unitless)         :: gamma_cv
     
     ! Dry air
     ! <https://en.wikipedia.org/wiki/Atmosphere_of_Earth>
@@ -209,7 +235,7 @@ subroutine test_r_cv(tests)
     call cv%e%v%init_const(1.0_WP, 0)
     
     r_cv = cv%r()
-    call tests%real_eq(r_cv%v%v, 0.2870e3_WP, "cv%r for mixture (moran_thermodynamics_2008 table 3.1)", abs_tol=0.1_WP)
+    call tests%real_eq(r_cv%v%v, 0.2870e3_WP, "cv%r for mixture (moran_fundamentals_2008 table 3.1)", abs_tol=0.1_WP)
     call tests%real_eq(r_cv%v%v, R_BAR/DRY_AIR%mm, "cv%r for mixture (DRY_AIR)", abs_tol=0.1_WP)
     
     ! Test for `rho_eos` with multiple gas species.
@@ -217,7 +243,39 @@ subroutine test_r_cv(tests)
     call temp%v%init_const(TEMP_ATM, 0)
     rho = cv%rho_eos(p, temp, y)
     call tests%real_eq(rho%v%v, RHO_ATM, "rho_eos, atmospheric (2)", abs_tol=1.0e-3_WP)
+    
+    gamma_cv = cv%gamma()
+    call tests%real_eq(gamma_cv%v%v, DRY_AIR%gamma, "cv%gamma for mixture (1)", abs_tol=0.5e-3_WP)
 end subroutine test_r_cv
+
+subroutine test_gamma_cv(tests)
+    use cva, only: AR, CO2, cv_type
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_type)        :: cv
+    type(si_temperature) :: temp
+    type(unitless)       :: gamma_cv
+    real(WP)             :: gamma_expected
+    
+    allocate(cv%gas(2))
+    allocate(cv%m(2))
+    
+    cv%gas(1) = AR
+    cv%gas(2) = CO2
+    
+    call cv%m(1)%v%init_const(1.0_WP, 0)
+    call cv%m(2)%v%init_const(1.0_WP, 0)
+    call temp%v%init_const(300.0_WP, 0)
+    
+    cv%e = cv%m(1)*cv%gas(1)%u(temp) + cv%m(2)*cv%gas(2)%u(temp)
+    
+    gamma_cv = cv%gamma()
+    ! `AR` specific heat values from NIST; see where `AR` is defined.
+    ! CO2 specific heat values from moran_fundamentals_2008 table A-20 at 300 K.
+    gamma_expected = (0.52154_WP + 0.846_WP) / (0.31239_WP + 0.657_WP)
+    call tests%real_eq(gamma_cv%v%v, gamma_expected, "cv%gamma for mixture (2)", abs_tol=1.0e-4_WP)
+end subroutine test_gamma_cv
 
 subroutine test_p_c(tests)
     ! Based on moran_fundamentals_2008 example 11.10, pp. 615--617.
@@ -226,9 +284,9 @@ subroutine test_p_c(tests)
     
     type(test_results_type), intent(in out) :: tests
 
-    type(cv_type)     :: cv
-    real(WP)          :: n(2), m(2)
-    type(si_pressure) :: p_c_cv
+    type(cv_type)          :: cv
+    real(WP)               :: n(2), m(2)
+    type(si_pressure)      :: p_c_cv
     
     allocate(cv%gas(2))
     
@@ -261,6 +319,9 @@ subroutine test_p_c(tests)
     ! p. 616: critical pressure
     p_c_cv = cv%p_c()
     call tests%real_eq(p_c_cv%v%v, 41.33e5_WP, "cv%p_c", abs_tol=50.0_WP)
+    
+    ! I was going to test `cv%gamma()` for this case. However, something is off about butane.
+    ! The specific heats calculated from moran_fundamentals_2008 eqs. 3.47a-3.47b are about 13% off what NIST says.
 end subroutine test_p_c
 
 subroutine test_p_f_1(tests)
@@ -1187,10 +1248,15 @@ subroutine test_2010_08_07(tests)
     
     call run(sys_start, sys_end, status)
     
-    ! characterization test
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 61.55313880562690_WP, "test_2010_08_07, muzzle velocity")
-    
     call tests%integer_eq(status%rc, 0, "test_2010_08_07, status%rc")
+    
+    call tests%real_eq(sys_end%cv(1)%x%v%v, x_1%v%v, "test_2010_08_07, chamber end stays still")
+    call tests%real_eq(sys_end%cv(1)%x_dot%v%v, 0.0_WP, "test_2010_08_07, chamber end velocity stays zero")
+    
+    ! characterization test
+    ! This is the same number as before the fix in ed8d53d833c364f8f8b8c6788f96bb8d99dacbee.
+    ! So that commit didn't break anything worse, at least.
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 61.55313880562690_WP, "test_2010_08_07, muzzle velocity")
 end subroutine test_2010_08_07
 
 subroutine test_p_v_h2o(tests)

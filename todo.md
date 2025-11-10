@@ -1,21 +1,19 @@
+- Filling: isentropic vs. isothermal
+- Interpolate `sys` to `x_stop` for `rc = 0`.
 - convert.f90
     - `PSI_TO_PA`
     - `IN_TO_M`
     - `IN3_TO_M3`
+    - `C_TO_K`
     - Convenience setters
         - psi
         - in
-- Filling: isentropic vs. isothermal
 - Validation test for full simulation loop.
-- Interpolate `sys` to `x_stop` or `t_stop`.
 - Break cva.f90 into multiple modules? `gas_type` might work in its own module.
 - documentation
 - pneumatic validation case
-    - test that `x = 0` and `x_dot = 0` for CV 1
-- Add `t_end` and `rc` to `run`
-    - `rc = 0` for success (output CV number that triggered termination)
-    - `rc = 1` for hitting time limit
-    - `rc = 2` for negative mass
+    - Use genetic algorithm to better fit the data.
+- Add `status` to `run`
     - test each `rc` code for `run`
 - `config_type`
     - `id` for CSV file name
@@ -24,6 +22,7 @@
     - `write_csv_header(sys, csv_filename)`
     - `write_csv_row(sys, csv_filename)`
         - Calculate flow rates for the current time step in there.
+- function to calculate efficiency
 
 ***
 

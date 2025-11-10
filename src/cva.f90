@@ -17,6 +17,7 @@ public :: smooth_min
 public :: f_m_dot, g_m_dot, m_dot
 public :: time_step, run
 public :: p_v_h2o
+public :: set_celsius_const
 
 ! <https://en.wikipedia.org/wiki/Gas_constant>
 real(WP), public, parameter :: R_BAR = 8.31446261815324_WP ! J/(mol*K)
@@ -46,9 +47,9 @@ type, public :: gas_type
 contains
     procedure :: u => u_gas
     procedure :: h => h_gas
-    procedure, private :: r   => r_gas
-    procedure, private :: c_v => c_v_gas
-    procedure, private :: c_p => c_p_gas
+    procedure :: r   => r_gas
+    procedure :: c_v => c_v_gas
+    procedure :: c_p => c_p_gas
 end type gas_type
 
 ! Molecular mass and critical pressure of air (consistent with dry air): moran_fundamentals_2008 table A-1
@@ -78,13 +79,12 @@ type(gas_type), public, parameter :: O2      = gas_type(gamma = 1.395_WP, &
                                                         mm    = 32.0e-3_WP, &
                                                         p_c   = 50.5e5_WP)
 
-! Molecular mass and critical pressure of Ar: moran_fundamentals_2008 table A-1
-! `gamma`, `u_0`, `h_0` from <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/Ar> ("Fluid Properties")
+! <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/Ar> ("Fluid Properties")
 type(gas_type), public, parameter :: AR      = gas_type(gamma = 0.52154_WP/0.31239_WP, &
                                                         u_0   = 155.90e3_WP, &
                                                         h_0   = 93.497e3_WP, &
-                                                        mm    = 39.94e-3_WP, &
-                                                        p_c   = 48.6e5_WP)
+                                                        mm    = 39.948e-3_WP, &
+                                                        p_c   = 4.8630e6_WP)
 
 ! Molecular mass and critical pressure of CO2: moran_fundamentals_2008 table A-1
 ! Specific heat ratio of CO2: moran_fundamentals_2008 table A-20
@@ -128,13 +128,14 @@ contains
     procedure :: p_c
     procedure :: y
     procedure :: chi
-    procedure :: r    => r_cv
-    procedure :: temp => temp_cv
-    procedure :: vol  => vol_cv
-    procedure :: rho  => rho_cv
-    procedure :: p    => p_cv
-    procedure :: u    => u_cv
-    procedure :: h    => h_cv
+    procedure :: r     => r_cv
+    procedure :: temp  => temp_cv
+    procedure :: vol   => vol_cv
+    procedure :: rho   => rho_cv
+    procedure :: p     => p_cv
+    procedure :: u     => u_cv
+    procedure :: h     => h_cv
+    procedure :: gamma => gamma_cv
     procedure :: set
     procedure :: p_f
     procedure :: p_f0
@@ -582,6 +583,32 @@ pure function h_cv(cv)
     
     call assert(h_cv%v%v > 0.0_WP, "cva (h_cv): h_cv > 0 violated")
 end function h_cv
+
+pure function gamma_cv(cv)
+    class(cv_type), intent(in) :: cv
+    
+    type(unitless) :: gamma_cv
+    
+    integer                :: n_d, i
+    type(si_mass)          :: m_total
+    type(si_specific_heat) :: c_p_cv, c_v_cv
+    
+    call assert_mass(cv, "gamma_cv")
+    
+    n_d     = size(cv%m(1)%v%d)
+    m_total = cv%m_total()
+    
+    call c_p_cv%v%init_const(0.0_WP, n_d)
+    call c_v_cv%v%init_const(0.0_WP, n_d)
+    do i = 1, size(cv%m)
+        c_p_cv = c_p_cv + cv%m(i)*cv%gas(i)%c_p(n_d)/m_total
+        c_v_cv = c_v_cv + cv%m(i)*cv%gas(i)%c_v(n_d)/m_total
+    end do
+    
+    gamma_cv = c_p_cv / c_v_cv
+    
+    call assert(gamma_cv%v%v > 1.0_WP, "cva (gamma_cv): gamma_cv > 1 violated")
+end function gamma_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas, x_stop)
     class(cv_type), intent(in out) :: cv
@@ -1181,5 +1208,20 @@ pure function p_v_h2o(temp)
     
     p_v_h2o = a*exp(-b/(temp + c))
 end function p_v_h2o
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! procedures for conversions !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+pure function set_celsius_const(temp, n_d)
+    real(WP), intent(in) :: temp
+    integer, intent(in)  :: n_d
+    
+    type(si_temperature) :: set_celsius_const
+    
+    call assert(temp > (-TEMP_C_TO_K), "cva (set_celsius_const): temperature below absolute zero")
+    
+    call set_celsius_const%v%init_const(TEMP_C_TO_K + temp, n_d)
+end function set_celsius_const
 
 end module cva
