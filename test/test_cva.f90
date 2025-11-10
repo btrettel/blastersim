@@ -31,6 +31,7 @@ call test_p_f0_2(tests)
 call test_temp_cv(tests)
 call test_set_1(tests)
 call test_set_2(tests)
+call test_set_3(tests)
 call test_rates(tests)
 call test_u_h_cv(tests)
 call test_gamma_cv(tests)
@@ -669,6 +670,45 @@ subroutine test_set_2(tests)
     call tests%real_eq(cv%x_stop%v%v, 1.0_WP, "set 2, x_stop")
 end subroutine test_set_2
 
+subroutine test_set_3(tests)
+    ! Testing isentropic filling
+    
+    use cva, only: DRY_AIR, cv_type
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_type) :: cv
+    
+    type(si_length)       :: x
+    type(si_velocity)     :: x_dot
+    type(unitless)        :: y(1)
+    type(si_pressure)     :: p
+    type(si_temperature)  :: temp_atm, temp_cv
+    type(si_area)         :: csa
+    type(si_inverse_mass) :: rm_p
+    type(si_pressure)     :: p_fs, p_fd, p_atm
+    type(si_stiffness)    :: k
+    type(si_length)       :: x_z
+    
+    call x%v%init_const(0.5_WP, 0)
+    call x_dot%v%init_const(0.5_WP, 0)
+    call y(1)%v%init_const(1.0_WP, 0)
+    call p%v%init_const(2.0e5_WP, 0)
+    call temp_atm%v%init_const(300.0_WP, 0)
+    call csa%v%init_const(0.1_WP, 0)
+    call rm_p%v%init_const(1.0_WP/0.5_WP, 0)
+    call p_fs%v%init_const(0.2e5_WP, 0)
+    call p_fd%v%init_const(0.1e5_WP, 0)
+    call p_atm%v%init_const(1.0e5_WP, 0)
+    call k%v%init_const(10.0_WP, 0)
+    call x_z%v%init_const(3.0_WP, 0)
+    
+    call cv%set(x, x_dot, y, p, temp_atm, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR], isentropic_filling=.true.)
+    
+    temp_cv = cv%temp()
+    call tests%real_eq(temp_cv%v%v, 300.0_WP*(2.0_WP**(0.4_WP/1.4_WP)), "set 3, isentropic_filling=.true., cv%temp")
+end subroutine test_set_3
+
 subroutine test_rates(tests)
     use cva, only: DRY_AIR, cv_type
     
@@ -913,8 +953,6 @@ subroutine test_m_dot_1(tests)
                             * sqrt(1.0_WP - ((P_RL - con%b%v%v) / (1.0_WP - con%b%v%v))**2)
     call tests%real_eq(m_dot_con%v%d(1), d_m_dot_d_delta_p, "m_dot, small delta_p, d", abs_tol=1.0e-3_WP)
 end subroutine test_m_dot_1
-
-! TODO: do a test at a higher pressure differential for `m_dot`
 
 subroutine test_m_dot_2(tests)
     ! Tests the subsonic branch (`P_RL > cv_from%p()/cv_to%p() > b`).
@@ -1180,7 +1218,7 @@ subroutine test_2010_08_07(tests)
     type(si_velocity)        :: x_dot
     type(unitless)           :: y(1)
     type(si_pressure)        :: p_atm, p_1, p_2, p_fs_1, p_fd_1, p_fs_2, p_fd_2
-    type(si_temperature)     :: temp_atm, temp_1, temp_2
+    type(si_temperature)     :: temp_atm
     type(si_area)            :: csa_1, csa_2
     type(si_inverse_mass)    :: rm_p_1, rm_p_2
     type(si_stiffness)       :: k
@@ -1221,12 +1259,12 @@ subroutine test_2010_08_07(tests)
     call assert(x_1%v%v < (8.0_WP*2.54e-2_WP), "x_1 should be less than 8 inches")
     call p_1%v%init_const(70.0_WP*6894.8_WP, 0)
     p_1 = p_1 + p_atm
-    temp_1 = temp_atm ! TODO: update this after adding isentropic filling
     call rm_p_1%v%init_const(0.0_WP, 0) ! immobile
     call p_fs_1%v%init_const(0.0_WP, 0)
     call p_fd_1%v%init_const(0.0_WP, 0)
     
-    call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp_1, csa_1, rm_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR])
+    call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp_atm, csa_1, rm_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR], &
+                                isentropic_filling=.true.)
     
     ! 2: barrel
     
@@ -1234,15 +1272,14 @@ subroutine test_2010_08_07(tests)
     csa_2 = (PI/4.0_WP)*square(d_2)
     call vol_d%v%init_const(1.1_WP*16.387e-6_WP, 0)
     x_2 = vol_d/csa_2
-    p_2    = p_atm
-    temp_2 = temp_atm
+    p_2 = p_atm
     call rm_p_2%v%init_const(1.0_WP/0.98e-3_WP, 0)
     call p_fs_2%v%init_const(0.5_WP*6894.8_WP, 0) ! estimate
     call p_fd_2%v%init_const(0.0_WP, 0)
     call x_stop_2%v%init_const(12.0_WP*2.54e-2_WP, 0)
     x_stop_2 = x_stop_2 + x_2
     
-    call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_2, csa_2, rm_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, [DRY_AIR], x_stop_2)
+    call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_atm, csa_2, rm_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, [DRY_AIR], x_stop_2)
     
     call run(sys_start, sys_end, status)
     
@@ -1254,7 +1291,7 @@ subroutine test_2010_08_07(tests)
     ! characterization test
     ! This is the same number as before the fix in ed8d53d833c364f8f8b8c6788f96bb8d99dacbee.
     ! So that commit didn't break anything worse, at least.
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 61.55313880562690_WP, "test_2010_08_07, muzzle velocity")
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 69.302132379795268_WP, "test_2010_08_07, muzzle velocity")
 end subroutine test_2010_08_07
 
 subroutine test_p_v_h2o(tests)
