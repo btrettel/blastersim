@@ -16,9 +16,6 @@ type(test_results_type) :: tests
 
 call tests%start_tests("cva.nml")
 
-call test_u_h(tests)
-call test_c_p_c_v(tests)
-
 call test_m_total(tests)
 call test_p_eos(tests)
 call test_rho_eos(tests)
@@ -53,67 +50,9 @@ call tests%end_tests()
 
 contains
 
-subroutine test_u_h(tests)
-    use cva, only: DRY_AIR
-    
-    type(test_results_type), intent(in out) :: tests
-
-    type(si_temperature)     :: temp
-    type(si_specific_energy) :: u, h
-    
-    call temp%v%init_const(300.0_WP, 0)
-    
-    u = DRY_AIR%u(temp)
-    h = DRY_AIR%h(temp)
-    
-    ! Data from moran_fundamentals_2008 table A-22.
-    call tests%real_eq(u%v%v, DRY_AIR%u_0, "u (gas), 300 K")
-    call tests%real_eq(h%v%v, DRY_AIR%h_0, "h (gas), 300 K")
-    
-    call temp%v%init_const(400.0_WP, 0)
-    
-    u = DRY_AIR%u(temp)
-    h = DRY_AIR%h(temp)
-    
-    ! Data from moran_fundamentals_2008 table A-22.
-    call tests%real_eq(u%v%v, 286.16e3_WP, "u (gas), 400 K", abs_tol=1.0e3_WP)
-    call tests%real_eq(h%v%v, 400.98e3_WP, "h (gas), 400 K", abs_tol=1.0e3_WP)
-    
-    call temp%v%init_const(200.0_WP, 0)
-    
-    u = DRY_AIR%u(temp)
-    h = DRY_AIR%h(temp)
-    
-    ! Data from moran_fundamentals_2008 table A-22.
-    call tests%real_eq(u%v%v, 142.56e3_WP, "u (gas), 200 K", abs_tol=1.0e3_WP)
-    call tests%real_eq(h%v%v, 199.97e3_WP, "h (gas), 200 K", abs_tol=1.0e3_WP)
-end subroutine test_u_h
-
-subroutine test_c_p_c_v(tests)
-    use cva, only: DRY_AIR, AR
-    
-    type(test_results_type), intent(in out) :: tests
-
-    type(si_specific_heat) :: c_p, c_v
-    
-    c_p = DRY_AIR%c_p(0)
-    c_v = DRY_AIR%c_v(0)
-    
-    ! Data from moran_fundamentals_2008 table A-20.
-    call tests%real_eq(c_p%v%v, 1.005e3_WP, "c_p (DRY_AIR), 300 K", abs_tol=1.0_WP)
-    call tests%real_eq(c_v%v%v, 0.718e3_WP, "c_v (DRY_AIR), 300 K", abs_tol=1.0_WP)
-    
-    c_p = AR%c_p(0)
-    c_v = AR%c_v(0)
-    
-    ! See `AR` in cva.f90 for the source of these values.
-    ! The NIST data seems to be less consistent with ideal gas equations than moran_fundamentals_2008's data.
-    call tests%real_eq(c_p%v%v, 0.52154e3_WP, "c_p (AR), 300 K", abs_tol=3.0_WP)
-    call tests%real_eq(c_v%v%v, 0.31239e3_WP, "c_v (AR), 300 K", abs_tol=2.0_WP)
-end subroutine test_c_p_c_v
-
 subroutine test_m_total(tests)
-    use cva, only: DRY_AIR, cv_type
+    use gasdata, only: DRY_AIR
+    use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
     
@@ -144,7 +83,8 @@ subroutine test_m_total(tests)
 end subroutine test_m_total
 
 subroutine test_p_eos(tests)
-    use cva, only: P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR, cv_type
+    use gasdata, only: P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR
+    use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -168,7 +108,8 @@ subroutine test_p_eos(tests)
 end subroutine test_p_eos
 
 subroutine test_rho_eos(tests)
-    use cva, only: P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR, cv_type
+    use gasdata, only: P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR
+    use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -196,7 +137,8 @@ subroutine test_r_cv(tests)
     ! Test using ambient air.
     ! Tests both the `r_cv` and `rho_eos`
     
-    use cva, only: P_ATM, TEMP_ATM, RHO_ATM, R_BAR, gas_type, DRY_AIR, N2, O2, AR, CO2, cv_type
+    use gasdata, only: P_ATM, TEMP_ATM, RHO_ATM, R_BAR, gas_type, DRY_AIR, N2, O2, AR, CO2
+    use cva, only: cv_type
     use checks, only: assert, is_close
     
     type(test_results_type), intent(in out) :: tests
@@ -250,7 +192,8 @@ subroutine test_r_cv(tests)
 end subroutine test_r_cv
 
 subroutine test_gamma_cv(tests)
-    use cva, only: AR, CO2, cv_type
+    use gasdata, only: AR, CO2
+    use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -279,7 +222,8 @@ end subroutine test_gamma_cv
 subroutine test_p_c(tests)
     ! Based on moran_fundamentals_2008 example 11.10, pp. 615--617.
     
-    use cva, only: gas_type, cv_type
+    use gasdata, only: gas_type
+    use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -473,7 +417,8 @@ end subroutine test_p_f0_2
 ! TODO: Plot `p_f0` to test it.
 
 subroutine test_temp_cv(tests)
-    use cva, only: DRY_AIR, cv_type
+    use gasdata, only: DRY_AIR
+    use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -496,7 +441,8 @@ subroutine test_temp_cv(tests)
 end subroutine test_temp_cv
 
 subroutine test_set_1(tests)
-    use cva, only: X_STOP_DEFAULT, P_ATM_ => P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR, cv_type
+    use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR
+    use cva, only: X_STOP_DEFAULT, cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -567,7 +513,8 @@ subroutine test_set_2(tests)
     ! Intended to test gas mixtures.
     ! Based on moran_fundamentals_2008 example 11.10, pp. 615--617.
     
-    use cva, only: X_STOP_DEFAULT, P_ATM_ => P_ATM, TEMP_C_TO_K, gas_type, cv_type
+    use gasdata, only: P_ATM_ => P_ATM, TEMP_C_TO_K, gas_type
+    use cva, only: X_STOP_DEFAULT, cv_type
     use checks, only: assert, is_close
     
     type(test_results_type), intent(in out) :: tests
@@ -673,7 +620,8 @@ end subroutine test_set_2
 subroutine test_set_3(tests)
     ! Testing isentropic filling
     
-    use cva, only: DRY_AIR, cv_type
+    use gasdata, only: DRY_AIR
+    use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -710,7 +658,8 @@ subroutine test_set_3(tests)
 end subroutine test_set_3
 
 subroutine test_rates(tests)
-    use cva, only: DRY_AIR, cv_type
+    use gasdata, only: DRY_AIR
+    use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -774,7 +723,8 @@ subroutine test_rates(tests)
 end subroutine test_rates
 
 subroutine test_u_h_cv(tests)
-    use cva, only: N2, H2O, cv_type
+    use gasdata, only: N2, H2O
+    use cva, only: cv_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -898,7 +848,8 @@ subroutine test_m_dot_1(tests)
     ! Test to check that $\dot{m} \varpropto \Delta p$ at small $\Delta p$.
     ! Tests the laminar branch (`cv_from%p()/cv_to%p() >= P_RL`).
     
-    use cva, only: P_ATM_ => P_ATM, TEMP_ATM, DRY_AIR, R_BAR, P_RL, cv_type, con_type
+    use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM, DRY_AIR, R_BAR
+    use cva, only: P_RL, cv_type, con_type
     
     type(test_results_type), intent(in out) :: tests
     
@@ -957,7 +908,8 @@ end subroutine test_m_dot_1
 subroutine test_m_dot_2(tests)
     ! Tests the subsonic branch (`P_RL > cv_from%p()/cv_to%p() > b`).
     
-    use cva, only: P_ATM_ => P_ATM, TEMP_ATM, DRY_AIR, R_BAR, P_RL, cv_type, con_type
+    use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM, DRY_AIR, R_BAR
+    use cva, only: P_RL, cv_type, con_type
     use checks, only: assert
     
     type(test_results_type), intent(in out) :: tests
@@ -1022,7 +974,8 @@ end subroutine test_m_dot_2
 subroutine test_m_dot_3(tests)
     ! Tests the choked branch (`cv_from%p()/cv_to%p() <= b`).
     
-    use cva, only: P_ATM_ => P_ATM, TEMP_ATM, DRY_AIR, R_BAR, cv_type, con_type
+    use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM, DRY_AIR, R_BAR
+    use cva, only: cv_type, con_type
     use checks, only: assert
     
     type(test_results_type), intent(in out) :: tests
@@ -1080,7 +1033,8 @@ end subroutine test_m_dot_3
 subroutine test_m_dot_4(tests)
     ! Test inactive connection.
     
-    use cva, only: P_ATM_ => P_ATM, TEMP_ATM, DRY_AIR, cv_type, con_type
+    use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM, DRY_AIR
+    use cva, only: cv_type, con_type
     use checks, only: assert
     
     type(test_results_type), intent(in out) :: tests
@@ -1129,7 +1083,8 @@ subroutine test_m_dot_4(tests)
 end subroutine test_m_dot_4
 
 subroutine test_calculate_flows(tests)
-    use cva, only: P_ATM_ => P_ATM, R_BAR, DRY_AIR, cv_system_type
+    use gasdata, only: P_ATM_ => P_ATM, R_BAR, DRY_AIR
+    use cva, only: cv_system_type
     
     type(test_results_type), intent(in out) :: tests
 
@@ -1204,7 +1159,8 @@ subroutine test_calculate_flows(tests)
 end subroutine test_calculate_flows
 
 subroutine test_2010_08_07(tests)
-    use cva, only: DRY_AIR, cv_system_type, run_status_type, run
+    use gasdata, only: DRY_AIR
+    use cva, only: cv_system_type, run_status_type, run
     use prec, only: PI
     use checks, only: assert
     
@@ -1295,7 +1251,7 @@ subroutine test_2010_08_07(tests)
 end subroutine test_2010_08_07
 
 subroutine test_p_v_h2o(tests)
-    use cva, only: TEMP_C_TO_K, p_v_h2o
+    use gasdata, only: TEMP_C_TO_K, p_v_h2o
     
     type(test_results_type), intent(in out) :: tests
     

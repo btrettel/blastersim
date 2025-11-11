@@ -1,5 +1,7 @@
-- Interpolate `sys` to `x_stop` for `rc = 0`.
+- Create test_validation.f90 and move 2010 test and information about the 2010 test there.
 - convert.f90
+    - `TEMP_C_TO_K`
+    - `set_celsius_const`
     - `PSI_TO_PA`
     - `IN_TO_M`
     - `IN3_TO_M3`
@@ -7,13 +9,11 @@
     - Convenience setters
         - psi
         - in
-- Validation test for full simulation loop.
-- Break cva.f90 into multiple modules? `gas_type` might work in its own module.
+- Interpolate `sys` to `x_stop` for `rc = 0`.
 - documentation
 - pneumatic validation case
     - Use genetic algorithm to better fit the data.
-- Add `status` to `run`
-    - test each `rc` code for `run`
+- test each `rc` code for `run`
 - `config_type`
     - `id` for CSV file name
     - whether to enable CSV output or not
@@ -22,6 +22,7 @@
     - `write_csv_row(sys, csv_filename)`
         - Calculate flow rates for the current time step in there.
 - function to calculate efficiency
+- Input file reader generator
 
 ***
 
@@ -40,5 +41,12 @@
 - transonic corrections in the barrel
 - pressure gradient
 - Instead of `p_atm` in the force balance, allow for using another control volume's pressure.
+- exterior ballistics
 - Error messages:
     - When mass goes negative, suggest that perhaps their effective area is too large.
+- At termination, print:
+    - If a success, say so.
+    - If a failure, say so.
+    - Muzzle velocity including units.
+    - efficiency
+- Make subroutine to fit `sys%con(:, :)%a_e`, `sys%con(:, :)%b`, `sys%cv(:)%p_fs`, `sys%cv(:)%p_fd` for all `con_types` and `cv_types`.

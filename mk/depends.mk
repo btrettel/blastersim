@@ -8,13 +8,15 @@ src$(DIR_SEP)checks.$(OBJEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)prec
 
 src$(DIR_SEP)cli.$(OBJEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)rev.$(OBJEXT) src$(DIR_SEP)stopcodes.$(OBJEXT) src$(DIR_SEP)cli.f90
 
-src$(DIR_SEP)cva.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)cva.f90
+src$(DIR_SEP)cva.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)cva.f90
 
 src$(DIR_SEP)debug.$(OBJEXT): src$(DIR_SEP)debug.f90
 
 src$(DIR_SEP)fmad.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)fmad.f90
 
 src$(DIR_SEP)ga.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)purerng.$(OBJEXT) src$(DIR_SEP)ga.f90
+
+src$(DIR_SEP)gasdata.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)gasdata.f90
 
 src$(DIR_SEP)prec.$(OBJEXT): src$(DIR_SEP)prec.f90
 
@@ -34,9 +36,15 @@ src$(DIR_SEP)unittest.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec
 # Program dependencies #
 ########################
 
-test_cva$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_cva.f90
-	$(FC) $(OFLAG) $@ $(FFLAGS) src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_cva.f90
+test_cva$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_cva.f90
+	$(FC) $(OFLAG) $@ $(FFLAGS) src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_cva.f90
 
 cva.nml: test_cva$(BINEXT)
 	$(RUN)test_cva$(BINEXT)
+
+test_gasdata$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_gasdata.f90
+	$(FC) $(OFLAG) $@ $(FFLAGS) src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_gasdata.f90
+
+gasdata.nml: test_gasdata$(BINEXT)
+	$(RUN)test_gasdata$(BINEXT)
 
