@@ -13,12 +13,13 @@ use checks, only: assert
 implicit none
 private
 
-public :: celsius_const, psi_const, inch_const, cubic_inches_const
+public :: celsius_const, psi_const, inch_const, cubic_inches_const, fps_const
 
 real(WP), public, parameter :: CONVERT_C_TO_K = 273.15_WP ! K, temperature to add to convert from C to K
 real(WP), parameter :: CONVERT_PSI_TO_PA = 6894.8_WP    ! Pa/psi
 real(WP), parameter :: CONVERT_IN_TO_M   = 2.54e-2_WP   ! m/in
 real(WP), parameter :: CONVERT_IN3_TO_M3 = 16.387e-6_WP ! m3/in3
+real(WP), parameter :: CONVERT_FT_TO_M   = 0.3048_WP    ! m/ft
 
 contains
 
@@ -59,5 +60,14 @@ pure function cubic_inches_const(vol, n_d)
     
     call cubic_inches_const%v%init_const(CONVERT_IN3_TO_M3*vol, n_d)
 end function cubic_inches_const
+
+pure function fps_const(v, n_d)
+    real(WP), intent(in) :: v
+    integer, intent(in)  :: n_d
+    
+    type(si_velocity) :: fps_const
+    
+    call fps_const%v%init_const(CONVERT_FT_TO_M*v, n_d)
+end function fps_const
 
 end module convert

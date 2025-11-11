@@ -1,8 +1,8 @@
-- Create test_validation.f90 and move 2010 test and information about the 2010 test there.
 - documentation
 - pneumatic validation case
     - Use genetic algorithm to better fit the data.
 - test each `rc` code for `run`
+    - Test if correct `sys` is output (old or new)
 - `config_type`
     - `id` for CSV file name
     - whether to enable CSV output or not

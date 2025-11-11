@@ -16,13 +16,13 @@ type(test_results_type) :: tests
 
 call tests%start_tests("validation.nml")
 
-call test_2010_08_07(tests)
+call test_2010_08_07_70_psi(tests)
 
 call tests%end_tests()
 
 contains
 
-subroutine test_2010_08_07(tests)
+subroutine test_2010_08_07_70_psi(tests)
     use convert
     use gasdata, only: DRY_AIR
     use cva, only: cv_system_type, run_status_type, run
@@ -36,7 +36,7 @@ subroutine test_2010_08_07(tests)
     type(run_status_type) :: status
     
     type(si_length)          :: d_e, x_1, x_2, d_1, d_2, x_stop_2
-    type(si_velocity)        :: x_dot
+    type(si_velocity)        :: x_dot, v_exp
     type(unitless)           :: y(1)
     type(si_pressure)        :: p_atm, p_1, p_2, p_fs_1, p_fd_1, p_fs_2, p_fd_2
     type(si_temperature)     :: temp_atm
@@ -55,7 +55,7 @@ subroutine test_2010_08_07(tests)
     sys_start%con(2, 2)%active = .false.
     
     sys_start%con(1, 2)%active = .true.
-    d_e = inch_const(0.125_WP, 0)
+    d_e = inch_const(0.105_WP, 0)
     sys_start%con(1, 2)%a_e = (PI/4.0_WP)*square(d_e)
     call sys_start%con(1, 2)%b%v%init_const(0.5_WP, 0)
     
@@ -108,10 +108,9 @@ subroutine test_2010_08_07(tests)
     call tests%real_eq(sys_end%cv(1)%x%v%v, x_1%v%v, "test_2010_08_07, chamber end stays still")
     call tests%real_eq(sys_end%cv(1)%x_dot%v%v, 0.0_WP, "test_2010_08_07, chamber end velocity stays zero")
     
-    ! characterization test
-    ! This is the same number as before the fix in ed8d53d833c364f8f8b8c6788f96bb8d99dacbee.
-    ! So that commit didn't break anything worse, at least.
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 69.30211953171249_WP, "test_2010_08_07, muzzle velocity")
-end subroutine test_2010_08_07
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 58.291508555416044_WP, "test_2010_08_07, muzzle velocity (characterization)")
+    v_exp = fps_const(190.987_WP, 0)
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, v_exp%v%v, "test_2010_08_07, muzzle velocity (validation)", abs_tol=1.0_WP)
+end subroutine test_2010_08_07_70_psi
 
 end program test_validation
