@@ -64,6 +64,7 @@ depends_file         = canonicalize_path(config['depends']['depends_file'])
 before_file          = canonicalize_path(config['depends']['before_file'])
 allsrc_raw           = config['depends']['allsrc'].split(' ')
 not_allsrc_raw       = config['depends']['not_allsrc'].split(' ')
+extra_testnml        = config['depends']['extra_testnml'].split(' ')
 
 fail = False
 
@@ -272,7 +273,7 @@ with open(depends_file, "w") as output_handler:
             output_handler.write("\t$(FC) $(OFLAG) $@ $(FFLAGS) {} {}$(DIR_SEP){}.f90\n\n".format(dependency_string.strip(), directory, depstruct.name))
             
             # For programs starting with `test_`, write code to run test too.
-            if depstruct.name.startswith("test_") and (depstruct.name[5:] in depstruct.dependencies):
+            if depstruct.name.startswith("test_") and ((depstruct.name[5:] in depstruct.dependencies) or (depstruct.name in extra_testnml)):
                 output_handler.write("{}.nml: {}$(BINEXT)\n".format(depstruct.name[5:], depstruct.name))
                 output_handler.write("\t$(RUN){}$(BINEXT)\n\n".format(depstruct.name))
                 test_nmls.append(depstruct.name[5:]+".nml")
