@@ -969,7 +969,7 @@ subroutine run(sys_start, sys_end, status)
     
     type(si_time) :: t_stop ! time where simulation will stop
     integer       :: n_d, n_cv, i_cv, j_cv, n_bad_cv
-    type(si_time) :: t, dt
+    type(si_time) :: t, dt, t_old
     type(si_mass) :: m_total_i, m_total_j
     
     sys_old = sys_start
@@ -983,22 +983,19 @@ subroutine run(sys_start, sys_end, status)
     
     time_loop: do
         call time_step(sys_old, dt, sys_new)
-        t = t + dt
-        
-        call move_alloc(from=sys_old,  to=sys_temp)
-        call move_alloc(from=sys_new,  to=sys_old)
-        call move_alloc(from=sys_temp, to=sys_new)
-        
-        if (t >= t_stop) then
-            status%rc = 1
-            exit time_loop
-        end if
+        t_old = t
+        t     = t + dt
         
         do i_cv = 1, n_cv
             if (sys_new%cv(i_cv)%x >= sys_new%cv(i_cv)%x_stop) then
                 status%rc = 0
                 allocate(status%i_cv(1))
                 status%i_cv(1) = i_cv
+                
+                ! If successful, interpolate to correct `x` value.
+                
+                call sys_interp(t_old, dt, status%i_cv(1), sys_old, sys_new, t, sys_end)
+                
                 exit time_loop
             end if
             
@@ -1024,10 +1021,63 @@ subroutine run(sys_start, sys_end, status)
                 exit time_loop
             end if
         end do
+        
+        if (t >= t_stop) then
+            status%rc = 1
+            exit time_loop
+        end if
+        
+        call move_alloc(from=sys_old,  to=sys_temp)
+        call move_alloc(from=sys_new,  to=sys_old)
+        call move_alloc(from=sys_temp, to=sys_new)
     end do time_loop
     
-    sys_end = sys_old
+    if (status%rc /= 0) then
+        ! Switch allocations back as "old" being actually new here (and vice-versa) is confusing.
+        call move_alloc(from=sys_old,  to=sys_temp)
+        call move_alloc(from=sys_new,  to=sys_old)
+        call move_alloc(from=sys_temp, to=sys_new)
+        
+        sys_end = sys_new
+    end if
+    
     status%t = t
 end subroutine run
+
+pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
+    ! Linearly interpolate system to state between two systems based on `x_stop` for control volume number `i_cv_interp`.
+    
+    type(si_time), intent(in)                      :: t_old, dt
+    integer, intent(in)                            :: i_cv_interp ! control volume number to interpolate based on
+    type(cv_system_type), allocatable, intent(in)  :: sys_old, sys_new
+    type(si_time), intent(out)                     :: t
+    type(cv_system_type), allocatable, intent(out) :: sys_end
+    
+    type(unitless) :: frac
+    integer        :: i_cv, n_cv, k_gas, n_gas
+    
+    call assert(is_close(sys_old%cv(i_cv_interp)%x_stop%v%v, sys_new%cv(i_cv_interp)%x_stop%v%v), &
+                    "cva (sys_interp): x_stop is inconsistent")
+    
+    n_cv  = size(sys_old%cv)
+    n_gas = size(sys_old%cv(1)%m)
+    
+    frac = (sys_new%cv(i_cv_interp)%x_stop - sys_old%cv(i_cv_interp)%x) &
+                / (sys_new%cv(i_cv_interp)%x - sys_old%cv(i_cv_interp)%x)
+    
+    call assert(frac%v%v >= 0.0_WP, "cva (sys_interp): fraction >= 0 violated")
+    call assert(frac%v%v <= 1.0_WP, "cva (sys_interp): fraction <= 1 violated")
+    
+    sys_end = sys_old
+    do i_cv = 1, n_cv
+        sys_end%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + frac*(sys_new%cv(i_cv)%x     - sys_old%cv(i_cv)%x)
+        sys_end%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + frac*(sys_new%cv(i_cv)%x_dot - sys_old%cv(i_cv)%x_dot)
+        sys_end%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + frac*(sys_new%cv(i_cv)%e     - sys_old%cv(i_cv)%e)
+        do k_gas = 1, n_gas
+            sys_end%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + frac*(sys_new%cv(i_cv)%m(k_gas) - sys_old%cv(i_cv)%m(k_gas))
+        end do
+    end do
+    t = t_old + frac*dt
+end subroutine sys_interp
 
 end module cva

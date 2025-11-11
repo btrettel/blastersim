@@ -111,7 +111,7 @@ subroutine test_2010_08_07(tests)
     ! characterization test
     ! This is the same number as before the fix in ed8d53d833c364f8f8b8c6788f96bb8d99dacbee.
     ! So that commit didn't break anything worse, at least.
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 69.302132379795268_WP, "test_2010_08_07, muzzle velocity")
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 69.30211953171249_WP, "test_2010_08_07, muzzle velocity")
 end subroutine test_2010_08_07
 
 end program test_validation

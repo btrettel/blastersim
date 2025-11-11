@@ -1,5 +1,4 @@
 - Create test_validation.f90 and move 2010 test and information about the 2010 test there.
-- Interpolate `sys` to `x_stop` for `rc = 0`.
 - documentation
 - pneumatic validation case
     - Use genetic algorithm to better fit the data.
