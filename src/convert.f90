@@ -13,21 +13,51 @@ use checks, only: assert
 implicit none
 private
 
-public :: set_celsius_const
+public :: celsius_const, psi_const, inch_const, cubic_inches_const
 
-real(WP), public, parameter :: TEMP_C_TO_K = 273.15_WP ! K, temperature to add to convert from C to K
+real(WP), public, parameter :: CONVERT_C_TO_K = 273.15_WP ! K, temperature to add to convert from C to K
+real(WP), parameter :: CONVERT_PSI_TO_PA = 6894.8_WP    ! Pa/psi
+real(WP), parameter :: CONVERT_IN_TO_M   = 2.54e-2_WP   ! m/in
+real(WP), parameter :: CONVERT_IN3_TO_M3 = 16.387e-6_WP ! m3/in3
 
 contains
 
-pure function set_celsius_const(temp, n_d)
+pure function celsius_const(temp, n_d)
     real(WP), intent(in) :: temp
     integer, intent(in)  :: n_d
     
-    type(si_temperature) :: set_celsius_const
+    type(si_temperature) :: celsius_const
     
-    call assert(temp > (-TEMP_C_TO_K), "convert (set_celsius_const): temperature below absolute zero")
+    call celsius_const%v%init_const(CONVERT_C_TO_K + temp, n_d)
     
-    call set_celsius_const%v%init_const(TEMP_C_TO_K + temp, n_d)
-end function set_celsius_const
+    call assert(celsius_const%v%v > 0.0_WP, "convert (celsius_const): temperature below or equal to absolute zero")
+end function celsius_const
+
+pure function psi_const(p, n_d)
+    real(WP), intent(in) :: p
+    integer, intent(in)  :: n_d
+    
+    type(si_pressure) :: psi_const
+    
+    call psi_const%v%init_const(CONVERT_PSI_TO_PA*p, n_d)
+end function psi_const
+
+pure function inch_const(x, n_d)
+    real(WP), intent(in) :: x
+    integer, intent(in)  :: n_d
+    
+    type(si_length) :: inch_const
+    
+    call inch_const%v%init_const(CONVERT_IN_TO_M*x, n_d)
+end function inch_const
+
+pure function cubic_inches_const(vol, n_d)
+    real(WP), intent(in) :: vol
+    integer, intent(in)  :: n_d
+    
+    type(si_volume) :: cubic_inches_const
+    
+    call cubic_inches_const%v%init_const(CONVERT_IN3_TO_M3*vol, n_d)
+end function cubic_inches_const
 
 end module convert

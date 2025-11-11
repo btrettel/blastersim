@@ -85,7 +85,7 @@ subroutine test_c_p_c_v(tests)
 end subroutine test_c_p_c_v
 
 subroutine test_p_v_h2o(tests)
-    use convert, only: TEMP_C_TO_K
+    use convert, only: celsius_const
     use gasdata, only: p_v_h2o
     
     type(test_results_type), intent(in out) :: tests
@@ -96,15 +96,15 @@ subroutine test_p_v_h2o(tests)
     ! Data from moran_fundamentals_2008 table A-2.
     ! This won't match up exactly with the regression equation as it's a different data source.
     
-    call temp%v%init_const(TEMP_C_TO_K + 0.01_WP, 0)
+    temp = celsius_const(0.01_WP, 0)
     p_v = p_v_h2o(temp)
     call tests%real_eq(p_v%v%v, 0.00611e5_WP, "water vapor pressure at 0.01 C", abs_tol=30.0_WP)
     
-    call temp%v%init_const(TEMP_C_TO_K + 20.0_WP, 0)
+    temp = celsius_const(20.0_WP, 0)
     p_v = p_v_h2o(temp)
     call tests%real_eq(p_v%v%v, 0.02339e5_WP, "water vapor pressure at 20 C", abs_tol=10.0_WP)
     
-    call temp%v%init_const(TEMP_C_TO_K + 50.0_WP, 0)
+    temp = celsius_const(50.0_WP, 0)
     p_v = p_v_h2o(temp)
     call tests%real_eq(p_v%v%v, 0.1235e5_WP, "water vapor pressure at 50 C", abs_tol=200.0_WP)
 end subroutine test_p_v_h2o

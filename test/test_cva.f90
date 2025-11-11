@@ -511,7 +511,7 @@ subroutine test_set_2(tests)
     ! Intended to test gas mixtures.
     ! Based on moran_fundamentals_2008 example 11.10, pp. 615--617.
     
-    use convert, only: TEMP_C_TO_K
+    use convert, only: celsius_const
     use gasdata, only: P_ATM_ => P_ATM, gas_type
     use cva, only: X_STOP_DEFAULT, cv_type
     use checks, only: assert, is_close
@@ -565,7 +565,7 @@ subroutine test_set_2(tests)
     call csa%v%init_const(1.0_WP, 0)
     
     ! > temperature of 238 C
-    call temp%v%init_const(TEMP_C_TO_K + 238.0_WP, 0)
+    temp = celsius_const(238.0_WP, 0)
     
     ! p. 615: > The experimental value for the pressure is 68.9 bar.
     ! But the ideal gas law is off here. I'm testing the ideal gas law right now so I'll use the ideal gas value.
@@ -1158,6 +1158,7 @@ subroutine test_calculate_flows(tests)
 end subroutine test_calculate_flows
 
 subroutine test_2010_08_07(tests)
+    use convert
     use gasdata, only: DRY_AIR
     use cva, only: cv_system_type, run_status_type, run
     use prec, only: PI
@@ -1189,7 +1190,7 @@ subroutine test_2010_08_07(tests)
     sys_start%con(2, 2)%active = .false.
     
     sys_start%con(1, 2)%active = .true.
-    call d_e%v%init_const(0.125_WP*2.54e-2_WP, 0)
+    d_e = inch_const(0.125_WP, 0)
     sys_start%con(1, 2)%a_e = (PI/4.0_WP)*square(d_e)
     call sys_start%con(1, 2)%b%v%init_const(0.5_WP, 0)
     
@@ -1206,13 +1207,13 @@ subroutine test_2010_08_07(tests)
     ! I guess I bought the pipe from Home Depot or Lowes as it doesn't appear on my old McMaster-Carr orders.
     ! Seems to be similar to <https://www.mcmaster.com/4830K158>.
     
-    call d_1%v%init_const(0.493_WP*2.54e-2_WP, 0)
+    d_1   = inch_const(0.493_WP, 0)
     csa_1 = (PI/4.0_WP)*square(d_1)
-    call vol_1%v%init_const(1.1_WP*16.387e-6_WP, 0)
-    x_1 = vol_1/csa_1
-    call assert(x_1%v%v > (5.0_WP*2.54e-2_WP), "x_1 should be at least 5 inches")
-    call assert(x_1%v%v < (8.0_WP*2.54e-2_WP), "x_1 should be less than 8 inches")
-    call p_1%v%init_const(70.0_WP*6894.8_WP, 0)
+    vol_1 = cubic_inches_const(1.1_WP, 0)
+    x_1   = vol_1/csa_1
+    call assert(x_1 > inch_const(5.0_WP, 0), "x_1 should be at least 5 inches")
+    call assert(x_1 < inch_const(8.0_WP, 0), "x_1 should be less than 8 inches")
+    p_1 = psi_const(70.0_WP, 0)
     p_1 = p_1 + p_atm
     call rm_p_1%v%init_const(0.0_WP, 0) ! immobile
     call p_fs_1%v%init_const(0.0_WP, 0)
@@ -1223,16 +1224,15 @@ subroutine test_2010_08_07(tests)
     
     ! 2: barrel
     
-    call d_2%v%init_const(0.527_WP*2.54e-2_WP, 0)
+    d_2   = inch_const(0.527_WP, 0)
     csa_2 = (PI/4.0_WP)*square(d_2)
-    call vol_d%v%init_const(1.1_WP*16.387e-6_WP, 0)
-    x_2 = vol_d/csa_2
-    p_2 = p_atm
+    vol_d = cubic_inches_const(1.1_WP, 0)
+    x_2   = vol_d/csa_2
+    p_2   = p_atm
     call rm_p_2%v%init_const(1.0_WP/0.98e-3_WP, 0)
-    call p_fs_2%v%init_const(0.5_WP*6894.8_WP, 0) ! estimate
+    p_fs_2 = psi_const(0.5_WP, 0) ! estimate
     call p_fd_2%v%init_const(0.0_WP, 0)
-    call x_stop_2%v%init_const(12.0_WP*2.54e-2_WP, 0)
-    x_stop_2 = x_stop_2 + x_2
+    x_stop_2 = x_2 + inch_const(12.0_WP, 0)
     
     call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_atm, csa_2, rm_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, [DRY_AIR], x_stop_2)
     
