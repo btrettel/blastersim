@@ -16,7 +16,11 @@ type(test_results_type) :: tests
 
 call tests%start_tests("validation.nml")
 
-call test_2010_08_07_20_psi(tests)
+call test_2010_08_07_25_psi(tests)
+call test_2010_08_07_30_psi(tests)
+call test_2010_08_07_40_psi(tests)
+call test_2010_08_07_50_psi(tests)
+call test_2010_08_07_60_psi(tests)
 call test_2010_08_07_70_psi(tests)
 
 call tests%end_tests()
@@ -41,14 +45,14 @@ contains
 
 ! TODO: Check handwritten notes for more information. I can't find anything in the scans I have.
 
-subroutine create_2010_08_07_sys(p_psi, sys_start, x_1_)
+subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_1_)
     use convert
     use gasdata, only: DRY_AIR
     use prec, only: PI
     use checks, only: assert
     use cva, only: cv_system_type
     
-    real(WP), intent(in)                           :: p_psi
+    real(WP), intent(in)                           :: p_psi, d_e_in
     type(cv_system_type), allocatable, intent(out) :: sys_start
     type(si_length), intent(out), optional         :: x_1_
     
@@ -72,7 +76,7 @@ subroutine create_2010_08_07_sys(p_psi, sys_start, x_1_)
     sys_start%con(2, 2)%active = .false.
     
     sys_start%con(1, 2)%active = .true.
-    d_e = inch_const(0.105_WP, 0)
+    d_e = inch_const(d_e_in, 0)
     sys_start%con(1, 2)%a_e = (PI/4.0_WP)*square(d_e)
     call sys_start%con(1, 2)%b%v%init_const(0.5_WP, 0)
     
@@ -111,7 +115,10 @@ subroutine create_2010_08_07_sys(p_psi, sys_start, x_1_)
     x_2   = vol_d/csa_2
     p_2   = p_atm
     call rm_p_2%v%init_const(1.0_WP/0.98e-3_WP, 0)
-    p_fs_2 = psi_const(0.5_WP, 0) ! estimate
+    !p_fs_2 = psi_const(0.5_WP, 0) ! estimate
+    ! I recall that I could blow the darts down the barrel. So that places an upper limit on the static friction pressure.
+    ! 9500 Pa is about where the maximum is for men according to <https://pmc.ncbi.nlm.nih.gov/articles/PMC1501025/>
+    call p_fs_2%v%init_const(5000.0_WP, 0)
     call p_fd_2%v%init_const(0.0_WP, 0)
     x_stop_2 = x_2 + inch_const(12.0_WP, 0)
     
@@ -120,7 +127,7 @@ subroutine create_2010_08_07_sys(p_psi, sys_start, x_1_)
     if (present(x_1_)) x_1_ = x_1
 end subroutine create_2010_08_07_sys
 
-subroutine test_2010_08_07_20_psi(tests)
+subroutine test_2010_08_07_25_psi(tests)
     use convert
     use cva, only: cv_system_type, run_status_type, run
     
@@ -129,12 +136,100 @@ subroutine test_2010_08_07_20_psi(tests)
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
-    call create_2010_08_07_sys(20.0_WP, sys_start)
+    call create_2010_08_07_sys(25.0_WP, 0.13_WP, sys_start)
     
     call run(sys_start, sys_end, status)
     
-    call tests%integer_eq(status%rc, 1, "test_2010_08_07_20_psi, status%rc (gun did not fire?)")
-end subroutine test_2010_08_07_20_psi
+    call tests%integer_eq(status%rc, 1, "test_2010_08_07_25_psi, status%rc (projectile did not exit)")
+end subroutine test_2010_08_07_25_psi
+
+subroutine test_2010_08_07_30_psi(tests)
+    use convert
+    use cva, only: cv_system_type, run_status_type, run
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_system_type), allocatable :: sys_start, sys_end
+    type(run_status_type)             :: status
+    type(si_velocity)                 :: v_exp
+    
+    call create_2010_08_07_sys(30.0_WP, 0.13_WP, sys_start)
+    
+    call run(sys_start, sys_end, status)
+    
+    call tests%integer_eq(status%rc, 0, "test_2010_08_07_30_psi, status%rc")
+    
+    !print *, 30, sys_end%cv(2)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(2)%x_dot%v%v
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 23.831535000306918_WP, "test_2010_08_07_30_psi, muzzle velocity (characterization)")
+    v_exp = fps_const(80.465_WP, 0)
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, v_exp%v%v, "test_2010_08_07_30_psi, muzzle velocity (validation)", abs_tol=1.0_WP)
+end subroutine test_2010_08_07_30_psi
+
+subroutine test_2010_08_07_40_psi(tests)
+    use convert
+    use cva, only: cv_system_type, run_status_type, run
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_system_type), allocatable :: sys_start, sys_end
+    type(run_status_type)             :: status
+    type(si_velocity)                 :: v_exp
+    
+    call create_2010_08_07_sys(40.0_WP, 0.115_WP, sys_start)
+    
+    call run(sys_start, sys_end, status)
+    
+    call tests%integer_eq(status%rc, 0, "test_2010_08_07_40_psi, status%rc")
+    
+    !print *, 40, sys_end%cv(2)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(2)%x_dot%v%v
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 36.185426086918270_WP, "test_2010_08_07_40_psi, muzzle velocity (characterization)")
+    v_exp = fps_const(120.353_WP, 0)
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, v_exp%v%v, "test_2010_08_07_40_psi, muzzle velocity (validation)", abs_tol=1.0_WP)
+end subroutine test_2010_08_07_40_psi
+
+subroutine test_2010_08_07_50_psi(tests)
+    use convert
+    use cva, only: cv_system_type, run_status_type, run
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_system_type), allocatable :: sys_start, sys_end
+    type(run_status_type)             :: status
+    type(si_velocity)                 :: v_exp
+    
+    call create_2010_08_07_sys(50.0_WP, 0.11_WP, sys_start)
+    
+    call run(sys_start, sys_end, status)
+    
+    call tests%integer_eq(status%rc, 0, "test_2010_08_07_50_psi, status%rc")
+    
+    !print *, 50, sys_end%cv(2)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(2)%x_dot%v%v
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 45.224507289167370_WP, "test_2010_08_07_50_psi, muzzle velocity (characterization)")
+    v_exp = fps_const(145.664_WP, 0)
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, v_exp%v%v, "test_2010_08_07_50_psi, muzzle velocity (validation)", abs_tol=1.0_WP)
+end subroutine test_2010_08_07_50_psi
+
+subroutine test_2010_08_07_60_psi(tests)
+    use convert
+    use cva, only: cv_system_type, run_status_type, run
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_system_type), allocatable :: sys_start, sys_end
+    type(run_status_type)             :: status
+    type(si_velocity)                 :: v_exp
+    
+    call create_2010_08_07_sys(60.0_WP, 0.10_WP, sys_start)
+    
+    call run(sys_start, sys_end, status)
+    
+    call tests%integer_eq(status%rc, 0, "test_2010_08_07_60_psi, status%rc")
+    
+    !print *, 60, sys_end%cv(2)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(2)%x_dot%v%v
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 47.65430830618942_WP, "test_2010_08_07_60_psi, muzzle velocity (characterization)")
+    v_exp = fps_const(158.567_WP, 0)
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, v_exp%v%v, "test_2010_08_07_60_psi, muzzle velocity (validation)", abs_tol=1.0_WP)
+end subroutine test_2010_08_07_60_psi
 
 subroutine test_2010_08_07_70_psi(tests)
     use convert
@@ -147,7 +242,7 @@ subroutine test_2010_08_07_70_psi(tests)
     type(si_length)                   :: x_1
     type(si_velocity)                 :: v_exp
     
-    call create_2010_08_07_sys(70.0_WP, sys_start, x_1)
+    call create_2010_08_07_sys(70.0_WP, 0.105_WP, sys_start, x_1)
     
     call run(sys_start, sys_end, status)
     
@@ -156,7 +251,8 @@ subroutine test_2010_08_07_70_psi(tests)
     call tests%real_eq(sys_end%cv(1)%x%v%v, x_1%v%v, "test_2010_08_07_70_psi, chamber end stays still")
     call tests%real_eq(sys_end%cv(1)%x_dot%v%v, 0.0_WP, "test_2010_08_07_70_psi, chamber end velocity stays zero")
     
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 58.291508555416044_WP, "test_2010_08_07_70_psi, muzzle velocity (characterization)")
+    !print *, 70, sys_end%cv(2)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(2)%x_dot%v%v
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 58.30938473018930_WP, "test_2010_08_07_70_psi, muzzle velocity (characterization)")
     v_exp = fps_const(190.987_WP, 0)
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, v_exp%v%v, "test_2010_08_07_70_psi, muzzle velocity (validation)", abs_tol=1.0_WP)
 end subroutine test_2010_08_07_70_psi
