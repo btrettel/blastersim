@@ -22,8 +22,8 @@ public :: time_step, run
 ! based on first part of beater_pneumatic_2007 eq. 5.4
 real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 
-real(WP), public, parameter :: X_STOP_DEFAULT = 1.0e3_WP ! m (If you have a barrel that's a km long, that's probably wrong.)
-real(WP), public, parameter :: T_STOP_DEFAULT = 0.5_WP   ! s
+real(WP), public, parameter :: X_STOP_DEFAULT = 1.0e3_WP  ! m (If you have a barrel that's a km long, that's probably wrong.)
+real(WP), public, parameter :: T_STOP_DEFAULT = 1.0e-2_WP ! s
 
 type, public :: cv_type ! control volume
     ! time varying
@@ -803,11 +803,9 @@ pure function m_dot(con, cv_from, cv_to)
     
     call assert_dimension(cv_from%x%v%d, cv_to%x%v%d)
     
-    if (con%active) then
+    if (con%active .and. (cv_from%p() >= cv_to%p())) then
         call assert_dimension(con%a_e%v%d, con%b%v%d)
         call assert_dimension(cv_from%x%v%d, con%a_e%v%d)
-        
-        call assert(cv_from%p() >= cv_to%p(), "cva (m_dot): cv_from%p >= cv_to%p violated")
         
         p_r = cv_to%p() / cv_from%p()
         call assert(p_r%v%v >= 0.0_WP, "cva (m_dot): p_r >= 0 violated")
@@ -985,6 +983,8 @@ subroutine run(sys_start, sys_end, status)
         call time_step(sys_old, dt, sys_new)
         t_old = t
         t     = t + dt
+        
+        !print *, t%v%v
         
         do i_cv = 1, n_cv
             if (sys_new%cv(i_cv)%x >= sys_new%cv(i_cv)%x_stop) then
