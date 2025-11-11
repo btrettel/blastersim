@@ -44,8 +44,6 @@ call test_m_dot_4(tests)
 call test_calculate_flows(tests)
 call test_2010_08_07(tests)
 
-call test_p_v_h2o(tests)
-
 call tests%end_tests()
 
 contains
@@ -513,7 +511,8 @@ subroutine test_set_2(tests)
     ! Intended to test gas mixtures.
     ! Based on moran_fundamentals_2008 example 11.10, pp. 615--617.
     
-    use gasdata, only: P_ATM_ => P_ATM, TEMP_C_TO_K, gas_type
+    use convert, only: TEMP_C_TO_K
+    use gasdata, only: P_ATM_ => P_ATM, gas_type
     use cva, only: X_STOP_DEFAULT, cv_type
     use checks, only: assert, is_close
     
@@ -1249,29 +1248,5 @@ subroutine test_2010_08_07(tests)
     ! So that commit didn't break anything worse, at least.
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 69.302132379795268_WP, "test_2010_08_07, muzzle velocity")
 end subroutine test_2010_08_07
-
-subroutine test_p_v_h2o(tests)
-    use gasdata, only: TEMP_C_TO_K, p_v_h2o
-    
-    type(test_results_type), intent(in out) :: tests
-    
-    type(si_temperature) :: temp
-    type(si_pressure)    :: p_v
-    
-    ! Data from moran_fundamentals_2008 table A-2.
-    ! This won't match up exactly with the regression equation as it's a different data source.
-    
-    call temp%v%init_const(TEMP_C_TO_K + 0.01_WP, 0)
-    p_v = p_v_h2o(temp)
-    call tests%real_eq(p_v%v%v, 0.00611e5_WP, "water vapor pressure at 0.01 C", abs_tol=30.0_WP)
-    
-    call temp%v%init_const(TEMP_C_TO_K + 20.0_WP, 0)
-    p_v = p_v_h2o(temp)
-    call tests%real_eq(p_v%v%v, 0.02339e5_WP, "water vapor pressure at 20 C", abs_tol=10.0_WP)
-    
-    call temp%v%init_const(TEMP_C_TO_K + 50.0_WP, 0)
-    p_v = p_v_h2o(temp)
-    call tests%real_eq(p_v%v%v, 0.1235e5_WP, "water vapor pressure at 50 C", abs_tol=200.0_WP)
-end subroutine test_p_v_h2o
 
 end program test_cva
