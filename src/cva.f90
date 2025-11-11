@@ -858,99 +858,37 @@ pure subroutine time_step(sys_old, dt, sys_new)
     type(si_time), intent(in)                      :: dt
     type(cv_system_type), allocatable, intent(out) :: sys_new
     
-    type(cv_system_type), allocatable      :: sys_2, sys_3, sys_4
-    type(si_mass_flow_rate), allocatable   :: m_dot_1(:, :), m_dot_2(:, :), m_dot_3(:, :), m_dot_4(:, :)
-    type(si_energy_flow_rate), allocatable :: h_dot_1(:, :), h_dot_2(:, :), h_dot_3(:, :), h_dot_4(:, :)
+    type(cv_delta_type), allocatable :: cv_delta_0(:), cv_delta_1(:), cv_delta_2(:), cv_delta_3(:), cv_delta_4(:)
     
-    type(cv_delta_type), allocatable :: cv_delta_1(:), cv_delta_2(:), cv_delta_3(:), cv_delta_4(:)
-    
-    integer :: i_cv, n_cv, k_gas, n_gas
+    integer :: i_cv, n_cv, k_gas, n_gas, n_d
     
     n_cv  = size(sys_old%cv)
     n_gas = size(sys_old%cv(1)%m)
-    
-    allocate(cv_delta_1(n_cv))
-    allocate(cv_delta_2(n_cv))
-    allocate(cv_delta_3(n_cv))
-    allocate(cv_delta_4(n_cv))
-    
-    do i_cv = 1, n_cv
-        allocate(cv_delta_1(i_cv)%m(n_gas))
-        allocate(cv_delta_2(i_cv)%m(n_gas))
-        allocate(cv_delta_3(i_cv)%m(n_gas))
-        allocate(cv_delta_4(i_cv)%m(n_gas))
-    end do
+    n_d   = size(sys_old%cv(1)%m(1)%v%d)
     
     ! stage 1
-    call sys_old%calculate_flows(m_dot_1, h_dot_1)
+    allocate(cv_delta_0(n_cv))
     do i_cv = 1, n_cv
-        cv_delta_1(i_cv)%x     = dt*d_x_d_t(sys_old%cv(i_cv))
-        cv_delta_1(i_cv)%x_dot = dt*d_xdot_d_t(sys_old%cv(i_cv))
-        cv_delta_1(i_cv)%e     = dt*d_e_d_t(sys_old%cv(i_cv), h_dot_1, i_cv)
+        allocate(cv_delta_0(i_cv)%m(n_gas))
+    end do
+    do i_cv = 1, n_cv
+        call cv_delta_0(i_cv)%x%v%init_const(0.0_WP, n_d)
+        call cv_delta_0(i_cv)%x_dot%v%init_const(0.0_WP, n_d)
+        call cv_delta_0(i_cv)%e%v%init_const(0.0_WP, n_d)
         do k_gas = 1, n_gas
-            cv_delta_1(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys_old%cv(i_cv), m_dot_1, k_gas, i_cv)
+            call cv_delta_0(i_cv)%m(k_gas)%v%init_const(0.0_WP, n_d)
         end do
     end do
+    call rk_stage(dt, 1.0_WP, sys_old, cv_delta_0, cv_delta_1)
     
     ! stage 2
-    sys_2 = sys_old
-    do i_cv = 1, n_cv
-        sys_2%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + 0.5_WP*cv_delta_1(i_cv)%x
-        sys_2%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + 0.5_WP*cv_delta_1(i_cv)%x_dot
-        sys_2%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + 0.5_WP*cv_delta_1(i_cv)%e
-        do k_gas = 1, n_gas
-            sys_2%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + 0.5_WP*cv_delta_1(i_cv)%m(k_gas)
-        end do
-    end do
-    call sys_2%calculate_flows(m_dot_2, h_dot_2)
-    do i_cv = 1, n_cv
-        cv_delta_2(i_cv)%x     = dt*d_x_d_t(sys_2%cv(i_cv))
-        cv_delta_2(i_cv)%x_dot = dt*d_xdot_d_t(sys_2%cv(i_cv))
-        cv_delta_2(i_cv)%e     = dt*d_e_d_t(sys_2%cv(i_cv), h_dot_2, i_cv)
-        do k_gas = 1, n_gas
-            cv_delta_2(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys_2%cv(i_cv), m_dot_2, k_gas, i_cv)
-        end do
-    end do
+    call rk_stage(dt, 0.5_WP, sys_old, cv_delta_1, cv_delta_2)
     
     ! stage 3
-    sys_3 = sys_old
-    do i_cv = 1, n_cv
-        sys_3%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + 0.5_WP*cv_delta_2(i_cv)%x
-        sys_3%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + 0.5_WP*cv_delta_2(i_cv)%x_dot
-        sys_3%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + 0.5_WP*cv_delta_2(i_cv)%e
-        do k_gas = 1, n_gas
-            sys_3%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + 0.5_WP*cv_delta_2(i_cv)%m(k_gas)
-        end do
-    end do
-    call sys_3%calculate_flows(m_dot_3, h_dot_3)
-    do i_cv = 1, n_cv
-        cv_delta_3(i_cv)%x     = dt*d_x_d_t(sys_3%cv(i_cv))
-        cv_delta_3(i_cv)%x_dot = dt*d_xdot_d_t(sys_3%cv(i_cv))
-        cv_delta_3(i_cv)%e     = dt*d_e_d_t(sys_3%cv(i_cv), h_dot_3, i_cv)
-        do k_gas = 1, n_gas
-            cv_delta_3(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys_3%cv(i_cv), m_dot_3, k_gas, i_cv)
-        end do
-    end do
+    call rk_stage(dt, 0.5_WP, sys_old, cv_delta_2, cv_delta_3)
     
     ! stage 4
-    sys_4 = sys_old
-    do i_cv = 1, n_cv
-        sys_4%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + cv_delta_3(i_cv)%x
-        sys_4%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + cv_delta_3(i_cv)%x_dot
-        sys_4%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + cv_delta_3(i_cv)%e
-        do k_gas = 1, n_gas
-            sys_4%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + cv_delta_3(i_cv)%m(k_gas)
-        end do
-    end do
-    call sys_4%calculate_flows(m_dot_4, h_dot_4)
-    do i_cv = 1, n_cv
-        cv_delta_4(i_cv)%x     = dt*d_x_d_t(sys_4%cv(i_cv))
-        cv_delta_4(i_cv)%x_dot = dt*d_xdot_d_t(sys_4%cv(i_cv))
-        cv_delta_4(i_cv)%e     = dt*d_e_d_t(sys_4%cv(i_cv), h_dot_4, i_cv)
-        do k_gas = 1, n_gas
-            cv_delta_4(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys_4%cv(i_cv), m_dot_4, k_gas, i_cv)
-        end do
-    end do
+    call rk_stage(dt, 1.0_WP, sys_old, cv_delta_3, cv_delta_4)
     
     ! Put it all together.
     sys_new = sys_old
@@ -981,6 +919,46 @@ pure subroutine time_step(sys_old, dt, sys_new)
         call assert_mass(sys_new%cv(i_cv), "time_step")
     end do
 end subroutine time_step
+
+pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
+    type(si_time), intent(in)                      :: dt
+    real(WP), intent(in)                           :: a
+    type(cv_system_type), allocatable, intent(in)  :: sys_old
+    type(cv_delta_type), allocatable, intent(in)   :: cv_delta_in(:)
+    type(cv_delta_type), allocatable, intent(out)  :: cv_delta_out(:)
+    
+    type(cv_system_type), allocatable      :: sys
+    type(si_mass_flow_rate), allocatable   :: m_dot(:, :)
+    type(si_energy_flow_rate), allocatable :: h_dot(:, :)
+    integer :: i_cv, n_cv, k_gas, n_gas
+    
+    n_cv  = size(sys_old%cv)
+    n_gas = size(sys_old%cv(1)%m)
+    
+    allocate(cv_delta_out(n_cv))
+    do i_cv = 1, n_cv
+        allocate(cv_delta_out(i_cv)%m(n_gas))
+    end do
+    
+    sys = sys_old
+    do i_cv = 1, n_cv
+        sys%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + a*cv_delta_in(i_cv)%x
+        sys%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + a*cv_delta_in(i_cv)%x_dot
+        sys%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + a*cv_delta_in(i_cv)%e
+        do k_gas = 1, n_gas
+            sys%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + a*cv_delta_in(i_cv)%m(k_gas)
+        end do
+    end do
+    call sys%calculate_flows(m_dot, h_dot)
+    do i_cv = 1, n_cv
+        cv_delta_out(i_cv)%x     = dt*d_x_d_t(sys%cv(i_cv))
+        cv_delta_out(i_cv)%x_dot = dt*d_xdot_d_t(sys%cv(i_cv))
+        cv_delta_out(i_cv)%e     = dt*d_e_d_t(sys%cv(i_cv), h_dot, i_cv)
+        do k_gas = 1, n_gas
+            cv_delta_out(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys%cv(i_cv), m_dot, k_gas, i_cv)
+        end do
+    end do
+end subroutine rk_stage
 
 subroutine run(sys_start, sys_end, status)
     type(cv_system_type), allocatable, intent(in)  :: sys_start
