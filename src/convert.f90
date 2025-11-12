@@ -13,13 +13,15 @@ use checks, only: assert
 implicit none
 private
 
-public :: celsius_const, psi_const, inch_const, cubic_inches_const, fps_const
+public :: celsius_const, psi_const, inch_const, cubic_inches_const, fps_const, lbf_per_in_const
 
 real(WP), public, parameter :: CONVERT_C_TO_K = 273.15_WP ! K, temperature to add to convert from C to K
+
 real(WP), parameter :: CONVERT_PSI_TO_PA = 6894.8_WP    ! Pa/psi
 real(WP), parameter :: CONVERT_IN_TO_M   = 2.54e-2_WP   ! m/in
 real(WP), parameter :: CONVERT_IN3_TO_M3 = 16.387e-6_WP ! m3/in3
 real(WP), parameter :: CONVERT_FT_TO_M   = 0.3048_WP    ! m/ft
+real(WP), parameter :: CONVERT_LB_TO_N   = 0.22481_WP   ! N/lbf
 
 contains
 
@@ -69,5 +71,14 @@ pure function fps_const(v, n_d)
     
     call fps_const%v%init_const(CONVERT_FT_TO_M*v, n_d)
 end function fps_const
+
+pure function lbf_per_in_const(k, n_d)
+    real(WP), intent(in) :: k
+    integer, intent(in)  :: n_d
+    
+    type(si_stiffness) :: lbf_per_in_const
+    
+    call lbf_per_in_const%v%init_const(CONVERT_LB_TO_N*k/CONVERT_IN_TO_M, n_d)
+end function lbf_per_in_const
 
 end module convert
