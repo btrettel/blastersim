@@ -25,7 +25,7 @@ call test_2010_08_07_60_psi(tests)
 call test_2010_08_07_70_psi(tests)
 
 ! springers
-!call test_tinkershot_1(tests)
+call test_tinkershot_1(tests)
 
 call tests%end_tests()
 
@@ -262,96 +262,96 @@ subroutine test_2010_08_07_70_psi(tests)
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, v_exp%v%v, "test_2010_08_07_70_psi, muzzle velocity (validation)", abs_tol=1.0_WP)
 end subroutine test_2010_08_07_70_psi
 
-!subroutine test_tinkershot_1(tests)
-!    ! Tinkershot
-!    ! Worker Swift
-!    ! 2024-09-05
-!    ! <https://discord.com/channels/825852031239061545/1281443944420348059/1281443944420348059>
+subroutine test_tinkershot_1(tests)
+    ! Tinkershot
+    ! Worker Swift
+    ! 2024-09-05
+    ! <https://discord.com/channels/825852031239061545/1281443944420348059/1281443944420348059>
     
-!    use convert
-!    use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
-!    use prec, only: PI
-!    use checks, only: assert
-!    use cva, only: cv_system_type, run_status_type, run
+    use convert
+    use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
+    use prec, only: PI
+    use checks, only: assert
+    use cva, only: cv_system_type, run_status_type, run
     
-!    type(test_results_type), intent(in out) :: tests
+    type(test_results_type), intent(in out) :: tests
 
-!    type(cv_system_type), allocatable :: sys_start, sys_end
-!    type(run_status_type)             :: status
+    type(cv_system_type), allocatable :: sys_start, sys_end
+    type(run_status_type)             :: status
     
-!    type(si_length)      :: d_e, x_1, x_2, d_1, d_2, x_stop_2
-!    type(si_velocity)    :: x_dot, v_exp
-!    type(unitless)       :: y(1)
-!    type(si_pressure)    :: p_atm, p_fs_1, p_fd_1, p_fs_2, p_fd_2
-!    type(si_temperature) :: temp_atm
-!    type(si_area)        :: csa_1, csa_2
-!    type(si_mass)        :: m_p_1, m_p_2
-!    type(si_stiffness)   :: k
-!    type(si_length)      :: x_z
+    type(si_length)      :: d_e, x_1, x_2, d_1, d_2, x_stop_2
+    type(si_velocity)    :: x_dot, v_exp
+    type(unitless)       :: y(1)
+    type(si_pressure)    :: p_atm, p_fs_1, p_fd_1, p_fs_2, p_fd_2
+    type(si_temperature) :: temp_atm
+    type(si_area)        :: csa_1, csa_2
+    type(si_mass)        :: m_p_1, m_p_2
+    type(si_stiffness)   :: k
+    type(si_length)      :: x_z
     
-!    allocate(sys_start)
-!    allocate(sys_start%cv(2))
-!    allocate(sys_start%con(2, 2))
+    allocate(sys_start)
+    allocate(sys_start%cv(2))
+    allocate(sys_start%con(2, 2))
     
-!    sys_start%con(1, 1)%active = .false.
-!    sys_start%con(2, 1)%active = .false.
-!    sys_start%con(2, 2)%active = .false.
+    sys_start%con(1, 1)%active = .false.
+    sys_start%con(2, 1)%active = .false.
+    sys_start%con(2, 2)%active = .false.
     
-!    sys_start%con(1, 2)%active = .true.
-!    d_e = inch_const(0.4_WP, 0)
-!    sys_start%con(1, 2)%a_e = (PI/4.0_WP)*square(d_e)
-!    call sys_start%con(1, 2)%b%v%init_const(0.5_WP, 0)
+    sys_start%con(1, 2)%active = .true.
+    d_e = inch_const(0.4_WP, 0)
+    sys_start%con(1, 2)%a_e = (PI/4.0_WP)*square(d_e)
+    call sys_start%con(1, 2)%b%v%init_const(0.5_WP, 0)
     
-!    ! The same for every control volume.
-!    call x_dot%v%init_const(0.0_WP, 0)
-!    call y(1)%v%init_const(1.0_WP, 0)
-!    call p_atm%v%init_const(P_ATM_, 0)
-!    call temp_atm%v%init_const(TEMP_ATM_, 0)
+    ! The same for every control volume.
+    call x_dot%v%init_const(0.0_WP, 0)
+    call y(1)%v%init_const(1.0_WP, 0)
+    call p_atm%v%init_const(P_ATM_, 0)
+    call temp_atm%v%init_const(TEMP_ATM_, 0)
     
-!    ! 1: chamber
-!    d_1   = inch_const(30.0e-3_WP, 0)
-!    csa_1 = (PI/4.0_WP)*square(d_1)
-!    call x_1%v%init_const(157.0e-3_WP, 0) ! TODO: Assuming no dead volume
+    ! 1: chamber
+    call d_1%v%init_const(30.0e-3_WP, 0)
+    csa_1 = (PI/4.0_WP)*square(d_1)
+    call x_1%v%init_const(157.0e-3_WP, 0) ! TODO: Assuming no dead volume
     
-!    ! <https://discord.com/channels/825852031239061545/825852033898774543/1034238116065726544>
-!    ! 2022-10-24
-!    ! Assuming using new 30 g plunger.
-!    call m_p_1%v%init_const(30.0e-3_WP, 0)
+    ! <https://discord.com/channels/825852031239061545/825852033898774543/1034238116065726544>
+    ! 2022-10-24
+    ! Assuming using new 30 g plunger.
+    call m_p_1%v%init_const(30.0e-3_WP, 0)
     
-!    call p_fs_1%v%init_const(0.0_WP, 0)
-!    call p_fd_1%v%init_const(0.0_WP, 0)
-!    k = lbf_per_in_const(3.38_WP, 0)
-!    call x_z%v%init_const(297.0e-3_WP-381e-3_WP, 0) ! TODO check
+    call p_fs_1%v%init_const(0.0_WP, 0)
+    call p_fd_1%v%init_const(0.0_WP, 0)
+    k = lbf_per_in_const(3.38_WP, 0)
+    call x_z%v%init_const(297.0e-3_WP-381.0e-3_WP, 0) ! TODO check
     
-!    call sys_start%cv(1)%set(x_1, x_dot, y, p_atm, temp_atm, csa_1, 1.0_WP/m_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR])
+    call sys_start%cv(1)%set(x_1, x_dot, y, p_atm, temp_atm, csa_1, 1.0_WP/m_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR])
     
-!    ! 2: barrel
+    ! 2: barrel
     
-!    call d_2%v%init_const(13.0e-3_WP, 0) ! TODO check
-!    csa_2 = (PI/4.0_WP)*square(d_2)
-!    call x_2%v%init_const(1.0e-2_WP, 0) ! TODO check
-!    call m_p_2%v%init_const(1.016e-3_WP, 0)
-!    call p_fs_2%v%init_const(0.0_WP, 0)
-!    call p_fd_2%v%init_const(0.0_WP, 0)
+    call d_2%v%init_const(13.0e-3_WP, 0) ! TODO check
+    csa_2 = (PI/4.0_WP)*square(d_2)
+    call x_2%v%init_const(1.0e-2_WP, 0) ! TODO check
+    call m_p_2%v%init_const(1.016e-3_WP, 0)
+    call p_fs_2%v%init_const(0.0_WP, 0)
+    call p_fd_2%v%init_const(0.0_WP, 0)
     
-!    ! <https://discord.com/channels/825852031239061545/825852033898774543/1034238116065726544>
-!    ! 2022-10-24
-!    ! Assuming barrel length is 550 mm due to similarity of muzzle velocities.
-!    ! TODO: Get correct number. Update to include dead space if necessary.
-!    call x_stop_2%v%init_const(550.0e-3_WP + 1.0e-2_WP, 0)
+    ! <https://discord.com/channels/825852031239061545/825852033898774543/1034238116065726544>
+    ! 2022-10-24
+    ! Assuming barrel length is 550 mm due to similarity of muzzle velocities.
+    ! TODO: Get correct number. Update to include dead space if necessary.
+    call x_stop_2%v%init_const(550.0e-3_WP + 1.0e-2_WP, 0)
     
-!    call k%v%init_const(0.0_WP, 0)
-!    call x_z%v%init_const(0.0_WP, 0)
+    call k%v%init_const(0.0_WP, 0)
+    call x_z%v%init_const(0.0_WP, 0)
     
-!    call sys_start%cv(2)%set(x_2, x_dot, y, p_atm, temp_atm, csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, &
-!                                [DRY_AIR], x_stop_2)
+    call sys_start%cv(2)%set(x_2, x_dot, y, p_atm, temp_atm, csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, &
+                                [DRY_AIR], x_stop_2)
     
-!    call run(sys_start, sys_end, status)
+    call run(sys_start, sys_end, status)
     
-!    call tests%integer_eq(status%rc, 0, "test_tinkershot_1, status%rc")
+    call tests%integer_eq(status%rc, 0, "test_tinkershot_1, status%rc")
     
-!    v_exp = fps_const(359.7778_WP, 0)
-!    print *, sys_end%cv(2)%x_dot%v%v, v_exp%v%v
-!end subroutine test_tinkershot_1
+    v_exp = fps_const(359.7778_WP, 0)
+    print *, sys_end%cv(2)%x_dot%v%v, v_exp%v%v
+end subroutine test_tinkershot_1
 
 end program test_validation

@@ -15,6 +15,8 @@
     - whether to enable CSV output or not
 - function to calculate efficiency
 - Input file reader generator
+- Input checks:
+    - Any diameter is too small.
 
 ***
 
