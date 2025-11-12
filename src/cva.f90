@@ -688,6 +688,7 @@ pure function d_e_d_t(cv, h_dot, i_cv)
     
     call assert(size(h_dot, 1) == size(h_dot, 2), "cva (d_e_d_t): h_dots must be square")
     call assert_dimension(h_dot(1, 1)%v%d, cv%x%v%d)
+    call assert(cv%csa%v%v > 0.0_WP, "cva (d_e_d_t): cv%csa > 0 violated")
     
     d_e_d_t = -cv%p() * cv%csa * cv%x_dot
     
