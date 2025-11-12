@@ -21,7 +21,7 @@ real(WP), parameter :: CONVERT_PSI_TO_PA = 6894.8_WP    ! Pa/psi
 real(WP), parameter :: CONVERT_IN_TO_M   = 2.54e-2_WP   ! m/in
 real(WP), parameter :: CONVERT_IN3_TO_M3 = 16.387e-6_WP ! m3/in3
 real(WP), parameter :: CONVERT_FT_TO_M   = 0.3048_WP    ! m/ft
-real(WP), parameter :: CONVERT_LB_TO_N   = 0.22481_WP   ! N/lbf
+real(WP), parameter :: CONVERT_LB_TO_N   = 4.4482_WP    ! N/lbf
 
 contains
 

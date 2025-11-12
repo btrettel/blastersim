@@ -1,10 +1,10 @@
+- Do temperature > 0 check in `run` too.
+- Don't do `run` checks every time step for speed.
 - CSV file output in `run`
     - This could help a lot with debugging the springer case. I don't know what's going on at the moment.
     - `write_csv_header(sys, csv_filename)`
     - `write_csv_row(sys, csv_filename)`
         - Calculate flow rates for the current time step in there.
-- testing
-    - `lbf_per_in_const`
 - documentation
 - pneumatic validation case
     - Use genetic algorithm to better fit the data.
