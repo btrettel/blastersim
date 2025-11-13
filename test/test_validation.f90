@@ -77,13 +77,14 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_1_)
     allocate(sys_start%con(2, 2))
     
     sys_start%con(1, 1)%active = .false.
-    sys_start%con(2, 1)%active = .false.
     sys_start%con(2, 2)%active = .false.
     
     sys_start%con(1, 2)%active = .true.
     d_e = inch_const(d_e_in, 0)
     sys_start%con(1, 2)%a_e = (PI/4.0_WP)*square(d_e)
     call sys_start%con(1, 2)%b%v%init_const(0.5_WP, 0)
+    
+    sys_start%con(2, 1) = sys_start%con(1, 2)
     
     ! The same for every control volume.
     call x_dot%v%init_const(0.0_WP, 0)
@@ -294,13 +295,14 @@ subroutine test_tinkershot_1(tests)
     allocate(sys_start%con(2, 2))
     
     sys_start%con(1, 1)%active = .false.
-    sys_start%con(2, 1)%active = .false.
     sys_start%con(2, 2)%active = .false.
     
     sys_start%con(1, 2)%active = .true.
     d_e = inch_const(0.165_WP, 0)
     sys_start%con(1, 2)%a_e = (PI/4.0_WP)*square(d_e)
     call sys_start%con(1, 2)%b%v%init_const(0.5_WP, 0)
+    
+    sys_start%con(2, 1) = sys_start%con(1, 2)
     
     ! The same for every control volume.
     call x_dot%v%init_const(0.0_WP, 0)
@@ -352,7 +354,7 @@ subroutine test_tinkershot_1(tests)
     
     v_exp = fps_const(359.7778_WP, 0)
     !print *, sys_end%cv(2)%x_dot%v%v, v_exp%v%v
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 109.92914682010314_WP, "test_tinkershot_1, muzzle velocity (characterization)")
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 109.92753263095905_WP, "test_tinkershot_1, muzzle velocity (characterization)")
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, v_exp%v%v, "test_tinkershot_1, muzzle velocity (validation)", abs_tol=1.0_WP)
 end subroutine test_tinkershot_1
 

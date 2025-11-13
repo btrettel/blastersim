@@ -1,3 +1,6 @@
+- Make `t_stop` an optional argument for `run`.
+- Energy conservation test case
+- Equilibrium test case
 - CSV file output in `run`
     - Don't print out every time step. Add optional argument `csv_frequency` to control.
     - This could help a lot with debugging the springer case. I don't know what's going on at the moment.
