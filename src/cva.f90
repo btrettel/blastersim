@@ -86,6 +86,8 @@ type, public :: cv_system_type
     type(con_type), allocatable :: con(:, :)
 contains
     procedure :: calculate_flows
+    procedure :: m_total => m_total_sys
+    procedure :: e_total => e_total_sys
 end type cv_system_type
 
 type, public :: run_status_type
@@ -106,11 +108,11 @@ pure function m_total(cv)
     
     type(si_mass) :: m_total
     
-    integer :: i
+    integer :: i_gas
     
     call m_total%v%init_const(0.0_WP, size(cv%m(1)%v%d))
-    do i = 1, size(cv%m)
-        m_total = m_total + cv%m(i)
+    do i_gas = 1, size(cv%m)
+        m_total = m_total + cv%m(i_gas)
     end do
 end function m_total
 
@@ -524,7 +526,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, csa, rm_p, p_fs, p_fd, p_atm, 
     call assert(csa%v%v      >  0.0_WP, "cva (set): csa > 0 violated")
     call assert(cv%p_fs%v%v  >= 0.0_WP, "cva (set): p_fs >= 0 violated")
     call assert(cv%p_fd%v%v  >= 0.0_WP, "cva (set): p_fd >= 0 violated")
-    call assert(cv%p_atm%v%v >  0.0_WP, "cva (set): p_atm > 0 violated")
+    !call assert(cv%p_atm%v%v >  0.0_WP, "cva (set): p_atm > 0 violated") ! Having `p_atm == 0` is useful for testing.
     call assert(cv%k%v%v     >= 0.0_WP, "cva (set): k >= 0 violated")
     
     call assert_dimension(y, cv%gas)
@@ -544,6 +546,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, csa, rm_p, p_fs, p_fd, p_atm, 
     
     ! Get correct temperature depending on how the chamber is filled.
     if (isentropic_filling_) then
+        call assert(cv%p_atm%v%v >  0.0_WP, "cva (set): p_atm > 0 required for isentropic_filling")
         gamma_cv = cv%gamma(y)
         temp = temp_atm * ((p / p_atm)**((gamma_cv - 1.0_WP)/gamma_cv))
     else
@@ -849,6 +852,38 @@ pure subroutine calculate_flows(sys, m_dot, h_dot)
         end do
     end do
 end subroutine calculate_flows
+
+pure function m_total_sys(sys)
+    class(cv_system_type), intent(in) :: sys
+    
+    type(si_mass) :: m_total_sys
+    
+    integer :: i_cv
+    
+    call m_total_sys%v%init_const(0.0_WP, size(sys%cv(1)%m(1)%v%d))
+    do i_cv = 1, size(sys%cv)
+        m_total_sys = m_total_sys + sys%cv(i_cv)%m_total()
+    end do
+end function m_total_sys
+
+pure function e_total_sys(sys)
+    use checks, only: is_close
+    
+    class(cv_system_type), intent(in) :: sys
+    
+    type(si_energy) :: e_total_sys
+    
+    integer :: i_cv
+    
+    call e_total_sys%v%init_const(0.0_WP, size(sys%cv(1)%e%v%d))
+    do i_cv = 1, size(sys%cv)
+        e_total_sys = e_total_sys + sys%cv(i_cv)%e + 0.5_WP*sys%cv(i_cv)%k*square(sys%cv(1)%x - sys%cv(i_cv)%x_z)
+        
+        if (.not. is_close(sys%cv(i_cv)%rm_p%v%v, 0.0_WP)) then
+            e_total_sys = e_total_sys + 0.5_WP*square(sys%cv(i_cv)%x_dot)/sys%cv(i_cv)%rm_p
+        end if
+    end do
+end function e_total_sys
 
 pure subroutine time_step(sys_old, dt, sys_new)
     ! Advances by one time step.

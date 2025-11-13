@@ -1,3 +1,6 @@
+- Modify `test_conservation` to use a spring so that's tested too.
+- Add `cv%e_total`, test it, and update `sys%e_total` to use it.
+- Test `sys%m_total` and `sys%e_total`
 - Make `t_stop` an optional argument for `run`.
 - Energy conservation test case
 - Equilibrium test case
@@ -41,7 +44,7 @@
 - Instead of `p_atm` in the force balance, allow for using another control volume's pressure.
 - exterior ballistics
 - Error messages:
-    - When mass goes negative, suggest that perhaps their effective area is too large.
+    - When mass or temperature goes negative, suggest that perhaps the effective area is too large.
 - At termination, print:
     - If a success, say so.
     - If a failure, say so.

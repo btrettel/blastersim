@@ -42,6 +42,7 @@ call test_m_dot_3(tests)
 call test_m_dot_4(tests)
 
 call test_calculate_flows(tests)
+call test_conservation(tests)
 
 call tests%end_tests()
 
@@ -1155,5 +1156,91 @@ subroutine test_calculate_flows(tests)
     call tests%real_eq(h_dot(2, 1)%v%v, 0.0_WP, "m_dots(2, 1)")
     call tests%real_eq(h_dot(2, 2)%v%v, 0.0_WP, "m_dots(2, 2)")
 end subroutine test_calculate_flows
+
+subroutine test_conservation(tests)
+    use convert
+    use gasdata, only: DRY_AIR
+    use prec, only: PI
+    use cva, only: cv_system_type, run_status_type, run
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    type(cv_system_type), allocatable :: sys_start, sys_end
+    type(run_status_type)             :: status
+    
+    type(si_length)       :: d_e, x_1, x_2, d_1, d_2, x_stop_2
+    type(si_velocity)     :: x_dot
+    type(unitless)        :: y(1)
+    type(si_pressure)     :: p_atm, p_1, p_2, p_fs_1, p_fd_1, p_fs_2, p_fd_2
+    type(si_temperature)  :: temp_atm
+    type(si_area)         :: csa_1, csa_2
+    type(si_inverse_mass) :: rm_p_1
+    type(si_mass)         :: m_p_2, m_start, m_end
+    type(si_stiffness)    :: k
+    type(si_length)       :: x_z
+    type(si_volume)       :: vol_1, vol_d
+    type(si_energy)       :: e_start, e_end
+    
+    allocate(sys_start)
+    allocate(sys_start%cv(2))
+    allocate(sys_start%con(2, 2))
+    
+    sys_start%con(1, 1)%active = .false.
+    sys_start%con(2, 2)%active = .false.
+    
+    sys_start%con(1, 2)%active = .true.
+    d_e = inch_const(0.1_WP, 0)
+    sys_start%con(1, 2)%a_e = (PI/4.0_WP)*square(d_e)
+    call sys_start%con(1, 2)%b%v%init_const(0.5_WP, 0)
+    
+    sys_start%con(2, 1) = sys_start%con(1, 2)
+    
+    ! The same for every control volume.
+    call x_dot%v%init_const(0.0_WP, 0)
+    call y(1)%v%init_const(1.0_WP, 0)
+    call p_atm%v%init_const(0.0_WP, 0)
+    call temp_atm%v%init_const(300.0_WP, 0)
+    call k%v%init_const(0.0_WP, 0)
+    call x_z%v%init_const(0.0_WP, 0)
+    
+    ! 1: chamber
+    d_1   = inch_const(1.0_WP, 0)
+    csa_1 = (PI/4.0_WP)*square(d_1)
+    vol_1 = cubic_inches_const(2.0_WP, 0)
+    x_1   = vol_1/csa_1
+    call p_1%v%init_const(5.0e5_WP, 0)
+    call rm_p_1%v%init_const(0.0_WP, 0) ! immobile
+    call p_fs_1%v%init_const(0.0_WP, 0)
+    call p_fd_1%v%init_const(0.0_WP, 0)
+    
+    call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp_atm, csa_1, rm_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR])
+    ! `isentropic_filling=.true.` requires that `p_atm > 0`, so it's not used here.
+    
+    ! 2: barrel
+    
+    d_2   = inch_const(0.5_WP, 0)
+    csa_2 = (PI/4.0_WP)*square(d_2)
+    vol_d = cubic_inches_const(0.5_WP, 0)
+    x_2   = vol_d/csa_2
+    call p_2%v%init_const(1.0e5_WP, 0)
+    call m_p_2%v%init_const(1.0e-3_WP, 0)
+    call p_fs_2%v%init_const(0.0_WP, 0)
+    call p_fd_2%v%init_const(0.0_WP, 0)
+    x_stop_2 = x_2 + inch_const(12.0_WP, 0)
+    
+    call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_atm, csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, [DRY_AIR], x_stop_2)
+    
+    call run(sys_start, sys_end, status)
+    
+    call tests%integer_eq(status%rc, 0, "test_conservation, status%rc")
+    
+    m_start = sys_start%m_total()
+    m_end   = sys_end%m_total()
+    call tests%real_eq(m_start%v%v, m_end%v%v, "test_conservation, m_start == m_end")
+    
+    e_start = sys_start%e_total()
+    e_end   = sys_end%e_total()
+    call tests%real_eq(e_start%v%v, e_end%v%v, "test_conservation, e_start == e_end", abs_tol=1.0e-6_WP)
+end subroutine test_conservation
 
 end program test_cva
