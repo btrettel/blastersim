@@ -526,7 +526,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, csa, rm_p, p_fs, p_fd, p_atm, 
     call assert(csa%v%v      >  0.0_WP, "cva (set): csa > 0 violated")
     call assert(cv%p_fs%v%v  >= 0.0_WP, "cva (set): p_fs >= 0 violated")
     call assert(cv%p_fd%v%v  >= 0.0_WP, "cva (set): p_fd >= 0 violated")
-    !call assert(cv%p_atm%v%v >  0.0_WP, "cva (set): p_atm > 0 violated") ! Having `p_atm == 0` is useful for testing.
+    call assert(cv%p_atm%v%v >= 0.0_WP, "cva (set): p_atm >= 0 violated") ! Having `p_atm == 0` is useful for testing.
     call assert(cv%k%v%v     >= 0.0_WP, "cva (set): k >= 0 violated")
     
     call assert_dimension(y, cv%gas)
