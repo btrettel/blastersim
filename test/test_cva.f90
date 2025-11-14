@@ -1200,8 +1200,6 @@ subroutine test_conservation(tests)
     call y(1)%v%init_const(1.0_WP, 0)
     call p_atm%v%init_const(0.0_WP, 0)
     call temp_atm%v%init_const(300.0_WP, 0)
-    call k%v%init_const(0.0_WP, 0)
-    call x_z%v%init_const(0.0_WP, 0)
     
     ! 1: chamber
     d_1   = inch_const(1.0_WP, 0)
@@ -1212,6 +1210,8 @@ subroutine test_conservation(tests)
     call rm_p_1%v%init_const(0.0_WP, 0) ! immobile
     call p_fs_1%v%init_const(0.0_WP, 0)
     call p_fd_1%v%init_const(0.0_WP, 0)
+    k = lbf_per_in_const(4.0_WP, 0)
+    x_z = -x_1/1.0_WP
     
     call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp_atm, csa_1, rm_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR])
     ! `isentropic_filling=.true.` requires that `p_atm > 0`, so it's not used here.
@@ -1227,6 +1227,8 @@ subroutine test_conservation(tests)
     call p_fs_2%v%init_const(0.0_WP, 0)
     call p_fd_2%v%init_const(0.0_WP, 0)
     x_stop_2 = x_2 + inch_const(12.0_WP, 0)
+    call k%v%init_const(0.0_WP, 0)
+    call x_z%v%init_const(0.0_WP, 0)
     
     call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_atm, csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, [DRY_AIR], x_stop_2)
     
