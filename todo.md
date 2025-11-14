@@ -1,3 +1,4 @@
+- test each `status%rc` code for `check_sys`
 - Equilibrium test case
 - CSV file output in `run`
     - Don't print out every time step. Add optional argument `csv_frequency` to control.
@@ -5,13 +6,11 @@
     - `write_csv_header(sys, csv_filename)`
     - `write_csv_row(sys, csv_filename)`
         - Calculate flow rates for the current time step in there.
-- Do temperature > 0 check in `run` too.
 - Don't do `run` checks every time step for speed. Add optional argument `check_frequency` to control.
 - documentation
 - pneumatic validation case
     - Use genetic algorithm to better fit the data.
-- test each `rc` code for `run`
-    - Test if correct `sys` is output (old or new)
+- Test if correct `sys` is output for `run` (old or new)
 - `config_type`
     - `id` for CSV file name
     - whether to enable CSV output or not
