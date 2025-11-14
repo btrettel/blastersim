@@ -44,6 +44,9 @@ type, public :: cv_type ! control volume
     type(si_length)             :: x_stop     ! `x` location where simulation will stop
 contains
     procedure :: m_total
+    procedure :: spring_pe
+    procedure :: m_p_ke
+    procedure :: e_total
     procedure :: p_eos
     procedure :: rho_eos
     procedure :: p_c
@@ -115,6 +118,36 @@ pure function m_total(cv)
         m_total = m_total + cv%m(i_gas)
     end do
 end function m_total
+
+pure function spring_pe(cv)
+    class(cv_type), intent(in) :: cv
+    
+    type(si_energy) :: spring_pe
+    
+    spring_pe = 0.5_WP*cv%k*square(cv%x - cv%x_z)
+end function spring_pe
+
+pure function m_p_ke(cv)
+    class(cv_type), intent(in) :: cv
+    
+    type(si_energy) :: m_p_ke
+    
+    if (is_close(cv%rm_p%v%v, 0.0_WP)) then
+        call assert(is_close(cv%k%v%v, 0.0_WP), "cva (m_p_ke): if the piston is immobile, k should be zero")
+        
+        call m_p_ke%v%init_const(0.0_WP, size(cv%x_dot%v%d))
+    else
+        m_p_ke = 0.5_WP*square(cv%x_dot)/cv%rm_p
+    end if
+end function m_p_ke
+
+pure function e_total(cv)
+    class(cv_type), intent(in) :: cv
+    
+    type(si_energy) :: e_total
+    
+    e_total = cv%e + cv%spring_pe() + cv%m_p_ke()
+end function e_total
 
 pure function p_eos(cv, rho, temp)
     ! Calculate pressure using the equation of state.
@@ -867,8 +900,6 @@ pure function m_total_sys(sys)
 end function m_total_sys
 
 pure function e_total_sys(sys)
-    use checks, only: is_close
-    
     class(cv_system_type), intent(in) :: sys
     
     type(si_energy) :: e_total_sys
@@ -877,11 +908,7 @@ pure function e_total_sys(sys)
     
     call e_total_sys%v%init_const(0.0_WP, size(sys%cv(1)%e%v%d))
     do i_cv = 1, size(sys%cv)
-        e_total_sys = e_total_sys + sys%cv(i_cv)%e + 0.5_WP*sys%cv(i_cv)%k*square(sys%cv(1)%x - sys%cv(i_cv)%x_z)
-        
-        if (.not. is_close(sys%cv(i_cv)%rm_p%v%v, 0.0_WP)) then
-            e_total_sys = e_total_sys + 0.5_WP*square(sys%cv(i_cv)%x_dot)/sys%cv(i_cv)%rm_p
-        end if
+        e_total_sys = e_total_sys + sys%cv(i_cv)%e_total()
     end do
 end function e_total_sys
 

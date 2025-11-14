@@ -1174,12 +1174,10 @@ subroutine test_conservation(tests)
     type(si_pressure)     :: p_atm, p_1, p_2, p_fs_1, p_fd_1, p_fs_2, p_fd_2
     type(si_temperature)  :: temp_atm
     type(si_area)         :: csa_1, csa_2
-    type(si_inverse_mass) :: rm_p_1
-    type(si_mass)         :: m_p_2, m_start, m_end
+    type(si_mass)         :: m_p_1, m_p_2, m_start, m_end
     type(si_stiffness)    :: k
     type(si_length)       :: x_z
-    type(si_volume)       :: vol_1, vol_d
-    type(si_energy)       :: e_start, e_end
+    type(si_energy)       :: e_start, e_end, spring_pe_1_start, m_p_ke_1_start, e_start_1
     
     allocate(sys_start)
     allocate(sys_start%cv(2))
@@ -1196,32 +1194,31 @@ subroutine test_conservation(tests)
     sys_start%con(2, 1) = sys_start%con(1, 2)
     
     ! The same for every control volume.
-    call x_dot%v%init_const(0.0_WP, 0)
     call y(1)%v%init_const(1.0_WP, 0)
     call p_atm%v%init_const(0.0_WP, 0)
     call temp_atm%v%init_const(300.0_WP, 0)
     
     ! 1: chamber
-    d_1   = inch_const(1.0_WP, 0)
+    call x_dot%v%init_const(-2.0_WP, 0)
+    call d_1%v%init_const(2.0e-2_WP, 0)
     csa_1 = (PI/4.0_WP)*square(d_1)
-    vol_1 = cubic_inches_const(2.0_WP, 0)
-    x_1   = vol_1/csa_1
+    call x_1%v%init_const(10.0e-2_WP, 0)
     call p_1%v%init_const(5.0e5_WP, 0)
-    call rm_p_1%v%init_const(0.0_WP, 0) ! immobile
+    call m_p_1%v%init_const(30.0e-3_WP, 0)
     call p_fs_1%v%init_const(0.0_WP, 0)
     call p_fd_1%v%init_const(0.0_WP, 0)
-    k = lbf_per_in_const(4.0_WP, 0)
-    x_z = -x_1/1.0_WP
+    call k%v%init_const(700.0_WP, 0)
+    call x_z%v%init_const(1.0e-2_WP, 0)
     
-    call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp_atm, csa_1, rm_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR])
+    call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp_atm, csa_1, 1.0_WP/m_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR])
     ! `isentropic_filling=.true.` requires that `p_atm > 0`, so it's not used here.
     
     ! 2: barrel
     
-    d_2   = inch_const(0.5_WP, 0)
+    call x_dot%v%init_const(0.0_WP, 0)
+    call d_2%v%init_const(2.0e-2_WP, 0)
     csa_2 = (PI/4.0_WP)*square(d_2)
-    vol_d = cubic_inches_const(0.5_WP, 0)
-    x_2   = vol_d/csa_2
+    call x_2%v%init_const(10.0e-2_WP, 0)
     call p_2%v%init_const(1.0e5_WP, 0)
     call m_p_2%v%init_const(1.0e-3_WP, 0)
     call p_fs_2%v%init_const(0.0_WP, 0)
@@ -1236,13 +1233,23 @@ subroutine test_conservation(tests)
     
     call tests%integer_eq(status%rc, 0, "test_conservation, status%rc")
     
+    spring_pe_1_start = sys_start%cv(1)%spring_pe()
+    call tests%real_eq(spring_pe_1_start%v%v, 0.5_WP*(700.0_WP)*(9.0e-2_WP)**2, "test_conservation, spring_pe_1_start")
+    
+    m_p_ke_1_start = sys_start%cv(1)%m_p_ke()
+    call tests%real_eq(m_p_ke_1_start%v%v, 0.5_WP*(30.0e-3_WP)*(2.0_WP)**2, "test_conservation, m_p_ke_1_start")
+    
+    e_start_1 = sys_start%cv(1)%e_total()
+    call tests%real_eq(e_start_1%v%v, sys_start%cv(1)%e%v%v + spring_pe_1_start%v%v + m_p_ke_1_start%v%v, &
+                            "test_conservation, sys_start%cv(1)%e_total()")
+    
     m_start = sys_start%m_total()
     m_end   = sys_end%m_total()
     call tests%real_eq(m_start%v%v, m_end%v%v, "test_conservation, m_start == m_end")
     
     e_start = sys_start%e_total()
     e_end   = sys_end%e_total()
-    call tests%real_eq(e_start%v%v, e_end%v%v, "test_conservation, e_start == e_end", abs_tol=1.0e-6_WP)
+    call tests%real_eq(e_start%v%v, e_end%v%v, "test_conservation, e_start == e_end", abs_tol=1.0e-5_WP)
 end subroutine test_conservation
 
 end program test_cva

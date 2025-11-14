@@ -1,6 +1,3 @@
-- Modify `test_conservation` to use a spring so that's tested too.
-- Add `cv%e_total`, test it, and update `sys%e_total` to use it.
-- Test `sys%m_total` and `sys%e_total`
 - Make `t_stop` an optional argument for `run`.
 - Energy conservation test case
 - Equilibrium test case
