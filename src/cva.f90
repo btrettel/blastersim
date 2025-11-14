@@ -1021,26 +1021,30 @@ pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
     end do
 end subroutine rk_stage
 
-subroutine run(sys_start, sys_end, status)
+subroutine run(sys_start, sys_end, status, t_stop_)
     type(cv_system_type), allocatable, intent(in)  :: sys_start
     type(cv_system_type), allocatable, intent(out) :: sys_end
     type(run_status_type), intent(out)             :: status
+    type(si_time), intent(in), optional            :: t_stop_
     
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp
     
-    type(si_time) :: t_stop ! time where simulation will stop
-    integer       :: n_d, n_cv, i_cv, j_cv, n_bad_cv
-    type(si_time) :: t, dt, t_old
-    type(si_mass) :: m_total_i, m_total_j
+    type(si_time)        :: t_stop ! time where simulation will stop
+    integer              :: n_d
+    type(si_time)        :: t, dt, t_old
+    logical              :: exit_time_loop
+    
+    n_d = size(sys_start%cv(1)%x%v%d)
+    
+    if (present(t_stop_)) then
+        t_stop = t_stop_
+    else
+        call t_stop%v%init_const(T_STOP_DEFAULT, n_d)
+    end if
     
     sys_old = sys_start
-    
-    n_d = size(sys_old%cv(1)%x%v%d)
     call t%v%init_const(0.0_WP, n_d)
     call dt%v%init_const(DT_DEFAULT, n_d)
-    call t_stop%v%init_const(T_STOP_DEFAULT, n_d)
-    
-    n_cv = size(sys_old%cv)
     
     time_loop: do
         call time_step(sys_old, dt, sys_new)
@@ -1049,63 +1053,100 @@ subroutine run(sys_start, sys_end, status)
         
         !print *, t%v%v
         
-        do i_cv = 1, n_cv
-            if (sys_new%cv(i_cv)%x >= sys_new%cv(i_cv)%x_stop) then
-                status%rc = 0
-                allocate(status%i_cv(1))
-                status%i_cv(1) = i_cv
-                
-                ! If successful, interpolate to correct `x` value.
-                
-                call sys_interp(t_old, dt, status%i_cv(1), sys_old, sys_new, t, sys_end)
-                
-                exit time_loop
-            end if
-            
-            m_total_i = sys_new%cv(i_cv)%m_total()
-            if (m_total_i%v%v <= 0.0_WP) then
-                status%rc = 2
-                
-                allocate(status%data(n_cv))
-                n_bad_cv = 0
-                do j_cv = 1, n_cv
-                    m_total_j = sys_new%cv(j_cv)%m_total()
-                    status%data(j_cv) = m_total_j%v%v
-                end do
-                call assert(n_bad_cv >= 1, "cva (run): number of bad control volumes should be 1 or more here")
-                
-                allocate(status%i_cv(n_bad_cv))
-                n_bad_cv = 0
-                do j_cv = 1, n_cv
-                    n_bad_cv = n_bad_cv + 1
-                    status%i_cv(n_bad_cv) = j_cv
-                end do
-                
-                exit time_loop
-            end if
-        end do
-        
-        if (t >= t_stop) then
-            status%rc = 1
-            exit time_loop
-        end if
+        call check_sys(sys_new, t_stop, t, status, exit_time_loop)
+        if (exit_time_loop) exit time_loop
         
         call move_alloc(from=sys_old,  to=sys_temp)
         call move_alloc(from=sys_new,  to=sys_old)
         call move_alloc(from=sys_temp, to=sys_new)
     end do time_loop
     
-    if (status%rc /= 0) then
-        ! Switch allocations back as "old" being actually new here (and vice-versa) is confusing.
-        call move_alloc(from=sys_old,  to=sys_temp)
-        call move_alloc(from=sys_new,  to=sys_old)
-        call move_alloc(from=sys_temp, to=sys_new)
-        
+    if (status%rc == 0) then
+        ! If successful, interpolate to correct `x` value.
+        call sys_interp(t_old, dt, status%i_cv(1), sys_old, sys_new, t, sys_end)
+    else
         sys_end = sys_new
     end if
     
     status%t = t
 end subroutine run
+
+pure subroutine check_sys(sys, t_stop, t, status, exit_time_loop)
+    type(cv_system_type), allocatable, intent(in) :: sys
+    type(si_time), intent(in)                     :: t_stop, t
+    type(run_status_type), intent(out)            :: status
+    logical, intent(out)                          :: exit_time_loop
+    
+    integer              :: n_cv, i_cv, j_cv, n_bad_cv
+    type(si_mass)        :: m_total_i, m_total_j
+    type(si_temperature) :: temp_i, temp_j
+    
+    n_cv = size(sys%cv)
+    exit_time_loop = .false.
+    
+    do i_cv = 1, n_cv
+        if (sys%cv(i_cv)%x >= sys%cv(i_cv)%x_stop) then
+            status%rc = 0
+            allocate(status%i_cv(1))
+            status%i_cv(1) = i_cv
+            
+            exit_time_loop = .true.
+            return
+        end if
+        
+        m_total_i = sys%cv(i_cv)%m_total()
+        if (m_total_i%v%v <= 0.0_WP) then
+            status%rc = 2
+            
+            allocate(status%data(n_cv))
+            n_bad_cv = 0
+            do j_cv = 1, n_cv
+                m_total_j = sys%cv(j_cv)%m_total()
+                status%data(j_cv) = m_total_j%v%v
+            end do
+            call assert(n_bad_cv >= 1, "cva (check_sys): number of bad control volumes should be 1 or more here (1)")
+            
+            allocate(status%i_cv(n_bad_cv))
+            n_bad_cv = 0
+            do j_cv = 1, n_cv
+                n_bad_cv = n_bad_cv + 1
+                status%i_cv(n_bad_cv) = j_cv
+            end do
+            
+            exit_time_loop = .true.
+            return
+        end if
+        
+        temp_i = sys%cv(i_cv)%temp()
+        if (temp_i%v%v <= 0.0_WP) then
+            status%rc = 3
+            
+            allocate(status%data(n_cv))
+            n_bad_cv = 0
+            do j_cv = 1, n_cv
+                temp_j = sys%cv(j_cv)%temp()
+                status%data(j_cv) = temp_j%v%v
+            end do
+            call assert(n_bad_cv >= 1, "cva (check_sys): number of bad control volumes should be 1 or more here (2)")
+            
+            allocate(status%i_cv(n_bad_cv))
+            n_bad_cv = 0
+            do j_cv = 1, n_cv
+                n_bad_cv = n_bad_cv + 1
+                status%i_cv(n_bad_cv) = j_cv
+            end do
+            
+            exit_time_loop = .true.
+            return
+        end if
+    end do
+    
+    if (t >= t_stop) then
+        status%rc = 1
+        exit_time_loop = .true.
+        return
+    end if
+end subroutine check_sys
 
 pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     ! Linearly interpolate system to state between two systems based on `x_stop` for control volume number `i_cv_interp`.

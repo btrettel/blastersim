@@ -1,5 +1,3 @@
-- Make `t_stop` an optional argument for `run`.
-- Energy conservation test case
 - Equilibrium test case
 - CSV file output in `run`
     - Don't print out every time step. Add optional argument `csv_frequency` to control.
@@ -48,3 +46,5 @@
     - Muzzle velocity including units.
     - efficiency
 - Make subroutine to fit `sys%con(:, :)%a_e`, `sys%con(:, :)%b`, `sys%cv(:)%p_fs`, `sys%cv(:)%p_fd` for all `con_types` and `cv_types`.
+- Keep track of energy lost to friction and energy lost to work against the atmosphere.
+    - Energy conservation test case that takes these into account.
