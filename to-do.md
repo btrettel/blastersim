@@ -1,7 +1,9 @@
 - v0.1.0
-    - Add human-readable name for each control volume, to be printed in the CSV file.
     - Input file reader generator
+        - Input checks:
+            - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
     - CSV file output in `run`
+        - Add human-readable name for each control volume, to be printed in the CSV file.
         - Don't print out every time step. Add optional argument `csv_frequency` to control.
         - This could help a lot with debugging the springer case. I don't know what's going on at the moment.
         - `write_csv_header(sys, csv_filename)`
@@ -24,8 +26,6 @@
         - If a failure, say so.
         - Muzzle velocity including units.
         - efficiency
-    - Input checks:
-        - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
     - Upload Windows BlasterSim to malware scanner to check. 
     - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
     - Stopping criteria based on acceleration to find optimal barrel length

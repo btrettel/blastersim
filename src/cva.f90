@@ -34,6 +34,7 @@ type, public :: cv_type ! control volume
     type(si_energy)            :: e     ! energy of gas in control volume
     
     ! constants
+    character(len=32)           :: label      ! human-readable label for control volume
     type(si_area)               :: csa        ! cross-sectional area
     type(si_inverse_mass)       :: rm_p       ! reciprocal mass of piston/projectile
     type(si_pressure)           :: p_fs, p_fd ! static and dynamic friction pressure

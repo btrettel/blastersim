@@ -102,3 +102,29 @@ lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f5.3"
 /
+
+&input_parameter
+parameter_name        = "p_atm"
+type_definition       = "type(si_pressure)"
+tex_unit              = "Pa"
+tex_description       = "Atmospheric pressure."
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "P_ATM_"
+no_kind_default_value = .true.
+bound_fmt             = "f5.3"
+/
+
+&input_parameter
+parameter_name        = "t_atm"
+type_definition       = "type(si_temperature)"
+tex_unit              = "K"
+tex_description       = "Atmospheric temperature."
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "T_ATM_"
+no_kind_default_value = .true.
+bound_fmt             = "f5.3"
+/
