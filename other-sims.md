@@ -9,3 +9,4 @@
 - <https://github.com/ahalekelly/comptonSim>
 - <https://www.reddit.com/r/Nerf/comments/17u3fr7/nerf_sim_beta_from_the_kelly_industries_dev_team/>
 - <https://www.reddit.com/r/Nerf/comments/1bhgyin/modelling_nerf_blaster_physics/>
+- <https://www.reddit.com/r/nerfhomemades/comments/1p16zi8/interest_in_springer_physics_simulator/>

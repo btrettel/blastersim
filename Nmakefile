@@ -7,7 +7,7 @@
 
 # defaults
 !ifndef FC
-FC=ifx
+FC=gfortran
 !endif
 BUILD  = debug
 OPENMP = no

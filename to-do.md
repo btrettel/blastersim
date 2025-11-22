@@ -1,0 +1,62 @@
+- v0.1.0
+    - Input file reader generator
+    - CSV file output in `run`
+        - Don't print out every time step. Add optional argument `csv_frequency` to control.
+        - This could help a lot with debugging the springer case. I don't know what's going on at the moment.
+        - `write_csv_header(sys, csv_filename)`
+        - `write_csv_row(sys, csv_filename)`
+            - Calculate flow rates for the current time step in there.
+    - Don't do `run` checks every time step for speed. Add optional argument `check_frequency` to control.
+    - documentation
+        - drawings of pneumatic and springer guns with lengths labeled
+        - explanation of governing equations
+        - list of all inputs
+    - `config_type`
+        - `id` for CSV file name
+        - whether to enable CSV output or not
+    - Create functions in input.f90 to create pneumatic and springer systems. Use these in the tests.
+    - At termination, print:
+        - If a success, say so.
+        - If a failure, say so.
+        - Muzzle velocity including units.
+        - efficiency
+    - Input checks:
+        - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
+    - Upload Windows BlasterSim to malware scanner to check. 
+    - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
+
+***
+
+- Functions to calculate input PE (spring and adiabatic compression) for efficiency calculation.
+- function to calculate efficiency
+- gnuplot subroutine for testing and generic output
+- water vapor
+    - moran_thermodynamics_2008 pp. 666--667: can use $h_g(T)$, $u_g(T)$, or could use Table A-22 (but recognize that Table A-22 has a different datum than the steam tables and can not be used when liquid water is present, which is irrelevant here)
+    - Have function to construct `y` given relative humidity.
+    - How to handle water condensing out of the air is not clear at the moment, but I suppose I can ignore that to start. All I should have to do to handle water vapor is add the right `gas_type`.
+    - This is more complicated than I originally thought: Relative humidity from weather data is given at atmospheric conditions, not pressurized conditions. This means that as the air is compressed, the relative humidity decreases because the vapor pressure increases. So I need to model the compression process. Take ambient air at given relative humidity, and increase the pressure.
+- Property test to compare BlasterSim derivatives against numerical derivatives of BlasterSim input.
+    - test_fmad.f90: `test_num_deriv`
+- Readd `smooth_min` assertions including new one from Wikipedia including some extra gap for floating point error
+- Add elevation angle
+- Add assertion for validity of lumped parameter approximation
+- transonic corrections in the barrel
+- pressure gradient
+- exterior ballistics
+- Error messages:
+    - When mass or temperature goes negative, suggest that perhaps the effective area is too large.
+- Make subroutine to fit `sys%con(:, :)%a_e`, `sys%con(:, :)%b`, `sys%cv(:)%p_fs`, `sys%cv(:)%p_fd` for all `con_types` and `cv_types`.
+- valve opening time?
+- Instead of `p_atm` in the force balance, allow for using another control volume's pressure.
+    - Start with requiring that the other control volume be constant pressure, and later generalize this.
+    - I'll need to pick which control volume controls `x` and `x_dot` and how each are related to the other control volume's same.
+    - "Mirror" control volumes?
+    - Simpler form: Add constant pressure ("source"/"sink" or atmospheric) control volume. The mass for this can go to zero. `p_eos` will be overridden internally? This will have the advantage of not requiring extensive changes to `x` and `x_dot` for the source control volume.
+        - Special `set` procedure
+        - Test `p_eos` with constant pressure
+        - in `d_x_dot_d_t` assert that other CV is constant pressure
+- Keep track of energy lost to friction and energy lost to work against the atmosphere.
+    - Energy conservation test case that takes these into account.
+- test each `status%rc` code for `check_sys`
+- Equilibrium test case
+- Test if correct `sys` is output for `run` (old or new)
