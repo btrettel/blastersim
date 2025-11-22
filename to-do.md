@@ -1,16 +1,20 @@
 - v0.1.0
+    - Add human-readable name for each control volume, to be printed in the CSV file.
     - Input file reader generator
     - CSV file output in `run`
         - Don't print out every time step. Add optional argument `csv_frequency` to control.
         - This could help a lot with debugging the springer case. I don't know what's going on at the moment.
         - `write_csv_header(sys, csv_filename)`
         - `write_csv_row(sys, csv_filename)`
-            - Calculate flow rates for the current time step in there.
+            - Calculate flow rates for the current time step in there. Alternatively use `m_dot_eff = delta_m/dt`?
     - Don't do `run` checks every time step for speed. Add optional argument `check_frequency` to control.
     - documentation
+        - quick start
         - drawings of pneumatic and springer guns with lengths labeled
         - explanation of governing equations
         - list of all inputs
+        - FAQ:
+            - Answer complaints about units: Writing `2.0e-2` is nearly as easy as writing 2.0 cm
     - `config_type`
         - `id` for CSV file name
         - whether to enable CSV output or not
@@ -24,6 +28,7 @@
         - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
     - Upload Windows BlasterSim to malware scanner to check. 
     - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
+    - Stopping criteria based on acceleration to find optimal barrel length
 
 ***
 

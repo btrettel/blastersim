@@ -37,10 +37,12 @@
 modtable.txt
 *.nml
 !genunits.nml
+!geninput_*.nml
 test_*
 !test_*.f90
 src/rev.f90
 src/units.f90
+src/geninput_*.f90
 missed.txt
 *.opt.yaml
 *.optrpt

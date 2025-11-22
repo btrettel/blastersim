@@ -1,0 +1,104 @@
+&geninput_config
+output_file_prefix = "src/geninput_springer"
+namelist_group     = "springer"
+kind_parameter     = "WP"
+/
+
+&input_parameter
+parameter_name  = "id"
+type_definition = "character(len=128)"
+tex_unit        = "1"
+tex_description = 'Unique identifier for the current simulation. Maximum 128 characters. Used in the CSV file name, for example, for \texttt{id = "abc"}, the file abc.csv is written.'
+default_value   = "output"
+/
+
+&input_parameter
+parameter_name        = "d_plunger"
+type_definition       = "type(si_length)"
+required              = .true.
+tex_unit              = "m"
+tex_description       = "Diameter of the plunger tube."
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f5.3"
+/
+
+&input_parameter
+parameter_name        = "l_draw"
+type_definition       = "type(si_length)"
+required              = .true.
+tex_unit              = "m"
+tex_description       = "Plunger draw length."
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f5.3"
+/
+
+&input_parameter
+parameter_name  = "l_precompress"
+type_definition = "type(si_length)"
+required        = .true.
+tex_unit        = "m"
+tex_description = "Precompression length of the spring. In other words, the amount the spring is compressed at zero draw length."
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f5.3"
+/
+
+&input_parameter
+parameter_name        = "d_barrel"
+type_definition       = "type(si_length)"
+required              = .true.
+tex_unit              = "m"
+tex_description       = "Barrel diameter."
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f5.3"
+/
+
+&input_parameter
+parameter_name        = "l_barrel"
+type_definition       = "type(si_length)"
+required              = .true.
+tex_unit              = "m"
+tex_description       = "Barrel length"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f5.3"
+/
+
+&input_parameter
+parameter_name        = "vol_dead"
+type_definition       = "type(si_volume)"
+required              = .true.
+tex_unit              = "m$^3$"
+tex_description       = "Dead volume. Volume in the barrel at the dart's initial position."
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f5.3"
+/
+
+&input_parameter
+parameter_name        = "k"
+type_definition       = "type(si_stiffness)"
+required              = .true.
+tex_unit              = "N/m"
+tex_description       = "Spring stiffness."
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f5.3"
+/
