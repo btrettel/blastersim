@@ -15,6 +15,7 @@ implicit none
 private
 
 public :: smooth_min
+public :: d_x_d_t, d_xdot_d_t, d_m_k_d_t, d_e_d_t
 public :: f_m_dot, g_m_dot, m_dot
 public :: time_step, run
 
@@ -64,10 +65,6 @@ contains
     procedure :: set
     procedure :: p_f
     procedure :: p_f0
-    procedure :: d_x_d_t
-    procedure :: d_xdot_d_t
-    procedure :: d_m_k_d_t
-    procedure :: d_e_d_t
 end type cv_type
 
 type :: cv_delta_type
@@ -672,7 +669,7 @@ pure function p_f0(cv, p_fe)
 end function p_f0
 
 pure function d_x_d_t(cv)
-    class(cv_type), intent(in) :: cv
+    type(cv_type), intent(in) :: cv
     
     type(si_velocity) :: d_x_d_t
     
@@ -680,7 +677,7 @@ pure function d_x_d_t(cv)
 end function d_x_d_t
 
 pure function d_xdot_d_t(cv)
-    class(cv_type), intent(in) :: cv
+    type(cv_type), intent(in) :: cv
     
     type(si_acceleration) :: d_xdot_d_t
     
@@ -694,7 +691,7 @@ pure function d_xdot_d_t(cv)
 end function d_xdot_d_t
 
 pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
-    class(cv_type), intent(in)          :: cv
+    type(cv_type), intent(in)           :: cv
     type(si_mass_flow_rate), intent(in) :: m_dot(:, :)
     integer, intent(in)                 :: k_gas, i_cv
     
@@ -718,7 +715,7 @@ pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
 end function d_m_k_d_t
 
 pure function d_e_d_t(cv, h_dot, i_cv)
-    class(cv_type), intent(in)            :: cv
+    type(cv_type), intent(in)             :: cv
     type(si_energy_flow_rate), intent(in) :: h_dot(:, :)
     integer, intent(in)                   :: i_cv
     

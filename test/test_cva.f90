@@ -658,14 +658,14 @@ end subroutine test_set_3
 
 subroutine test_rates(tests)
     use gasdata, only: DRY_AIR
-    use cva, only: cv_type
+    use cva, only: cv_type, d_x_d_t, d_xdot_d_t, d_m_k_d_t, d_e_d_t
     
     type(test_results_type), intent(in out) :: tests
 
     type(cv_type) :: cv
     
     type(si_length)           :: x
-    type(si_velocity)         :: x_dot, d_x_d_t
+    type(si_velocity)         :: x_dot, d_x_d_t_
     type(unitless)            :: y(1)
     type(si_pressure)         :: p, p_fs, p_fd, p_atm
     type(si_temperature)      :: temp
@@ -673,9 +673,9 @@ subroutine test_rates(tests)
     type(si_inverse_mass)     :: rm_p
     type(si_stiffness)        :: k
     type(si_length)           :: x_z
-    type(si_acceleration)     :: d_xdot_d_t
+    type(si_acceleration)     :: d_xdot_d_t_
     type(si_mass_flow_rate)   :: m_dots(2, 2), d_m_1_d_t
-    type(si_energy_flow_rate) :: h_dots(2, 2), d_e_d_t
+    type(si_energy_flow_rate) :: h_dots(2, 2), d_e_d_t_
     
     call x%v%init_const(1.5_WP, 0)
     call x_dot%v%init_const(10.0_WP, 0)
@@ -692,33 +692,33 @@ subroutine test_rates(tests)
     
     call cv%set(x, x_dot, y, p, temp, "test_rates", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
     
-    d_x_d_t = cv%d_x_d_t()
-    call tests%real_eq(d_x_d_t%v%v, x_dot%v%v, "cv%d_x_d_t")
+    d_x_d_t_ = d_x_d_t(cv)
+    call tests%real_eq(d_x_d_t_%v%v, x_dot%v%v, "d_x_d_t")
     
-    d_xdot_d_t = cv%d_xdot_d_t()
-    call tests%real_eq(d_xdot_d_t%v%v, 1.5e6_WP, "cv%d_xdot_d_t")
+    d_xdot_d_t_ = d_xdot_d_t(cv)
+    call tests%real_eq(d_xdot_d_t_%v%v, 1.5e6_WP, "d_xdot_d_t")
     
     call m_dots(1, 1)%v%init_const(0.0_WP, 0)
     call m_dots(1, 2)%v%init_const(2.0_WP, 0)
     call m_dots(2, 1)%v%init_const(0.0_WP, 0)
     call m_dots(2, 2)%v%init_const(0.0_WP, 0)
     
-    d_m_1_d_t = cv%d_m_k_d_t(m_dots, 1, 1)
-    call tests%real_eq(d_m_1_d_t%v%v, -2.0_WP, "cv%d_m_d_t(1)")
+    d_m_1_d_t = d_m_k_d_t(cv, m_dots, 1, 1)
+    call tests%real_eq(d_m_1_d_t%v%v, -2.0_WP, "d_m_d_t(1)")
     
-    d_m_1_d_t = cv%d_m_k_d_t(m_dots, 1, 2)
-    call tests%real_eq(d_m_1_d_t%v%v, 2.0_WP, "cv%d_m_d_t(2)")
+    d_m_1_d_t = d_m_k_d_t(cv, m_dots, 1, 2)
+    call tests%real_eq(d_m_1_d_t%v%v, 2.0_WP, "d_m_d_t(2)")
     
     call h_dots(1, 1)%v%init_const(0.0_WP, 0)
     call h_dots(1, 2)%v%init_const(0.0_WP, 0)
     call h_dots(2, 1)%v%init_const(2.0e5_WP, 0)
     call h_dots(2, 2)%v%init_const(0.0_WP, 0)
     
-    d_e_d_t = cv%d_e_d_t(h_dots, 1)
-    call tests%real_eq(d_e_d_t%v%v, -p%v%v*csa%v%v*x_dot%v%v + 2.0e5_WP, "cv%d_e_d_t(1)")
+    d_e_d_t_ = d_e_d_t(cv, h_dots, 1)
+    call tests%real_eq(d_e_d_t_%v%v, -p%v%v*csa%v%v*x_dot%v%v + 2.0e5_WP, "d_e_d_t(1)")
     
-    d_e_d_t = cv%d_e_d_t(h_dots, 2)
-    call tests%real_eq(d_e_d_t%v%v, -p%v%v*csa%v%v*x_dot%v%v - 2.0e5_WP, "cv%d_e_d_t(2)")
+    d_e_d_t_ = d_e_d_t(cv, h_dots, 2)
+    call tests%real_eq(d_e_d_t_%v%v, -p%v%v*csa%v%v*x_dot%v%v - 2.0e5_WP, "d_e_d_t(2)")
 end subroutine test_rates
 
 subroutine test_u_h_cv(tests)
