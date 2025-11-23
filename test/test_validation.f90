@@ -55,22 +55,23 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_1_)
     use prec, only: PI
     use checks, only: assert
     use cva, only: cv_system_type
+    use io, only: create_barrel
     
     real(WP), intent(in)                           :: p_psi, d_e_in
     type(cv_system_type), allocatable, intent(out) :: sys_start
     type(si_length), intent(out), optional         :: x_1_
     
-    type(si_length)       :: d_e, x_1, x_2, d_1, d_2, x_stop_2
+    type(si_length)       :: d_e, x_1, d_1, d_barrel
     type(si_velocity)     :: x_dot
     type(unitless)        :: y(1)
-    type(si_pressure)     :: p_atm, p_1, p_2, p_fs_1, p_fd_1, p_fs_2, p_fd_2
+    type(si_pressure)     :: p_atm, p_1, p_fs_1, p_fd_1, p_fs_barrel, p_fd_barrel
     type(si_temperature)  :: temp_atm
-    type(si_area)         :: csa_1, csa_2
+    type(si_area)         :: csa_1
     type(si_inverse_mass) :: rm_p_1
-    type(si_mass)         :: m_p_2
+    type(si_mass)         :: m_projectile
     type(si_stiffness)    :: k
     type(si_length)       :: x_z
-    type(si_volume)       :: vol_1, vol_d
+    type(si_volume)       :: vol_1, vol_dead
     
     allocate(sys_start)
     allocate(sys_start%cv(2))
@@ -115,21 +116,17 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_1_)
     
     ! 2: barrel
     
-    d_2   = inch_const(0.527_WP, 0)
-    csa_2 = (PI/4.0_WP)*square(d_2)
-    vol_d = cubic_inches_const(1.1_WP, 0)
-    x_2   = vol_d/csa_2
-    p_2   = p_atm
-    call m_p_2%v%init_const(0.98e-3_WP, 0)
+    d_barrel = inch_const(0.527_WP, 0)
+    vol_dead = cubic_inches_const(1.1_WP, 0)
+    call m_projectile%v%init_const(0.98e-3_WP, 0)
     !p_fs_2 = psi_const(0.5_WP, 0) ! estimate
     ! I recall that I could blow the darts down the barrel. So that places an upper limit on the static friction pressure.
     ! 9500 Pa is about where the maximum is for men according to <https://pmc.ncbi.nlm.nih.gov/articles/PMC1501025/>
-    call p_fs_2%v%init_const(5000.0_WP, 0)
-    call p_fd_2%v%init_const(0.0_WP, 0)
-    x_stop_2 = x_2 + inch_const(12.0_WP, 0)
+    call p_fs_barrel%v%init_const(5000.0_WP, 0)
+    call p_fd_barrel%v%init_const(0.0_WP, 0)
     
-    call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_atm, "barrel", csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, &
-                                [DRY_AIR], x_stop_2)
+    call create_barrel(vol_dead, d_barrel, p_atm, temp_atm, m_projectile, p_fs_barrel, p_fd_barrel, inch_const(12.0_WP, 0), &
+                        sys_start%cv(2))
     
     if (present(x_1_)) x_1_ = x_1
 end subroutine create_2010_08_07_sys
@@ -275,21 +272,23 @@ subroutine test_tinkershot_1(tests)
     use prec, only: PI
     use checks, only: assert
     use cva, only: cv_system_type, run_status_type, run
+    use io, only: create_barrel
     
     type(test_results_type), intent(in out) :: tests
 
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
-    type(si_length)      :: d_e, x_1, x_2, d_1, d_2, x_stop_2
+    type(si_length)      :: d_e, x_1, x_2, l_travel, d_1, d_barrel
     type(si_velocity)    :: x_dot, v_exp
     type(unitless)       :: y(1)
-    type(si_pressure)    :: p_atm, p_fs_1, p_fd_1, p_fs_2, p_fd_2
+    type(si_pressure)    :: p_atm, p_fs_1, p_fd_1, p_fs_barrel, p_fd_barrel
     type(si_temperature) :: temp_atm
-    type(si_area)        :: csa_1, csa_2
-    type(si_mass)        :: m_p_1, m_p_2
+    type(si_area)        :: csa_1, csa_barrel
+    type(si_mass)        :: m_p_1, m_projectile
     type(si_stiffness)   :: k
     type(si_length)      :: x_z
+    type(si_volume)      :: vol_dead
     
     allocate(sys_start)
     allocate(sys_start%cv(2))
@@ -331,24 +330,21 @@ subroutine test_tinkershot_1(tests)
     
     ! 2: barrel
     
-    call d_2%v%init_const(13.0e-3_WP, 0) ! TODO check
-    csa_2 = (PI/4.0_WP)*square(d_2)
+    call d_barrel%v%init_const(13.0e-3_WP, 0) ! TODO check
+    csa_barrel = (PI/4.0_WP)*square(d_barrel)
     call x_2%v%init_const(1.0e-2_WP, 0) ! TODO check
-    call m_p_2%v%init_const(1.016e-3_WP, 0)
-    call p_fs_2%v%init_const(0.0_WP, 0)
-    call p_fd_2%v%init_const(0.0_WP, 0)
+    vol_dead = x_2*csa_barrel
+    call m_projectile%v%init_const(1.016e-3_WP, 0)
+    call p_fs_barrel%v%init_const(0.0_WP, 0)
+    call p_fd_barrel%v%init_const(0.0_WP, 0)
     
     ! <https://discord.com/channels/825852031239061545/825852033898774543/1034238116065726544>
     ! 2022-10-24
     ! Assuming barrel length is 550 mm due to similarity of muzzle velocities.
     ! TODO: Get correct number. Update to include dead space if necessary.
-    call x_stop_2%v%init_const(550.0e-3_WP + x_2%v%v, 0)
+    call l_travel%v%init_const(550.0e-3_WP, 0)
     
-    call k%v%init_const(0.0_WP, 0)
-    call x_z%v%init_const(0.0_WP, 0)
-    
-    call sys_start%cv(2)%set(x_2, x_dot, y, p_atm, temp_atm, "barrel", csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, &
-                                [DRY_AIR], x_stop_2)
+    call create_barrel(vol_dead, d_barrel, p_atm, temp_atm, m_projectile, p_fs_barrel, p_fd_barrel, l_travel, sys_start%cv(2))
     
     call run(sys_start, sys_end, status)
     
