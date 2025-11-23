@@ -499,7 +499,7 @@ pure function gamma_cv(cv, y)
     call assert(gamma_cv%v%v > 1.0_WP, "cva (gamma_cv): gamma_cv > 1 violated")
 end function gamma_cv
 
-pure subroutine set(cv, x, x_dot, y, p, temp_atm, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas, x_stop, isentropic_filling)
+pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas, x_stop, isentropic_filling)
     class(cv_type), intent(in out) :: cv
     
     ! time varying
@@ -507,9 +507,10 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, csa, rm_p, p_fs, p_fd, p_atm, 
     type(si_velocity), intent(in)    :: x_dot    ! velocity of piston/projectile
     type(unitless), intent(in)       :: y(:)     ! mass fractions of each gas
     type(si_pressure), intent(in)    :: p        ! pressure
-    type(si_temperature), intent(in) :: temp_atm ! atmospheric temperature
     
     ! constant
+    type(si_temperature), intent(in)  :: temp_atm   ! atmospheric temperature
+    character(len=*), intent(in)      :: label      ! human-readable label for control volume
     type(si_area), intent(in)         :: csa        ! cross-sectional area
     type(si_inverse_mass), intent(in) :: rm_p       ! reciprocal mass of piston/projectile
     type(si_pressure), intent(in)     :: p_fs, p_fd ! static and dynamic friction pressure
@@ -533,6 +534,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, csa, rm_p, p_fs, p_fd, p_atm, 
     cv%x_dot = x_dot
     ! `p` and `temp` will be handled below
     
+    cv%label = label
     cv%csa   = csa
     cv%rm_p  = rm_p
     cv%p_fs  = p_fs
@@ -554,14 +556,15 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, csa, rm_p, p_fs, p_fd, p_atm, 
         isentropic_filling_ = .false.
     end if
     
-    call assert(cv%x%v%v     >  0.0_WP, "cva (set): x > 0 violated")
-    call assert(p%v%v        >  0.0_WP, "cva (set): p > 0 violated")
-    call assert(temp_atm%v%v >  0.0_WP, "cva (set): temp > 0 violated")
-    call assert(csa%v%v      >  0.0_WP, "cva (set): csa > 0 violated")
-    call assert(cv%p_fs%v%v  >= 0.0_WP, "cva (set): p_fs >= 0 violated")
-    call assert(cv%p_fd%v%v  >= 0.0_WP, "cva (set): p_fd >= 0 violated")
-    call assert(cv%p_atm%v%v >= 0.0_WP, "cva (set): p_atm >= 0 violated") ! Having `p_atm == 0` is useful for testing.
-    call assert(cv%k%v%v     >= 0.0_WP, "cva (set): k >= 0 violated")
+    call assert(cv%x%v%v            >  0.0_WP, "cva (set): x > 0 violated")
+    call assert(p%v%v               >  0.0_WP, "cva (set): p > 0 violated")
+    call assert(temp_atm%v%v        >  0.0_WP, "cva (set): temp_atm > 0 violated")
+    call assert(len(trim(cv%label)) >       0, "cva (set): len(label) > 0 violated")
+    call assert(cv%csa%v%v          >  0.0_WP, "cva (set): csa > 0 violated")
+    call assert(cv%p_fs%v%v         >= 0.0_WP, "cva (set): p_fs >= 0 violated")
+    call assert(cv%p_fd%v%v         >= 0.0_WP, "cva (set): p_fd >= 0 violated")
+    call assert(cv%p_atm%v%v        >= 0.0_WP, "cva (set): p_atm >= 0 violated") ! Having `p_atm == 0` is useful for testing.
+    call assert(cv%k%v%v            >= 0.0_WP, "cva (set): k >= 0 violated")
     
     call assert_dimension(y, cv%gas)
     allocate(cv%m(size(y)))

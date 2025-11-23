@@ -474,7 +474,7 @@ subroutine test_set_1(tests)
     call k%v%init_const(10.0_WP, 0)
     call x_z%v%init_const(3.0_WP, 0)
     
-    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv%set(x, x_dot, y, p, temp, "test_set_1", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
     
     call tests%real_eq(cv%x%v%v, x%v%v, "set 1, x")
     call tests%real_eq(cv%x_dot%v%v, x_dot%v%v, "set 1, x_dot")
@@ -583,7 +583,7 @@ subroutine test_set_2(tests)
     call x_stop%v%init_const(1.0_WP, 0) ! to test non-default `x_stop`
     call assert(.not. is_close(x_stop%v%v, X_STOP_DEFAULT), "x_stop must not equal the default for this test")
     
-    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas, x_stop)
+    call cv%set(x, x_dot, y, p, temp, "test_set_2", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas, x_stop)
     
     ! All the masses are slightly off. This is expected, as total mass is not an input here.
     ! Pressure is the input setting the total mass, and it's only approximate.
@@ -650,7 +650,7 @@ subroutine test_set_3(tests)
     call k%v%init_const(10.0_WP, 0)
     call x_z%v%init_const(3.0_WP, 0)
     
-    call cv%set(x, x_dot, y, p, temp_atm, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR], isentropic_filling=.true.)
+    call cv%set(x, x_dot, y, p, temp_atm, "test_set_3", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR], isentropic_filling=.true.)
     
     temp_cv = cv%temp()
     call tests%real_eq(temp_cv%v%v, 300.0_WP*(2.0_WP**(0.4_WP/1.4_WP)), "set 3, isentropic_filling=.true., cv%temp")
@@ -690,7 +690,7 @@ subroutine test_rates(tests)
     call k%v%init_const(1.0e6_WP, 0)
     call x_z%v%init_const(0.5_WP, 0)
     
-    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv%set(x, x_dot, y, p, temp, "test_rates", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
     
     d_x_d_t = cv%d_x_d_t()
     call tests%real_eq(d_x_d_t%v%v, x_dot%v%v, "cv%d_x_d_t")
@@ -756,7 +756,7 @@ subroutine test_u_h_cv(tests)
     call k%v%init_const(1.0e6_WP, 0)
     call x_z%v%init_const(0.5_WP, 0)
     
-    call cv%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [N2, H2O])
+    call cv%set(x, x_dot, y, p, temp, "test_u_h_cv", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [N2, H2O])
     
     u_exact = y(1)%v%v*N2%u_0 + y(2)%v%v*H2O%u_0
     h_exact = y(1)%v%v*N2%h_0 + y(2)%v%v*H2O%h_0
@@ -889,8 +889,8 @@ subroutine test_m_dot_1(tests)
     call k%v%init_const(0.0_WP, 1)
     call x_z%v%init_const(0.0_WP, 1)
     
-    call cv_from%set(x, x_dot, y, p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
-    call cv_to%set(x, x_dot, y, p - delta_p, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv_from%set(x, x_dot, y, p, temp, "from", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv_to%set(x, x_dot, y, p - delta_p, temp, "to", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
     
     m_dot_con = con%m_dot(cv_from, cv_to)
     
@@ -953,8 +953,8 @@ subroutine test_m_dot_2(tests)
     
     p_out = p_in*p_r
     
-    call cv_from%set(x, x_dot, y, p_in, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
-    call cv_to%set(x, x_dot, y, p_out, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
     
     m_dot_con = con%m_dot(cv_from, cv_to)
     
@@ -1018,8 +1018,8 @@ subroutine test_m_dot_3(tests)
     
     p_out = p_in*p_r
     
-    call cv_from%set(x, x_dot, y, p_in, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
-    call cv_to%set(x, x_dot, y, p_out, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
     
     m_dot_con = con%m_dot(cv_from, cv_to)
     
@@ -1072,8 +1072,8 @@ subroutine test_m_dot_4(tests)
     call k%v%init_const(0.0_WP, 1)
     call x_z%v%init_const(0.0_WP, 1)
     
-    call cv_from%set(x, x_dot, y, p_in, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
-    call cv_to%set(x, x_dot, y, p_out, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
     
     m_dot_con = con%m_dot(cv_from, cv_to)
     
@@ -1133,8 +1133,8 @@ subroutine test_calculate_flows(tests)
     
     p_out = p_in*p_r
     
-    call sys%cv(1)%set(x, x_dot, y, p_in, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
-    call sys%cv(2)%set(x, x_dot, y, p_out, temp, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call sys%cv(1)%set(x, x_dot, y, p_in, temp, "1", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
+    call sys%cv(2)%set(x, x_dot, y, p_out, temp, "2", csa, rm_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR])
     
     m_dot_12 = sys%con(1, 2)%a_e%v%v * p_in%v%v * sqrt((1.0_WP - sys%con(1, 2)%b%v%v)/((R_BAR/DRY_AIR%mm) * temp%v%v))
     
@@ -1210,7 +1210,8 @@ subroutine test_conservation(tests)
     call k%v%init_const(700.0_WP, 0)
     call x_z%v%init_const(1.0e-2_WP, 0)
     
-    call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp_atm, csa_1, 1.0_WP/m_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR])
+    call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp_atm, "pressure chamber", csa_1, 1.0_WP/m_p_1, p_fs_1, p_fd_1, p_atm, k, &
+                                x_z, [DRY_AIR])
     ! `isentropic_filling=.true.` requires that `p_atm > 0`, so it's not used here.
     
     ! 2: barrel
@@ -1227,7 +1228,8 @@ subroutine test_conservation(tests)
     call k%v%init_const(0.0_WP, 0)
     call x_z%v%init_const(0.0_WP, 0)
     
-    call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_atm, csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, [DRY_AIR], x_stop_2)
+    call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_atm, "barrel", csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, p_atm, k, &
+                                x_z, [DRY_AIR], x_stop_2)
     
     call run(sys_start, sys_end, status)
     

@@ -110,8 +110,8 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_1_)
     call p_fs_1%v%init_const(0.0_WP, 0)
     call p_fd_1%v%init_const(0.0_WP, 0)
     
-    call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp_atm, csa_1, rm_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR], &
-                                isentropic_filling=.true.)
+    call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp_atm, "pressure chamber", csa_1, rm_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, &
+                                [DRY_AIR], isentropic_filling=.true.)
     
     ! 2: barrel
     
@@ -128,7 +128,8 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_1_)
     call p_fd_2%v%init_const(0.0_WP, 0)
     x_stop_2 = x_2 + inch_const(12.0_WP, 0)
     
-    call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_atm, csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, [DRY_AIR], x_stop_2)
+    call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_atm, "barrel", csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, &
+                                [DRY_AIR], x_stop_2)
     
     if (present(x_1_)) x_1_ = x_1
 end subroutine create_2010_08_07_sys
@@ -325,7 +326,8 @@ subroutine test_tinkershot_1(tests)
     k = lbf_per_in_const(3.38_WP, 0)
     call x_z%v%init_const(297.0e-3_WP-381.0e-3_WP, 0) ! TODO check
     
-    call sys_start%cv(1)%set(x_1, x_dot, y, p_atm, temp_atm, csa_1, 1.0_WP/m_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, [DRY_AIR])
+    call sys_start%cv(1)%set(x_1, x_dot, y, p_atm, temp_atm, "piston chamber", csa_1, 1.0_WP/m_p_1, p_fs_1, p_fd_1, p_atm, k, x_z, &
+                                [DRY_AIR])
     
     ! 2: barrel
     
@@ -345,7 +347,7 @@ subroutine test_tinkershot_1(tests)
     call k%v%init_const(0.0_WP, 0)
     call x_z%v%init_const(0.0_WP, 0)
     
-    call sys_start%cv(2)%set(x_2, x_dot, y, p_atm, temp_atm, csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, &
+    call sys_start%cv(2)%set(x_2, x_dot, y, p_atm, temp_atm, "barrel", csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, p_atm, k, x_z, &
                                 [DRY_AIR], x_stop_2)
     
     call run(sys_start, sys_end, status)

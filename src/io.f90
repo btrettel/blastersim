@@ -46,7 +46,7 @@ subroutine create_barrel(vol_dead, d_barrel, p_atm, temp_atm, m_p, p_fs, p_fd, l
     call x_z%v%init_const(0.0_WP, n_d)
     x_stop = x_d + l_travel
     
-    call cv%set(x_d, x_dot, y, p_atm, temp_atm, csa_barrel, 1.0_WP/m_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR], x_stop)
+    call cv%set(x_d, x_dot, y, p_atm, temp_atm, "barrel", csa_barrel, 1.0_WP/m_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR], x_stop)
 end subroutine create_barrel
 
 !subroutine read_springer_namelist(input_file, sys, rc)
