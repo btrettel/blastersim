@@ -65,11 +65,11 @@ bound_fmt             = "f5.3"
 /
 
 &input_parameter
-parameter_name        = "l_barrel"
+parameter_name        = "l_travel"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
-tex_description       = "Barrel length"
+tex_description       = "Distance base of projectile moves before exiting the barrel. Sometimes called the barrel length."
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
