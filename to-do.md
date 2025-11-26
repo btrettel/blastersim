@@ -6,29 +6,56 @@
         - Add human-readable name for each control volume, to be printed in the CSV file.
         - Don't print out every time step. Add optional argument `csv_frequency` to control.
         - This could help a lot with debugging the springer case. I don't know what's going on at the moment.
-        - `write_csv_header(sys, csv_filename)`
-        - `write_csv_row(sys, csv_filename)`
-            - Calculate flow rates for the current time step in there. Alternatively use `m_dot_eff = delta_m/dt`?
+        - `write_csv_row(sys, row_type)`
+            - `row_type`: Can select header or normal row.
+            - For constant pressure CV, only write pressure, mass, and energy. Do not write other variables as they are meaningless.
+            - Calculate flow rates for the current time step in there. Alternatively use `m_dot_eff = delta_m/dt` so that the outputs appear to satisfy conservation? Backing out `h_dot_eff` like that would be difficult due to the work term so perhaps don't bother with that approach.
     - Don't do `run` checks every time step for speed. Add optional argument `check_frequency` to control.
+        - <https://gcc.gnu.org/onlinedocs/gfortran/MOD.html>
     - documentation
         - quick start
         - drawings of pneumatic and springer guns with lengths labeled
         - explanation of governing equations
         - list of all inputs
         - FAQ:
+            - TODO: Collect comments making these points.
+            - Accuracy of the simulation
             - Answer complaints about units: Writing `2.0e-2` is nearly as easy as writing 2.0 cm
+                - <https://www.reddit.com/r/nerfhomemades/comments/1p16zi8/interest_in_springer_physics_simulator/npoj6xa/>
+                - <https://discord.com/channels/727038380054937610/1172390267890958366/1431436991752572968>
+            - Too complex to simulate.
+                - <https://www.reddit.com/r/Nerf/comments/1ordwlk/optimising_for_fps_designing_springer_blasters/nnpwewz/>
+                - <https://www.reddit.com/r/Nerf/comments/dmgxeb/science_and_math_of_nerf_formulae_and_how_to/f50mx2c/>
+            - Simulation isn't worthwhile because it takes less time to figure things out experimentally. Not true from my perspective. In practice, the alternative to simulation has been speculation. People spend a huge amount of time working on things that a simulation could show is not plausible. That's a waste of time. If anything, simulation saves time by reducing the amount of experiments that need to be done. Simulation and experimentation are complementary.
+            - How do I calculate optimal barrel length?
+                - Comment on some common formulas, give better approximate formulas based on adiabatic process relations, and say how to do it in BlasterSim.
+                - <https://www.reddit.com/r/Nerf/comments/1k428am/ideal_barrel_length_math/>
+                - <https://www.reddit.com/r/Nerf/comments/186ckcn/formula_for_optimal_barrel_length/>
+                - <http://btrettel.nerfers.com/archives/54>
     - `config_type`
         - `id` for CSV file name
         - whether to enable CSV output or not
-    - Create functions in input.f90 to create pneumatic and springer systems. Use these in the tests.
+    - Create subroutines in io.f90 to create different types of CVs. Use these in the tests.
     - At termination, print:
         - If a success, say so.
         - If a failure, say so.
         - Muzzle velocity including units.
         - efficiency
+        - whether under- or over-barreled
     - Upload Windows BlasterSim to malware scanner to check. 
     - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
     - Stopping criteria based on acceleration to find optimal barrel length
+    - Plunger head motion bounds (lower and upper)
+    - Instead of `p_atm` in the force balance, allow for using another control volume's pressure.
+        - Start with requiring that the other control volume be constant pressure, and later generalize this.
+        - I'll need to pick which control volume controls `x` and `x_dot` and how each are related to the other control volume's same.
+        - "Mirror" control volumes?
+        - Simpler form: Add constant pressure ("source"/"sink" or atmospheric) control volume. The mass for this can go to zero. `p_eos` will be overridden internally? This will have the advantage of not requiring extensive changes to `x` and `x_dot` for the source control volume.
+            - Special `set` procedure
+            - Test `p_eos` with constant pressure
+            - in `d_x_dot_d_t` assert that other CV is constant pressure
+    - Keep track of energy lost to friction and energy lost to work against the atmosphere.
+        - Energy conservation test case that takes these into account.
 
 ***
 
@@ -47,21 +74,22 @@
 - Add assertion for validity of lumped parameter approximation
 - transonic corrections in the barrel
 - pressure gradient
+    - Is the pressure gradient necessary? The multiple control volumes will provide a pressure gradient of sorts.
 - exterior ballistics
 - Error messages:
     - When mass or temperature goes negative, suggest that perhaps the effective area is too large.
 - Make subroutine to fit `sys%con(:, :)%a_e`, `sys%con(:, :)%b`, `sys%cv(:)%p_fs`, `sys%cv(:)%p_fd` for all `con_types` and `cv_types`.
 - valve opening time?
-- Instead of `p_atm` in the force balance, allow for using another control volume's pressure.
-    - Start with requiring that the other control volume be constant pressure, and later generalize this.
-    - I'll need to pick which control volume controls `x` and `x_dot` and how each are related to the other control volume's same.
-    - "Mirror" control volumes?
-    - Simpler form: Add constant pressure ("source"/"sink" or atmospheric) control volume. The mass for this can go to zero. `p_eos` will be overridden internally? This will have the advantage of not requiring extensive changes to `x` and `x_dot` for the source control volume.
-        - Special `set` procedure
-        - Test `p_eos` with constant pressure
-        - in `d_x_dot_d_t` assert that other CV is constant pressure
-- Keep track of energy lost to friction and energy lost to work against the atmosphere.
-    - Energy conservation test case that takes these into account.
 - test each `status%rc` code for `check_sys`
 - Equilibrium test case
 - Test if correct `sys` is output for `run` (old or new)
+- Data to collect from the open literature:
+    - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
+- Have ability to run multiple cycles and terminate when mass gets low in any particular CV.
+- If I use a constant pressure/temperature CV to model a HPA or CO2 tank, then I'll still need a way to estimate the real gas internal energy and enthalpy. Going all the way with a better equation of state and thermodynamic properties might not be much more complex. I could make each control volume use a different EOS if I want to avoid iterations associated with a different EOS.
+
+***
+
+Notes:
+
+<https://discord.com/channels/825852031239061545/825852073382772758/1441916424942649354>: > if i'm not mistaken, they're the length in mm of the spring at rest in the blaster (so including precomp if there is any) and the length of the spring when primed [L1 and L2 respectively]

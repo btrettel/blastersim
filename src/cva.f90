@@ -16,7 +16,7 @@ private
 
 public :: smooth_min
 public :: d_x_d_t, d_xdot_d_t, d_m_k_d_t, d_e_d_t
-public :: f_m_dot, g_m_dot, m_dot
+public :: f_m_dot, g_m_dot
 public :: time_step, run
 
 ! pressure ratio laminar flow nominally starts at
@@ -39,10 +39,11 @@ type, public :: cv_type ! control volume
     type(si_area)               :: csa        ! cross-sectional area
     type(si_inverse_mass)       :: rm_p       ! reciprocal mass of piston/projectile
     type(si_pressure)           :: p_fs, p_fd ! static and dynamic friction pressure
-    type(si_pressure)           :: p_atm      ! atmospheric pressure
     type(si_stiffness)          :: k          ! stiffness of spring attached to piston
     type(si_length)             :: x_z        ! zero force location for spring
     type(gas_type), allocatable :: gas(:)     ! gas data
+    integer                     :: i_cv_other ! index of control volume to use in pressure difference calculation
+    type(si_pressure)           :: p_const    ! if `i_cv_other = 0`, then `cv%p() = p_const`
     type(si_length)             :: x_stop     ! `x` location where simulation will stop
 contains
     procedure :: m_total
@@ -63,6 +64,7 @@ contains
     procedure :: h     => h_cv
     procedure :: gamma => gamma_cv
     procedure :: set
+    procedure :: set_const
     procedure :: p_f
     procedure :: p_f0
 end type cv_type
@@ -157,16 +159,20 @@ pure function p_eos(cv, rho, temp)
     
     integer :: n_d ! number of derivatives
     
-    call assert(rho%v%v  > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
-    call assert(temp%v%v > 0.0_WP, "cva (p_eos): temp%v > 0 violated")
-    call assert_dimension(rho%v%d, temp%v%d)
-    
-    n_d   = size(rho%v%d)
-    p_eos = rho * cv%r() * temp
+    if (cv%i_cv_other >= 1) then
+        call assert(rho%v%v  > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
+        call assert(temp%v%v > 0.0_WP, "cva (p_eos): temp%v > 0 violated")
+        call assert_dimension(rho%v%d, temp%v%d)
+        
+        n_d   = size(rho%v%d)
+        p_eos = rho * cv%r() * temp
+        
+        call assert(p_eos < cv%p_c(), "cva (p_eos): ideal gas law validity is questionable")
+    else
+        p_eos = cv%p_const
+    end if
     
     call assert(p_eos%v%v > 0.0_WP, "cva (p_eos): p_eos%v > 0 violated")
-    
-    call assert(p_eos < cv%p_c(), "cva (p_eos): ideal gas law validity is questionable")
 end function p_eos
 
 pure function rho_eos(cv, p, temp, y)
@@ -191,9 +197,9 @@ pure function rho_eos(cv, p, temp, y)
     
     ! Don't check `p_c` here as that requires the masses.
     
-    call assert(p%v%v    > 0.0_WP, "cva (rho_eos): p%v > 0 violated")
-    call assert(temp%v%v > 0.0_WP, "cva (rho_eos): temp%v > 0 violated")
-    call assert(size(y)  >= 1,     "cva (rho_eos): size(y) >= 1 violated")
+    call assert(p%v%v    >  0.0_WP, "cva (rho_eos): p%v > 0 violated")
+    call assert(temp%v%v >  0.0_WP, "cva (rho_eos): temp%v > 0 violated")
+    call assert(size(y)  >= 1,      "cva (rho_eos): size(y) >= 1 violated")
     call assert_dimension(p%v%d, temp%v%d)
     call assert_dimension(p%v%d, y(1)%v%d)
     call assert_dimension(y, cv%gas)
@@ -496,7 +502,8 @@ pure function gamma_cv(cv, y)
     call assert(gamma_cv%v%v > 1.0_WP, "cva (gamma_cv): gamma_cv > 1 violated")
 end function gamma_cv
 
-pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, p_atm, k, x_z, gas, x_stop, isentropic_filling)
+pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, x_z, gas, i_cv_other, &
+                        x_stop, isentropic_filling, p_atm)
     class(cv_type), intent(in out) :: cv
     
     ! time varying
@@ -511,13 +518,14 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     type(si_area), intent(in)         :: csa        ! cross-sectional area
     type(si_inverse_mass), intent(in) :: rm_p       ! reciprocal mass of piston/projectile
     type(si_pressure), intent(in)     :: p_fs, p_fd ! static and dynamic friction pressure
-    type(si_pressure), intent(in)     :: p_atm      ! atmospheric pressure
     type(si_stiffness), intent(in)    :: k          ! stiffness of spring attached to piston
     type(si_length), intent(in)       :: x_z        ! zero force location for spring
     type(gas_type), intent(in)        :: gas(:)     ! gas data
+    integer, intent(in)               :: i_cv_other ! index of control volume to use in pressure difference calculation
     
-    type(si_length), intent(in), optional :: x_stop ! `x` location where simulation will stop
-    logical, intent(in), optional         :: isentropic_filling
+    type(si_length), intent(in), optional   :: x_stop     ! `x` location where simulation will stop
+    logical, intent(in), optional           :: isentropic_filling
+    type(si_pressure), intent(in), optional :: p_atm      ! atmospheric pressure (only requried if `isentropic_filling = .true.`
     
     integer              :: i, n_d
     type(si_temperature) :: temp
@@ -531,15 +539,15 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     cv%x_dot = x_dot
     ! `p` and `temp` will be handled below
     
-    cv%label = label
-    cv%csa   = csa
-    cv%rm_p  = rm_p
-    cv%p_fs  = p_fs
-    cv%p_fd  = p_fd
-    cv%p_atm = p_atm
-    cv%k     = k
-    cv%x_z   = x_z
-    cv%gas   = gas
+    cv%label      = label
+    cv%csa        = csa
+    cv%rm_p       = rm_p
+    cv%p_fs       = p_fs
+    cv%p_fd       = p_fd
+    cv%k          = k
+    cv%x_z        = x_z
+    cv%gas        = gas
+    cv%i_cv_other = i_cv_other
     
     if (present(x_stop)) then
         cv%x_stop = x_stop
@@ -560,8 +568,9 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     call assert(cv%csa%v%v          >  0.0_WP, "cva (set): csa > 0 violated")
     call assert(cv%p_fs%v%v         >= 0.0_WP, "cva (set): p_fs >= 0 violated")
     call assert(cv%p_fd%v%v         >= 0.0_WP, "cva (set): p_fd >= 0 violated")
-    call assert(cv%p_atm%v%v        >= 0.0_WP, "cva (set): p_atm >= 0 violated") ! Having `p_atm == 0` is useful for testing.
+    call assert(p_atm%v%v           >= 0.0_WP, "cva (set): p_atm >= 0 violated") ! Having `p_atm == 0` is useful for testing.
     call assert(cv%k%v%v            >= 0.0_WP, "cva (set): k >= 0 violated")
+    call assert(cv%i_cv_other       >= 1,      "cva (set): i_cv_other >= 1 violated")
     
     call assert_dimension(y, cv%gas)
     allocate(cv%m(size(y)))
@@ -580,7 +589,8 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     
     ! Get correct temperature depending on how the chamber is filled.
     if (isentropic_filling_) then
-        call assert(cv%p_atm%v%v >  0.0_WP, "cva (set): p_atm > 0 required for isentropic_filling")
+        call assert(present(p_atm), "cva (set): isentropic_filling = .true. requires p_atm")
+        call assert(p_atm%v%v > 0.0_WP, "cva (set): p_atm > 0 required for isentropic_filling")
         gamma_cv = cv%gamma(y)
         temp = temp_atm * ((p / p_atm)**((gamma_cv - 1.0_WP)/gamma_cv))
     else
@@ -604,6 +614,46 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     ! This is checked here and not in `rho_eos` as the masses are not defined when `rho_eos` is called.
     call assert(p < cv%p_c(), "cva (set): ideal gas law validity is questionable")
 end subroutine set
+
+pure subroutine set_const(cv, label, p_const, gas)
+    class(cv_type), intent(in out) :: cv
+    
+    character(len=*), intent(in)  :: label   ! human-readable label for control volume
+    type(si_pressure), intent(in) :: p_const ! pressure
+    type(gas_type), intent(in)    :: gas(:)  ! gas data
+    
+    integer :: n_d, n_gas, i_gas
+    
+    call assert(len(trim(cv%label)) > 0, "cva (set_const): len(label) > 0 violated")
+    call assert(p_const%v%v > 0, "cva (set_const): len(label) > 0 violated")
+    
+    n_d   = size(p_const%v%d)
+    n_gas = size(gas)
+    
+    allocate(cv%m(n_gas))
+    do i_gas = 1, n_gas
+        call cv%m(i_gas)%v%init_const(0.0_WP, n_d)
+    end do
+    
+    call cv%x%v%init_const(0.0_WP, n_d)
+    call cv%x_dot%v%init_const(0.0_WP, n_d)
+    call cv%e%v%init_const(0.0_WP, n_d)
+    call cv%csa%v%init_const(0.0_WP, n_d)
+    call cv%rm_p%v%init_const(0.0_WP, n_d)
+    call cv%p_fs%v%init_const(0.0_WP, n_d)
+    call cv%p_fd%v%init_const(0.0_WP, n_d)
+    call cv%k%v%init_const(0.0_WP, n_d)
+    call cv%x_z%v%init_const(0.0_WP, n_d)
+    call cv%x_stop%v%init_const(X_STOP_DEFAULT, n_d)
+    
+    cv%label      = label
+    cv%gas        = gas
+    cv%i_cv_other = 0 ! the zero means this is a constant pressure control volume
+    cv%p_const    = p_const
+    
+    ! Having `p_atm == 0` is useful for testing, so I allow this to go to zero.
+    call assert(cv%p_const%v%v >= 0.0_WP, "cva (set_constant): p_const >= 0 violated")
+end subroutine set_const
 
 pure function p_f(cv, p_fe)
     ! Returns pressure of friction.
@@ -676,18 +726,27 @@ pure function d_x_d_t(cv)
     d_x_d_t = cv%x_dot
 end function d_x_d_t
 
-pure function d_xdot_d_t(cv)
-    type(cv_type), intent(in) :: cv
+pure function d_xdot_d_t(sys, i_cv)
+    type(cv_system_type), intent(in) :: sys
+    integer, intent(in)              :: i_cv
     
     type(si_acceleration) :: d_xdot_d_t
     
     type(si_pressure) :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
+    type(si_pressure) :: p_other
     
-    call assert(cv%csa%v%v > 0.0_WP, "cva (d_xdot_d_t): cv%csa > 0 violated")
-    
-    p_fe = cv%p() - cv%p_atm - (cv%k/cv%csa)*(cv%x - cv%x_z)
-    
-    d_xdot_d_t = cv%csa*cv%rm_p*(cv%p() - cv%p_atm - cv%p_f(p_fe)) - cv%k*cv%rm_p*(cv%x - cv%x_z)
+    if (sys%cv(i_cv)%i_cv_other >= 1) then
+        call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_xdot_d_t): cv%csa > 0 violated")
+        
+        p_other = sys%cv(sys%cv(i_cv)%i_cv_other)%p()
+        
+        p_fe = sys%cv(i_cv)%p() - p_other - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
+        
+        d_xdot_d_t = sys%cv(i_cv)%csa*sys%cv(i_cv)%rm_p*(sys%cv(i_cv)%p() - p_other - sys%cv(i_cv)%p_f(p_fe)) &
+                        - sys%cv(i_cv)%k*sys%cv(i_cv)%rm_p*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
+    else
+        call d_xdot_d_t%v%init_const(0.0_WP, size(sys%cv(i_cv)%rm_p%v%d))
+    end if
 end function d_xdot_d_t
 
 pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
@@ -1014,7 +1073,7 @@ pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
     call sys%calculate_flows(m_dot, h_dot)
     do i_cv = 1, n_cv
         cv_delta_out(i_cv)%x     = dt*d_x_d_t(sys%cv(i_cv))
-        cv_delta_out(i_cv)%x_dot = dt*d_xdot_d_t(sys%cv(i_cv))
+        cv_delta_out(i_cv)%x_dot = dt*d_xdot_d_t(sys, i_cv)
         cv_delta_out(i_cv)%e     = dt*d_e_d_t(sys%cv(i_cv), h_dot, i_cv)
         do k_gas = 1, n_gas
             cv_delta_out(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys%cv(i_cv), m_dot, k_gas, i_cv)
