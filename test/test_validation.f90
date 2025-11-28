@@ -49,7 +49,7 @@ contains
 
 ! TODO: Check handwritten notes for more information. I can't find anything in the scans I have.
 
-subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_1_)
+subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_2_)
     use convert
     use gasdata, only: DRY_AIR
     use prec, only: PI
@@ -59,19 +59,19 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_1_)
     
     real(WP), intent(in)                           :: p_psi, d_e_in
     type(cv_system_type), allocatable, intent(out) :: sys_start
-    type(si_length), intent(out), optional         :: x_1_
+    type(si_length), intent(out), optional         :: x_2_
     
-    type(si_length)       :: d_e, x_1, d_1, d_barrel
+    type(si_length)       :: d_e, x_2, d_2, d_barrel
     type(si_velocity)     :: x_dot
     type(unitless)        :: y(1)
-    type(si_pressure)     :: p_atm, p_1, p_fs_1, p_fd_1, p_fs_barrel, p_fd_barrel
+    type(si_pressure)     :: p_atm, p_2, p_fs_2, p_fd_2, p_fs_barrel, p_fd_barrel
     type(si_temperature)  :: temp_atm
-    type(si_area)         :: csa_1
-    type(si_inverse_mass) :: rm_p_1
+    type(si_area)         :: csa_barrel, csa_2
+    type(si_inverse_mass) :: rm_p_2
     type(si_mass)         :: m_projectile
     type(si_stiffness)    :: k
     type(si_length)       :: x_z
-    type(si_volume)       :: vol_1, vol_dead
+    type(si_volume)       :: vol_2, vol_dead
     
     allocate(sys_start)
     allocate(sys_start%cv(3))
@@ -100,31 +100,32 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_1_)
     call k%v%init_const(0.0_WP, 0)
     call x_z%v%init_const(0.0_WP, 0)
     
-    ! 1: atmosphere
-    call sys_start%cv(1)%set_const("atmosphere", p_atm, temp_atm, [DRY_AIR])
+    ! 1: atmosphere for barrel
+    d_barrel = inch_const(0.527_WP, 0)
+    csa_barrel = (PI/4.0_WP)*square(d_barrel)
+    call sys_start%cv(1)%set_const("atmosphere", csa_barrel, p_atm, temp_atm, [DRY_AIR], 3)
     
     ! 2: chamber
     ! Appears to be constructed about 6 inches of 3/8" NPT threaded steel nipple from the photo I have.
     ! I guess I bought the pipe from Home Depot or Lowes as it doesn't appear on my old McMaster-Carr orders.
     ! Seems to be similar to <https://www.mcmaster.com/4830K158>.
     
-    d_1   = inch_const(0.493_WP, 0)
-    csa_1 = (PI/4.0_WP)*square(d_1)
-    vol_1 = cubic_inches_const(1.1_WP, 0)
-    x_1   = vol_1/csa_1
-    call assert(x_1 > inch_const(5.0_WP, 0), "x_1 should be at least 5 inches")
-    call assert(x_1 < inch_const(8.0_WP, 0), "x_1 should be less than 8 inches")
-    p_1 = p_atm + psi_const(p_psi, 0)
-    call rm_p_1%v%init_const(0.0_WP, 0) ! immobile
-    call p_fs_1%v%init_const(0.0_WP, 0)
-    call p_fd_1%v%init_const(0.0_WP, 0)
+    d_2   = inch_const(0.493_WP, 0)
+    csa_2 = (PI/4.0_WP)*square(d_2)
+    vol_2 = cubic_inches_const(1.1_WP, 0)
+    x_2   = vol_2/csa_2
+    call assert(x_2 > inch_const(5.0_WP, 0), "x_2 should be at least 5 inches")
+    call assert(x_2 < inch_const(8.0_WP, 0), "x_2 should be less than 8 inches")
+    p_2 = p_atm + psi_const(p_psi, 0)
+    call rm_p_2%v%init_const(0.0_WP, 0) ! immobile
+    call p_fs_2%v%init_const(0.0_WP, 0)
+    call p_fd_2%v%init_const(0.0_WP, 0)
     
-    call sys_start%cv(2)%set_normal(x_1, x_dot, y, p_1, temp_atm, "pressure chamber", csa_1, rm_p_1, p_fs_1, p_fd_1, k, x_z, &
-                                [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm)
+    call sys_start%cv(2)%set_normal(x_2, x_dot, y, p_2, temp_atm, "pressure chamber", csa_2, rm_p_2, p_fs_2, p_fd_2, k, x_z, &
+                                [DRY_AIR], 0, isentropic_filling=.true., p_atm=p_atm)
     
     ! 3: barrel
     
-    d_barrel = inch_const(0.527_WP, 0)
     vol_dead = cubic_inches_const(1.1_WP, 0)
     call m_projectile%v%init_const(0.98e-3_WP, 0)
     !p_fs_2 = psi_const(0.5_WP, 0) ! estimate
@@ -136,7 +137,7 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_1_)
     call create_barrel(vol_dead, d_barrel, p_atm, temp_atm, m_projectile, p_fs_barrel, p_fd_barrel, inch_const(12.0_WP, 0), &
                         [DRY_AIR], 1, sys_start%cv(3))
     
-    if (present(x_1_)) x_1_ = x_1
+    if (present(x_2_)) x_2_ = x_2
 end subroutine create_2010_08_07_sys
 
 subroutine test_2010_08_07_25_psi(tests)
@@ -251,16 +252,16 @@ subroutine test_2010_08_07_70_psi(tests)
 
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
-    type(si_length)                   :: x_1
+    type(si_length)                   :: x_2
     type(si_velocity)                 :: v_exp
     
-    call create_2010_08_07_sys(70.0_WP, 0.105_WP, sys_start, x_1)
+    call create_2010_08_07_sys(70.0_WP, 0.105_WP, sys_start, x_2)
     
     call run(sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, 0, "test_2010_08_07_70_psi, status%rc")
     
-    call tests%real_eq(sys_end%cv(2)%x%v%v, x_1%v%v, "test_2010_08_07_70_psi, chamber end stays still")
+    call tests%real_eq(sys_end%cv(2)%x%v%v, x_2%v%v, "test_2010_08_07_70_psi, chamber end stays still")
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 0.0_WP, "test_2010_08_07_70_psi, chamber end velocity stays zero")
     
     !print *, 70, sys_end%cv(2)%x%v%v/sys_end%cv(3)%x_stop%v%v, sys_end%cv(3)%x_dot%v%v
@@ -287,35 +288,43 @@ subroutine test_tinkershot_1(tests)
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
-    type(si_length)      :: d_e, x_1, x_2, l_travel, d_1, d_barrel
+    type(si_length)      :: d_e, x_3, x_4, l_travel, d_3, d_barrel
     type(si_velocity)    :: x_dot, v_exp
     type(unitless)       :: y(1)
-    type(si_pressure)    :: p_atm, p_fs_1, p_fd_1, p_fs_barrel, p_fd_barrel
+    type(si_pressure)    :: p_atm, p_fs_3, p_fd_3, p_fs_barrel, p_fd_barrel
     type(si_temperature) :: temp_atm
-    type(si_area)        :: csa_1, csa_barrel
-    type(si_mass)        :: m_p_1, m_projectile
+    type(si_area)        :: csa_3, csa_barrel
+    type(si_mass)        :: m_p_3, m_projectile
     type(si_stiffness)   :: k
     type(si_length)      :: x_z
     type(si_volume)      :: vol_dead
     
     allocate(sys_start)
-    allocate(sys_start%cv(3))
-    allocate(sys_start%con(3, 3))
+    allocate(sys_start%cv(4))
+    allocate(sys_start%con(4, 4))
     
     sys_start%con(1, 1)%active = .false.
     sys_start%con(1, 2)%active = .false.
     sys_start%con(1, 3)%active = .false.
+    sys_start%con(1, 4)%active = .false.
     
     sys_start%con(2, 1)%active = .false.
     sys_start%con(2, 2)%active = .false.
-    sys_start%con(2, 3)%active = .true.
-    d_e = inch_const(0.165_WP, 0)
-    sys_start%con(2, 3)%a_e = (PI/4.0_WP)*square(d_e)
-    call sys_start%con(2, 3)%b%v%init_const(0.5_WP, 0)
+    sys_start%con(2, 3)%active = .false.
+    sys_start%con(2, 4)%active = .false.
     
     sys_start%con(3, 1)%active = .false.
-    sys_start%con(3, 2) = sys_start%con(2, 3)
+    sys_start%con(3, 2)%active = .false.
     sys_start%con(3, 3)%active = .false.
+    sys_start%con(3, 4)%active = .true.
+    d_e = inch_const(0.165_WP, 0)
+    sys_start%con(3, 4)%a_e = (PI/4.0_WP)*square(d_e)
+    call sys_start%con(3, 4)%b%v%init_const(0.5_WP, 0)
+    
+    sys_start%con(4, 1)%active = .false.
+    sys_start%con(4, 2)%active = .false.
+    sys_start%con(4, 3) = sys_start%con(3, 4)
+    sys_start%con(4, 4)%active = .false.
     
     ! The same for every control volume.
     call x_dot%v%init_const(0.0_WP, 0)
@@ -323,33 +332,35 @@ subroutine test_tinkershot_1(tests)
     call p_atm%v%init_const(P_ATM_, 0)
     call temp_atm%v%init_const(TEMP_ATM_, 0)
     
-    ! 1: atmosphere
-    call sys_start%cv(1)%set_const("atmosphere", p_atm, temp_atm, [DRY_AIR])
+    ! 1: atmosphere for chamber
+    call d_3%v%init_const(30.0e-3_WP, 0)
+    csa_3 = (PI/4.0_WP)*square(d_3)
+    call sys_start%cv(1)%set_const("atmosphere for chamber", csa_3, p_atm, temp_atm, [DRY_AIR], 3)
     
-    ! 2: chamber
-    call d_1%v%init_const(30.0e-3_WP, 0)
-    csa_1 = (PI/4.0_WP)*square(d_1)
-    call x_1%v%init_const(157.0e-3_WP, 0) ! TODO: Assuming no dead volume
+    ! 2: atmosphere for barrel
+    call d_barrel%v%init_const(13.0e-3_WP, 0) ! TODO check
+    csa_barrel = (PI/4.0_WP)*square(d_barrel)
+    call sys_start%cv(2)%set_const("atmosphere for barrel", csa_barrel, p_atm, temp_atm, [DRY_AIR], 4)
+    
+    ! 3: chamber
+    call x_3%v%init_const(157.0e-3_WP, 0) ! TODO: Assuming no dead volume
     
     ! <https://discord.com/channels/825852031239061545/825852033898774543/1034238116065726544>
     ! 2022-10-24
     ! Assuming using new 30 g plunger.
-    call m_p_1%v%init_const(30.0e-3_WP, 0)
+    call m_p_3%v%init_const(30.0e-3_WP, 0)
     
-    call p_fs_1%v%init_const(0.0_WP, 0)
-    call p_fd_1%v%init_const(0.0_WP, 0)
+    call p_fs_3%v%init_const(0.0_WP, 0)
+    call p_fd_3%v%init_const(0.0_WP, 0)
     k = lbf_per_in_const(3.38_WP, 0)
     call x_z%v%init_const(297.0e-3_WP-381.0e-3_WP, 0) ! TODO check
     
-    call sys_start%cv(2)%set_normal(x_1, x_dot, y, p_atm, temp_atm, "piston chamber", csa_1, 1.0_WP/m_p_1, p_fs_1, p_fd_1, k, x_z, &
+    call sys_start%cv(3)%set_normal(x_3, x_dot, y, p_atm, temp_atm, "piston chamber", csa_3, 1.0_WP/m_p_3, p_fs_3, p_fd_3, k, x_z, &
                                 [DRY_AIR], 1)
     
-    ! 3: barrel
-    
-    call d_barrel%v%init_const(13.0e-3_WP, 0) ! TODO check
-    csa_barrel = (PI/4.0_WP)*square(d_barrel)
-    call x_2%v%init_const(1.0e-2_WP, 0) ! TODO check
-    vol_dead = x_2*csa_barrel
+    ! 4: barrel
+    call x_4%v%init_const(1.0e-2_WP, 0) ! TODO check
+    vol_dead = x_4*csa_barrel
     call m_projectile%v%init_const(1.016e-3_WP, 0)
     call p_fs_barrel%v%init_const(0.0_WP, 0)
     call p_fd_barrel%v%init_const(0.0_WP, 0)
@@ -361,16 +372,16 @@ subroutine test_tinkershot_1(tests)
     call l_travel%v%init_const(550.0e-3_WP, 0)
     
     call create_barrel(vol_dead, d_barrel, p_atm, temp_atm, m_projectile, p_fs_barrel, p_fd_barrel, l_travel, &
-                        [DRY_AIR], 1, sys_start%cv(3))
+                        [DRY_AIR], 2, sys_start%cv(4))
     
     call run(sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, 0, "test_tinkershot_1, status%rc")
     
     v_exp = fps_const(359.7778_WP, 0)
-    !print *, sys_end%cv(2)%x_dot%v%v, v_exp%v%v
-    call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 109.92753263095905_WP, "test_tinkershot_1, muzzle velocity (characterization)")
-    call tests%real_eq(sys_end%cv(3)%x_dot%v%v, v_exp%v%v, "test_tinkershot_1, muzzle velocity (validation)", abs_tol=1.0_WP)
+    !print *, sys_end%cv(4)%x_dot%v%v, v_exp%v%v
+    call tests%real_eq(sys_end%cv(4)%x_dot%v%v, 109.92753263095905_WP, "test_tinkershot_1, muzzle velocity (characterization)")
+    call tests%real_eq(sys_end%cv(4)%x_dot%v%v, v_exp%v%v, "test_tinkershot_1, muzzle velocity (validation)", abs_tol=1.0_WP)
 end subroutine test_tinkershot_1
 
 end program test_validation

@@ -710,18 +710,19 @@ subroutine test_set_const(tests)
     type(test_results_type), intent(in out) :: tests
 
     type(cv_type)         :: cv
+    type(si_area)         :: csa
     type(si_pressure)     :: p
     type(si_temperature)  :: temp
     
+    call csa%v%init_const(2.0_WP, 0)
     call p%v%init_const(2.0e5_WP, 0)
     call temp%v%init_const(350.0_WP, 0)
     
-    call cv%set_const("test_set_const", p, temp, [DRY_AIR])
+    call cv%set_const("test_set_const", csa, p, temp, [DRY_AIR], 3)
     
     call tests%real_eq(cv%x%v%v, 1.0_WP, "test_set_const, x")
     call tests%real_eq(cv%x_dot%v%v, 0.0_WP, "test_set_const, x_dot")
     call tests%real_eq(cv%e%v%v, 0.0_WP, "test_set_const, e")
-    call tests%real_eq(cv%csa%v%v, 1.0_WP, "test_set_const, csa")
     call tests%real_eq(cv%rm_p%v%v, 0.0_WP, "test_set_const, rm_p")
     call tests%real_eq(cv%p_fs%v%v, 0.0_WP, "test_set_const, p_fs")
     call tests%real_eq(cv%p_fd%v%v, 0.0_WP, "test_set_const, p_fd")
@@ -733,8 +734,10 @@ subroutine test_set_const(tests)
     call tests%integer_eq(cv%type, CONST_CV_TYPE, "test_set_const, type")
     call tests%integer_eq(size(cv%gas), 1, "test_set_const, size(gas)")
     call tests%character_eq(cv%gas(1)%label, "dry air", "test_set_const, gas label")
+    call tests%real_eq(cv%csa%v%v, csa%v%v, "test_set_const, csa")
     call tests%real_eq(cv%p_const%v%v, p%v%v, "test_set_const, p_const")
     call tests%real_eq(cv%temp_const%v%v, temp%v%v, "test_set_const, temp_const")
+    call tests%integer_eq(cv%i_cv_mirror, 3, "test_set_const, i_cv_mirror")
 end subroutine test_set_const
 
 subroutine test_rates(tests)
@@ -773,7 +776,7 @@ subroutine test_rates(tests)
     
     allocate(sys%cv(2))
     
-    call sys%cv(1)%set_const("test_rates 1 (constant pressure)", p_atm, temp, [DRY_AIR])
+    call sys%cv(1)%set_const("test_rates 1 (constant pressure)", csa, p_atm, temp, [DRY_AIR], 2)
     call sys%cv(2)%set_normal(x, x_dot, y, p, temp, "test_rates 2", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 1)
     
     d_x_d_t_ = d_x_d_t(sys%cv(2))
@@ -1252,91 +1255,104 @@ subroutine test_conservation(tests)
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
-    type(si_length)       :: d_e, x_1, x_2, d_1, d_2, x_stop_2
+    type(si_length)       :: d_e, x_3, x_4, d_3, d_4, x_stop_4
     type(si_velocity)     :: x_dot
     type(unitless)        :: y(1)
-    type(si_pressure)     :: p_atm, p_1, p_2, p_fs_1, p_fd_1, p_fs_2, p_fd_2
+    type(si_pressure)     :: p_atm, p_3, p_4, p_fs_3, p_fd_3, p_fs_4, p_fd_4
     type(si_temperature)  :: temp_atm
-    type(si_area)         :: csa_1, csa_2
-    type(si_mass)         :: m_p_1, m_p_2, m_start, m_end
+    type(si_area)         :: csa_3, csa_4
+    type(si_mass)         :: m_p_3, m_p_4, m_start, m_end
     type(si_stiffness)    :: k
     type(si_length)       :: x_z
-    type(si_energy)       :: e_start, e_end, spring_pe_2_start, m_p_ke_2_start, e_start_2
+    type(si_energy)       :: e_start, e_end, spring_pe_3_start, m_p_ke_3_start, e_start_3
     
     allocate(sys_start)
-    allocate(sys_start%cv(3))
-    allocate(sys_start%con(3, 3))
+    allocate(sys_start%cv(4))
+    allocate(sys_start%con(4, 4))
     
     sys_start%con(1, 1)%active = .false.
     sys_start%con(1, 2)%active = .false.
     sys_start%con(1, 3)%active = .false.
+    sys_start%con(1, 4)%active = .false.
     
     sys_start%con(2, 1)%active = .false.
     sys_start%con(2, 2)%active = .false.
-    sys_start%con(2, 3)%active = .true.
-    d_e = inch_const(0.1_WP, 0)
-    sys_start%con(2, 3)%a_e = (PI/4.0_WP)*square(d_e)
-    call sys_start%con(2, 3)%b%v%init_const(0.5_WP, 0)
+    sys_start%con(2, 3)%active = .false.
+    sys_start%con(2, 4)%active = .false.
     
     sys_start%con(3, 1)%active = .false.
-    sys_start%con(3, 2) = sys_start%con(2, 3)
+    sys_start%con(3, 2)%active = .false.
     sys_start%con(3, 3)%active = .false.
+    sys_start%con(3, 4)%active = .true.
+    d_e = inch_const(0.1_WP, 0)
+    sys_start%con(3, 4)%a_e = (PI/4.0_WP)*square(d_e)
+    call sys_start%con(3, 4)%b%v%init_const(0.5_WP, 0)
+    
+    sys_start%con(4, 1)%active = .false.
+    sys_start%con(4, 2)%active = .false.
+    sys_start%con(4, 3) = sys_start%con(3, 4)
+    sys_start%con(4, 4)%active = .false.
     
     ! The same for every control volume.
     call y(1)%v%init_const(1.0_WP, 0)
     call temp_atm%v%init_const(300.0_WP, 0)
     
-    ! 1: atmosphere
+    ! 1: atmosphere for chamber
     call p_atm%v%init_const(0.0_WP, 0)
+    call d_3%v%init_const(2.0e-2_WP, 0)
+    csa_3 = (PI/4.0_WP)*square(d_3)
     
-    call sys_start%cv(1)%set_const("atmosphere", p_atm, temp_atm, [DRY_AIR])
+    call sys_start%cv(1)%set_const("atmosphere for chamber", csa_3, p_atm, temp_atm, [DRY_AIR], 3)
     
-    ! 2: chamber
+    ! 2: atmosphere for barrel
+    call p_atm%v%init_const(0.0_WP, 0)
+    call d_4%v%init_const(2.0e-2_WP, 0)
+    csa_4 = (PI/4.0_WP)*square(d_4)
+    
+    call sys_start%cv(2)%set_const("atmosphere for barrel", csa_4, p_atm, temp_atm, [DRY_AIR], 4)
+    
+    ! 3: chamber
     call x_dot%v%init_const(-2.0_WP, 0)
-    call d_1%v%init_const(2.0e-2_WP, 0)
-    csa_1 = (PI/4.0_WP)*square(d_1)
-    call x_1%v%init_const(10.0e-2_WP, 0)
-    call p_1%v%init_const(5.0e5_WP, 0)
-    call m_p_1%v%init_const(30.0e-3_WP, 0)
-    call p_fs_1%v%init_const(0.0_WP, 0)
-    call p_fd_1%v%init_const(0.0_WP, 0)
+    call x_3%v%init_const(10.0e-2_WP, 0)
+    call p_3%v%init_const(5.0e5_WP, 0)
+    call m_p_3%v%init_const(30.0e-3_WP, 0)
+    call p_fs_3%v%init_const(0.0_WP, 0)
+    call p_fd_3%v%init_const(0.0_WP, 0)
     call k%v%init_const(700.0_WP, 0)
     call x_z%v%init_const(1.0e-2_WP, 0)
     
-    call sys_start%cv(2)%set_normal(x_1, x_dot, y, p_1, temp_atm, "pressure chamber", csa_1, 1.0_WP/m_p_1, p_fs_1, p_fd_1, k, &
-                                x_z, [DRY_AIR], 1)
+    call sys_start%cv(3)%set_normal(x_3, x_dot, y, p_3, temp_atm, "pressure chamber", csa_3, 1.0_WP/m_p_3, p_fs_3, p_fd_3, k, &
+                                    x_z, [DRY_AIR], 1)
     ! `isentropic_filling=.true.` requires that `p_atm > 0`, so it's not used here.
     
-    ! 3: barrel
+    ! 4: barrel
     
     call x_dot%v%init_const(0.0_WP, 0)
-    call d_2%v%init_const(2.0e-2_WP, 0)
-    csa_2 = (PI/4.0_WP)*square(d_2)
-    call x_2%v%init_const(10.0e-2_WP, 0)
-    call p_2%v%init_const(1.0e5_WP, 0)
-    call m_p_2%v%init_const(1.0e-3_WP, 0)
-    call p_fs_2%v%init_const(0.0_WP, 0)
-    call p_fd_2%v%init_const(0.0_WP, 0)
-    x_stop_2 = x_2 + inch_const(12.0_WP, 0)
+    call x_4%v%init_const(10.0e-2_WP, 0)
+    call p_4%v%init_const(1.0e5_WP, 0)
+    call m_p_4%v%init_const(1.0e-3_WP, 0)
+    call p_fs_4%v%init_const(0.0_WP, 0)
+    call p_fd_4%v%init_const(0.0_WP, 0)
+    x_stop_4 = x_4 + inch_const(12.0_WP, 0)
     call k%v%init_const(0.0_WP, 0)
     call x_z%v%init_const(0.0_WP, 0)
     
-    call sys_start%cv(3)%set_normal(x_2, x_dot, y, p_2, temp_atm, "barrel", csa_2, 1.0_WP/m_p_2, p_fs_2, p_fd_2, k, &
-                                x_z, [DRY_AIR], 1, x_stop=x_stop_2)
+    call sys_start%cv(4)%set_normal(x_4, x_dot, y, p_4, temp_atm, "barrel", csa_4, 1.0_WP/m_p_4, p_fs_4, p_fd_4, k, &
+                                x_z, [DRY_AIR], 1, x_stop=x_stop_4)
     
     call run(sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, 0, "test_conservation, status%rc")
     
-    spring_pe_2_start = sys_start%cv(2)%spring_pe()
-    call tests%real_eq(spring_pe_2_start%v%v, 0.5_WP*(700.0_WP)*(9.0e-2_WP)**2, "test_conservation, spring_pe_1_start")
+    spring_pe_3_start = sys_start%cv(3)%spring_pe()
+    call tests%real_eq(spring_pe_3_start%v%v, 0.5_WP*(700.0_WP)*(9.0e-2_WP)**2, "test_conservation, spring_pe_3_start")
     
-    m_p_ke_2_start = sys_start%cv(2)%m_p_ke()
-    call tests%real_eq(m_p_ke_2_start%v%v, 0.5_WP*(30.0e-3_WP)*(2.0_WP)**2, "test_conservation, m_p_ke_1_start")
+    m_p_ke_3_start = sys_start%cv(3)%m_p_ke()
+    call tests%real_eq(m_p_ke_3_start%v%v, 0.5_WP*(30.0e-3_WP)*(2.0_WP)**2, "test_conservation, m_p_ke_3_start")
     
-    e_start_2 = sys_start%cv(2)%e_total()
-    call tests%real_eq(e_start_2%v%v, sys_start%cv(2)%e%v%v + spring_pe_2_start%v%v + m_p_ke_2_start%v%v, &
-                            "test_conservation, sys_start%cv(2)%e_total()")
+    e_start_3 = sys_start%cv(3)%e_total()
+    call tests%real_eq(e_start_3%v%v, sys_start%cv(3)%e%v%v + spring_pe_3_start%v%v + m_p_ke_3_start%v%v, &
+                            "test_conservation, sys_start%cv(3)%e_total()")
     
     m_start = sys_start%m_total()
     m_end   = sys_end%m_total()
