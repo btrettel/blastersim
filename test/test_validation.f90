@@ -119,7 +119,7 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_1_)
     call p_fs_1%v%init_const(0.0_WP, 0)
     call p_fd_1%v%init_const(0.0_WP, 0)
     
-    call sys_start%cv(2)%set(x_1, x_dot, y, p_1, temp_atm, "pressure chamber", csa_1, rm_p_1, p_fs_1, p_fd_1, k, x_z, &
+    call sys_start%cv(2)%set_normal(x_1, x_dot, y, p_1, temp_atm, "pressure chamber", csa_1, rm_p_1, p_fs_1, p_fd_1, k, x_z, &
                                 [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm)
     
     ! 3: barrel
@@ -341,7 +341,7 @@ subroutine test_tinkershot_1(tests)
     k = lbf_per_in_const(3.38_WP, 0)
     call x_z%v%init_const(297.0e-3_WP-381.0e-3_WP, 0) ! TODO check
     
-    call sys_start%cv(2)%set(x_1, x_dot, y, p_atm, temp_atm, "piston chamber", csa_1, 1.0_WP/m_p_1, p_fs_1, p_fd_1, k, x_z, &
+    call sys_start%cv(2)%set_normal(x_1, x_dot, y, p_atm, temp_atm, "piston chamber", csa_1, 1.0_WP/m_p_1, p_fs_1, p_fd_1, k, x_z, &
                                 [DRY_AIR], 1)
     
     ! 3: barrel

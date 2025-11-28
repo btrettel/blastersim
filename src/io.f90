@@ -50,7 +50,7 @@ subroutine create_barrel(vol_dead, d_barrel, p_atm, temp_atm, m_p, p_fs, p_fd, l
     call x_z%v%init_const(0.0_WP, n_d)
     x_stop = x_d + l_travel
     
-    call cv%set(x_d, x_dot, y, p_atm, temp_atm, "barrel", csa_barrel, 1.0_WP/m_p, p_fs, p_fd, k, x_z, gas, &
+    call cv%set_normal(x_d, x_dot, y, p_atm, temp_atm, "barrel", csa_barrel, 1.0_WP/m_p, p_fs, p_fd, k, x_z, gas, &
                     i_cv_mirror, x_stop=x_stop)
 end subroutine create_barrel
 

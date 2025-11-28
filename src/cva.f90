@@ -69,7 +69,7 @@ contains
     procedure :: u     => u_cv
     procedure :: h     => h_cv
     procedure :: gamma => gamma_cv
-    procedure :: set
+    procedure :: set_normal
     procedure :: set_const
     procedure :: p_f
     procedure :: p_f0
@@ -526,8 +526,8 @@ pure function gamma_cv(cv, y)
     call assert(gamma_cv%v%v > 1.0_WP, "cva (gamma_cv): gamma_cv > 1 violated")
 end function gamma_cv
 
-pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, x_z, gas, i_cv_mirror, &
-                        x_stop, isentropic_filling, p_atm)
+pure subroutine set_normal(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, x_z, gas, &
+                            i_cv_mirror, x_stop, isentropic_filling, p_atm)
     class(cv_type), intent(in out) :: cv
     
     ! time varying
@@ -640,7 +640,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     
     ! This is checked here and not in `rho_eos` as the masses are not defined when `rho_eos` is called.
     call assert(p < cv%p_c(), "cva (set): ideal gas law validity is questionable")
-end subroutine set
+end subroutine set_normal
 
 pure subroutine set_const(cv, label, p_const, temp_const, gas)
     class(cv_type), intent(in out) :: cv
