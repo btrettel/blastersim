@@ -27,9 +27,9 @@ real(WP), public, parameter :: X_STOP_DEFAULT = 1.0e3_WP  ! m (If you have a bar
 real(WP), public, parameter :: DT_DEFAULT     = 1.0e-5_WP ! s
 real(WP), public, parameter :: T_STOP_DEFAULT = 0.5_WP    ! s
 
-integer, public, parameter :: NORMAL_CV_TYPE   = 1
-integer, public, parameter :: CONSTANT_CV_TYPE = 2
-integer, public, parameter :: MIRROR_CV_TYPE   = 3
+integer, public, parameter :: NORMAL_CV_TYPE = 1
+integer, public, parameter :: CONST_CV_TYPE  = 2
+integer, public, parameter :: MIRROR_CV_TYPE = 3
 
 type, public :: cv_type ! control volume
     ! time varying
@@ -48,8 +48,8 @@ type, public :: cv_type ! control volume
     type(si_length)             :: x_z         ! zero force location for spring
     type(gas_type), allocatable :: gas(:)      ! gas data
     integer                     :: i_cv_mirror ! index of control volume to use in pressure difference calculation
-    type(si_pressure)           :: p_const    ! if `cv%type = CONSTANT_CV_TYPE`, then `cv%p() = p_const`
-    type(si_temperature)        :: temp_const ! if `cv%type = CONSTANT_CV_TYPE`, then `cv%temp() = temp_const`
+    type(si_pressure)           :: p_const    ! if `cv%type = CONST_CV_TYPE`, then `cv%p() = p_const`
+    type(si_temperature)        :: temp_const ! if `cv%type = CONST_CV_TYPE`, then `cv%temp() = temp_const`
     type(si_length)             :: x_stop     ! `x` location where simulation will stop
 contains
     procedure :: m_total
@@ -176,7 +176,8 @@ pure function p_eos(cv, rho, temp)
             p_eos = rho * cv%r() * temp
             
             call assert(p_eos < cv%p_c(), "cva (p_eos): ideal gas law validity is questionable")
-        case (CONSTANT_CV_TYPE)
+        case (CONST_CV_TYPE)
+            call assert(is_close(temp%v%v, cv%temp_const%v%v), "cva (p_eos): temp /= temp_const")
             p_eos = cv%p_const
         case default
             error stop "cva (p_eos): invalid cv%type"
@@ -401,7 +402,7 @@ pure function temp_cv(cv)
             
             call temp_0_%v%init_const(TEMP_0, n_d)
             temp_cv = temp_0_ + (cv%e - e_0) / heat_capacity
-        case (CONSTANT_CV_TYPE)
+        case (CONST_CV_TYPE)
             temp_cv = cv%temp_const
         case default
             error stop "cva (temp_cv): invalid cv%type"
@@ -674,7 +675,7 @@ pure subroutine set_const(cv, label, p_const, temp_const, gas)
     call cv%x_stop%v%init_const(X_STOP_DEFAULT, n_d)
     
     cv%label      = label
-    cv%type       = CONSTANT_CV_TYPE
+    cv%type       = CONST_CV_TYPE
     cv%gas        = gas
     cv%p_const    = p_const
     cv%temp_const = temp_const
@@ -773,15 +774,15 @@ pure function d_xdot_d_t(sys, i_cv)
             
             p_other = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
             
-            call assert((sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == CONSTANT_CV_TYPE) &
+            call assert((sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == CONST_CV_TYPE) &
                             .or. (sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE), &
-                            "cva (d_xdot_d_t): mirror CV not CONSTANT_CV_TYPE or MIRROR_CV_TYPE")
+                            "cva (d_xdot_d_t): mirror CV not CONST_CV_TYPE or MIRROR_CV_TYPE")
             
             p_fe = sys%cv(i_cv)%p() - p_other - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
             
             d_xdot_d_t = sys%cv(i_cv)%csa*sys%cv(i_cv)%rm_p*(sys%cv(i_cv)%p() - p_other - sys%cv(i_cv)%p_f(p_fe)) &
                             - sys%cv(i_cv)%k*sys%cv(i_cv)%rm_p*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
-        case (CONSTANT_CV_TYPE)
+        case (CONST_CV_TYPE)
             call d_xdot_d_t%v%init_const(0.0_WP, size(sys%cv(i_cv)%rm_p%v%d))
         case default
             error stop "cva (d_xdot_d_t): invalid cv%type"
