@@ -27,6 +27,10 @@ real(WP), public, parameter :: X_STOP_DEFAULT = 1.0e3_WP  ! m (If you have a bar
 real(WP), public, parameter :: DT_DEFAULT     = 1.0e-5_WP ! s
 real(WP), public, parameter :: T_STOP_DEFAULT = 0.5_WP    ! s
 
+integer, public, parameter :: NORMAL_CV_TYPE   = 1
+integer, public, parameter :: CONSTANT_CV_TYPE = 2
+integer, public, parameter :: MIRROR_CV_TYPE   = 3
+
 type, public :: cv_type ! control volume
     ! time varying
     type(si_length)            :: x     ! location of piston/projectile
@@ -35,16 +39,17 @@ type, public :: cv_type ! control volume
     type(si_energy)            :: e     ! energy of gas in control volume
     
     ! constants
-    character(len=32)           :: label      ! human-readable label for control volume
-    type(si_area)               :: csa        ! cross-sectional area
-    type(si_inverse_mass)       :: rm_p       ! reciprocal mass of piston/projectile
-    type(si_pressure)           :: p_fs, p_fd ! static and dynamic friction pressure
-    type(si_stiffness)          :: k          ! stiffness of spring attached to piston
-    type(si_length)             :: x_z        ! zero force location for spring
-    type(gas_type), allocatable :: gas(:)     ! gas data
-    integer                     :: i_cv_other ! index of control volume to use in pressure difference calculation
-    type(si_pressure)           :: p_const    ! if `i_cv_other = 0`, then `cv%p() = p_const`
-    type(si_temperature)        :: temp_const ! if `i_cv_other = 0`, then `cv%temp() = temp_const`
+    character(len=32)           :: label       ! human-readable label for control volume
+    integer                     :: type        ! type of control volume
+    type(si_area)               :: csa         ! cross-sectional area
+    type(si_inverse_mass)       :: rm_p        ! reciprocal mass of piston/projectile
+    type(si_pressure)           :: p_fs, p_fd  ! static and dynamic friction pressure
+    type(si_stiffness)          :: k           ! stiffness of spring attached to piston
+    type(si_length)             :: x_z         ! zero force location for spring
+    type(gas_type), allocatable :: gas(:)      ! gas data
+    integer                     :: i_cv_mirror ! index of control volume to use in pressure difference calculation
+    type(si_pressure)           :: p_const    ! if `cv%type = CONSTANT_CV_TYPE`, then `cv%p() = p_const`
+    type(si_temperature)        :: temp_const ! if `cv%type = CONSTANT_CV_TYPE`, then `cv%temp() = temp_const`
     type(si_length)             :: x_stop     ! `x` location where simulation will stop
 contains
     procedure :: m_total
@@ -160,18 +165,22 @@ pure function p_eos(cv, rho, temp)
     
     integer :: n_d ! number of derivatives
     
-    if (cv%i_cv_other >= 1) then
-        call assert(rho%v%v  > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
-        call assert(temp%v%v > 0.0_WP, "cva (p_eos): temp%v > 0 violated")
-        call assert_dimension(rho%v%d, temp%v%d)
-        
-        n_d   = size(rho%v%d)
-        p_eos = rho * cv%r() * temp
-        
-        call assert(p_eos < cv%p_c(), "cva (p_eos): ideal gas law validity is questionable")
-    else
-        p_eos = cv%p_const
-    end if
+    select case (cv%type)
+        case (NORMAL_CV_TYPE)
+            call assert(cv%i_cv_mirror >= 1, "cva (p_eos): i_cv_mirror must be a positive integer")
+            call assert(rho%v%v  > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
+            call assert(temp%v%v > 0.0_WP, "cva (p_eos): temp%v > 0 violated")
+            call assert_dimension(rho%v%d, temp%v%d)
+            
+            n_d   = size(rho%v%d)
+            p_eos = rho * cv%r() * temp
+            
+            call assert(p_eos < cv%p_c(), "cva (p_eos): ideal gas law validity is questionable")
+        case (CONSTANT_CV_TYPE)
+            p_eos = cv%p_const
+        case default
+            error stop "cva (p_eos): invalid cv%type"
+    end select
     
     call assert(p_eos%v%v >= 0.0_WP, "cva (p_eos): p_eos%v >= 0 violated")
 end function p_eos
@@ -378,21 +387,25 @@ pure function temp_cv(cv)
     
     call assert_mass(cv, "temp_cv")
     
-    if (cv%i_cv_other >= 1) then
-        n_d = size(cv%m(1)%v%d)
-        call e_0%v%init_const(0.0_WP, n_d)
-        call heat_capacity%v%init_const(0.0_WP, n_d)
-        do i = 1, size(cv%m)
-            call u_0%v%init_const(cv%gas(i)%u_0, n_d)
-            e_0           = e_0           + cv%m(i)*u_0
-            heat_capacity = heat_capacity + cv%m(i)*cv%gas(i)%c_v(n_d)
-        end do
-        
-        call temp_0_%v%init_const(TEMP_0, n_d)
-        temp_cv = temp_0_ + (cv%e - e_0) / heat_capacity
-    else
-        temp_cv = cv%temp_const
-    end if
+    select case (cv%type)
+        case (NORMAL_CV_TYPE)
+            call assert(cv%i_cv_mirror >= 1, "cva (temp_cv): i_cv_mirror must be a positive integer")
+            n_d = size(cv%m(1)%v%d)
+            call e_0%v%init_const(0.0_WP, n_d)
+            call heat_capacity%v%init_const(0.0_WP, n_d)
+            do i = 1, size(cv%m)
+                call u_0%v%init_const(cv%gas(i)%u_0, n_d)
+                e_0           = e_0           + cv%m(i)*u_0
+                heat_capacity = heat_capacity + cv%m(i)*cv%gas(i)%c_v(n_d)
+            end do
+            
+            call temp_0_%v%init_const(TEMP_0, n_d)
+            temp_cv = temp_0_ + (cv%e - e_0) / heat_capacity
+        case (CONSTANT_CV_TYPE)
+            temp_cv = cv%temp_const
+        case default
+            error stop "cva (temp_cv): invalid cv%type"
+    end select
     
     call assert(temp_cv%v%v > 0.0_WP, "cva (temp_cv): temp_cv > 0 violated")
 end function temp_cv
@@ -513,7 +526,7 @@ pure function gamma_cv(cv, y)
     call assert(gamma_cv%v%v > 1.0_WP, "cva (gamma_cv): gamma_cv > 1 violated")
 end function gamma_cv
 
-pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, x_z, gas, i_cv_other, &
+pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, x_z, gas, i_cv_mirror, &
                         x_stop, isentropic_filling, p_atm)
     class(cv_type), intent(in out) :: cv
     
@@ -532,7 +545,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     type(si_stiffness), intent(in)    :: k          ! stiffness of spring attached to piston
     type(si_length), intent(in)       :: x_z        ! zero force location for spring
     type(gas_type), intent(in)        :: gas(:)     ! gas data
-    integer, intent(in)               :: i_cv_other ! index of control volume to use in pressure difference calculation
+    integer, intent(in)               :: i_cv_mirror ! index of control volume to use in pressure difference calculation
     
     type(si_length), intent(in), optional   :: x_stop     ! `x` location where simulation will stop
     logical, intent(in), optional           :: isentropic_filling
@@ -550,15 +563,16 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     cv%x_dot = x_dot
     ! `p` and `temp` will be handled below
     
-    cv%label      = label
-    cv%csa        = csa
-    cv%rm_p       = rm_p
-    cv%p_fs       = p_fs
-    cv%p_fd       = p_fd
-    cv%k          = k
-    cv%x_z        = x_z
-    cv%gas        = gas
-    cv%i_cv_other = i_cv_other
+    cv%label       = label
+    cv%csa         = csa
+    cv%rm_p        = rm_p
+    cv%p_fs        = p_fs
+    cv%p_fd        = p_fd
+    cv%k           = k
+    cv%x_z         = x_z
+    cv%gas         = gas
+    cv%i_cv_mirror = i_cv_mirror
+    cv%type        = NORMAL_CV_TYPE
     
     if (present(x_stop)) then
         cv%x_stop = x_stop
@@ -580,7 +594,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     call assert(cv%p_fs%v%v         >= 0.0_WP, "cva (set): p_fs >= 0 violated")
     call assert(cv%p_fd%v%v         >= 0.0_WP, "cva (set): p_fd >= 0 violated")
     call assert(cv%k%v%v            >= 0.0_WP, "cva (set): k >= 0 violated")
-    call assert(cv%i_cv_other       >= 1,      "cva (set): i_cv_other >= 1 violated")
+    call assert(cv%i_cv_mirror      >= 1,      "cva (set): i_cv_mirror >= 1 violated")
     
     call assert_dimension(y, cv%gas)
     allocate(cv%m(size(y)))
@@ -660,8 +674,8 @@ pure subroutine set_const(cv, label, p_const, temp_const, gas)
     call cv%x_stop%v%init_const(X_STOP_DEFAULT, n_d)
     
     cv%label      = label
+    cv%type       = CONSTANT_CV_TYPE
     cv%gas        = gas
-    cv%i_cv_other = 0 ! the zero means this is a constant pressure control volume
     cv%p_const    = p_const
     cv%temp_const = temp_const
     
@@ -751,18 +765,27 @@ pure function d_xdot_d_t(sys, i_cv)
     type(si_pressure) :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
     type(si_pressure) :: p_other
     
-    if (sys%cv(i_cv)%i_cv_other >= 1) then
-        call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_xdot_d_t): cv%csa > 0 violated")
-        
-        p_other = sys%cv(sys%cv(i_cv)%i_cv_other)%p()
-        
-        p_fe = sys%cv(i_cv)%p() - p_other - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
-        
-        d_xdot_d_t = sys%cv(i_cv)%csa*sys%cv(i_cv)%rm_p*(sys%cv(i_cv)%p() - p_other - sys%cv(i_cv)%p_f(p_fe)) &
-                        - sys%cv(i_cv)%k*sys%cv(i_cv)%rm_p*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
-    else
-        call d_xdot_d_t%v%init_const(0.0_WP, size(sys%cv(i_cv)%rm_p%v%d))
-    end if
+    select case (sys%cv(i_cv)%type)
+        case (NORMAL_CV_TYPE)
+            call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_xdot_d_t): i_cv_mirror must be a positive integer")
+            call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_xdot_d_t): i_cv_mirror can not equal i_cv")
+            call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_xdot_d_t): cv%csa > 0 violated")
+            
+            p_other = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
+            
+            call assert((sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == CONSTANT_CV_TYPE) &
+                            .or. (sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE), &
+                            "cva (d_xdot_d_t): mirror CV not CONSTANT_CV_TYPE or MIRROR_CV_TYPE")
+            
+            p_fe = sys%cv(i_cv)%p() - p_other - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
+            
+            d_xdot_d_t = sys%cv(i_cv)%csa*sys%cv(i_cv)%rm_p*(sys%cv(i_cv)%p() - p_other - sys%cv(i_cv)%p_f(p_fe)) &
+                            - sys%cv(i_cv)%k*sys%cv(i_cv)%rm_p*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
+        case (CONSTANT_CV_TYPE)
+            call d_xdot_d_t%v%init_const(0.0_WP, size(sys%cv(i_cv)%rm_p%v%d))
+        case default
+            error stop "cva (d_xdot_d_t): invalid cv%type"
+    end select
 end function d_xdot_d_t
 
 pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)

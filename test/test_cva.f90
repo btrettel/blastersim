@@ -82,7 +82,7 @@ end subroutine test_m_total
 
 subroutine test_p_eos(tests)
     use gasdata, only: P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR
-    use cva, only: cv_type
+    use cva, only: cv_type, NORMAL_CV_TYPE
     
     type(test_results_type), intent(in out) :: tests
 
@@ -96,7 +96,8 @@ subroutine test_p_eos(tests)
     allocate(cv%m(1))
     call cv%m(1)%v%init_const(1.0_WP, 0)
     call cv%e%v%init_const(1.0_WP, 0)
-    cv%i_cv_other = 2
+    cv%i_cv_mirror = 2
+    cv%type = NORMAL_CV_TYPE
     
     allocate(cv%gas(1))
     cv%gas(1) = DRY_AIR
@@ -417,7 +418,7 @@ end subroutine test_p_f0_2
 
 subroutine test_temp_cv(tests)
     use gasdata, only: DRY_AIR
-    use cva, only: cv_type
+    use cva, only: cv_type, NORMAL_CV_TYPE
     
     type(test_results_type), intent(in out) :: tests
 
@@ -427,7 +428,8 @@ subroutine test_temp_cv(tests)
     ! 1 kg of mass
     allocate(cv%m(1))
     call cv%m(1)%v%init_const(1.0_WP, 0)
-    cv%i_cv_other = 1
+    cv%i_cv_mirror = 2
+    cv%type = NORMAL_CV_TYPE
     
     ! air
     allocate(cv%gas(1))
@@ -442,7 +444,7 @@ end subroutine test_temp_cv
 
 subroutine test_set_1(tests)
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR
-    use cva, only: X_STOP_DEFAULT, cv_type
+    use cva, only: X_STOP_DEFAULT, cv_type, NORMAL_CV_TYPE
     
     type(test_results_type), intent(in out) :: tests
 
@@ -485,7 +487,8 @@ subroutine test_set_1(tests)
     call tests%real_eq(cv%rm_p%v%v, rm_p%v%v, "set 1, rm_p")
     call tests%real_eq(cv%p_fs%v%v, p_fs%v%v, "set 1, p_fs")
     call tests%real_eq(cv%p_fd%v%v, p_fd%v%v, "set 1, p_fd")
-    call tests%integer_eq(cv%i_cv_other, 2, "set 1, i_cv_other")
+    call tests%integer_eq(cv%i_cv_mirror, 2, "set 1, i_cv_mirror")
+    call tests%integer_eq(cv%type, NORMAL_CV_TYPE, "set 1, type")
     
     call tests%real_eq(cv%k%v%v, k%v%v, "set 1, k")
     call tests%real_eq(cv%x_z%v%v, x_z%v%v, "set 1, x_z")
