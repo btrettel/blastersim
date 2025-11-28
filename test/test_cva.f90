@@ -779,7 +779,7 @@ subroutine test_rates(tests)
     call sys%cv(1)%set_const("test_rates 1 (constant pressure)", csa, p_atm, temp, [DRY_AIR], 2)
     call sys%cv(2)%set_normal(x, x_dot, y, p, temp, "test_rates 2", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 1)
     
-    d_x_d_t_ = d_x_d_t(sys%cv(2))
+    d_x_d_t_ = d_x_d_t(sys, 2)
     call tests%real_eq(d_x_d_t_%v%v, x_dot%v%v, "d_x_d_t")
     
     d_xdot_d_t_ = d_xdot_d_t(sys, 2)

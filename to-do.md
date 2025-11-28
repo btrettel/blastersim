@@ -32,6 +32,8 @@
                 - <https://www.reddit.com/r/Nerf/comments/1k428am/ideal_barrel_length_math/>
                 - <https://www.reddit.com/r/Nerf/comments/186ckcn/formula_for_optimal_barrel_length/>
                 - <http://btrettel.nerfers.com/archives/54>
+        - API
+            - `i_cv_mirror = 0` disables mirror CVs; use for constant volume chambers
     - `config_type`
         - `id` for CSV file name
         - whether to enable CSV output or not
@@ -46,16 +48,9 @@
     - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
     - Stopping criteria based on acceleration to find optimal barrel length
     - Plunger head motion bounds (lower and upper)
-    - Instead of `p_atm` in the force balance, allow for using another control volume's pressure.
-        - Start with requiring that the other control volume be constant pressure, and later generalize this.
-        - I'll need to pick which control volume controls `x` and `x_dot` and how each are related to the other control volume's same.
-        - "Mirror" control volumes?
-        - Simpler form: Add constant pressure ("source"/"sink" or atmospheric) control volume. The mass for this can go to zero. `p_eos` will be overridden internally? This will have the advantage of not requiring extensive changes to `x` and `x_dot` for the source control volume.
-            - Special `set` procedure
-            - Test `p_eos` with constant pressure
-            - in `d_x_dot_d_t` assert that other CV is constant pressure
     - Keep track of energy lost to friction and energy lost to work against the atmosphere.
         - Energy conservation test case that takes these into account.
+    - Test `d_x_d_t` and `d_xdot_d_t` for `CONST_CV_TYPE` and `MIRROR_CV_TYPE`.
 
 ***
 
