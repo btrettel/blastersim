@@ -17,18 +17,20 @@ public :: create_barrel
 
 contains
 
-subroutine create_barrel(vol_dead, d_barrel, p_atm, temp_atm, m_p, p_fs, p_fd, l_travel, cv)
+subroutine create_barrel(vol_dead, d_barrel, p_atm, temp_atm, m_p, p_fs, p_fd, l_travel, gas, i_cv_mirror, cv)
     use prec, only: PI
-    use gasdata, only: DRY_AIR
+    use gasdata, only: gas_type
     use cva, only: cv_type
     
-    type(si_volume), intent(in)      :: vol_dead   ! dead volume
-    type(si_length), intent(in)      :: d_barrel   ! barrel diameter
-    type(si_pressure), intent(in)    :: p_atm      ! atmospheric pressure
-    type(si_temperature), intent(in) :: temp_atm   ! atmospheric temperature
-    type(si_mass), intent(in)        :: m_p        ! projectile mass
-    type(si_pressure)                :: p_fs, p_fd ! pressures of static and dynamic friction, respectively
-    type(si_length), intent(in)      :: l_travel   ! projectile travel
+    type(si_volume), intent(in)      :: vol_dead    ! dead volume
+    type(si_length), intent(in)      :: d_barrel    ! barrel diameter
+    type(si_pressure), intent(in)    :: p_atm       ! atmospheric pressure
+    type(si_temperature), intent(in) :: temp_atm    ! atmospheric temperature
+    type(si_mass), intent(in)        :: m_p         ! projectile mass
+    type(si_pressure)                :: p_fs, p_fd  ! pressures of static and dynamic friction, respectively
+    type(si_length), intent(in)      :: l_travel    ! projectile travel
+    type(gas_type), intent(in)       :: gas(:)      ! gas data
+    integer, intent(in)              :: i_cv_mirror ! index of control volume to use in pressure difference calculation
     type(cv_type), intent(out)       :: cv
     
     type(si_length)    :: x_d, x_stop, x_z
@@ -48,7 +50,8 @@ subroutine create_barrel(vol_dead, d_barrel, p_atm, temp_atm, m_p, p_fs, p_fd, l
     call x_z%v%init_const(0.0_WP, n_d)
     x_stop = x_d + l_travel
     
-    call cv%set(x_d, x_dot, y, p_atm, temp_atm, "barrel", csa_barrel, 1.0_WP/m_p, p_fs, p_fd, p_atm, k, x_z, [DRY_AIR], x_stop)
+    call cv%set(x_d, x_dot, y, p_atm, temp_atm, "barrel", csa_barrel, 1.0_WP/m_p, p_fs, p_fd, k, x_z, gas, &
+                    i_cv_mirror, x_stop=x_stop)
 end subroutine create_barrel
 
 !subroutine read_springer_namelist(input_file, sys, rc)
