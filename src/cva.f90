@@ -44,6 +44,7 @@ type, public :: cv_type ! control volume
     type(gas_type), allocatable :: gas(:)     ! gas data
     integer                     :: i_cv_other ! index of control volume to use in pressure difference calculation
     type(si_pressure)           :: p_const    ! if `i_cv_other = 0`, then `cv%p() = p_const`
+    type(si_temperature)        :: temp_const ! if `i_cv_other = 0`, then `cv%temp() = temp_const`
     type(si_length)             :: x_stop     ! `x` location where simulation will stop
 contains
     procedure :: m_total
@@ -172,7 +173,7 @@ pure function p_eos(cv, rho, temp)
         p_eos = cv%p_const
     end if
     
-    call assert(p_eos%v%v > 0.0_WP, "cva (p_eos): p_eos%v > 0 violated")
+    call assert(p_eos%v%v >= 0.0_WP, "cva (p_eos): p_eos%v >= 0 violated")
 end function p_eos
 
 pure function rho_eos(cv, p, temp, y)
@@ -377,17 +378,21 @@ pure function temp_cv(cv)
     
     call assert_mass(cv, "temp_cv")
     
-    n_d = size(cv%m(1)%v%d)
-    call e_0%v%init_const(0.0_WP, n_d)
-    call heat_capacity%v%init_const(0.0_WP, n_d)
-    do i = 1, size(cv%m)
-        call u_0%v%init_const(cv%gas(i)%u_0, n_d)
-        e_0           = e_0           + cv%m(i)*u_0
-        heat_capacity = heat_capacity + cv%m(i)*cv%gas(i)%c_v(n_d)
-    end do
-    
-    call temp_0_%v%init_const(TEMP_0, n_d)
-    temp_cv = temp_0_ + (cv%e - e_0) / heat_capacity
+    if (cv%i_cv_other >= 1) then
+        n_d = size(cv%m(1)%v%d)
+        call e_0%v%init_const(0.0_WP, n_d)
+        call heat_capacity%v%init_const(0.0_WP, n_d)
+        do i = 1, size(cv%m)
+            call u_0%v%init_const(cv%gas(i)%u_0, n_d)
+            e_0           = e_0           + cv%m(i)*u_0
+            heat_capacity = heat_capacity + cv%m(i)*cv%gas(i)%c_v(n_d)
+        end do
+        
+        call temp_0_%v%init_const(TEMP_0, n_d)
+        temp_cv = temp_0_ + (cv%e - e_0) / heat_capacity
+    else
+        temp_cv = cv%temp_const
+    end if
     
     call assert(temp_cv%v%v > 0.0_WP, "cva (temp_cv): temp_cv > 0 violated")
 end function temp_cv
@@ -414,7 +419,7 @@ pure function rho_cv(cv)
     
     rho_cv = cv%m_total() / cv%vol()
     
-    call assert(rho_cv%v%v > 0.0_WP, "cva (rho_cv): rho_cv > 0 violated")
+    call assert(rho_cv%v%v >= 0.0_WP, "cva (rho_cv): rho_cv > 0 violated")
 end function rho_cv
 
 pure function p_cv(cv)
@@ -430,7 +435,7 @@ pure function p_cv(cv)
     
     p_cv = cv%p_eos(rho, temp)
     
-    call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated")
+    call assert(p_cv%v%v >= 0.0_WP, "cva (p_cv): p_cv >= 0 violated")
 end function p_cv
 
 pure function u_cv(cv)
@@ -463,6 +468,7 @@ pure function h_cv(cv)
     integer              :: i
     type(si_mass)        :: m_total
     type(si_temperature) :: temp
+    type(unitless)       :: y
     
     call assert_mass(cv, "h_cv")
     
@@ -471,10 +477,15 @@ pure function h_cv(cv)
     
     call h_cv%v%init_const(0.0_WP, size(cv%m(1)%v%d))
     do i = 1, size(cv%m)
-        h_cv = h_cv + cv%m(i)*cv%gas(i)%h(temp)/m_total
+        if (.not. is_close(m_total%v%v, 0.0_WP)) then
+            y = cv%m(i)/m_total
+        else
+            call y%v%init_const(0.0_WP, size(cv%m(1)%v%d))
+        end if
+        h_cv = h_cv + y*cv%gas(i)%h(temp)
     end do
     
-    call assert(h_cv%v%v > 0.0_WP, "cva (h_cv): h_cv > 0 violated")
+    call assert(h_cv%v%v >= 0.0_WP, "cva (h_cv): h_cv > 0 violated")
 end function h_cv
 
 pure function gamma_cv(cv, y)
@@ -568,7 +579,6 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     call assert(cv%csa%v%v          >  0.0_WP, "cva (set): csa > 0 violated")
     call assert(cv%p_fs%v%v         >= 0.0_WP, "cva (set): p_fs >= 0 violated")
     call assert(cv%p_fd%v%v         >= 0.0_WP, "cva (set): p_fd >= 0 violated")
-    call assert(p_atm%v%v           >= 0.0_WP, "cva (set): p_atm >= 0 violated") ! Having `p_atm == 0` is useful for testing.
     call assert(cv%k%v%v            >= 0.0_WP, "cva (set): k >= 0 violated")
     call assert(cv%i_cv_other       >= 1,      "cva (set): i_cv_other >= 1 violated")
     
@@ -594,6 +604,9 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
         gamma_cv = cv%gamma(y)
         temp = temp_atm * ((p / p_atm)**((gamma_cv - 1.0_WP)/gamma_cv))
     else
+        call assert(.not. present(p_atm), &
+                        "cva (set): p_atm only affects isentropic_filling so it should not be set otherwise")
+        
         ! isothermal
         temp = temp_atm
     end if
@@ -615,17 +628,17 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     call assert(p < cv%p_c(), "cva (set): ideal gas law validity is questionable")
 end subroutine set
 
-pure subroutine set_const(cv, label, p_const, gas)
+pure subroutine set_const(cv, label, p_const, temp_const, gas)
     class(cv_type), intent(in out) :: cv
     
-    character(len=*), intent(in)  :: label   ! human-readable label for control volume
-    type(si_pressure), intent(in) :: p_const ! pressure
-    type(gas_type), intent(in)    :: gas(:)  ! gas data
+    character(len=*), intent(in)     :: label      ! human-readable label for control volume
+    type(si_pressure), intent(in)    :: p_const    ! pressure
+    type(si_temperature), intent(in) :: temp_const ! temperature
+    type(gas_type), intent(in)       :: gas(:)     ! gas data
     
     integer :: n_d, n_gas, i_gas
     
     call assert(len(trim(cv%label)) > 0, "cva (set_const): len(label) > 0 violated")
-    call assert(p_const%v%v > 0, "cva (set_const): len(label) > 0 violated")
     
     n_d   = size(p_const%v%d)
     n_gas = size(gas)
@@ -635,10 +648,10 @@ pure subroutine set_const(cv, label, p_const, gas)
         call cv%m(i_gas)%v%init_const(0.0_WP, n_d)
     end do
     
-    call cv%x%v%init_const(0.0_WP, n_d)
+    call cv%x%v%init_const(1.0_WP, n_d)
     call cv%x_dot%v%init_const(0.0_WP, n_d)
     call cv%e%v%init_const(0.0_WP, n_d)
-    call cv%csa%v%init_const(0.0_WP, n_d)
+    call cv%csa%v%init_const(1.0_WP, n_d)
     call cv%rm_p%v%init_const(0.0_WP, n_d)
     call cv%p_fs%v%init_const(0.0_WP, n_d)
     call cv%p_fd%v%init_const(0.0_WP, n_d)
@@ -650,9 +663,12 @@ pure subroutine set_const(cv, label, p_const, gas)
     cv%gas        = gas
     cv%i_cv_other = 0 ! the zero means this is a constant pressure control volume
     cv%p_const    = p_const
+    cv%temp_const = temp_const
     
     ! Having `p_atm == 0` is useful for testing, so I allow this to go to zero.
-    call assert(cv%p_const%v%v >= 0.0_WP, "cva (set_constant): p_const >= 0 violated")
+    call assert(cv%p_const%v%v >= 0.0_WP, "cva (set_const): p_const >= 0 violated")
+    
+    call assert(cv%temp_const%v%v > 0.0_WP, "cva (set_const): temp_const > 0 violated")
 end subroutine set_const
 
 pure function p_f(cv, p_fe)
@@ -757,6 +773,7 @@ pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
     type(si_mass_flow_rate) :: d_m_k_d_t
     
     integer :: n_d, n_cv, j_cv
+    type(si_mass)  :: m_total
     type(unitless) :: y_k
     
     call assert(size(m_dot, 1) == size(m_dot, 2), "cva (d_m_k_d_t): m_dots must be square")
@@ -766,7 +783,13 @@ pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
     call d_m_k_d_t%v%init_const(0.0_WP, n_d)
     
     n_cv = size(m_dot, 1)
-    y_k  = cv%m(k_gas) / cv%m_total()
+    m_total = cv%m_total()
+    if (.not. is_close(m_total%v%v, 0.0_WP)) then
+        y_k = cv%m(k_gas) / m_total
+    else
+        call y_k%v%init_const(0.0_WP, n_d)
+    end if
+    
     do j_cv = 1, n_cv
         call assert(is_close(m_dot(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_m_k_d_t): mass can not flow from self to self")
         d_m_k_d_t = d_m_k_d_t + y_k*m_dot(j_cv, i_cv) - y_k*m_dot(i_cv, j_cv)
@@ -812,7 +835,7 @@ pure subroutine assert_mass(cv, procedure_name)
     end do
     
     m_total = cv%m_total()
-    call assert(m_total%v%v > 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m_total > 0 violated")
+    call assert(m_total%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m_total >= 0 violated")
     
     ! I would also check that `cv%e` is positive here, but...
     ! Strictly speaking, the people making the thermodynamic tables might not have made internal energy always positive.
@@ -1155,16 +1178,17 @@ pure subroutine check_sys(sys, t_stop, t, status, exit_time_loop)
         end if
         
         m_total_i = sys%cv(i_cv)%m_total()
-        if (m_total_i%v%v <= 0.0_WP) then
+        if (m_total_i%v%v < 0.0_WP) then
             status%rc = 2
             
             allocate(status%data(n_cv))
             n_bad_cv = 0
             do j_cv = 1, n_cv
                 m_total_j = sys%cv(j_cv)%m_total()
+                if (m_total_j%v%v < 0.0_WP) n_bad_cv = n_bad_cv + 1
                 status%data(j_cv) = m_total_j%v%v
             end do
-            call assert(n_bad_cv >= 1, "cva (check_sys): number of bad control volumes should be 1 or more here (1)")
+            call assert(n_bad_cv >= 1, "cva (check_sys): number of control volumes with negative mass should be >= 1")
             
             allocate(status%i_cv(n_bad_cv))
             n_bad_cv = 0
@@ -1185,9 +1209,11 @@ pure subroutine check_sys(sys, t_stop, t, status, exit_time_loop)
             n_bad_cv = 0
             do j_cv = 1, n_cv
                 temp_j = sys%cv(j_cv)%temp()
+                if (temp_j%v%v < 0.0_WP) n_bad_cv = n_bad_cv + 1
                 status%data(j_cv) = temp_j%v%v
             end do
-            call assert(n_bad_cv >= 1, "cva (check_sys): number of bad control volumes should be 1 or more here (2)")
+            call assert(n_bad_cv >= 1, &
+                "cva (check_sys): number of control volumes with negative or zero temperature should be >= 1")
             
             allocate(status%i_cv(n_bad_cv))
             n_bad_cv = 0
