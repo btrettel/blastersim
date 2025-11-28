@@ -27,11 +27,12 @@ real(WP), public, parameter :: RHO_ATM  = 1.2250_WP                ! kg/m3
 real(WP), public, parameter :: TEMP_0 = 300.0_WP ! K, temperature that `gamma`, `u_0`, and `h_0` are taken at in `gas_type`
 
 type, public :: gas_type
-    real(WP) :: gamma ! ratio of specific heats, unitless
-    real(WP) :: u_0   ! internal energy at `TEMP_0`, J/kg
-    real(WP) :: h_0   ! enthalphy at `TEMP_0`, J/kg
-    real(WP) :: mm    ! molar mass, kg/mol
-    real(WP) :: p_c   ! critical pressure, Pa
+    character(len=32) :: label ! human-readable label for gas
+    real(WP)          :: gamma ! ratio of specific heats, unitless
+    real(WP)          :: u_0   ! internal energy at `TEMP_0`, J/kg
+    real(WP)          :: h_0   ! enthalphy at `TEMP_0`, J/kg
+    real(WP)          :: mm    ! molar mass, kg/mol
+    real(WP)          :: p_c   ! critical pressure, Pa
 contains
     procedure :: u => u_gas
     procedure :: h => h_gas
@@ -43,7 +44,8 @@ end type gas_type
 ! Molecular mass and critical pressure of air (consistent with dry air): moran_fundamentals_2008 table A-1
 ! Specific heat ratio of air (consistent with dry air): moran_fundamentals_2008 table A-20
 ! Internal energy and enthalpy of air: moran_fundamentals_2008 table A-22
-type(gas_type), public, parameter :: DRY_AIR = gas_type(gamma = 1.400_WP, &
+type(gas_type), public, parameter :: DRY_AIR = gas_type(label = "dry air", &
+                                                        gamma = 1.400_WP, &
                                                         u_0   = 214.07e3_WP, &
                                                         h_0   = 300.19e3_WP, &
                                                         mm    = 28.97e-3_WP, &
@@ -52,7 +54,8 @@ type(gas_type), public, parameter :: DRY_AIR = gas_type(gamma = 1.400_WP, &
 ! Molecular mass and critical pressure of N2: moran_fundamentals_2008 table A-1
 ! Specific heat ratio of N2: moran_fundamentals_2008 table A-20
 ! Internal energy and enthalpy of N2: moran_fundamentals_2008 table A-23
-type(gas_type), public, parameter :: N2      = gas_type(gamma = 1.400_WP, &
+type(gas_type), public, parameter :: N2      = gas_type(label = "N2", &
+                                                        gamma = 1.400_WP, &
                                                         u_0   = 28.01e-3_WP*6229.0e3_WP, &
                                                         h_0   = 28.01e-3_WP*8723.0e3_WP, &
                                                         mm    = 28.01e-3_WP, &
@@ -61,14 +64,16 @@ type(gas_type), public, parameter :: N2      = gas_type(gamma = 1.400_WP, &
 ! Molecular mass and critical pressure of O2: moran_fundamentals_2008 table A-1
 ! Specific heat ratio of O2: moran_fundamentals_2008 table A-20
 ! Internal energy and enthalpy of O2: moran_fundamentals_2008 table A-23
-type(gas_type), public, parameter :: O2      = gas_type(gamma = 1.395_WP, &
+type(gas_type), public, parameter :: O2      = gas_type(label = "O2", &
+                                                        gamma = 1.395_WP, &
                                                         u_0   = 6242.0e3_WP, &
                                                         h_0   = 8736.0e3_WP, &
                                                         mm    = 32.0e-3_WP, &
                                                         p_c   = 50.5e5_WP)
 
 ! <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/Ar> ("Fluid Properties")
-type(gas_type), public, parameter :: AR      = gas_type(gamma = 0.52154_WP/0.31239_WP, &
+type(gas_type), public, parameter :: AR      = gas_type(label = "AR", &
+                                                        gamma = 0.52154_WP/0.31239_WP, &
                                                         u_0   = 155.90e3_WP, &
                                                         h_0   = 93.497e3_WP, &
                                                         mm    = 39.948e-3_WP, &
@@ -77,7 +82,8 @@ type(gas_type), public, parameter :: AR      = gas_type(gamma = 0.52154_WP/0.312
 ! Molecular mass and critical pressure of CO2: moran_fundamentals_2008 table A-1
 ! Specific heat ratio of CO2: moran_fundamentals_2008 table A-20
 ! Internal energy and enthalpy of CO2: moran_fundamentals_2008 table A-23
-type(gas_type), public, parameter :: CO2     = gas_type(gamma = 1.288_WP, &
+type(gas_type), public, parameter :: CO2     = gas_type(label = "CO2", &
+                                                        gamma = 1.288_WP, &
                                                         u_0   = 44.01e-3_WP*6939.0e3_WP, &
                                                         h_0   = 44.01e-3_WP*9431.0e3_WP, &
                                                         mm    = 44.01e-3_WP, &
@@ -87,7 +93,8 @@ type(gas_type), public, parameter :: CO2     = gas_type(gamma = 1.288_WP, &
 ! Specific heat ratio of H2O: <https://en.wikipedia.org/wiki/Heat_capacity_ratio>
 ! Internal energy and enthalpy of H2O: moran_fundamentals_2008 table A-23
 ! TODO: Switch to stream tables for `u` and `h` if adding liquid water; see moran_thermodynamics_2008 pp. 666--667
-type(gas_type), public, parameter :: H2O     = gas_type(gamma = 1.330_WP, & ! at 20 C, not 300 K, but close enough
+type(gas_type), public, parameter :: H2O     = gas_type(label = "H2O", &
+                                                        gamma = 1.330_WP, & ! at 20 C, not 300 K, but close enough
                                                         u_0   = 18.02e-3_WP*7472.0e3_WP, &
                                                         h_0   = 18.02e-3_WP*9966.0e3_WP, &
                                                         mm    = 18.02e-3_WP, &

@@ -30,7 +30,7 @@ call test_temp_cv_normal(tests)
 call test_set_normal_1(tests)
 call test_set_normal_2(tests)
 call test_set_normal_3(tests)
-!call test_set_const(tests)
+call test_set_const(tests)
 call test_rates(tests)
 call test_u_h_cv(tests)
 call test_gamma_cv(tests)
@@ -267,7 +267,8 @@ subroutine test_p_c(tests)
     ! > 0.18 kmol of methane (CH4) and 0.274 of butane (C4H10)
     ! methane (CH4)
     ! <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/CH4/h1H4> ("Fluid Properties" at 0.101325 MPa)
-    cv%gas(1) = gas_type(gamma = 2.2359_WP/1.7129_WP, &
+    cv%gas(1) = gas_type(label = "CH4", &
+                         gamma = 2.2359_WP/1.7129_WP, &
                          u_0   = 758.87e3_WP, &
                          h_0   = 914.09e3_WP, &
                          mm    = 16.04e-3_WP, & ! moran_fundamentals_2008 table A-1
@@ -275,7 +276,8 @@ subroutine test_p_c(tests)
     
     ! butane (C4H10)
     ! <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/C4H10/c1-3-4-2/h3-4H2%2C1-2H3> ("Fluid Properties" at 0.101325 MPa)
-    cv%gas(2) = gas_type(gamma = 1.7388_WP/1.5744_WP, &
+    cv%gas(2) = gas_type(label = "C4H10", &
+                         gamma = 1.7388_WP/1.5744_WP, &
                          u_0   = 589.09e3_WP, &
                          h_0   = 630.74e3_WP, &
                          mm    = 58.12e-3_WP, & ! moran_fundamentals_2008 table A-1
@@ -520,6 +522,10 @@ subroutine test_set_normal_1(tests)
     call tests%real_eq(cv%p_fd%v%v, p_fd%v%v, "set_normal 1, p_fd")
     call tests%integer_eq(cv%i_cv_mirror, 2, "set_normal 1, i_cv_mirror")
     call tests%integer_eq(cv%type, NORMAL_CV_TYPE, "set_normal 1, type")
+    call tests%character_eq(cv%label, "test_set_normal_1", "test_set_normal_1, label")
+    
+    call tests%integer_eq(size(cv%gas), 1, "test_set_normal_1, size(gas)")
+    call tests%character_eq(cv%gas(1)%label, "dry air", "test_set_normal_1, gas label")
     
     call tests%real_eq(cv%k%v%v, k%v%v, "set_normal 1, k")
     call tests%real_eq(cv%x_z%v%v, x_z%v%v, "set_normal 1, x_z")
@@ -576,7 +582,8 @@ subroutine test_set_normal_2(tests)
     ! > 0.18 kmol of methane (CH4) and 0.274 of butane (C4H10)
     ! methane (CH4)
     ! <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/CH4/h1H4> ("Fluid Properties" at 0.101325 MPa)
-    gas(1) = gas_type(gamma = 2.2359_WP/1.7129_WP, &
+    gas(1) = gas_type(label = "CH4", &
+                      gamma = 2.2359_WP/1.7129_WP, &
                       u_0   = 758.87e3_WP, &
                       h_0   = 914.09e3_WP, &
                       mm    = 16.04e-3_WP, & ! moran_fundamentals_2008 table A-1
@@ -584,7 +591,8 @@ subroutine test_set_normal_2(tests)
     
     ! butane (C4H10)
     ! <https://webbook.nist.gov/cgi/inchi/InChI%3D1S/C4H10/c1-3-4-2/h3-4H2%2C1-2H3> ("Fluid Properties" at 0.101325 MPa)
-    gas(2) = gas_type(gamma = 1.7388_WP/1.5744_WP, &
+    gas(2) = gas_type(label = "C4H10", &
+                      gamma = 1.7388_WP/1.5744_WP, &
                       u_0   = 589.09e3_WP, &
                       h_0   = 630.74e3_WP, &
                       mm    = 58.12e-3_WP, & ! moran_fundamentals_2008 table A-1
@@ -694,6 +702,40 @@ subroutine test_set_normal_3(tests)
     call tests%real_eq(temp_cv%v%v, 300.0_WP*(2.0_WP**(0.4_WP/1.4_WP)), &
                         "set_normal 3, isentropic_filling=.true., cv%temp")
 end subroutine test_set_normal_3
+
+subroutine test_set_const(tests)
+    use gasdata, only: DRY_AIR
+    use cva, only: cv_type, CONST_CV_TYPE, X_STOP_DEFAULT
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_type)         :: cv
+    type(si_pressure)     :: p
+    type(si_temperature)  :: temp
+    
+    call p%v%init_const(2.0e5_WP, 0)
+    call temp%v%init_const(350.0_WP, 0)
+    
+    call cv%set_const("test_set_const", p, temp, [DRY_AIR])
+    
+    call tests%real_eq(cv%x%v%v, 1.0_WP, "test_set_const, x")
+    call tests%real_eq(cv%x_dot%v%v, 0.0_WP, "test_set_const, x_dot")
+    call tests%real_eq(cv%e%v%v, 0.0_WP, "test_set_const, e")
+    call tests%real_eq(cv%csa%v%v, 1.0_WP, "test_set_const, csa")
+    call tests%real_eq(cv%rm_p%v%v, 0.0_WP, "test_set_const, rm_p")
+    call tests%real_eq(cv%p_fs%v%v, 0.0_WP, "test_set_const, p_fs")
+    call tests%real_eq(cv%p_fd%v%v, 0.0_WP, "test_set_const, p_fd")
+    call tests%real_eq(cv%k%v%v, 0.0_WP, "test_set_const, k")
+    call tests%real_eq(cv%x_z%v%v, 0.0_WP, "test_set_const, x_z")
+    call tests%real_eq(cv%x_stop%v%v, X_STOP_DEFAULT, "test_set_const, x_stop")
+    
+    call tests%character_eq(cv%label, "test_set_const", "test_set_const, label")
+    call tests%integer_eq(cv%type, CONST_CV_TYPE, "test_set_const, type")
+    call tests%integer_eq(size(cv%gas), 1, "test_set_const, size(gas)")
+    call tests%character_eq(cv%gas(1)%label, "dry air", "test_set_const, gas label")
+    call tests%real_eq(cv%p_const%v%v, p%v%v, "test_set_const, p_const")
+    call tests%real_eq(cv%temp_const%v%v, temp%v%v, "test_set_const, temp_const")
+end subroutine test_set_const
 
 subroutine test_rates(tests)
     use gasdata, only: DRY_AIR

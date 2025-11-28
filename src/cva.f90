@@ -674,6 +674,8 @@ pure subroutine set_const(cv, label, p_const, temp_const, gas)
     call cv%x_z%v%init_const(0.0_WP, n_d)
     call cv%x_stop%v%init_const(X_STOP_DEFAULT, n_d)
     
+    call assert(.not. is_close(cv%x%v%v, cv%x_stop%v%v), "cva (set_const): x = x_stop will cause immediate termination of run")
+    
     cv%label      = label
     cv%type       = CONST_CV_TYPE
     cv%gas        = gas
