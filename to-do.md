@@ -82,6 +82,7 @@
     - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
 - Have ability to run multiple cycles and terminate when mass gets low in any particular CV.
 - If I use a constant pressure/temperature CV to model a HPA or CO2 tank, then I'll still need a way to estimate the real gas internal energy and enthalpy. Going all the way with a better equation of state and thermodynamic properties might not be much more complex. I could make each control volume use a different EOS if I want to avoid iterations associated with a different EOS.
+- Arbitrary displacement vs. force curves, using cubic splines for smoothness
 
 ***
 

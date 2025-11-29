@@ -141,7 +141,11 @@ pure function spring_pe(cv)
     
     type(si_energy) :: spring_pe
     
-    spring_pe = 0.5_WP*cv%k*square(cv%x - cv%x_z)
+    if (cv%type == MIRROR_CV_TYPE) then
+        call spring_pe%v%init_const(0.0_WP, size(cv%x_dot%v%d))
+    else
+        spring_pe = 0.5_WP*cv%k*square(cv%x - cv%x_z)
+    end if
 end function spring_pe
 
 pure function m_p_ke(cv)
@@ -149,8 +153,11 @@ pure function m_p_ke(cv)
     
     type(si_energy) :: m_p_ke
     
-    if (is_close(cv%rm_p%v%v, 0.0_WP)) then
-        call assert(is_close(cv%k%v%v, 0.0_WP), "cva (m_p_ke): if the piston is immobile, k should be zero")
+    if (is_close(cv%rm_p%v%v, 0.0_WP) .or. (cv%type == MIRROR_CV_TYPE)) then
+        if (is_close(cv%rm_p%v%v, 0.0_WP)) then
+            ! `MIRROR_CV_TYPE` might simply copy what the other CV has, so it might not have no inverse mass.
+            call assert(is_close(cv%k%v%v, 0.0_WP), "cva (m_p_ke): if the piston is immobile, k should be zero")
+        end if
         
         call m_p_ke%v%init_const(0.0_WP, size(cv%x_dot%v%d))
     else
@@ -631,7 +638,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     call assert(cv%k%v%v            >= 0.0_WP, "cva (set): k >= 0 violated")
     call assert(cv%i_cv_mirror      >= 0,      "cva (set): i_cv_mirror >= 0 violated")
     
-    call assert((cv%eos >= 1) .and. (cv%eos <= MAX_EOS), "cva (set): invalid EOS")
+    call assert((cv%eos  >= 1) .and. (cv%eos <= MAX_EOS),      "cva (set): invalid EOS")
     call assert((cv%type >= 1) .and. (cv%type <= MAX_CV_TYPE), "cva (set): invalid control volume type")
     
     call assert_dimension(y, cv%gas)
