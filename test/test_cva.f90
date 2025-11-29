@@ -17,8 +17,8 @@ type(test_results_type) :: tests
 call tests%start_tests("cva.nml")
 
 call test_m_total(tests)
-call test_p_eos_normal(tests)
-call test_constant_cv(tests)
+call test_p_eos_ideal(tests)
+call test_constant_eos(tests)
 call test_rho_eos(tests)
 call test_r_cv(tests)
 call test_p_c(tests)
@@ -26,7 +26,7 @@ call test_p_f_1(tests)
 call test_p_f_2(tests)
 call test_p_f0_1(tests)
 call test_p_f0_2(tests)
-call test_temp_cv_normal(tests)
+call test_temp_cv_ideal(tests)
 call test_set_normal_1(tests)
 call test_set_normal_2(tests)
 call test_set_normal_3(tests)
@@ -82,9 +82,9 @@ subroutine test_m_total(tests)
     call tests%real_eq(chi(2)%v%v, 5.0_WP/6.0_WP, "chi(2)")
 end subroutine test_m_total
 
-subroutine test_p_eos_normal(tests)
+subroutine test_p_eos_ideal(tests)
     use gasdata, only: P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR
-    use cva, only: cv_type, NORMAL_CV_TYPE
+    use cva, only: cv_type, NORMAL_CV_TYPE, IDEAL_EOS
     
     type(test_results_type), intent(in out) :: tests
 
@@ -100,6 +100,7 @@ subroutine test_p_eos_normal(tests)
     call cv%e%v%init_const(1.0_WP, 0)
     cv%i_cv_mirror = 2
     cv%type = NORMAL_CV_TYPE
+    cv%eos  = IDEAL_EOS
     
     allocate(cv%gas(1))
     cv%gas(1) = DRY_AIR
@@ -107,11 +108,11 @@ subroutine test_p_eos_normal(tests)
     p = cv%p_eos(rho, temp)
     
     call tests%real_eq(p%v%v, P_ATM, "p_eos, normal CV, atmospheric", abs_tol=20.0_WP)
-end subroutine test_p_eos_normal
+end subroutine test_p_eos_ideal
 
-subroutine test_constant_cv(tests)
+subroutine test_constant_eos(tests)
     use gasdata, only: DRY_AIR
-    use cva, only: cv_type, CONST_CV_TYPE
+    use cva, only: cv_type, CONST_EOS
     
     type(test_results_type), intent(in out) :: tests
 
@@ -126,7 +127,7 @@ subroutine test_constant_cv(tests)
     allocate(cv%m(1))
     call cv%m(1)%v%init_const(1.0_WP, 0)
     call cv%e%v%init_const(1.0_WP, 0)
-    cv%type = CONST_CV_TYPE
+    cv%eos = CONST_EOS
     
     allocate(cv%gas(1))
     cv%gas(1) = DRY_AIR
@@ -136,7 +137,7 @@ subroutine test_constant_cv(tests)
     
     call tests%real_eq(p%v%v, 5.0e5_WP, "p_eos, constant CV")
     call tests%real_eq(temp%v%v, 400.0_WP, "temp_cv, constant CV")
-end subroutine test_constant_cv
+end subroutine test_constant_eos
 
 subroutine test_rho_eos(tests)
     use gasdata, only: P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR
@@ -449,9 +450,9 @@ end subroutine test_p_f0_2
 
 ! TODO: Plot `p_f0` to test it.
 
-subroutine test_temp_cv_normal(tests)
+subroutine test_temp_cv_ideal(tests)
     use gasdata, only: DRY_AIR
-    use cva, only: cv_type, NORMAL_CV_TYPE
+    use cva, only: cv_type, NORMAL_CV_TYPE, IDEAL_EOS
     
     type(test_results_type), intent(in out) :: tests
 
@@ -463,6 +464,7 @@ subroutine test_temp_cv_normal(tests)
     call cv%m(1)%v%init_const(1.0_WP, 0)
     cv%i_cv_mirror = 2
     cv%type = NORMAL_CV_TYPE
+    cv%eos  = IDEAL_EOS
     
     ! air
     allocate(cv%gas(1))
@@ -473,7 +475,7 @@ subroutine test_temp_cv_normal(tests)
     
     temp = cv%temp()
     call tests%real_eq(temp%v%v, 300.0_WP, "temp_cv (qualitative)", abs_tol=5.0_WP)
-end subroutine test_temp_cv_normal
+end subroutine test_temp_cv_ideal
 
 subroutine test_set_normal_1(tests)
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR
@@ -705,7 +707,7 @@ end subroutine test_set_normal_3
 
 subroutine test_set_const(tests)
     use gasdata, only: DRY_AIR
-    use cva, only: cv_type, CONST_CV_TYPE, X_STOP_DEFAULT
+    use cva, only: cv_type, MIRROR_CV_TYPE, CONST_EOS, X_STOP_DEFAULT
     
     type(test_results_type), intent(in out) :: tests
 
@@ -731,7 +733,8 @@ subroutine test_set_const(tests)
     call tests%real_eq(cv%x_stop%v%v, X_STOP_DEFAULT, "test_set_const, x_stop")
     
     call tests%character_eq(cv%label, "test_set_const", "test_set_const, label")
-    call tests%integer_eq(cv%type, CONST_CV_TYPE, "test_set_const, type")
+    call tests%integer_eq(cv%type, MIRROR_CV_TYPE, "test_set_const, type")
+    call tests%integer_eq(cv%eos, CONST_EOS, "test_set_const, eos")
     call tests%integer_eq(size(cv%gas), 1, "test_set_const, size(gas)")
     call tests%character_eq(cv%gas(1)%label, "dry air", "test_set_const, gas label")
     call tests%real_eq(cv%csa%v%v, csa%v%v, "test_set_const, csa")

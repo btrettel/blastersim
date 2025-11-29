@@ -27,9 +27,14 @@ real(WP), public, parameter :: X_STOP_DEFAULT = 1.0e3_WP  ! m (If you have a bar
 real(WP), public, parameter :: DT_DEFAULT     = 1.0e-5_WP ! s
 real(WP), public, parameter :: T_STOP_DEFAULT = 0.5_WP    ! s
 
+integer, public, parameter :: IDEAL_EOS = 1 ! ideal gas equation of state
+integer, public, parameter :: CONST_EOS = 2 ! constant pressure, temperature, density
+integer, public, parameter :: RK_EOS    = 3 ! Redlich–Kwong equation of state
+integer, public, parameter :: MAX_EOS   = 3
+
 integer, public, parameter :: NORMAL_CV_TYPE = 1
-integer, public, parameter :: CONST_CV_TYPE  = 2
-integer, public, parameter :: MIRROR_CV_TYPE = 3
+integer, public, parameter :: MIRROR_CV_TYPE = 2
+integer, public, parameter :: MAX_CV_TYPE    = 3
 
 type, public :: cv_type ! control volume
     ! time varying
@@ -40,6 +45,7 @@ type, public :: cv_type ! control volume
     
     ! constants
     character(len=32)           :: label       ! human-readable label for control volume
+    integer                     :: eos         ! equation of state to use for control volume
     integer                     :: type        ! type of control volume
     type(si_area)               :: csa         ! cross-sectional area
     type(si_inverse_mass)       :: rm_p        ! reciprocal mass of piston/projectile
@@ -48,8 +54,8 @@ type, public :: cv_type ! control volume
     type(si_length)             :: x_z         ! zero force location for spring
     type(gas_type), allocatable :: gas(:)      ! gas data
     integer                     :: i_cv_mirror ! index of control volume to use in pressure difference calculation
-    type(si_pressure)           :: p_const    ! if `cv%type = CONST_CV_TYPE`, then `cv%p() = p_const`
-    type(si_temperature)        :: temp_const ! if `cv%type = CONST_CV_TYPE`, then `cv%temp() = temp_const`
+    type(si_pressure)           :: p_const    ! if `cv%eos = CONST_EOS`, then `cv%p() = p_const`
+    type(si_temperature)        :: temp_const ! if `cv%eos = CONST_EOS`, then `cv%temp() = temp_const`
     type(si_length)             :: x_stop     ! `x` location where simulation will stop
 contains
     procedure :: m_total
@@ -165,21 +171,21 @@ pure function p_eos(cv, rho, temp)
     
     integer :: n_d ! number of derivatives
     
-    select case (cv%type)
-        case (NORMAL_CV_TYPE)
-            call assert(rho%v%v  > 0.0_WP, "cva (p_eos): rho%v > 0 violated")
-            call assert(temp%v%v > 0.0_WP, "cva (p_eos): temp%v > 0 violated")
+    select case (cv%eos)
+        case (IDEAL_EOS)
+            call assert(rho%v%v  > 0.0_WP, "cva (p_eos, IDEAL_EOS): rho%v > 0 violated")
+            call assert(temp%v%v > 0.0_WP, "cva (p_eos, IDEAL_EOS): temp%v > 0 violated")
             call assert_dimension(rho%v%d, temp%v%d)
             
             n_d   = size(rho%v%d)
             p_eos = rho * cv%r() * temp
             
-            call assert(p_eos < cv%p_c(), "cva (p_eos): ideal gas law validity is questionable")
-        case (CONST_CV_TYPE)
-            call assert(is_close(temp%v%v, cv%temp_const%v%v), "cva (p_eos): temp /= temp_const")
+            call assert(p_eos < cv%p_c(), "cva (p_eos, IDEAL_EOS): ideal gas law validity is questionable")
+        case (CONST_EOS)
+            call assert(is_close(temp%v%v, cv%temp_const%v%v), "cva (p_eos, CONST_EOS): temp /= temp_const")
             p_eos = cv%p_const
         case default
-            error stop "cva (p_eos): invalid cv%type"
+            error stop "cva (p_eos): invalid cv%eos"
     end select
     
     call assert(p_eos%v%v >= 0.0_WP, "cva (p_eos): p_eos%v >= 0 violated")
@@ -387,8 +393,8 @@ pure function temp_cv(cv)
     
     call assert_mass(cv, "temp_cv")
     
-    select case (cv%type)
-        case (NORMAL_CV_TYPE)
+    select case (cv%eos)
+        case (IDEAL_EOS)
             n_d = size(cv%m(1)%v%d)
             call e_0%v%init_const(0.0_WP, n_d)
             call heat_capacity%v%init_const(0.0_WP, n_d)
@@ -400,10 +406,10 @@ pure function temp_cv(cv)
             
             call temp_0_%v%init_const(TEMP_0, n_d)
             temp_cv = temp_0_ + (cv%e - e_0) / heat_capacity
-        case (CONST_CV_TYPE)
+        case (CONST_EOS)
             temp_cv = cv%temp_const
         case default
-            error stop "cva (temp_cv): invalid cv%type"
+            error stop "cva (temp_cv): invalid cv%eos"
     end select
     
     call assert(temp_cv%v%v > 0.0_WP, "cva (temp_cv): temp_cv > 0 violated")
@@ -526,7 +532,7 @@ pure function gamma_cv(cv, y)
 end function gamma_cv
 
 pure subroutine set_normal(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, x_z, gas, &
-                            i_cv_mirror, x_stop, isentropic_filling, p_atm)
+                            i_cv_mirror, x_stop, isentropic_filling, p_atm, eos, type)
     class(cv_type), intent(in out) :: cv
     
     ! time varying
@@ -546,9 +552,11 @@ pure subroutine set_normal(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs,
     type(gas_type), intent(in)        :: gas(:)      ! gas data
     integer, intent(in)               :: i_cv_mirror ! index of control volume to use in pressure difference calculation
     
-    type(si_length), intent(in), optional   :: x_stop     ! `x` location where simulation will stop
+    type(si_length), intent(in), optional   :: x_stop ! `x` location where simulation will stop
     logical, intent(in), optional           :: isentropic_filling
-    type(si_pressure), intent(in), optional :: p_atm      ! atmospheric pressure (only requried if `isentropic_filling = .true.`
+    type(si_pressure), intent(in), optional :: p_atm  ! atmospheric pressure (only requried if `isentropic_filling = .true.`
+    integer, intent(in), optional           :: eos    ! equation of state to use
+    integer, intent(in), optional           :: type   ! type of CV to use
     
     integer              :: i, n_d
     type(si_temperature) :: temp
@@ -571,7 +579,6 @@ pure subroutine set_normal(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs,
     cv%x_z         = x_z
     cv%gas         = gas
     cv%i_cv_mirror = i_cv_mirror
-    cv%type        = NORMAL_CV_TYPE
     
     if (present(x_stop)) then
         cv%x_stop = x_stop
@@ -585,40 +592,55 @@ pure subroutine set_normal(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs,
         isentropic_filling_ = .false.
     end if
     
-    call assert(cv%x%v%v            >  0.0_WP, "cva (set): x > 0 violated")
-    call assert(p%v%v               >  0.0_WP, "cva (set): p > 0 violated")
-    call assert(temp_atm%v%v        >  0.0_WP, "cva (set): temp_atm > 0 violated")
-    call assert(len(trim(cv%label)) >       0, "cva (set): len(label) > 0 violated")
-    call assert(cv%csa%v%v          >  0.0_WP, "cva (set): csa > 0 violated")
-    call assert(cv%p_fs%v%v         >= 0.0_WP, "cva (set): p_fs >= 0 violated")
-    call assert(cv%p_fd%v%v         >= 0.0_WP, "cva (set): p_fd >= 0 violated")
-    call assert(cv%k%v%v            >= 0.0_WP, "cva (set): k >= 0 violated")
-    call assert(cv%i_cv_mirror      >= 0,      "cva (set): i_cv_mirror >= 0 violated")
+    if (present(eos)) then
+        cv%eos = eos
+    else
+        cv%eos = IDEAL_EOS
+    end if
+    
+    if (present(type)) then
+        cv%type = type
+    else
+        cv%type = NORMAL_CV_TYPE
+    end if
+    
+    call assert(cv%x%v%v            >  0.0_WP, "cva (set_normal): x > 0 violated")
+    call assert(p%v%v               >  0.0_WP, "cva (set_normal): p > 0 violated")
+    call assert(temp_atm%v%v        >  0.0_WP, "cva (set_normal): temp_atm > 0 violated")
+    call assert(len(trim(cv%label)) >       0, "cva (set_normal): len(label) > 0 violated")
+    call assert(cv%csa%v%v          >  0.0_WP, "cva (set_normal): csa > 0 violated")
+    call assert(cv%p_fs%v%v         >= 0.0_WP, "cva (set_normal): p_fs >= 0 violated")
+    call assert(cv%p_fd%v%v         >= 0.0_WP, "cva (set_normal): p_fd >= 0 violated")
+    call assert(cv%k%v%v            >= 0.0_WP, "cva (set_normal): k >= 0 violated")
+    call assert(cv%i_cv_mirror      >= 0,      "cva (set_normal): i_cv_mirror >= 0 violated")
+    
+    call assert((cv%eos >= 1) .and. (cv%eos <= MAX_EOS), "cva (set_normal): invalid EOS")
+    call assert((cv%type >= 1) .and. (cv%type <= MAX_CV_TYPE), "cva (set_normal): invalid control volume type")
     
     call assert_dimension(y, cv%gas)
     allocate(cv%m(size(y)))
     call y_sum%v%init_const(0.0_WP, n_d)
     call m_total%v%init_const(1.0_WP, n_d)
     do i = 1, size(y)
-        call assert(gas(i)%gamma > 1.0_WP, "cva (set): gas%gamma > 1 violated")
-        call assert(gas(i)%mm    > 0.0_WP, "cva (set): gas%mm > 0 violated")
-        call assert(gas(i)%mm    < 0.1_WP, "cva (set): gas%mm < 0.1 violated") ! to catch using g/mol by mistake
-        call assert(gas(i)%p_c   > 0.0_WP, "cva (set): gas%p_c > 0 violated") ! to catch using g/mol by mistake
+        call assert(gas(i)%gamma > 1.0_WP, "cva (set_normal): gas%gamma > 1 violated")
+        call assert(gas(i)%mm    > 0.0_WP, "cva (set_normal): gas%mm > 0 violated")
+        call assert(gas(i)%mm    < 0.1_WP, "cva (set_normal): gas%mm < 0.1 violated") ! to catch using g/mol by mistake
+        call assert(gas(i)%p_c   > 0.0_WP, "cva (set_normal): gas%p_c > 0 violated")
         
         y_sum = y_sum + y(i)
     end do
     
-    call assert(is_close(y_sum%v%v, 1.0_WP), "cva (set): mass fractions do not sum to 1")
+    call assert(is_close(y_sum%v%v, 1.0_WP), "cva (set_normal): mass fractions do not sum to 1")
     
     ! Get correct temperature depending on how the chamber is filled.
     if (isentropic_filling_) then
-        call assert(present(p_atm), "cva (set): isentropic_filling = .true. requires p_atm")
-        call assert(p_atm%v%v > 0.0_WP, "cva (set): p_atm > 0 required for isentropic_filling")
+        call assert(present(p_atm), "cva (set_normal): isentropic_filling = .true. requires p_atm")
+        call assert(p_atm%v%v > 0.0_WP, "cva (set_normal): p_atm > 0 required for isentropic_filling")
         gamma_cv = cv%gamma(y)
         temp = temp_atm * ((p / p_atm)**((gamma_cv - 1.0_WP)/gamma_cv))
     else
         call assert(.not. present(p_atm), &
-                        "cva (set): p_atm only affects isentropic_filling so it should not be set otherwise")
+                        "cva (set_normal): p_atm only affects isentropic_filling so it should not be set otherwise")
         
         ! isothermal
         temp = temp_atm
@@ -637,11 +659,13 @@ pure subroutine set_normal(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs,
     call assert_dimension(cv%x%v%d, cv%x_dot%v%d)
     call assert_dimension(cv%x%v%d, cv%e%v%d)
     
-    ! This is checked here and not in `rho_eos` as the masses are not defined when `rho_eos` is called.
-    call assert(p < cv%p_c(), "cva (set): ideal gas law validity is questionable")
+    if (cv%eos == IDEAL_EOS) then
+        ! This is checked here and not in `rho_eos` as the masses are not defined when `rho_eos` is called.
+        call assert(p < cv%p_c(), "cva (set_normal): ideal gas law validity is questionable")
+    end if
 end subroutine set_normal
 
-pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror)
+pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror, type)
     class(cv_type), intent(in out) :: cv
     
     character(len=*), intent(in)     :: label       ! human-readable label for control volume
@@ -650,6 +674,8 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror)
     type(si_temperature), intent(in) :: temp_const  ! temperature
     type(gas_type), intent(in)       :: gas(:)      ! gas data
     integer, intent(in)              :: i_cv_mirror ! index of control volume to use in pressure difference calculation
+    
+    integer, intent(in), optional :: type ! type of CV to use
     
     integer :: n_d, n_gas, i_gas
     
@@ -677,7 +703,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror)
     
     cv%label       = label
     cv%csa         = csa
-    cv%type        = CONST_CV_TYPE
+    cv%eos         = CONST_EOS
     cv%gas         = gas
     cv%i_cv_mirror = i_cv_mirror
     cv%p_const     = p_const
@@ -686,7 +712,21 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror)
     ! Having `p_atm == 0` is useful for testing, so I allow this to go to zero.
     call assert(cv%p_const%v%v    >= 0.0_WP, "cva (set_const): p_const >= 0 violated")
     call assert(cv%temp_const%v%v >  0.0_WP, "cva (set_const): temp_const > 0 violated")
-    call assert(cv%i_cv_mirror    >= 0,      "cva (set_const): i_cv_mirror >= 0 violated")
+    
+    if (present(type)) then
+        cv%type = type
+    else
+        cv%type = MIRROR_CV_TYPE
+    end if
+    
+    select case (cv%type)
+        case (NORMAL_CV_TYPE)
+            call assert(cv%i_cv_mirror >= 0, "cva (set_const): i_cv_mirror >= 0 violated")
+        case (MIRROR_CV_TYPE)
+            call assert(cv%i_cv_mirror >= 1, "cva (set_const, MIRROR_CV_TYPE): i_cv_mirror >= 1 violated")
+        case default
+            error stop "cva (set_const): invalid cv%type"
+    end select
 end subroutine set_const
 
 pure function p_f(cv, p_fe)
@@ -764,7 +804,7 @@ pure function d_x_d_t(sys, i_cv)
     select case (sys%cv(i_cv)%type)
         case (NORMAL_CV_TYPE)
             d_x_d_t = sys%cv(i_cv)%x_dot
-        case (CONST_CV_TYPE, MIRROR_CV_TYPE)
+        case (MIRROR_CV_TYPE)
             if (sys%cv(i_cv)%i_cv_mirror >= 1) then
                 call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
                                 "cva (d_x_d_t): mirror CV is not a NORMAL_CV_TYPE")
@@ -801,7 +841,7 @@ pure function d_xdot_d_t(sys, i_cv)
     select case (sys%cv(i_cv)%type)
         case (NORMAL_CV_TYPE)
             d_xdot_d_t = d_xdot_d_t_normal(sys, i_cv)
-        case (CONST_CV_TYPE, MIRROR_CV_TYPE)
+        case (MIRROR_CV_TYPE)
             if (sys%cv(i_cv)%i_cv_mirror >= 1) then
                 call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
                                 "cva (d_xdot_d_t): mirror CV is not a NORMAL_CV_TYPE")
@@ -824,13 +864,13 @@ pure function d_xdot_d_t_normal(sys, i_cv)
     type(si_pressure) :: p_other
     
     call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_xdot_d_t_normal): cv%csa > 0 violated")
+    call assert(sys%cv(i_cv)%type == NORMAL_CV_TYPE, "cva (d_xdot_d_t_normal): CV needs to be NORMAL_CV_TYPE")
     
     if (sys%cv(i_cv)%i_cv_mirror >= 1) then
         p_other = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
         
-        call assert((sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == CONST_CV_TYPE) &
-                        .or. (sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE), &
-                        "cva (d_xdot_d_t_normal): mirror CV not CONST_CV_TYPE or MIRROR_CV_TYPE")
+        call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
+                        "cva (d_xdot_d_t_normal): mirror CV not MIRROR_CV_TYPE")
     else
         ! If `i_cv_mirror == 0` then there is no mirror CV.
         call p_other%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
