@@ -134,7 +134,7 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_2_)
     call p_fs_barrel%v%init_const(5000.0_WP, 0)
     call p_fd_barrel%v%init_const(0.0_WP, 0)
     
-    call create_barrel(vol_dead, d_barrel, p_atm, temp_atm, m_projectile, p_fs_barrel, p_fd_barrel, inch_const(12.0_WP, 0), &
+    call create_barrel(vol_dead, csa_barrel, p_atm, temp_atm, m_projectile, p_fs_barrel, p_fd_barrel, inch_const(12.0_WP, 0), &
                         [DRY_AIR], 1, sys_start%cv(3))
     
     if (present(x_2_)) x_2_ = x_2
@@ -371,7 +371,7 @@ subroutine test_tinkershot_1(tests)
     ! TODO: Get correct number. Update to include dead space if necessary.
     call l_travel%v%init_const(550.0e-3_WP, 0)
     
-    call create_barrel(vol_dead, d_barrel, p_atm, temp_atm, m_projectile, p_fs_barrel, p_fd_barrel, l_travel, &
+    call create_barrel(vol_dead, csa_barrel, p_atm, temp_atm, m_projectile, p_fs_barrel, p_fd_barrel, l_travel, &
                         [DRY_AIR], 2, sys_start%cv(4))
     
     call run(sys_start, sys_end, status)
