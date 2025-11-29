@@ -36,6 +36,11 @@ integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
 integer, public, parameter :: MAX_CV_TYPE    = 2
 
+integer, public, parameter :: NORMAL_RUN_RC  = 0
+integer, public, parameter :: TIMEOUT_RUN_RC = 1
+integer, public, parameter :: MASS_RUN_RC    = 2
+integer, public, parameter :: TEMP_RUN_RC    = 3
+
 type, public :: cv_type ! control volume
     ! time varying
     type(si_length)            :: x     ! location of piston/projectile
@@ -1241,25 +1246,25 @@ pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
     end do
 end subroutine rk_stage
 
-subroutine run(sys_start, sys_end, status, t_stop_)
+subroutine run(sys_start, sys_end, status, t_stop)
     type(cv_system_type), allocatable, intent(in)  :: sys_start
     type(cv_system_type), allocatable, intent(out) :: sys_end
     type(run_status_type), intent(out)             :: status
-    type(si_time), intent(in), optional            :: t_stop_
+    type(si_time), intent(in), optional            :: t_stop
     
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp
     
-    type(si_time)        :: t_stop ! time where simulation will stop
+    type(si_time)        :: t_stop_ ! time where simulation will stop
     integer              :: n_d
     type(si_time)        :: t, dt, t_old
     logical              :: exit_time_loop
     
     n_d = size(sys_start%cv(1)%x%v%d)
     
-    if (present(t_stop_)) then
-        t_stop = t_stop_
+    if (present(t_stop)) then
+        t_stop_ = t_stop
     else
-        call t_stop%v%init_const(T_STOP_DEFAULT, n_d)
+        call t_stop_%v%init_const(T_STOP_DEFAULT, n_d)
     end if
     
     sys_old = sys_start
@@ -1273,7 +1278,7 @@ subroutine run(sys_start, sys_end, status, t_stop_)
         
         !print *, t%v%v
         
-        call check_sys(sys_new, t_stop, t, status, exit_time_loop)
+        call check_sys(sys_new, t_stop_, t, status, exit_time_loop)
         if (exit_time_loop) exit time_loop
         
         call move_alloc(from=sys_old,  to=sys_temp)
@@ -1316,7 +1321,7 @@ pure subroutine check_sys(sys, t_stop, t, status, exit_time_loop)
         
         m_total_i = sys%cv(i_cv)%m_total()
         if (m_total_i%v%v < 0.0_WP) then
-            status%rc = 2
+            status%rc = MASS_RUN_RC
             
             allocate(status%data(n_cv))
             n_bad_cv = 0
@@ -1340,7 +1345,7 @@ pure subroutine check_sys(sys, t_stop, t, status, exit_time_loop)
         
         temp_i = sys%cv(i_cv)%temp()
         if (temp_i%v%v <= 0.0_WP) then
-            status%rc = 3
+            status%rc = TEMP_RUN_RC
             
             allocate(status%data(n_cv))
             n_bad_cv = 0
@@ -1365,7 +1370,7 @@ pure subroutine check_sys(sys, t_stop, t, status, exit_time_loop)
     end do
     
     if (t >= t_stop) then
-        status%rc = 1
+        status%rc = TIMEOUT_RUN_RC
         exit_time_loop = .true.
         return
     end if

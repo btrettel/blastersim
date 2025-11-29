@@ -45,6 +45,7 @@ call test_m_dot_4(tests)
 
 call test_calculate_flows(tests)
 call test_conservation(tests)
+!call test_mirror(tests)
 
 call tests%end_tests()
 
@@ -1258,7 +1259,7 @@ subroutine test_conservation(tests)
     use convert
     use gasdata, only: DRY_AIR
     use prec, only: PI
-    use cva, only: cv_system_type, run_status_type, run
+    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run
     
     type(test_results_type), intent(in out) :: tests
     
@@ -1352,7 +1353,7 @@ subroutine test_conservation(tests)
     
     call run(sys_start, sys_end, status)
     
-    call tests%integer_eq(status%rc, 0, "test_conservation, status%rc")
+    call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_conservation, status%rc")
     
     spring_pe_3_start = sys_start%cv(3)%spring_pe()
     call tests%real_eq(spring_pe_3_start%v%v, 0.5_WP*(700.0_WP)*(9.0e-2_WP)**2, "test_conservation, spring_pe_3_start")
@@ -1372,5 +1373,59 @@ subroutine test_conservation(tests)
     e_end   = sys_end%e_total()
     call tests%real_eq(e_start%v%v, e_end%v%v, "test_conservation, e_start == e_end", abs_tol=1.0e-5_WP)
 end subroutine test_conservation
+
+!subroutine test_mirror(tests)
+!    use convert
+!    use gasdata, only: DRY_AIR
+!    use cva, only: MIRROR_CV_TYPE, TIMEOUT_RUN_RC, cv_system_type, run_status_type, run
+    
+!    type(test_results_type), intent(in out) :: tests
+    
+!    type(cv_system_type), allocatable :: sys_start, sys_end
+!    type(run_status_type)             :: status
+    
+!    type(si_length)      :: x_1, x_2
+!    type(si_velocity)    :: x_dot
+!    type(unitless)       :: y(1)
+!    type(si_pressure)    :: p_1, p_2, p_fs, p_fd
+!    type(si_temperature) :: temp
+!    type(si_area)        :: csa
+!    type(si_mass)        :: m_p
+!    type(si_stiffness)   :: k
+!    type(si_length)      :: x_z
+!    type(si_time)        :: t_stop
+    
+!    allocate(sys_start)
+!    allocate(sys_start%cv(2))
+!    allocate(sys_start%con(2, 2))
+    
+!    sys_start%con(1, 1)%active = .false.
+!    sys_start%con(1, 2)%active = .false.
+!    sys_start%con(2, 1)%active = .false.
+!    sys_start%con(2, 2)%active = .false.
+    
+!    call x_1%v%init_const(10.0e-2_WP, 0)
+!    call x_2%v%init_const(10.0e-2_WP, 0)
+!    call x_dot%v%init_const(0.0_WP, 0)
+!    call p_1%v%init_const(5.0e5_WP, 0)
+!    call p_2%v%init_const(1.0e5_WP, 0)
+!    call temp%v%init_const(300.0_WP, 0)
+!    call csa%v%init_const(0.0025_WP, 0)
+!    call m_p%v%init_const(100.0e-3_WP, 0)
+!    call p_fs%v%init_const(0.0_WP, 0)
+!    call p_fd%v%init_const(0.0_WP, 0)
+!    call k%v%init_const(0.0_WP, 0)
+!    call x_z%v%init_const(0.0_WP, 0)
+!    call t_stop%v%init_const(10.0_WP, 0)
+    
+!    call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp, "chamber 1", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
+!                                    x_z, [DRY_AIR], 2)
+!    call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp, "chamber 2", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
+!                                    x_z, [DRY_AIR], 1, type=MIRROR_CV_TYPE)
+    
+!    call run(sys_start, sys_end, status, t_stop=t_stop)
+    
+!    call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_mirror, status%rc")
+!end subroutine test_mirror
 
 end program test_cva
