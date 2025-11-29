@@ -111,7 +111,7 @@ subroutine test_p_eos_ideal(tests)
 end subroutine test_p_eos_ideal
 
 subroutine test_constant_eos(tests)
-    use gasdata, only: DRY_AIR
+    use gasdata, only: P_ATM, TEMP_ATM, DRY_AIR
     use cva, only: cv_type, CONST_EOS
     
     type(test_results_type), intent(in out) :: tests
@@ -121,12 +121,14 @@ subroutine test_constant_eos(tests)
     type(si_mass_density) :: rho
     type(si_temperature)  :: temp
     
-    call cv%p_const%v%init_const(5.0e5_WP, 0)
-    call cv%temp_const%v%init_const(400.0_WP, 0)
-    call rho%v%init_const(1.0_WP, 0)
+    call cv%p_const%v%init_const(P_ATM, 0)
+    call cv%temp_const%v%init_const(TEMP_ATM, 0)
+    call rho%v%init_const(1.0_WP, 0) ! Doesn't matter what this is set to initially.
     allocate(cv%m(1))
-    call cv%m(1)%v%init_const(1.0_WP, 0)
+    call cv%m(1)%v%init_const(4.0_WP, 0)
     call cv%e%v%init_const(1.0_WP, 0)
+    call cv%x%v%init_const(2.0_WP, 0)
+    call cv%csa%v%init_const(1.0_WP, 0)
     cv%eos = CONST_EOS
     
     allocate(cv%gas(1))
@@ -134,14 +136,16 @@ subroutine test_constant_eos(tests)
     
     p    = cv%p_eos(rho, cv%temp_const)
     temp = cv%temp()
+    rho  = cv%rho()
     
-    call tests%real_eq(p%v%v, 5.0e5_WP, "p_eos, constant CV")
-    call tests%real_eq(temp%v%v, 400.0_WP, "temp_cv, constant CV")
+    call tests%real_eq(p%v%v, P_ATM, "p_eos, constant CV")
+    call tests%real_eq(temp%v%v, TEMP_ATM, "temp_cv, constant CV")
+    call tests%real_eq(rho%v%v, 2.0_WP, "rho_cv, constant CV") ! calculated from mass, not meaningful
 end subroutine test_constant_eos
 
 subroutine test_rho_eos(tests)
     use gasdata, only: P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR
-    use cva, only: cv_type
+    use cva, only: cv_type, IDEAL_EOS
     
     type(test_results_type), intent(in out) :: tests
 
@@ -157,6 +161,7 @@ subroutine test_rho_eos(tests)
     allocate(cv%m(1))
     call cv%m(1)%v%init_const(1.0_WP, 0)
     call cv%e%v%init_const(1.0_WP, 0)
+    cv%eos = IDEAL_EOS
     
     allocate(cv%gas(1))
     cv%gas(1) = DRY_AIR
@@ -170,7 +175,7 @@ subroutine test_r_cv(tests)
     ! Tests both the `r_cv` and `rho_eos`
     
     use gasdata, only: P_ATM, TEMP_ATM, RHO_ATM, R_BAR, gas_type, DRY_AIR, N2, O2, AR, CO2
-    use cva, only: cv_type
+    use cva, only: cv_type, IDEAL_EOS
     use checks, only: assert, is_close
     
     type(test_results_type), intent(in out) :: tests
@@ -208,6 +213,8 @@ subroutine test_r_cv(tests)
     
     ! Needed to avoid an assertion failing.
     call cv%e%v%init_const(1.0_WP, 0)
+    
+    cv%eos = IDEAL_EOS
     
     r_cv = cv%r()
     call tests%real_eq(r_cv%v%v, 0.2870e3_WP, "cv%r for mixture (moran_fundamentals_2008 table 3.1)", abs_tol=0.1_WP)

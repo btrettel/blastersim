@@ -30,11 +30,11 @@ real(WP), public, parameter :: T_STOP_DEFAULT = 0.5_WP    ! s
 integer, public, parameter :: IDEAL_EOS = 1 ! ideal gas equation of state
 integer, public, parameter :: CONST_EOS = 2 ! constant pressure, temperature, density
 integer, public, parameter :: RK_EOS    = 3 ! Redlich–Kwong equation of state
-integer, public, parameter :: MAX_EOS   = 3
+integer, public, parameter :: MAX_EOS   = 2
 
 integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
-integer, public, parameter :: MAX_CV_TYPE    = 3
+integer, public, parameter :: MAX_CV_TYPE    = 2
 
 type, public :: cv_type ! control volume
     ! time varying
@@ -181,14 +181,14 @@ pure function p_eos(cv, rho, temp)
             p_eos = rho * cv%r() * temp
             
             call assert(p_eos < cv%p_c(), "cva (p_eos, IDEAL_EOS): ideal gas law validity is questionable")
+            call assert(p_eos%v%v > 0.0_WP, "cva (p_eos, IDEAL_EOS): p_eos%v > 0 violated")
         case (CONST_EOS)
             call assert(is_close(temp%v%v, cv%temp_const%v%v), "cva (p_eos, CONST_EOS): temp /= temp_const")
             p_eos = cv%p_const
+            call assert(p_eos%v%v >= 0.0_WP, "cva (p_eos, CONST_EOS): p_eos%v >= 0 violated")
         case default
             error stop "cva (p_eos): invalid cv%eos"
     end select
-    
-    call assert(p_eos%v%v >= 0.0_WP, "cva (p_eos): p_eos%v >= 0 violated")
 end function p_eos
 
 pure function rho_eos(cv, p, temp, y)
@@ -213,6 +213,7 @@ pure function rho_eos(cv, p, temp, y)
     
     ! Don't check `p_c` here as that requires the masses.
     
+    call assert(cv%eos == IDEAL_EOS, "cva (rho_eos): ideal equation of state required")
     call assert(p%v%v    >  0.0_WP, "cva (rho_eos): p%v > 0 violated")
     call assert(temp%v%v >  0.0_WP, "cva (rho_eos): temp%v > 0 violated")
     call assert(size(y)  >= 1,      "cva (rho_eos): size(y) >= 1 violated")
@@ -232,6 +233,7 @@ pure function rho_eos(cv, p, temp, y)
         do j = 1, size(y)
             denominator = denominator + y(j)*(cv%gas(i)%mm/cv%gas(j)%mm) ! MAYBE: change so that the molar masses have units?
         end do
+        call assert(denominator%v%v > 0.0_WP, "cva (rho_eos): denominator is zero")
         call gas_mm%v%init_const(cv%gas(i)%mm, n_d)
         mm    = mm + y(i)*gas_mm/denominator
         y_sum = y_sum + y(i)
@@ -268,6 +270,7 @@ pure function p_c(cv)
         do j = 1, size(cv%m)
             denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm) ! MAYBE: change so that the molar masses have units?
         end do
+        call assert(denominator%v%v > 0.0_WP, "cva (p_c): denominator is zero")
         chi = cv%m(i) / denominator
         call p_ci%v%init_const(cv%gas(i)%p_c, size(cv%m(1)%v%d))
         p_c = p_c + chi*p_ci
@@ -324,6 +327,7 @@ pure function chi(cv)
             denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm) ! MAYBE: change so that the molar masses have units?
             call assert(denominator%v%v >= 0.0_WP, "cva (chi): denominator >= 0 violated")
         end do
+        call assert(denominator%v%v > 0.0_WP, "cva (chi): denominator is zero")
         chi(i)  = cv%m(i) / denominator
         chi_sum = chi_sum + chi(i)
         call assert(chi(i)%v%v >= 0.0_WP, "cva (chi): chi >= 0 violated")
@@ -363,6 +367,7 @@ pure function r_cv(cv)
         do j = 1, size(cv%m)
             denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm) ! MAYBE: change so that the molar masses have units?
         end do
+        call assert(denominator%v%v > 0.0_WP, "cva (r_cv): denominator is zero")
         chi = cv%m(i) / denominator
         chi_sum = chi_sum + chi
         call gas_mm%v%init_const(cv%gas(i)%mm, n_d)
@@ -429,13 +434,20 @@ pure function vol_cv(cv)
 end function vol_cv
 
 pure function rho_cv(cv)
+    ! Returns simply the mass divided by the volume.
+    ! For `CONST_EOS`, this may not be the desired mass density.
+    
     class(cv_type), intent(in) :: cv
     
     type(si_mass_density) :: rho_cv
     
+    type(si_volume) :: vol
+    
     call assert_mass(cv, "rho_cv")
     
-    rho_cv = cv%m_total() / cv%vol()
+    vol = cv%vol()
+    call assert(vol%v%v > 0.0_WP, "cva (rho_cv): volume is zero")
+    rho_cv = cv%m_total() / vol
     
     call assert(rho_cv%v%v >= 0.0_WP, "cva (rho_cv): rho_cv > 0 violated")
 end function rho_cv
@@ -953,7 +965,14 @@ pure subroutine assert_mass(cv, procedure_name)
     end do
     
     m_total = cv%m_total()
-    call assert(m_total%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m_total >= 0 violated")
+    select case (cv%eos)
+        case (IDEAL_EOS)
+            call assert(m_total%v%v > 0.0_WP, "cva (" // trim(procedure_name) // ", IDEAL_EOS): cv%m_total > 0 violated")
+        case (CONST_EOS)
+            call assert(m_total%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // ", CONST_EOS): cv%m_total >= 0 violated")
+        case default
+            error stop "cva (assert_mass): invalid cv%eos"
+    end select
     
     ! I would also check that `cv%e` is positive here, but...
     ! Strictly speaking, the people making the thermodynamic tables might not have made internal energy always positive.
