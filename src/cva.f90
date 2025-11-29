@@ -75,7 +75,7 @@ contains
     procedure :: u     => u_cv
     procedure :: h     => h_cv
     procedure :: gamma => gamma_cv
-    procedure :: set_normal
+    procedure :: set
     procedure :: set_const
     procedure :: p_f
     procedure :: p_f0
@@ -543,7 +543,7 @@ pure function gamma_cv(cv, y)
     call assert(gamma_cv%v%v > 1.0_WP, "cva (gamma_cv): gamma_cv > 1 violated")
 end function gamma_cv
 
-pure subroutine set_normal(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, x_z, gas, &
+pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, x_z, gas, &
                             i_cv_mirror, x_stop, isentropic_filling, p_atm, eos, type)
     class(cv_type), intent(in out) :: cv
     
@@ -616,43 +616,43 @@ pure subroutine set_normal(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs,
         cv%type = NORMAL_CV_TYPE
     end if
     
-    call assert(cv%x%v%v            >  0.0_WP, "cva (set_normal): x > 0 violated")
-    call assert(p%v%v               >  0.0_WP, "cva (set_normal): p > 0 violated")
-    call assert(temp_atm%v%v        >  0.0_WP, "cva (set_normal): temp_atm > 0 violated")
-    call assert(len(trim(cv%label)) >       0, "cva (set_normal): len(label) > 0 violated")
-    call assert(cv%csa%v%v          >  0.0_WP, "cva (set_normal): csa > 0 violated")
-    call assert(cv%p_fs%v%v         >= 0.0_WP, "cva (set_normal): p_fs >= 0 violated")
-    call assert(cv%p_fd%v%v         >= 0.0_WP, "cva (set_normal): p_fd >= 0 violated")
-    call assert(cv%k%v%v            >= 0.0_WP, "cva (set_normal): k >= 0 violated")
-    call assert(cv%i_cv_mirror      >= 0,      "cva (set_normal): i_cv_mirror >= 0 violated")
+    call assert(cv%x%v%v            >  0.0_WP, "cva (set): x > 0 violated")
+    call assert(p%v%v               >  0.0_WP, "cva (set): p > 0 violated")
+    call assert(temp_atm%v%v        >  0.0_WP, "cva (set): temp_atm > 0 violated")
+    call assert(len(trim(cv%label)) >       0, "cva (set): len(label) > 0 violated")
+    call assert(cv%csa%v%v          >  0.0_WP, "cva (set): csa > 0 violated")
+    call assert(cv%p_fs%v%v         >= 0.0_WP, "cva (set): p_fs >= 0 violated")
+    call assert(cv%p_fd%v%v         >= 0.0_WP, "cva (set): p_fd >= 0 violated")
+    call assert(cv%k%v%v            >= 0.0_WP, "cva (set): k >= 0 violated")
+    call assert(cv%i_cv_mirror      >= 0,      "cva (set): i_cv_mirror >= 0 violated")
     
-    call assert((cv%eos >= 1) .and. (cv%eos <= MAX_EOS), "cva (set_normal): invalid EOS")
-    call assert((cv%type >= 1) .and. (cv%type <= MAX_CV_TYPE), "cva (set_normal): invalid control volume type")
+    call assert((cv%eos >= 1) .and. (cv%eos <= MAX_EOS), "cva (set): invalid EOS")
+    call assert((cv%type >= 1) .and. (cv%type <= MAX_CV_TYPE), "cva (set): invalid control volume type")
     
     call assert_dimension(y, cv%gas)
     allocate(cv%m(size(y)))
     call y_sum%v%init_const(0.0_WP, n_d)
     call m_total%v%init_const(1.0_WP, n_d)
     do i = 1, size(y)
-        call assert(gas(i)%gamma > 1.0_WP, "cva (set_normal): gas%gamma > 1 violated")
-        call assert(gas(i)%mm    > 0.0_WP, "cva (set_normal): gas%mm > 0 violated")
-        call assert(gas(i)%mm    < 0.1_WP, "cva (set_normal): gas%mm < 0.1 violated") ! to catch using g/mol by mistake
-        call assert(gas(i)%p_c   > 0.0_WP, "cva (set_normal): gas%p_c > 0 violated")
+        call assert(gas(i)%gamma > 1.0_WP, "cva (set): gas%gamma > 1 violated")
+        call assert(gas(i)%mm    > 0.0_WP, "cva (set): gas%mm > 0 violated")
+        call assert(gas(i)%mm    < 0.1_WP, "cva (set): gas%mm < 0.1 violated") ! to catch using g/mol by mistake
+        call assert(gas(i)%p_c   > 0.0_WP, "cva (set): gas%p_c > 0 violated")
         
         y_sum = y_sum + y(i)
     end do
     
-    call assert(is_close(y_sum%v%v, 1.0_WP), "cva (set_normal): mass fractions do not sum to 1")
+    call assert(is_close(y_sum%v%v, 1.0_WP), "cva (set): mass fractions do not sum to 1")
     
     ! Get correct temperature depending on how the chamber is filled.
     if (isentropic_filling_) then
-        call assert(present(p_atm), "cva (set_normal): isentropic_filling = .true. requires p_atm")
-        call assert(p_atm%v%v > 0.0_WP, "cva (set_normal): p_atm > 0 required for isentropic_filling")
+        call assert(present(p_atm), "cva (set): isentropic_filling = .true. requires p_atm")
+        call assert(p_atm%v%v > 0.0_WP, "cva (set): p_atm > 0 required for isentropic_filling")
         gamma_cv = cv%gamma(y)
         temp = temp_atm * ((p / p_atm)**((gamma_cv - 1.0_WP)/gamma_cv))
     else
         call assert(.not. present(p_atm), &
-                        "cva (set_normal): p_atm only affects isentropic_filling so it should not be set otherwise")
+                        "cva (set): p_atm only affects isentropic_filling so it should not be set otherwise")
         
         ! isothermal
         temp = temp_atm
@@ -673,9 +673,9 @@ pure subroutine set_normal(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs,
     
     if (cv%eos == IDEAL_EOS) then
         ! This is checked here and not in `rho_eos` as the masses are not defined when `rho_eos` is called.
-        call assert(p < cv%p_c(), "cva (set_normal): ideal gas law validity is questionable")
+        call assert(p < cv%p_c(), "cva (set): ideal gas law validity is questionable")
     end if
-end subroutine set_normal
+end subroutine set
 
 pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror, type)
     class(cv_type), intent(in out) :: cv
