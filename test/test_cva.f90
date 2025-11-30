@@ -1276,7 +1276,8 @@ subroutine test_conservation(tests)
     type(si_mass)         :: m_p_3, m_p_4, m_start, m_end
     type(si_stiffness)    :: k
     type(si_length)       :: x_z
-    type(si_energy)       :: e_start, e_end, spring_pe_3_start, m_p_ke_3_start, e_start_3
+    type(si_energy)       :: e_start, e_end, spring_pe_3_start, m_p_ke_3_start, e_start_3, &
+                                e_barrel_atm
     
     allocate(sys_start)
     allocate(sys_start%cv(4))
@@ -1310,14 +1311,14 @@ subroutine test_conservation(tests)
     call temp_atm%v%init_const(300.0_WP, 0)
     
     ! 1: atmosphere for chamber
-    call p_atm%v%init_const(0.0_WP, 0)
+    call p_atm%v%init_const(1.0e5_WP, 0)
     call d_3%v%init_const(2.0e-2_WP, 0)
     csa_3 = (PI/4.0_WP)*square(d_3)
     
     call sys_start%cv(1)%set_const("atmosphere for chamber", csa_3, p_atm, temp_atm, [DRY_AIR], 3)
     
     ! 2: atmosphere for barrel
-    call p_atm%v%init_const(0.0_WP, 0)
+    call p_atm%v%init_const(1.0e5_WP, 0)
     call d_4%v%init_const(2.0e-2_WP, 0)
     csa_4 = (PI/4.0_WP)*square(d_4)
     
@@ -1373,6 +1374,13 @@ subroutine test_conservation(tests)
     e_start = sys_start%e_total()
     e_end   = sys_end%e_total()
     call tests%real_eq(e_start%v%v, e_end%v%v, "test_conservation, e_start == e_end", abs_tol=1.0e-5_WP)
+    
+    e_barrel_atm = sys_start%cv(2)%e_total()
+    call tests%real_gt(e_barrel_atm%v%v, 0.0_WP, "test_conservation, barrel atmosphere energy is non-zero")
+    call tests%real_gt(abs(sys_start%cv(2)%x_dot%v%v), 0.0_WP, &
+                        "test_conservation, barrel piston/projectile velocity is non-zero")
+    call tests%real_eq(e_barrel_atm%v%v, sys_start%cv(2)%e%v%v, &
+                            "test_conservation, barrel atmosphere energy is internal energy")
 end subroutine test_conservation
 
 subroutine test_mirror_1(tests)

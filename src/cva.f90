@@ -733,9 +733,8 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror,
     cv%p_const     = p_const
     cv%temp_const  = temp_const
     
-    ! Having `p_atm == 0` is useful for testing, so I allow this to go to zero.
-    call assert(cv%p_const%v%v    >= 0.0_WP, "cva (set_const): p_const >= 0 violated")
-    call assert(cv%temp_const%v%v >  0.0_WP, "cva (set_const): temp_const > 0 violated")
+    call assert(cv%p_const%v%v    > 0.0_WP, "cva (set_const): p_const > 0 violated")
+    call assert(cv%temp_const%v%v > 0.0_WP, "cva (set_const): temp_const > 0 violated")
     
     if (present(type)) then
         cv%type = type
@@ -829,13 +828,10 @@ pure function d_x_d_t(sys, i_cv)
         case (NORMAL_CV_TYPE)
             d_x_d_t = sys%cv(i_cv)%x_dot
         case (MIRROR_CV_TYPE)
-            if (sys%cv(i_cv)%i_cv_mirror >= 1) then
-                call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
-                                "cva (d_x_d_t): mirror CV is not a NORMAL_CV_TYPE")
-                d_x_d_t = -sys%cv(sys%cv(i_cv)%i_cv_mirror)%x_dot
-            else
-                call d_x_d_t%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
-            end if
+            call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_xdot_d_t): i_cv_mirror must be defined for a mirror CV")
+            call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
+                            "cva (d_x_d_t): mirror CV is not a NORMAL_CV_TYPE")
+            d_x_d_t = -sys%cv(sys%cv(i_cv)%i_cv_mirror)%x_dot
         case default
             error stop "cva (d_x_d_t): invalid cv%type"
     end select
@@ -866,13 +862,10 @@ pure function d_xdot_d_t(sys, i_cv)
         case (NORMAL_CV_TYPE)
             d_xdot_d_t = d_xdot_d_t_normal(sys, i_cv)
         case (MIRROR_CV_TYPE)
-            if (sys%cv(i_cv)%i_cv_mirror >= 1) then
-                call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
-                                "cva (d_xdot_d_t): mirror CV is not a NORMAL_CV_TYPE")
-                d_xdot_d_t = -d_xdot_d_t_normal(sys, sys%cv(i_cv)%i_cv_mirror)
-            else
-                call d_xdot_d_t%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
-            end if
+            call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_xdot_d_t): i_cv_mirror must be defined for a mirror CV")
+            call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
+                            "cva (d_xdot_d_t): mirror CV is not a NORMAL_CV_TYPE")
+            d_xdot_d_t = -d_xdot_d_t_normal(sys, sys%cv(i_cv)%i_cv_mirror)
         case default
             error stop "cva (d_xdot_d_t): invalid cv%type"
     end select
