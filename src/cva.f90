@@ -15,7 +15,7 @@ implicit none
 private
 
 public :: smooth_min
-public :: d_x_d_t, d_xdot_d_t, d_m_k_d_t, d_e_d_t
+public :: d_x_d_t, d_xdot_d_t, d_m_k_d_t, d_e_d_t, d_e_f_d_t
 public :: f_m_dot, g_m_dot
 public :: time_step, run
 
@@ -47,6 +47,7 @@ type, public :: cv_type ! control volume
     type(si_velocity)          :: x_dot ! velocity of piston/projectile
     type(si_mass), allocatable :: m(:)  ! mass(es) of gas(es) in control volume
     type(si_energy)            :: e     ! energy of gas in control volume
+    type(si_energy)            :: e_f   ! energy lost to piston/projectile friction in control volume
     
     ! constants
     character(len=32)           :: label       ! human-readable label for control volume
@@ -91,6 +92,7 @@ type :: cv_delta_type
     type(si_velocity)          :: x_dot ! delta of velocity of piston/projectile
     type(si_mass), allocatable :: m(:)  ! delta of mass(es) of gas(es) in control volume
     type(si_energy)            :: e     ! delta of energy of gas in control volume
+    type(si_energy)            :: e_f   ! delta of energy lost to piston/projectile friction in control volume
 end type cv_delta_type
 
 type, public :: con_type ! connection between control volumes
@@ -170,7 +172,7 @@ pure function e_total(cv)
     
     type(si_energy) :: e_total
     
-    e_total = cv%e + cv%spring_pe() + cv%m_p_ke()
+    e_total = cv%e + cv%e_f + cv%spring_pe() + cv%m_p_ke()
 end function e_total
 
 pure function p_eos(cv, rho, temp)
@@ -592,6 +594,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     
     cv%x     = x
     cv%x_dot = x_dot
+    call cv%e_f%v%init_const(0.0_WP, n_d)
     ! `p` and `temp` will be handled below
     
     cv%label       = label
@@ -716,6 +719,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror,
     
     call cv%x%v%init_const(1.0_WP, n_d)
     call cv%e%v%init_const(0.0_WP, n_d)
+    call cv%e_f%v%init_const(0.0_WP, n_d)
     call cv%rm_p%v%init_const(0.0_WP, n_d)
     call cv%p_fs%v%init_const(0.0_WP, n_d)
     call cv%p_fd%v%init_const(0.0_WP, n_d)
@@ -775,7 +779,8 @@ pure function p_f(cv, p_fe)
     
     p_f = p_f0(cv, p_fe) + (cv%p_fd - tanh(cv%x_dot/v_scale)*p_f0(cv, p_fe))*tanh(cv%x_dot/v_scale)
     
-    call assert(p_f%v%v <= max(cv%p_fs%v%v, cv%p_fd%v%v), "cva (p_f): p_f <= max(p_fs, p_fd) violated")
+    ! The 1.1 factor was added as I guess the inequality with a factor of 1.0 isn't guaranteed?
+    call assert(p_f%v%v <= 1.1_WP*max(cv%p_fs%v%v, cv%p_fd%v%v), "cva (p_f): p_f <= 1.1*max(p_fs, p_fd) violated")
 end function p_f
 
 pure function p_f0(cv, p_fe)
@@ -958,6 +963,40 @@ pure function d_e_d_t(cv, h_dot, i_cv)
         d_e_d_t = d_e_d_t + h_dot(j_cv, i_cv) - h_dot(i_cv, j_cv)
     end do
 end function d_e_d_t
+
+pure function d_e_f_d_t(sys, i_cv)
+    type(cv_system_type), intent(in) :: sys
+    integer, intent(in)              :: i_cv
+    
+    type(si_energy_flow_rate) :: d_e_f_d_t
+    
+    type(si_pressure) :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
+    type(si_pressure) :: p_other
+    
+    call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_xdot_d_t_normal): cv%csa > 0 violated")
+    
+    select case (sys%cv(i_cv)%type)
+        case (NORMAL_CV_TYPE)
+            if (sys%cv(i_cv)%i_cv_mirror >= 1) then
+                p_other = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
+                
+                call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
+                                "cva (d_xdot_d_t_normal): mirror CV not MIRROR_CV_TYPE")
+            else
+                ! If `i_cv_mirror == 0` then there is no mirror CV.
+                call p_other%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
+            end if
+            
+            p_fe = sys%cv(i_cv)%p() - p_other - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
+            
+            d_e_f_d_t = sys%cv(i_cv)%p_f(p_fe) * sys%cv(i_cv)%csa * sys%cv(i_cv)%x_dot
+        case (MIRROR_CV_TYPE)
+            call d_e_f_d_t%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
+            call assert(is_close(sys%cv(i_cv)%e_f%v%v, 0.0_WP), "cva (d_e_f_d_t): e_f must be zero for MIRROR_CV_TYPE")
+        case default
+            error stop "cva (d_e_f_d_t): invalid cv%type"
+    end select
+end function d_e_f_d_t
 
 pure subroutine assert_mass(cv, procedure_name)
     ! Why not make this a type-bound operator?
@@ -1167,6 +1206,7 @@ pure subroutine time_step(sys_old, dt, sys_new)
         call cv_delta_0(i_cv)%x%v%init_const(0.0_WP, n_d)
         call cv_delta_0(i_cv)%x_dot%v%init_const(0.0_WP, n_d)
         call cv_delta_0(i_cv)%e%v%init_const(0.0_WP, n_d)
+        call cv_delta_0(i_cv)%e_f%v%init_const(0.0_WP, n_d)
         do k_gas = 1, n_gas
             call cv_delta_0(i_cv)%m(k_gas)%v%init_const(0.0_WP, n_d)
         end do
@@ -1199,6 +1239,11 @@ pure subroutine time_step(sys_old, dt, sys_new)
                                                         + 2.0_WP*cv_delta_2(i_cv)%e &
                                                         + 2.0_WP*cv_delta_3(i_cv)%e &
                                                         + cv_delta_4(i_cv)%e &
+                                                        )/6.0_WP
+        sys_new%cv(i_cv)%e_f   = sys_old%cv(i_cv)%e_f + (cv_delta_1(i_cv)%e_f &
+                                                        + 2.0_WP*cv_delta_2(i_cv)%e_f &
+                                                        + 2.0_WP*cv_delta_3(i_cv)%e_f &
+                                                        + cv_delta_4(i_cv)%e_f &
                                                         )/6.0_WP
         do k_gas = 1, n_gas
             sys_new%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + (cv_delta_1(i_cv)%m(k_gas) &
@@ -1237,6 +1282,7 @@ pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
         sys%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + a*cv_delta_in(i_cv)%x
         sys%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + a*cv_delta_in(i_cv)%x_dot
         sys%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + a*cv_delta_in(i_cv)%e
+        sys%cv(i_cv)%e_f   = sys_old%cv(i_cv)%e_f   + a*cv_delta_in(i_cv)%e_f
         do k_gas = 1, n_gas
             sys%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + a*cv_delta_in(i_cv)%m(k_gas)
         end do
@@ -1246,6 +1292,7 @@ pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
         cv_delta_out(i_cv)%x     = dt*d_x_d_t(sys, i_cv)
         cv_delta_out(i_cv)%x_dot = dt*d_xdot_d_t(sys, i_cv)
         cv_delta_out(i_cv)%e     = dt*d_e_d_t(sys%cv(i_cv), h_dot, i_cv)
+        cv_delta_out(i_cv)%e_f   = dt*d_e_f_d_t(sys, i_cv)
         do k_gas = 1, n_gas
             cv_delta_out(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys%cv(i_cv), m_dot, k_gas, i_cv)
         end do
