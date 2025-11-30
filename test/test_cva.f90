@@ -1260,7 +1260,7 @@ subroutine test_conservation(tests)
     use convert
     use gasdata, only: DRY_AIR
     use prec, only: PI
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run
+    use cva, only: MIRROR_CV_TYPE, NORMAL_RUN_RC, cv_system_type, run_status_type, run
     
     type(test_results_type), intent(in out) :: tests
     
@@ -1277,7 +1277,7 @@ subroutine test_conservation(tests)
     type(si_stiffness)    :: k
     type(si_length)       :: x_z
     type(si_energy)       :: e_start, e_end, spring_pe_3_start, m_p_ke_3_start, e_start_3, &
-                                e_barrel_atm
+                                e_chamber_atm, e_barrel_atm
     
     allocate(sys_start)
     allocate(sys_start%cv(4))
@@ -1314,8 +1314,12 @@ subroutine test_conservation(tests)
     call p_atm%v%init_const(1.0e5_WP, 0)
     call d_3%v%init_const(2.0e-2_WP, 0)
     csa_3 = (PI/4.0_WP)*square(d_3)
+    call x_dot%v%init_const(-2.0_WP, 0)
     
-    call sys_start%cv(1)%set_const("atmosphere for chamber", csa_3, p_atm, temp_atm, [DRY_AIR], 3)
+    call sys_start%cv(1)%set_const("atmosphere for chamber", csa_3, p_atm, temp_atm, [DRY_AIR], 3, x_dot=-x_dot)
+    
+    call tests%integer_eq(sys_start%cv(1)%type, MIRROR_CV_TYPE, "test_conservation, sys_start%cv(1)%type")
+    call tests%integer_eq(sys_start%cv(1)%i_cv_mirror, 3, "test_conservation, sys_start%cv(1)%i_cv_mirror")
     
     ! 2: atmosphere for barrel
     call p_atm%v%init_const(1.0e5_WP, 0)
@@ -1324,8 +1328,10 @@ subroutine test_conservation(tests)
     
     call sys_start%cv(2)%set_const("atmosphere for barrel", csa_4, p_atm, temp_atm, [DRY_AIR], 4)
     
+    call tests%integer_eq(sys_start%cv(2)%type, MIRROR_CV_TYPE, "test_conservation, sys_start%cv(2)%type")
+    call tests%integer_eq(sys_start%cv(2)%i_cv_mirror, 4, "test_conservation, sys_start%cv(2)%i_cv_mirror")
+    
     ! 3: chamber
-    call x_dot%v%init_const(-2.0_WP, 0)
     call x_3%v%init_const(10.0e-2_WP, 0)
     call p_3%v%init_const(5.0e5_WP, 0)
     call m_p_3%v%init_const(30.0e-3_WP, 0)
@@ -1375,11 +1381,24 @@ subroutine test_conservation(tests)
     e_end   = sys_end%e_total()
     call tests%real_eq(e_start%v%v, e_end%v%v, "test_conservation, e_start == e_end", abs_tol=1.0e-5_WP)
     
-    e_barrel_atm = sys_start%cv(2)%e_total()
+    e_chamber_atm = sys_end%cv(1)%e_total()
+    call tests%character_eq(sys_end%cv(1)%label, "atmosphere for chamber", "test_conservation, chamber atmosphere label")
+    call tests%real_lt(e_chamber_atm%v%v, 0.0_WP, "test_conservation, chamber atmosphere energy is non-zero")
+    call tests%real_gt(abs(sys_end%cv(1)%x_dot%v%v), 0.0_WP, &
+                        "test_conservation, chamber atmosphere piston velocity is non-zero")
+    call tests%real_eq(sys_end%cv(1)%x_dot%v%v, -sys_end%cv(3)%x_dot%v%v, &
+                        "test_conservation, chamber atmosphere velocity matches piston velocity")
+    call tests%real_eq(e_chamber_atm%v%v, sys_end%cv(1)%e%v%v, &
+                            "test_conservation, chamber atmosphere energy is internal energy")
+    
+    e_barrel_atm = sys_end%cv(2)%e_total()
+    call tests%character_eq(sys_end%cv(2)%label, "atmosphere for barrel", "test_conservation, barrel atmosphere label")
     call tests%real_gt(e_barrel_atm%v%v, 0.0_WP, "test_conservation, barrel atmosphere energy is non-zero")
-    call tests%real_gt(abs(sys_start%cv(2)%x_dot%v%v), 0.0_WP, &
-                        "test_conservation, barrel piston/projectile velocity is non-zero")
-    call tests%real_eq(e_barrel_atm%v%v, sys_start%cv(2)%e%v%v, &
+    call tests%real_gt(abs(sys_end%cv(2)%x_dot%v%v), 0.0_WP, &
+                        "test_conservation, barrel atmosphere piston/projectile velocity is non-zero")
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, -sys_end%cv(4)%x_dot%v%v, &
+                        "test_conservation, barrel atmosphere velocity matches projectile velocity")
+    call tests%real_eq(e_barrel_atm%v%v, sys_end%cv(2)%e%v%v, &
                             "test_conservation, barrel atmosphere energy is internal energy")
 end subroutine test_conservation
 

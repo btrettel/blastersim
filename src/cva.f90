@@ -689,7 +689,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     end if
 end subroutine set
 
-pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror, type)
+pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror, type, x_dot)
     class(cv_type), intent(in out) :: cv
     
     character(len=*), intent(in)     :: label       ! human-readable label for control volume
@@ -699,7 +699,8 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror,
     type(gas_type), intent(in)       :: gas(:)      ! gas data
     integer, intent(in)              :: i_cv_mirror ! index of control volume to use in pressure difference calculation
     
-    integer, intent(in), optional :: type ! type of CV to use
+    integer, intent(in), optional           :: type  ! type of CV to use
+    type(si_velocity), intent(in), optional :: x_dot ! initial velocity of piston/projectile
     
     integer :: n_d, n_gas, i_gas
     
@@ -714,7 +715,6 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror,
     end do
     
     call cv%x%v%init_const(1.0_WP, n_d)
-    call cv%x_dot%v%init_const(0.0_WP, n_d)
     call cv%e%v%init_const(0.0_WP, n_d)
     call cv%rm_p%v%init_const(0.0_WP, n_d)
     call cv%p_fs%v%init_const(0.0_WP, n_d)
@@ -740,6 +740,12 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror,
         cv%type = type
     else
         cv%type = MIRROR_CV_TYPE
+    end if
+    
+    if (present(x_dot)) then
+        cv%x_dot = x_dot
+    else
+        call cv%x_dot%v%init_const(0.0_WP, n_d)
     end if
     
     select case (cv%type)
