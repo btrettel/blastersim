@@ -112,6 +112,15 @@ contains
     procedure :: e_total => e_total_sys
 end type cv_system_type
 
+type, public :: run_config_type
+    character(len=128) :: id ! CSV file name
+    logical            :: csv_output
+    integer            :: csv_frequency, check_frequency
+    type(si_time)      :: t_stop, dt
+contains
+    procedure :: set => set_run_config
+end type run_config_type
+
 type, public :: run_status_type
     integer       :: rc
     type(si_time) :: t
@@ -1299,39 +1308,76 @@ pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
     end do
 end subroutine rk_stage
 
-subroutine run(sys_start, sys_end, status, t_stop)
+subroutine set_run_config(config, id, csv_output, csv_frequency, check_frequency, t_stop, dt, n_d)
+    class(run_config_type), intent(out) :: config
+    character(len=*), intent(in)        :: id ! CSV file name
+    
+    logical, intent(in), optional       :: csv_output
+    integer, intent(in), optional       :: csv_frequency, check_frequency
+    type(si_time), intent(in), optional :: t_stop, dt
+    integer, intent(in), optional       :: n_d
+    
+    config%id = id
+    
+    if (present(csv_output)) then
+        config%csv_output = csv_output
+    else
+        config%csv_output = .false.
+    end if
+    
+    if (present(csv_frequency)) then
+        call assert(csv_output, "cva (set_run_config): Why set csv_frequency if csv_output=.false.?")
+        config%csv_frequency = csv_frequency
+    else
+        config%csv_frequency = 10
+    end if
+    
+    if (present(check_frequency)) then
+        config%check_frequency = check_frequency
+    else
+        config%check_frequency = 10
+    end if
+    
+    if (present(t_stop)) then
+        config%t_stop = t_stop
+    else
+        call assert(present(n_d), "cva (get_run_config, t_stop): n_d must be provided to use defaults")
+        call config%t_stop%v%init_const(T_STOP_DEFAULT, n_d)
+    end if
+    
+    if (present(dt)) then
+        config%dt = dt
+    else
+        call assert(present(n_d), "cva (get_run_config, t_stop): n_d must be provided to use defaults")
+        call config%dt%v%init_const(DT_DEFAULT, n_d)
+    end if
+end subroutine set_run_config
+
+subroutine run(config, sys_start, sys_end, status)
+    type(run_config_type), intent(in)              :: config
     type(cv_system_type), allocatable, intent(in)  :: sys_start
     type(cv_system_type), allocatable, intent(out) :: sys_end
     type(run_status_type), intent(out)             :: status
-    type(si_time), intent(in), optional            :: t_stop
     
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp
     
-    type(si_time)        :: t_stop_ ! time where simulation will stop
     integer              :: n_d
-    type(si_time)        :: t, dt, t_old
+    type(si_time)        :: t, t_old
     logical              :: exit_time_loop
     
     n_d = size(sys_start%cv(1)%x%v%d)
     
-    if (present(t_stop)) then
-        t_stop_ = t_stop
-    else
-        call t_stop_%v%init_const(T_STOP_DEFAULT, n_d)
-    end if
-    
     sys_old = sys_start
     call t%v%init_const(0.0_WP, n_d)
-    call dt%v%init_const(DT_DEFAULT, n_d)
     
     time_loop: do
-        call time_step(sys_old, dt, sys_new)
+        call time_step(sys_old, config%dt, sys_new)
         t_old = t
-        t     = t + dt
+        t     = t + config%dt
         
         !print *, t%v%v
         
-        call check_sys(sys_new, t_stop_, t, status, exit_time_loop)
+        call check_sys(config, sys_new, t, status, exit_time_loop)
         if (exit_time_loop) exit time_loop
         
         call move_alloc(from=sys_old,  to=sys_temp)
@@ -1341,7 +1387,7 @@ subroutine run(sys_start, sys_end, status, t_stop)
     
     if (status%rc == 0) then
         ! If successful, interpolate to correct `x` value.
-        call sys_interp(t_old, dt, status%i_cv(1), sys_old, sys_new, t, sys_end)
+        call sys_interp(t_old, config%dt, status%i_cv(1), sys_old, sys_new, t, sys_end)
     else
         sys_end = sys_new
     end if
@@ -1349,9 +1395,10 @@ subroutine run(sys_start, sys_end, status, t_stop)
     status%t = t
 end subroutine run
 
-pure subroutine check_sys(sys, t_stop, t, status, exit_time_loop)
+pure subroutine check_sys(config, sys, t, status, exit_time_loop)
+    type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys
-    type(si_time), intent(in)                     :: t_stop, t
+    type(si_time), intent(in)                     :: t
     type(run_status_type), intent(out)            :: status
     logical, intent(out)                          :: exit_time_loop
     
@@ -1422,7 +1469,7 @@ pure subroutine check_sys(sys, t_stop, t, status, exit_time_loop)
         end if
     end do
     
-    if (t >= t_stop) then
+    if (t >= config%t_stop) then
         status%rc = TIMEOUT_RUN_RC
         exit_time_loop = .true.
         return

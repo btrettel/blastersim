@@ -34,9 +34,9 @@ Clone the FLT repository and build genunits:
 
     git clone https://github.com/btrettel/flt.git
     cd flt
-    make genunits
+    make genunits geninput
 
-On Windows with jom, you should replace `make genunits` with `jom genunits.exe`.
+On Windows with jom, you should replace `make genunits geninput` with `jom genunits.exe geninput.exe`.
 
 Place `genunits` or `genunits.exe` on your `PATH`. Now you can build BlasterSim by cloning the BlasterSim repository, `cd`ing into the clone, and following the instructions in the "From source" section.
 

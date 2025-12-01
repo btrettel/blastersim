@@ -1260,10 +1260,12 @@ subroutine test_conservation(tests)
     use convert
     use gasdata, only: DRY_AIR
     use prec, only: PI
-    use cva, only: MIRROR_CV_TYPE, NORMAL_RUN_RC, cv_system_type, run_status_type, run
+    use cva, only: MIRROR_CV_TYPE, NORMAL_RUN_RC, cv_system_type, run_config_type, run_status_type, &
+                    run
     
     type(test_results_type), intent(in out) :: tests
     
+    type(run_config_type)             :: config
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
@@ -1359,7 +1361,8 @@ subroutine test_conservation(tests)
     call sys_start%cv(4)%set(x_4, x_dot, y, p_4, temp_atm, "barrel", csa_4, 1.0_WP/m_p_4, p_fs_4, p_fd_4, k, &
                                 x_z, [DRY_AIR], 1, x_stop=x_stop_4)
     
-    call run(sys_start, sys_end, status)
+    call config%set("test_conservation", n_d=0)
+    call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_conservation, status%rc")
     
@@ -1410,10 +1413,12 @@ subroutine test_mirror_1(tests)
     
     use convert
     use gasdata, only: DRY_AIR
-    use cva, only: MIRROR_CV_TYPE, TIMEOUT_RUN_RC, cv_system_type, run_status_type, run
+    use cva, only: MIRROR_CV_TYPE, TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, &
+                    run
     
     type(test_results_type), intent(in out) :: tests
     
+    type(run_config_type)             :: config
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
@@ -1457,7 +1462,8 @@ subroutine test_mirror_1(tests)
     call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp, "chamber 2", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
                                     x_z, [DRY_AIR], 1, type=MIRROR_CV_TYPE)
     
-    call run(sys_start, sys_end, status, t_stop=t_stop)
+    call config%set("test_mirror_1", t_stop=t_stop, n_d=0)
+    call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_mirror_1, status%rc")
     
@@ -1484,10 +1490,12 @@ subroutine test_mirror_2(tests)
     
     use convert
     use gasdata, only: DRY_AIR
-    use cva, only: MIRROR_CV_TYPE, TIMEOUT_RUN_RC, cv_system_type, run_status_type, run
+    use cva, only: MIRROR_CV_TYPE, TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, &
+                    run
     
     type(test_results_type), intent(in out) :: tests
     
+    type(run_config_type)             :: config
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
@@ -1531,7 +1539,8 @@ subroutine test_mirror_2(tests)
     call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp, "chamber 2", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
                                     x_z, [DRY_AIR], 1, type=MIRROR_CV_TYPE)
     
-    call run(sys_start, sys_end, status, t_stop=t_stop)
+    call config%set("test_mirror_2", t_stop=t_stop, n_d=0)
+    call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_mirror_2, status%rc")
     

@@ -4,13 +4,13 @@
             - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
     - CSV file output in `run`
         - Add human-readable name for each control volume, to be printed in the CSV file.
-        - Don't print out every time step. Add optional argument `csv_frequency` to control.
+        - Don't print out every time step.
         - This could help a lot with debugging the springer case. I don't know what's going on at the moment.
         - `write_csv_row(sys, row_type)`
             - `row_type`: Can select header or normal row.
             - For constant pressure CV, only write pressure, mass, and energy. Do not write other variables as they are meaningless.
             - Calculate flow rates for the current time step in there. Alternatively use `m_dot_eff = delta_m/dt` so that the outputs appear to satisfy conservation? Backing out `h_dot_eff` like that would be difficult due to the work term so perhaps don't bother with that approach.
-    - Don't do `run` checks every time step for speed. Add optional argument `check_frequency` to control.
+    - Don't do `run` checks every time step for speed.
         - <https://gcc.gnu.org/onlinedocs/gfortran/MOD.html>
     - documentation
         - quick start
@@ -34,9 +34,6 @@
                 - <http://btrettel.nerfers.com/archives/54>
         - API
             - `i_cv_mirror = 0` disables mirror CVs; use for constant volume chambers
-    - `config_type`
-        - `id` for CSV file name
-        - whether to enable CSV output or not
     - Create subroutines in io.f90 to create different types of CVs. Use these in the tests.
     - At termination, print:
         - If a success, say so.
@@ -48,9 +45,7 @@
     - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
     - Stopping criteria based on acceleration to find optimal barrel length
     - Plunger head motion bounds (lower and upper)
-    - Keep track of energy lost to friction and energy lost to work against the atmosphere.
-        - Energy conservation test case that takes these into account.
-    - Test `d_x_d_t` and `d_xdot_d_t` for `CONST_CV_TYPE` and `MIRROR_CV_TYPE`.
+    - Test `d_x_d_t`, `d_xdot_d_t`, and `d_e_f_d_t` for `CONST_CV_TYPE` and `MIRROR_CV_TYPE`.
 
 ***
 

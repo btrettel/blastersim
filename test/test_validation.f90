@@ -142,16 +142,18 @@ end subroutine create_2010_08_07_sys
 
 subroutine test_2010_08_07_25_psi(tests)
     use convert
-    use cva, only: TIMEOUT_RUN_RC, cv_system_type, run_status_type, run
+    use cva, only: TIMEOUT_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     
     type(test_results_type), intent(in out) :: tests
 
+    type(run_config_type)             :: config
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
     call create_2010_08_07_sys(25.0_WP, 0.13_WP, sys_start)
     
-    call run(sys_start, sys_end, status)
+    call config%set("test_2010_08_07_25_psi", n_d=0)
+    call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, &
                             "test_2010_08_07_25_psi, status%rc (projectile did not exit)")
@@ -159,17 +161,19 @@ end subroutine test_2010_08_07_25_psi
 
 subroutine test_2010_08_07_30_psi(tests)
     use convert
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run
+    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     
     type(test_results_type), intent(in out) :: tests
 
+    type(run_config_type)             :: config
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     type(si_velocity)                 :: v_exp
     
     call create_2010_08_07_sys(30.0_WP, 0.13_WP, sys_start)
     
-    call run(sys_start, sys_end, status)
+    call config%set("test_2010_08_07_30_psi", n_d=0)
+    call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_2010_08_07_30_psi, status%rc")
     
@@ -181,17 +185,19 @@ end subroutine test_2010_08_07_30_psi
 
 subroutine test_2010_08_07_40_psi(tests)
     use convert
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run
+    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     
     type(test_results_type), intent(in out) :: tests
 
+    type(run_config_type)             :: config
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     type(si_velocity)                 :: v_exp
     
     call create_2010_08_07_sys(40.0_WP, 0.115_WP, sys_start)
     
-    call run(sys_start, sys_end, status)
+    call config%set("test_2010_08_07_40_psi", n_d=0)
+    call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_2010_08_07_40_psi, status%rc")
     
@@ -203,17 +209,19 @@ end subroutine test_2010_08_07_40_psi
 
 subroutine test_2010_08_07_50_psi(tests)
     use convert
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run
+    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     
     type(test_results_type), intent(in out) :: tests
 
+    type(run_config_type)             :: config
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     type(si_velocity)                 :: v_exp
     
     call create_2010_08_07_sys(50.0_WP, 0.11_WP, sys_start)
     
-    call run(sys_start, sys_end, status)
+    call config%set("test_2010_08_07_50_psi", n_d=0)
+    call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_2010_08_07_50_psi, status%rc")
     
@@ -225,17 +233,19 @@ end subroutine test_2010_08_07_50_psi
 
 subroutine test_2010_08_07_60_psi(tests)
     use convert
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run
+    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     
     type(test_results_type), intent(in out) :: tests
 
+    type(run_config_type)             :: config
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     type(si_velocity)                 :: v_exp
     
     call create_2010_08_07_sys(60.0_WP, 0.10_WP, sys_start)
     
-    call run(sys_start, sys_end, status)
+    call config%set("test_2010_08_07_60_psi", n_d=0)
+    call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_2010_08_07_60_psi, status%rc")
     
@@ -247,10 +257,11 @@ end subroutine test_2010_08_07_60_psi
 
 subroutine test_2010_08_07_70_psi(tests)
     use convert
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run
+    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     
     type(test_results_type), intent(in out) :: tests
 
+    type(run_config_type)             :: config
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     type(si_length)                   :: x_2
@@ -258,7 +269,8 @@ subroutine test_2010_08_07_70_psi(tests)
     
     call create_2010_08_07_sys(70.0_WP, 0.105_WP, sys_start, x_2)
     
-    call run(sys_start, sys_end, status)
+    call config%set("test_2010_08_07_70_psi", n_d=0)
+    call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_2010_08_07_70_psi, status%rc")
     
@@ -281,11 +293,12 @@ subroutine test_tinkershot_1(tests)
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
     use prec, only: PI
     use checks, only: assert
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run
+    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     use io, only: create_barrel
     
     type(test_results_type), intent(in out) :: tests
-
+    
+    type(run_config_type)             :: config
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
@@ -375,7 +388,8 @@ subroutine test_tinkershot_1(tests)
     call create_barrel(vol_dead, csa_barrel, p_atm, temp_atm, m_projectile, p_fs_barrel, p_fd_barrel, l_travel, &
                         [DRY_AIR], 2, sys_start%cv(4))
     
-    call run(sys_start, sys_end, status)
+    call config%set("test_tinkershot_1", n_d=0)
+    call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_tinkershot_1, status%rc")
     
