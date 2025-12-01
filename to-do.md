@@ -1,4 +1,14 @@
 - v0.1.0
+    - Order-of-accuracy test for single control volume
+        - adiabatic test without atmospheric pressure and friction
+        - constant pressure test with atmospheric pressure and friction, seigel_theory_1965 eq. 3-2 is a simpler version of this
+            - Test `e_f` with constant pressure test case
+    - Check that derivatives are correct in special cases where something is set to zero with no derivatives. See `h_cv` for example.
+    - Make EOS numbers not overlap with CV type numbers?
+    - Check all pressure assertions and change some to > for `IDEAL_EOS`
+    - tests for `test_const`, `p_eos`, `temp_cv`, and others for `MIRROR_CV_TYPE`
+    - Tests for io.f90
+    - Test `d_x_d_t`, `d_xdot_d_t`, and `d_e_f_d_t` for `CONST_CV_TYPE` and `MIRROR_CV_TYPE`.
     - Input file reader generator
         - Input checks:
             - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
@@ -45,7 +55,6 @@
     - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
     - Stopping criteria based on acceleration to find optimal barrel length
     - Plunger head motion bounds (lower and upper)
-    - Test `d_x_d_t`, `d_xdot_d_t`, and `d_e_f_d_t` for `CONST_CV_TYPE` and `MIRROR_CV_TYPE`.
 
 ***
 
