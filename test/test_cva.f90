@@ -1263,7 +1263,7 @@ subroutine test_conservation(tests)
     use convert
     use gasdata, only: DRY_AIR
     use prec, only: PI
-    use cva, only: MIRROR_CV_TYPE, NORMAL_RUN_RC, cv_system_type, run_config_type, run_status_type, &
+    use cva, only: MIRROR_CV_TYPE, SUCCESS_RUN_RC, cv_system_type, run_config_type, run_status_type, &
                     run
     
     type(test_results_type), intent(in out) :: tests
@@ -1367,7 +1367,7 @@ subroutine test_conservation(tests)
     call config%set("test_conservation", csv_output=.true., csv_frequency=1, n_d=0)
     call run(config, sys_start, sys_end, status)
     
-    call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_conservation, status%rc")
+    call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_conservation, status%rc")
     
     spring_pe_3_start = sys_start%cv(3)%spring_pe()
     call tests%real_eq(spring_pe_3_start%v%v, 0.5_WP*(700.0_WP)*(9.0e-2_WP)**2, "test_conservation, spring_pe_3_start")

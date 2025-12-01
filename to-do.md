@@ -14,9 +14,7 @@
         - Input checks:
             - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
     - CSV file output in `run`
-        - `write_csv_row(sys, row_type)`
-            - `row_type`: Can select header or normal row.
-            - For constant pressure CV, only write pressure, mass, and energy. Do not write other variables as they are meaningless.
+        - `write_csv_row`
             - Calculate flow rates for the current time step in there. Alternatively use `m_dot_eff = delta_m/dt` so that the outputs appear to satisfy conservation? Backing out `h_dot_eff` like that would be difficult due to the work term so perhaps don't bother with that approach.
     - Don't do `run` checks every time step for speed.
         - <https://gcc.gnu.org/onlinedocs/gfortran/MOD.html>

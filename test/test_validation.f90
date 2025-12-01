@@ -161,7 +161,7 @@ end subroutine test_2010_08_07_25_psi
 
 subroutine test_2010_08_07_30_psi(tests)
     use convert
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run_config_type, run
+    use cva, only: SUCCESS_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     
     type(test_results_type), intent(in out) :: tests
 
@@ -175,7 +175,7 @@ subroutine test_2010_08_07_30_psi(tests)
     call config%set("test_2010_08_07_30_psi", n_d=0)
     call run(config, sys_start, sys_end, status)
     
-    call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_2010_08_07_30_psi, status%rc")
+    call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_2010_08_07_30_psi, status%rc")
     
     !print *, 30, sys_end%cv(3)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(3)%x_dot%v%v
     call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 23.831535000306918_WP, "test_2010_08_07_30_psi, muzzle velocity (characterization)")
@@ -185,7 +185,7 @@ end subroutine test_2010_08_07_30_psi
 
 subroutine test_2010_08_07_40_psi(tests)
     use convert
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run_config_type, run
+    use cva, only: SUCCESS_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     
     type(test_results_type), intent(in out) :: tests
 
@@ -199,7 +199,7 @@ subroutine test_2010_08_07_40_psi(tests)
     call config%set("test_2010_08_07_40_psi", n_d=0)
     call run(config, sys_start, sys_end, status)
     
-    call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_2010_08_07_40_psi, status%rc")
+    call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_2010_08_07_40_psi, status%rc")
     
     !print *, 40, sys_end%cv(3)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(3)%x_dot%v%v
     call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 36.185426086918270_WP, "test_2010_08_07_40_psi, muzzle velocity (characterization)")
@@ -209,7 +209,7 @@ end subroutine test_2010_08_07_40_psi
 
 subroutine test_2010_08_07_50_psi(tests)
     use convert
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run_config_type, run
+    use cva, only: SUCCESS_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     
     type(test_results_type), intent(in out) :: tests
 
@@ -223,7 +223,7 @@ subroutine test_2010_08_07_50_psi(tests)
     call config%set("test_2010_08_07_50_psi", n_d=0)
     call run(config, sys_start, sys_end, status)
     
-    call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_2010_08_07_50_psi, status%rc")
+    call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_2010_08_07_50_psi, status%rc")
     
     !print *, 50, sys_end%cv(3)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(3)%x_dot%v%v
     call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 45.224507289167370_WP, "test_2010_08_07_50_psi, muzzle velocity (characterization)")
@@ -233,7 +233,7 @@ end subroutine test_2010_08_07_50_psi
 
 subroutine test_2010_08_07_60_psi(tests)
     use convert
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run_config_type, run
+    use cva, only: SUCCESS_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     
     type(test_results_type), intent(in out) :: tests
 
@@ -247,7 +247,7 @@ subroutine test_2010_08_07_60_psi(tests)
     call config%set("test_2010_08_07_60_psi", n_d=0)
     call run(config, sys_start, sys_end, status)
     
-    call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_2010_08_07_60_psi, status%rc")
+    call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_2010_08_07_60_psi, status%rc")
     
     !print *, 60, sys_end%cv(3)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(3)%x_dot%v%v
     call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 47.65430830618942_WP, "test_2010_08_07_60_psi, muzzle velocity (characterization)")
@@ -257,7 +257,7 @@ end subroutine test_2010_08_07_60_psi
 
 subroutine test_2010_08_07_70_psi(tests)
     use convert
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run_config_type, run
+    use cva, only: SUCCESS_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     
     type(test_results_type), intent(in out) :: tests
 
@@ -272,7 +272,7 @@ subroutine test_2010_08_07_70_psi(tests)
     call config%set("test_2010_08_07_70_psi", n_d=0)
     call run(config, sys_start, sys_end, status)
     
-    call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_2010_08_07_70_psi, status%rc")
+    call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_2010_08_07_70_psi, status%rc")
     
     call tests%real_eq(sys_end%cv(2)%x%v%v, x_2%v%v, "test_2010_08_07_70_psi, chamber end stays still")
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 0.0_WP, "test_2010_08_07_70_psi, chamber end velocity stays zero")
@@ -293,7 +293,7 @@ subroutine test_tinkershot_1(tests)
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
     use prec, only: PI
     use checks, only: assert
-    use cva, only: NORMAL_RUN_RC, cv_system_type, run_status_type, run_config_type, run
+    use cva, only: SUCCESS_RUN_RC, cv_system_type, run_status_type, run_config_type, run
     use io, only: create_barrel
     
     type(test_results_type), intent(in out) :: tests
@@ -391,7 +391,7 @@ subroutine test_tinkershot_1(tests)
     call config%set("test_tinkershot_1", n_d=0)
     call run(config, sys_start, sys_end, status)
     
-    call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_tinkershot_1, status%rc")
+    call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_tinkershot_1, status%rc")
     
     v_exp = fps_const(359.7778_WP, 0)
     !print *, sys_end%cv(4)%x_dot%v%v, v_exp%v%v

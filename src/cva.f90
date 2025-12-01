@@ -36,10 +36,11 @@ integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
 integer, public, parameter :: MAX_CV_TYPE    = 2
 
-integer, public, parameter :: NORMAL_RUN_RC  = 0
-integer, public, parameter :: TIMEOUT_RUN_RC = 1
-integer, public, parameter :: MASS_RUN_RC    = 2
-integer, public, parameter :: TEMP_RUN_RC    = 3
+integer, public, parameter :: CONTINUE_RUN_RC = -1
+integer, public, parameter :: SUCCESS_RUN_RC  = 0
+integer, public, parameter :: TIMEOUT_RUN_RC  = 1
+integer, public, parameter :: MASS_RUN_RC     = 2
+integer, public, parameter :: TEMP_RUN_RC     = 3
 
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
@@ -1395,8 +1396,9 @@ subroutine run(config, sys_start, sys_end, status)
             return
         end if
         
-        call write_csv_row(csv_unit, sys_old, HEADER_ROW_TYPE)
-        call write_csv_row(csv_unit, sys_old, NUMBER_ROW_TYPE)
+        status%rc = CONTINUE_RUN_RC
+        call write_csv_row(csv_unit, sys_old, t, status, HEADER_ROW_TYPE)
+        call write_csv_row(csv_unit, sys_old, t, status, NUMBER_ROW_TYPE)
     end if
     
     time_loop: do
@@ -1407,11 +1409,10 @@ subroutine run(config, sys_start, sys_end, status)
         
         !print *, t%v%v
         
-        if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
-            call write_csv_row(csv_unit, sys_new, NUMBER_ROW_TYPE)
-        end if
-        
         call check_sys(config, sys_new, t, status, exit_time_loop)
+        if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
+            call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)
+        end if
         if (exit_time_loop) exit time_loop
         
         call move_alloc(from=sys_old,  to=sys_temp)
@@ -1419,7 +1420,7 @@ subroutine run(config, sys_start, sys_end, status)
         call move_alloc(from=sys_temp, to=sys_new)
     end do time_loop
     
-    if (status%rc == 0) then
+    if (status%rc == SUCCESS_RUN_RC) then
         ! If successful, interpolate to correct `x` value.
         call sys_interp(t_old, config%dt, status%i_cv(1), sys_old, sys_new, t, sys_end)
     else
@@ -1443,11 +1444,12 @@ pure subroutine check_sys(config, sys, t, status, exit_time_loop)
     type(si_temperature) :: temp_i, temp_j
     
     n_cv = size(sys%cv)
+    status%rc      = CONTINUE_RUN_RC
     exit_time_loop = .false.
     
     do i_cv = 1, n_cv
         if (sys%cv(i_cv)%x >= sys%cv(i_cv)%x_stop) then
-            status%rc = 0
+            status%rc = SUCCESS_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
             
@@ -1548,13 +1550,18 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     t = t_old + frac*dt
 end subroutine sys_interp
 
-subroutine write_csv_row(csv_unit, sys, row_type)
+subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     integer, intent(in)                           :: csv_unit
     type(cv_system_type), allocatable, intent(in) :: sys
+    type(si_time), intent(in)                     :: t
+    type(run_status_type), intent(in)             :: status
     integer, intent(in)                           :: row_type
     
-    integer :: i_cv, n_cv!, j_cv, i_gas, n_gas
+    integer :: i_cv, n_cv, i_gas, n_gas
     logical :: csv_unit_opened
+    type(si_pressure)     :: p
+    type(si_temperature)  :: temp
+    type(si_mass_density) :: rho
     
     inquire(unit=csv_unit, opened=csv_unit_opened)
     call assert(csv_unit_opened, "cva (write_csv_row): csv_unit needs to be open")
@@ -1562,23 +1569,116 @@ subroutine write_csv_row(csv_unit, sys, row_type)
     n_cv = size(sys%cv)
     
     do i_cv = 1, n_cv
-        ! `x`, location of piston/projectile
+        ! `t`, time
         select case (row_type)
             case (HEADER_ROW_TYPE)
-                write(unit=csv_unit, fmt="(3a)", advance="no") '"x (m, ', trim(sys%cv(i_cv)%label), ')",'
+                write(unit=csv_unit, fmt="(a)", advance="no") '"t (s)",'
             case (NUMBER_ROW_TYPE)
-                write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%x%v%v, ","
+                write(unit=csv_unit, fmt="(g0, a)", advance="no") t%v%v, ","
             case default
-                error stop "cva (write_csv_row, x): invalid cv%eos"
+                error stop "cva (write_csv_row, t): invalid row_type"
         end select
         
-        ! `x_dot`, velocity of piston/projectile
+        if (sys%cv(i_cv)%type == NORMAL_CV_TYPE) then
+            ! `x`, location of piston/projectile
+            select case (row_type)
+                case (HEADER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(3a)", advance="no") '"x (m, ', trim(sys%cv(i_cv)%label), ')",'
+                case (NUMBER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%x%v%v, ","
+                case default
+                    error stop "cva (write_csv_row, x): invalid row_type"
+            end select
+            
+            ! `x_dot`, velocity of piston/projectile
+            select case (row_type)
+                case (HEADER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(3a)", advance="no") '"x_dot (m/s, ', trim(sys%cv(i_cv)%label), ')",'
+                case (NUMBER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%x_dot%v%v, ","
+                case default
+                    error stop "cva (write_csv_row, x_dot): invalid row_type"
+            end select
+        end if
+        
         ! `m(:)`, mass(es) of gas(es) in control volume
+        do i_gas = 1, n_gas
+            select case (row_type)
+                case (HEADER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(4a)", advance="no") '"m (kg, ', &
+                            trim(sys%cv(i_cv)%gas(i_gas)%label), ', ', &
+                            trim(sys%cv(i_cv)%label), ')",'
+                case (NUMBER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%m%v%v, ","
+                case default
+                    error stop "cva (write_csv_row, m): invalid row_type"
+            end select
+        end do
+        
         ! `e`, energy of gas in control volume
+        select case (row_type)
+            case (HEADER_ROW_TYPE)
+                write(unit=csv_unit, fmt="(3a)", advance="no") '"e (J, ', trim(sys%cv(i_cv)%label), ')",'
+            case (NUMBER_ROW_TYPE)
+                write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%e%v%v, ","
+            case default
+                error stop "cva (write_csv_row, e): invalid row_type"
+        end select
+        
         ! `e_f`, energy lost to piston/projectile friction in control volume
+        select case (row_type)
+            case (HEADER_ROW_TYPE)
+                write(unit=csv_unit, fmt="(3a)", advance="no") '"e_f (J, ', trim(sys%cv(i_cv)%label), ')",'
+            case (NUMBER_ROW_TYPE)
+                write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%e_f%v%v, ","
+            case default
+                error stop "cva (write_csv_row, e_f): invalid row_type"
+        end select
+        
+        ! p
+        select case (row_type)
+            case (HEADER_ROW_TYPE)
+                write(unit=csv_unit, fmt="(3a)", advance="no") '"p (Pa, ', trim(sys%cv(i_cv)%label), ')",'
+            case (NUMBER_ROW_TYPE)
+                p = sys%cv(i_cv)%p()
+                write(unit=csv_unit, fmt="(g0, a)", advance="no") p%v%v, ","
+            case default
+                error stop "cva (write_csv_row, p): invalid row_type"
+        end select
+        
+        ! temp
+        select case (row_type)
+            case (HEADER_ROW_TYPE)
+                write(unit=csv_unit, fmt="(3a)", advance="no") '"temp (K, ', trim(sys%cv(i_cv)%label), ')",'
+            case (NUMBER_ROW_TYPE)
+                temp = sys%cv(i_cv)%temp()
+                write(unit=csv_unit, fmt="(g0, a)", advance="no") temp%v%v, ","
+            case default
+                error stop "cva (write_csv_row, temp): invalid row_type"
+        end select
+        
+        ! rho
+        select case (row_type)
+            case (HEADER_ROW_TYPE)
+                write(unit=csv_unit, fmt="(3a)", advance="no") '"rho (kg/m3, ', trim(sys%cv(i_cv)%label), ')",'
+            case (NUMBER_ROW_TYPE)
+                rho = sys%cv(i_cv)%rho()
+                write(unit=csv_unit, fmt="(g0, a)", advance="no") rho%v%v, ","
+            case default
+                error stop "cva (write_csv_row, rho): invalid row_type"
+        end select
+        
+        ! TODO: m_dot, h_dot
     end do
     
-    write(unit=csv_unit, fmt="(a)") ""
+    select case (row_type)
+        case (HEADER_ROW_TYPE)
+            write(unit=csv_unit, fmt="(a)") '"return code"'
+        case (NUMBER_ROW_TYPE)
+            write(unit=csv_unit, fmt="(i0)") status%rc
+        case default
+            error stop "cva (write_csv_row, rc): invalid row_type"
+    end select
 end subroutine write_csv_row
 
 end module cva
