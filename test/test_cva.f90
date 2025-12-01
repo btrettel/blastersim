@@ -1364,7 +1364,7 @@ subroutine test_conservation(tests)
     call sys_start%cv(4)%set(x_4, x_dot, y, p_4, temp_atm, "barrel", csa_4, 1.0_WP/m_p_4, p_fs_4, p_fd_4, k, &
                                 x_z, [DRY_AIR], 1, x_stop=x_stop_4)
     
-    call config%set("test_conservation", n_d=0)
+    call config%set("test_conservation", csv_output=.true., csv_frequency=1, n_d=0)
     call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, NORMAL_RUN_RC, "test_conservation, status%rc")

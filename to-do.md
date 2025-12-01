@@ -6,7 +6,6 @@
         - constant pressure test with atmospheric pressure and friction
             - seigel_theory_1965 eq. 3-2 is a simpler version of this (just subtract atmospheric and friction pressures from the pressure to factor those in)
             - Can test the following: `x`, `x_dot`, `e_f`
-    - Check that `i_cv_mirror` is less than or equal to the number of CVs when appropriate.
     - Check that derivatives are correct in special cases where something is set to zero with no derivatives. Check for "TODO: Not sure the derivatives of this should be zero."
     - tests for `test_const`, `p_eos`, `temp_cv`, and others for `MIRROR_CV_TYPE`
     - Tests for io.f90
@@ -15,9 +14,6 @@
         - Input checks:
             - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
     - CSV file output in `run`
-        - Add human-readable name for each control volume, to be printed in the CSV file.
-        - Don't print out every time step.
-        - This could help a lot with debugging the springer case. I don't know what's going on at the moment.
         - `write_csv_row(sys, row_type)`
             - `row_type`: Can select header or normal row.
             - For constant pressure CV, only write pressure, mass, and energy. Do not write other variables as they are meaningless.

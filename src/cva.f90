@@ -17,7 +17,7 @@ private
 public :: smooth_min
 public :: d_x_d_t, d_xdot_d_t, d_m_k_d_t, d_e_d_t, d_e_f_d_t
 public :: f_m_dot, g_m_dot
-public :: time_step, run
+public :: time_step, run, write_csv_row
 
 ! pressure ratio laminar flow nominally starts at
 ! based on first part of beater_pneumatic_2007 eq. 5.4
@@ -40,6 +40,9 @@ integer, public, parameter :: NORMAL_RUN_RC  = 0
 integer, public, parameter :: TIMEOUT_RUN_RC = 1
 integer, public, parameter :: MASS_RUN_RC    = 2
 integer, public, parameter :: TEMP_RUN_RC    = 3
+
+integer, public, parameter :: HEADER_ROW_TYPE = 1
+integer, public, parameter :: NUMBER_ROW_TYPE = 2
 
 type, public :: cv_type ! control volume
     ! time varying
@@ -115,7 +118,7 @@ end type cv_system_type
 type, public :: run_config_type
     character(len=128) :: id ! CSV file name
     logical            :: csv_output
-    integer            :: csv_frequency, check_frequency
+    integer            :: csv_frequency
     type(si_time)      :: t_stop, dt
 contains
     procedure :: set => set_run_config
@@ -1322,12 +1325,12 @@ pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
     end do
 end subroutine rk_stage
 
-subroutine set_run_config(config, id, csv_output, csv_frequency, check_frequency, t_stop, dt, n_d)
+subroutine set_run_config(config, id, csv_output, csv_frequency, t_stop, dt, n_d)
     class(run_config_type), intent(out) :: config
     character(len=*), intent(in)        :: id ! CSV file name
     
     logical, intent(in), optional       :: csv_output
-    integer, intent(in), optional       :: csv_frequency, check_frequency
+    integer, intent(in), optional       :: csv_frequency
     type(si_time), intent(in), optional :: t_stop, dt
     integer, intent(in), optional       :: n_d
     
@@ -1346,12 +1349,6 @@ subroutine set_run_config(config, id, csv_output, csv_frequency, check_frequency
         config%csv_frequency = 10
     end if
     
-    if (present(check_frequency)) then
-        config%check_frequency = check_frequency
-    else
-        config%check_frequency = 10
-    end if
-    
     if (present(t_stop)) then
         config%t_stop = t_stop
     else
@@ -1368,6 +1365,9 @@ subroutine set_run_config(config, id, csv_output, csv_frequency, check_frequency
 end subroutine set_run_config
 
 subroutine run(config, sys_start, sys_end, status)
+    use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
+    use prec, only: CL
+    
     type(run_config_type), intent(in)              :: config
     type(cv_system_type), allocatable, intent(in)  :: sys_start
     type(cv_system_type), allocatable, intent(out) :: sys_end
@@ -1375,21 +1375,41 @@ subroutine run(config, sys_start, sys_end, status)
     
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp
     
-    integer              :: n_d
-    type(si_time)        :: t, t_old
-    logical              :: exit_time_loop
+    character(len=CL) :: error_message
+    integer           :: n_d, i, csv_unit
+    type(si_time)     :: t, t_old
+    logical           :: exit_time_loop
     
     n_d = size(sys_start%cv(1)%x%v%d)
     
     sys_old = sys_start
     call t%v%init_const(0.0_WP, n_d)
+    i = 0
+    
+    if (config%csv_output) then
+        open(newunit=csv_unit, action="write", status="replace", position="rewind", &
+                file=trim(config%id) // ".csv", iostat=status%rc, iomsg=error_message)
+        if (status%rc /= 0) then
+            write(unit=ERROR_UNIT, fmt="(a)") trim(error_message)
+            status%t = t
+            return
+        end if
+        
+        call write_csv_row(csv_unit, sys_old, HEADER_ROW_TYPE)
+        call write_csv_row(csv_unit, sys_old, NUMBER_ROW_TYPE)
+    end if
     
     time_loop: do
         call time_step(sys_old, config%dt, sys_new)
         t_old = t
         t     = t + config%dt
+        i     = i + 1
         
         !print *, t%v%v
+        
+        if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
+            call write_csv_row(csv_unit, sys_new, NUMBER_ROW_TYPE)
+        end if
         
         call check_sys(config, sys_new, t, status, exit_time_loop)
         if (exit_time_loop) exit time_loop
@@ -1407,6 +1427,8 @@ subroutine run(config, sys_start, sys_end, status)
     end if
     
     status%t = t
+    
+    if (config%csv_output) close(unit=csv_unit)
 end subroutine run
 
 pure subroutine check_sys(config, sys, t, status, exit_time_loop)
@@ -1525,5 +1547,38 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     end do
     t = t_old + frac*dt
 end subroutine sys_interp
+
+subroutine write_csv_row(csv_unit, sys, row_type)
+    integer, intent(in)                           :: csv_unit
+    type(cv_system_type), allocatable, intent(in) :: sys
+    integer, intent(in)                           :: row_type
+    
+    integer :: i_cv, n_cv!, j_cv, i_gas, n_gas
+    logical :: csv_unit_opened
+    
+    inquire(unit=csv_unit, opened=csv_unit_opened)
+    call assert(csv_unit_opened, "cva (write_csv_row): csv_unit needs to be open")
+    
+    n_cv = size(sys%cv)
+    
+    do i_cv = 1, n_cv
+        ! `x`, location of piston/projectile
+        select case (row_type)
+            case (HEADER_ROW_TYPE)
+                write(unit=csv_unit, fmt="(3a)", advance="no") '"x (m, ', trim(sys%cv(i_cv)%label), ')",'
+            case (NUMBER_ROW_TYPE)
+                write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%x%v%v, ","
+            case default
+                error stop "cva (write_csv_row, x): invalid cv%eos"
+        end select
+        
+        ! `x_dot`, velocity of piston/projectile
+        ! `m(:)`, mass(es) of gas(es) in control volume
+        ! `e`, energy of gas in control volume
+        ! `e_f`, energy lost to piston/projectile friction in control volume
+    end do
+    
+    write(unit=csv_unit, fmt="(a)") ""
+end subroutine write_csv_row
 
 end module cva
