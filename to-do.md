@@ -1,11 +1,13 @@
 - v0.1.0
     - Order-of-accuracy test for single control volume
         - adiabatic test without atmospheric pressure and friction
-        - constant pressure test with atmospheric pressure and friction, seigel_theory_1965 eq. 3-2 is a simpler version of this
-            - Test `e_f` with constant pressure test case
-    - Check that derivatives are correct in special cases where something is set to zero with no derivatives. See `h_cv` for example.
-    - Make EOS numbers not overlap with CV type numbers?
-    - Check all pressure assertions and change some to > for `IDEAL_EOS`
+            - Can test the following: `x_dot`, `e`, `e_f`
+            - `m` is constant
+        - constant pressure test with atmospheric pressure and friction
+            - seigel_theory_1965 eq. 3-2 is a simpler version of this (just subtract atmospheric and friction pressures from the pressure to factor those in)
+            - Can test the following: `x`, `x_dot`, `e_f`
+    - Check that `i_cv_mirror` is less than or equal to the number of CVs when appropriate.
+    - Check that derivatives are correct in special cases where something is set to zero with no derivatives. Check for "TODO: Not sure the derivatives of this should be zero."
     - tests for `test_const`, `p_eos`, `temp_cv`, and others for `MIRROR_CV_TYPE`
     - Tests for io.f90
     - Test `d_x_d_t`, `d_xdot_d_t`, and `d_e_f_d_t` for `CONST_CV_TYPE` and `MIRROR_CV_TYPE`.

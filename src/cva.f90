@@ -204,14 +204,14 @@ pure function p_eos(cv, rho, temp)
             p_eos = rho * cv%r() * temp
             
             call assert(p_eos < cv%p_c(), "cva (p_eos, IDEAL_EOS): ideal gas law validity is questionable")
-            call assert(p_eos%v%v > 0.0_WP, "cva (p_eos, IDEAL_EOS): p_eos%v > 0 violated")
         case (CONST_EOS)
             call assert(is_close(temp%v%v, cv%temp_const%v%v), "cva (p_eos, CONST_EOS): temp /= temp_const")
             p_eos = cv%p_const
-            call assert(p_eos%v%v >= 0.0_WP, "cva (p_eos, CONST_EOS): p_eos%v >= 0 violated")
         case default
             error stop "cva (p_eos): invalid cv%eos"
     end select
+    
+    call assert(p_eos%v%v > 0.0_WP, "cva (p_eos): p_eos%v > 0 violated")
 end function p_eos
 
 pure function rho_eos(cv, p, temp, y)
@@ -472,7 +472,14 @@ pure function rho_cv(cv)
     call assert(vol%v%v > 0.0_WP, "cva (rho_cv): volume is zero")
     rho_cv = cv%m_total() / vol
     
-    call assert(rho_cv%v%v >= 0.0_WP, "cva (rho_cv): rho_cv > 0 violated")
+    select case (cv%eos)
+        case (IDEAL_EOS)
+            call assert(rho_cv%v%v > 0.0_WP, "cva (rho_cv, IDEAL_EOS): rho_cv > 0 violated")
+        case (CONST_EOS)
+            call assert(rho_cv%v%v >= 0.0_WP, "cva (rho_cv, CONST_EOS): rho_cv >= 0 violated")
+        case default
+            error stop "cva (rho_cv): invalid cv%eos"
+    end select
 end function rho_cv
 
 pure function p_cv(cv)
@@ -488,7 +495,7 @@ pure function p_cv(cv)
     
     p_cv = cv%p_eos(rho, temp)
     
-    call assert(p_cv%v%v >= 0.0_WP, "cva (p_cv): p_cv >= 0 violated")
+    call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated")
 end function p_cv
 
 pure function u_cv(cv)
@@ -533,6 +540,7 @@ pure function h_cv(cv)
         if (.not. is_close(m_total%v%v, 0.0_WP)) then
             y = cv%m(i)/m_total
         else
+            ! TODO: Not sure the derivatives of this should be zero.
             call y%v%init_const(0.0_WP, size(cv%m(1)%v%d))
         end if
         h_cv = h_cv + y*cv%gas(i)%h(temp)
@@ -842,6 +850,7 @@ pure function d_x_d_t(sys, i_cv)
     type(si_velocity) :: d_x_d_t
     
     call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_x_d_t): i_cv_mirror must be a positive integer or zero")
+    call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_x_d_t): i_cv_mirror can't be larger than the cv array")
     call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_x_d_t): i_cv_mirror can not equal i_cv")
     
     select case (sys%cv(i_cv)%type)
@@ -867,6 +876,7 @@ pure function d_xdot_d_t(sys, i_cv)
     character(len=3)  :: i_cv_string, i_cv_mirror_string
     
     call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_xdot_d_t): i_cv_mirror must be a positive integer or zero")
+    call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_xdot_d_t): i_cv_mirror can't be larger than the cv array")
     call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_xdot_d_t): i_cv_mirror can not equal i_cv")
     
     if (sys%cv(i_cv)%i_cv_mirror >= 1) then
@@ -942,7 +952,7 @@ pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
     if (.not. is_close(m_total%v%v, 0.0_WP)) then
         y_k = cv%m(k_gas) / m_total
     else
-        call y_k%v%init_const(0.0_WP, n_d)
+        call y_k%v%init_const(0.0_WP, n_d) ! TODO: Not sure the derivatives of this should be zero.
     end if
     
     do j_cv = 1, n_cv
@@ -981,6 +991,10 @@ pure function d_e_f_d_t(sys, i_cv)
     
     type(si_pressure) :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
     type(si_pressure) :: p_other
+    
+    call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_e_f_d_t): i_cv_mirror must be a positive integer or zero")
+    call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_e_f_d_t): i_cv_mirror can't be larger than the cv array")
+    call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_e_f_d_t): i_cv_mirror can not equal i_cv")
     
     call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_xdot_d_t_normal): cv%csa > 0 violated")
     
