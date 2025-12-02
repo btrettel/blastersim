@@ -1,4 +1,12 @@
 - v0.1.0
+    - `check_sys`
+        - Total energy and mass are within a tolerance.
+        - All state variables don't exceed certain amounts.
+        - `x` > 0
+        - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
+    - `write_csv_row`
+        - Calculate flow rates for the current time step in there. Alternatively use `m_dot_eff = delta_m/dt` so that the outputs appear to satisfy conservation? Backing out `h_dot_eff` like that would be difficult due to the work term so perhaps don't bother with that approach.
+        - Write each component of energy and total energy so that someone can create their own energy balance plots.
     - Order-of-accuracy test for single control volume
         - adiabatic test without atmospheric pressure and friction
             - Can test the following: `x_dot`, `e`, `e_f`
@@ -9,15 +17,10 @@
     - Check that derivatives are correct in special cases where something is set to zero with no derivatives. Check for "TODO: Not sure the derivatives of this should be zero."
     - tests for `test_const`, `p_eos`, `temp_cv`, and others for `MIRROR_CV_TYPE`
     - Tests for io.f90
-    - Test `d_x_d_t`, `d_xdot_d_t`, and `d_e_f_d_t` for `CONST_CV_TYPE` and `MIRROR_CV_TYPE`.
+    - Test `d_x_d_t`, `d_xdot_d_t`, and `d_e_f_d_t` for `CONST_EOS` and `MIRROR_CV_TYPE`.
     - Input file reader generator
         - Input checks:
             - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
-    - CSV file output in `run`
-        - `write_csv_row`
-            - Calculate flow rates for the current time step in there. Alternatively use `m_dot_eff = delta_m/dt` so that the outputs appear to satisfy conservation? Backing out `h_dot_eff` like that would be difficult due to the work term so perhaps don't bother with that approach.
-    - Don't do `run` checks every time step for speed.
-        - <https://gcc.gnu.org/onlinedocs/gfortran/MOD.html>
     - documentation
         - quick start
         - drawings of pneumatic and springer guns with lengths labeled
@@ -40,6 +43,8 @@
                 - <http://btrettel.nerfers.com/archives/54>
         - API
             - `i_cv_mirror = 0` disables mirror CVs; use for constant volume chambers
+        - Write Fortran code to output gas data table to put in documentation.
+            - Can I use similar code generation to get other important values from the code?
     - Create subroutines in io.f90 to create different types of CVs. Use these in the tests.
     - At termination, print:
         - If a success, say so.
@@ -51,6 +56,7 @@
     - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
     - Stopping criteria based on acceleration to find optimal barrel length
     - Plunger head motion bounds (lower and upper)
+        - Lower is not necessarily zero.
 
 ***
 
@@ -74,15 +80,15 @@
 - Error messages:
     - When mass or temperature goes negative, suggest that perhaps the effective area is too large.
 - Make subroutine to fit `sys%con(:, :)%a_e`, `sys%con(:, :)%b`, `sys%cv(:)%p_fs`, `sys%cv(:)%p_fd` for all `con_types` and `cv_types`.
-- valve opening time?
+- Valve opening time, valve poppet model using pressures from CVs
 - test each `status%rc` code for `check_sys`
-- Equilibrium test case
 - Test if correct `sys` is output for `run` (old or new)
 - Data to collect from the open literature:
     - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
 - Have ability to run multiple cycles and terminate when mass gets low in any particular CV.
 - If I use a constant pressure/temperature CV to model a HPA or CO2 tank, then I'll still need a way to estimate the real gas internal energy and enthalpy. Going all the way with a better equation of state and thermodynamic properties might not be much more complex. I could make each control volume use a different EOS if I want to avoid iterations associated with a different EOS.
 - Arbitrary displacement vs. force curves, using cubic splines for smoothness
+- Why is there a small amount of backwards motion of the projectile in `test_conservation`? Is it due to friction?
 
 ***
 
