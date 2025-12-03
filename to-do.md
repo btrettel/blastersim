@@ -1,7 +1,9 @@
 - v0.1.0
     - `check_sys`
         - Total energy and mass are within a tolerance.
+            - Derivatives of total mass and energy should be effectively zero.
         - All state variables don't exceed certain amounts.
+            - Also check derivatives in stability checks.
         - `x` > 0
         - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
     - `write_csv_row`

@@ -23,24 +23,33 @@ public :: time_step, run, write_csv_row
 ! based on first part of beater_pneumatic_2007 eq. 5.4
 real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 
-real(WP), public, parameter :: X_STOP_DEFAULT = 1.0e3_WP  ! m (If you have a barrel that's a km long, that's probably wrong.)
-real(WP), public, parameter :: DT_DEFAULT     = 1.0e-5_WP ! s
-real(WP), public, parameter :: T_STOP_DEFAULT = 0.5_WP    ! s
+real(WP), public, parameter :: X_STOP_DEFAULT   = 1.0e3_WP  ! m (If you have a barrel that's a km long, that's probably wrong.)
+real(WP), public, parameter :: DT_DEFAULT       = 1.0e-5_WP ! s
+real(WP), public, parameter :: T_STOP_DEFAULT   = 0.5_WP    ! s
+real(WP), public, parameter :: MASS_TOLERANCE   = 1.0e-4_WP ! unitless
+real(WP), public, parameter :: ENERGY_TOLERANCE = 1.0e-3_WP ! unitless
 
 integer, public, parameter :: IDEAL_EOS = 1 ! ideal gas equation of state
 integer, public, parameter :: CONST_EOS = 2 ! constant pressure, temperature, density
-integer, public, parameter :: RK_EOS    = 3 ! Redlich–Kwong equation of state
+integer, public, parameter :: RK_EOS    = 3 ! Redlich–Kwong equation of state (not yet implemented)
 integer, public, parameter :: MAX_EOS   = 2
 
 integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
 integer, public, parameter :: MAX_CV_TYPE    = 2
 
-integer, public, parameter :: CONTINUE_RUN_RC = -1
-integer, public, parameter :: SUCCESS_RUN_RC  = 0
-integer, public, parameter :: TIMEOUT_RUN_RC  = 1
-integer, public, parameter :: MASS_RUN_RC     = 2
-integer, public, parameter :: TEMP_RUN_RC     = 3
+integer, public, parameter :: CONTINUE_RUN_RC         = -1
+integer, public, parameter :: SUCCESS_RUN_RC          = 0
+integer, public, parameter :: TIMEOUT_RUN_RC          = 1
+integer, public, parameter :: NEGATIVE_MASS_RUN_RC    = 2
+integer, public, parameter :: NEGATIVE_TEMP_RUN_RC    = 3
+integer, public, parameter :: MASS_TOLERANCE_RUN_RC   = 4
+integer, public, parameter :: ENERGY_TOLERANCE_RUN_RC = 5
+integer, public, parameter :: X_BLOW_UP_RUN_RC        = 6
+integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC    = 7
+integer, public, parameter :: M_BLOW_UP_RUN_RC        = 8
+integer, public, parameter :: E_BLOW_UP_RUN_RC        = 9
+integer, public, parameter :: E_F_BLOW_UP_RUN_RC      = 10
 
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
@@ -1378,11 +1387,15 @@ subroutine run(config, sys_start, sys_end, status)
     
     character(len=CL) :: error_message
     integer           :: n_d, i, csv_unit
+    type(si_mass)     :: m_start
+    type(si_energy)   :: e_start
     type(si_time)     :: t, t_old
     logical           :: exit_time_loop
     
     n_d = size(sys_start%cv(1)%x%v%d)
     
+    m_start = sys_start%m_total()
+    e_start = sys_start%e_total()
     sys_old = sys_start
     call t%v%init_const(0.0_WP, n_d)
     i = 0
@@ -1409,7 +1422,7 @@ subroutine run(config, sys_start, sys_end, status)
         
         !print *, t%v%v
         
-        call check_sys(config, sys_new, t, status, exit_time_loop)
+        call check_sys(config, sys_new, m_start, e_start, t, status, exit_time_loop)
         if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
             call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)
         end if
@@ -1432,9 +1445,11 @@ subroutine run(config, sys_start, sys_end, status)
     if (config%csv_output) close(unit=csv_unit)
 end subroutine run
 
-pure subroutine check_sys(config, sys, t, status, exit_time_loop)
+pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_loop)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys
+    type(si_mass), intent(in)                     :: m_start
+    type(si_energy), intent(in)                   :: e_start
     type(si_time), intent(in)                     :: t
     type(run_status_type), intent(out)            :: status
     logical, intent(out)                          :: exit_time_loop
@@ -1442,6 +1457,7 @@ pure subroutine check_sys(config, sys, t, status, exit_time_loop)
     integer              :: n_cv, i_cv, j_cv, n_bad_cv
     type(si_mass)        :: m_total_i, m_total_j
     type(si_temperature) :: temp_i, temp_j
+    type(unitless)       :: rel_delta
     
     n_cv = size(sys%cv)
     status%rc      = CONTINUE_RUN_RC
@@ -1459,7 +1475,7 @@ pure subroutine check_sys(config, sys, t, status, exit_time_loop)
         
         m_total_i = sys%cv(i_cv)%m_total()
         if (m_total_i%v%v < 0.0_WP) then
-            status%rc = MASS_RUN_RC
+            status%rc = NEGATIVE_MASS_RUN_RC
             
             allocate(status%data(n_cv))
             n_bad_cv = 0
@@ -1483,7 +1499,7 @@ pure subroutine check_sys(config, sys, t, status, exit_time_loop)
         
         temp_i = sys%cv(i_cv)%temp()
         if (temp_i%v%v <= 0.0_WP) then
-            status%rc = TEMP_RUN_RC
+            status%rc = NEGATIVE_TEMP_RUN_RC
             
             allocate(status%data(n_cv))
             n_bad_cv = 0
@@ -1506,6 +1522,22 @@ pure subroutine check_sys(config, sys, t, status, exit_time_loop)
             return
         end if
     end do
+    
+    call assert(m_start%v%v > 0.0_WP, "cva (check_sys): m_start must be greater than zero")
+    rel_delta = abs(sys%m_total() - m_start) / m_start
+    if (rel_delta%v%v > MASS_TOLERANCE) then
+        status%rc = MASS_TOLERANCE_RUN_RC
+        allocate(status%data(1))
+        status%data(1) = rel_delta%v%v
+    end if
+    
+    call assert(e_start%v%v > 0.0_WP, "cva (check_sys): e_start must be greater than zero")
+    rel_delta = abs(sys%e_total() - e_start) / e_start
+    if (rel_delta%v%v > ENERGY_TOLERANCE) then
+        status%rc = ENERGY_TOLERANCE_RUN_RC
+        allocate(status%data(1))
+        status%data(1) = rel_delta%v%v
+    end if
     
     if (t >= config%t_stop) then
         status%rc = TIMEOUT_RUN_RC
