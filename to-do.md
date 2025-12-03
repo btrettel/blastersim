@@ -5,6 +5,7 @@
         - All state variables don't exceed certain amounts.
             - Also check derivatives in stability checks.
         - `x` > 0
+        - Try "Lipschitz constant estimate" suggested by Gemini.
         - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
     - `write_csv_row`
         - Calculate flow rates for the current time step in there. Alternatively use `m_dot_eff = delta_m/dt` so that the outputs appear to satisfy conservation? Backing out `h_dot_eff` like that would be difficult due to the work term so perhaps don't bother with that approach.
