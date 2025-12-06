@@ -453,7 +453,9 @@ pure function temp_cv(cv)
             error stop "cva (temp_cv): invalid cv%eos"
     end select
     
-    call assert(temp_cv%v%v > 0.0_WP, "cva (temp_cv): temp_cv > 0 violated")
+    ! Disabled in favor of `check_sys` temperature check.
+    ! If this is active, `check_sys`'s temperature check won't work in debug compilation.
+    !call assert(temp_cv%v%v > 0.0_WP, "cva (temp_cv): temp_cv > 0 violated")
 end function temp_cv
 
 pure function vol_cv(cv)
