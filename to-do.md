@@ -1,11 +1,9 @@
 - v0.1.0
-    - `check_sys`
-        - test each `status%rc` code for `check_sys`
-        - Derivatives of total mass and energy should be effectively zero.
+    - `check_sys`: test each `status%rc` code
+        - critical pressure check for ideal gases
         - All state variables don't exceed certain amounts.
             - Also check derivatives in stability checks.
         - `x` > 0
-        - critical pressure check for ideal gases
     - `write_csv_row`
         - Make methods to get gas kinetic energy and internal energy, use in CSV output
             - Test cases for temperature and internal energy with non-zero gas velocity.

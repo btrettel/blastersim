@@ -1274,6 +1274,7 @@ subroutine test_conservation(tests)
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
+    integer               :: n_d
     type(si_length)       :: d_e, x_3, x_4, d_3, d_4, x_stop_4
     type(si_velocity)     :: x_dot
     type(unitless)        :: y(1)
@@ -1285,6 +1286,8 @@ subroutine test_conservation(tests)
     type(si_length)       :: x_z
     type(si_energy)       :: e_start, e_end, spring_pe_3_start, m_p_ke_3_start, e_start_3, &
                                 e_chamber_atm, e_barrel_atm
+    
+    n_d = 1
     
     allocate(sys_start)
     allocate(sys_start%cv(4))
@@ -1304,9 +1307,9 @@ subroutine test_conservation(tests)
     sys_start%con(3, 2)%active = .false.
     sys_start%con(3, 3)%active = .false.
     sys_start%con(3, 4)%active = .true.
-    d_e = inch_const(0.1_WP, 0)
+    d_e = inch_const(0.1_WP, n_d)
     sys_start%con(3, 4)%a_e = (PI/4.0_WP)*square(d_e)
-    call sys_start%con(3, 4)%b%v%init_const(0.5_WP, 0)
+    call sys_start%con(3, 4)%b%v%init_const(0.5_WP, n_d)
     
     sys_start%con(4, 1)%active = .false.
     sys_start%con(4, 2)%active = .false.
@@ -1314,14 +1317,14 @@ subroutine test_conservation(tests)
     sys_start%con(4, 4)%active = .false.
     
     ! The same for every control volume.
-    call y(1)%v%init_const(1.0_WP, 0)
-    call temp_atm%v%init_const(300.0_WP, 0)
+    call y(1)%v%init_const(1.0_WP, n_d)
+    call temp_atm%v%init_const(300.0_WP, n_d)
     
     ! 1: atmosphere for chamber
-    call p_atm%v%init_const(1.0e5_WP, 0)
-    call d_3%v%init_const(2.0e-2_WP, 0)
+    call p_atm%v%init_const(1.0e5_WP, n_d)
+    call d_3%v%init_const(2.0e-2_WP, n_d)
     csa_3 = (PI/4.0_WP)*square(d_3)
-    call x_dot%v%init_const(-2.0_WP, 0)
+    call x_dot%v%init_const(-2.0_WP, n_d)
     
     call sys_start%cv(1)%set_const("atmosphere for chamber", csa_3, p_atm, temp_atm, [DRY_AIR], 3, x_dot=-x_dot)
     
@@ -1329,8 +1332,8 @@ subroutine test_conservation(tests)
     call tests%integer_eq(sys_start%cv(1)%i_cv_mirror, 3, "test_conservation, sys_start%cv(1)%i_cv_mirror")
     
     ! 2: atmosphere for barrel
-    call p_atm%v%init_const(1.0e5_WP, 0)
-    call d_4%v%init_const(2.0e-2_WP, 0)
+    call p_atm%v%init_const(1.0e5_WP, n_d)
+    call d_4%v%init_const(2.0e-2_WP, n_d)
     csa_4 = (PI/4.0_WP)*square(d_4)
     
     call sys_start%cv(2)%set_const("atmosphere for barrel", csa_4, p_atm, temp_atm, [DRY_AIR], 4)
@@ -1339,13 +1342,13 @@ subroutine test_conservation(tests)
     call tests%integer_eq(sys_start%cv(2)%i_cv_mirror, 4, "test_conservation, sys_start%cv(2)%i_cv_mirror")
     
     ! 3: chamber
-    call x_3%v%init_const(10.0e-2_WP, 0)
-    call p_3%v%init_const(5.0e5_WP, 0)
-    call m_p_3%v%init_const(30.0e-3_WP, 0)
-    call p_fs_3%v%init_const(0.2e5_WP, 0)
-    call p_fd_3%v%init_const(0.1e5_WP, 0)
-    call k%v%init_const(700.0_WP, 0)
-    call x_z%v%init_const(1.0e-2_WP, 0)
+    call x_3%v%init_const(10.0e-2_WP, n_d)
+    call p_3%v%init(5.0e5_WP, 1, n_d) ! This will also test the derivatives a bit.
+    call m_p_3%v%init_const(30.0e-3_WP, n_d)
+    call p_fs_3%v%init_const(0.2e5_WP, n_d)
+    call p_fd_3%v%init_const(0.1e5_WP, n_d)
+    call k%v%init_const(700.0_WP, n_d)
+    call x_z%v%init_const(1.0e-2_WP, n_d)
     
     call sys_start%cv(3)%set(x_3, x_dot, y, p_3, temp_atm, "pressure chamber", csa_3, 1.0_WP/m_p_3, p_fs_3, p_fd_3, k, &
                                     x_z, [DRY_AIR], 1)
@@ -1353,20 +1356,20 @@ subroutine test_conservation(tests)
     
     ! 4: barrel
     
-    call x_dot%v%init_const(0.0_WP, 0)
-    call x_4%v%init_const(10.0e-2_WP, 0)
-    call p_4%v%init_const(1.0e5_WP, 0)
-    call m_p_4%v%init_const(1.0e-3_WP, 0)
-    call p_fs_4%v%init_const(0.2e5_WP, 0)
-    call p_fd_4%v%init_const(0.1e5_WP, 0)
-    x_stop_4 = x_4 + inch_const(12.0_WP, 0)
-    call k%v%init_const(0.0_WP, 0)
-    call x_z%v%init_const(0.0_WP, 0)
+    call x_dot%v%init_const(0.0_WP, n_d)
+    call x_4%v%init_const(10.0e-2_WP, n_d)
+    call p_4%v%init_const(1.0e5_WP, n_d)
+    call m_p_4%v%init_const(1.0e-3_WP, n_d)
+    call p_fs_4%v%init_const(0.2e5_WP, n_d)
+    call p_fd_4%v%init_const(0.1e5_WP, n_d)
+    x_stop_4 = x_4 + inch_const(12.0_WP, n_d)
+    call k%v%init_const(0.0_WP, n_d)
+    call x_z%v%init_const(0.0_WP, n_d)
     
     call sys_start%cv(4)%set(x_4, x_dot, y, p_4, temp_atm, "barrel", csa_4, 1.0_WP/m_p_4, p_fs_4, p_fd_4, k, &
                                 x_z, [DRY_AIR], 1, x_stop=x_stop_4)
     
-    call config%set("test_conservation", 0, csv_output=.true., csv_frequency=1)
+    call config%set("test_conservation", 1, csv_output=.true., csv_frequency=1)
     call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_conservation, status%rc")
@@ -1384,10 +1387,14 @@ subroutine test_conservation(tests)
     m_start = sys_start%m_total()
     m_end   = sys_end%m_total()
     call tests%real_eq(m_start%v%v, m_end%v%v, "test_conservation, m_start == m_end")
+    call tests%real_gt(m_start%v%d(1), 0.0_WP, "test_conservation, m_start derivative is positive")
+    call tests%real_eq(m_start%v%d(1) - m_end%v%d(1), 0.0_WP, "test_conservation, delta m derivative is zero", abs_tol=1.0e-22_WP)
     
     e_start = sys_start%e_total()
     e_end   = sys_end%e_total()
     call tests%real_eq(e_start%v%v, e_end%v%v, "test_conservation, e_start == e_end", abs_tol=1.0e-3_WP)
+    call tests%real_gt(e_start%v%d(1), 0.0_WP, "test_conservation, e_start derivative is positive")
+    call tests%real_eq(e_start%v%d(1) - e_end%v%d(1), 0.0_WP, "test_conservation, delta e derivative is zero", abs_tol=1.0e-5_WP)
     
     e_chamber_atm = sys_end%cv(1)%e_total()
     call tests%character_eq(sys_end%cv(1)%label, "atmosphere for chamber", "test_conservation, chamber atmosphere label")
@@ -1562,6 +1569,7 @@ subroutine test_check_sys(tests)
     use gasdata, only: DRY_AIR, H2O
     use cva, only: IDEAL_EOS, NORMAL_CV_TYPE, CONTINUE_RUN_RC, SUCCESS_RUN_RC, TIMEOUT_RUN_RC, NEGATIVE_CV_M_TOTAL_RUN_RC, &
                     NEGATIVE_CV_TEMP_RUN_RC, MASS_TOLERANCE_RUN_RC, ENERGY_TOLERANCE_RUN_RC, &
+                    MASS_DERIV_TOLERANCE_RUN_RC, ENERGY_DERIV_TOLERANCE_RUN_RC, &
                     !X_BLOW_UP_RUN_RC, M_BLOW_UP_RUN_RC, E_BLOW_UP_RUN_RC, E_F_BLOW_UP_RUN_RC, X_DOT_BLOW_UP_RUN_RC, &
                     run_config_type, cv_system_type, run_status_type, check_sys
     
@@ -1916,6 +1924,98 @@ subroutine test_check_sys(tests)
     call tests%integer_eq(status%rc, ENERGY_TOLERANCE_RUN_RC, "test_check_sys, ENERGY_TOLERANCE_RUN_RC, status%rc")
     call tests%integer_eq(size(status%data), 1, "test_check_sys, ENERGY_TOLERANCE_RUN_RC, size(status%data)")
     call tests%real_eq(status%data(1), 0.5_WP, "test_check_sys, ENERGY_TOLERANCE_RUN_RC, status%data(1)")
+    
+    ! `MASS_DERIV_TOLERANCE_RUN_RC`
+    
+    call sys%cv(1)%x%v%init_const(0.1_WP, n_d)
+    call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%m(1)%v%init(0.25_WP, 1, n_d)
+    call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
+    call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    sys%cv(1)%label = "CV1"
+    sys%cv(1)%eos   = IDEAL_EOS
+    sys%cv(1)%type  = NORMAL_CV_TYPE
+    sys%cv(1)%gas   = [DRY_AIR, H2O]
+    call sys%cv(1)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(1)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
+    call sys%cv(1)%x_z%v%init_const(0.1_WP, n_d)
+    sys%cv(1)%i_cv_mirror = 0
+    
+    call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
+    call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%m(1)%v%init_const(0.25_WP, n_d)
+    call sys%cv(2)%m(2)%v%init_const(0.25_WP, n_d)
+    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    sys%cv(2)%label = "CV1"
+    sys%cv(2)%eos   = IDEAL_EOS
+    sys%cv(2)%type  = NORMAL_CV_TYPE
+    sys%cv(2)%gas   = [DRY_AIR, H2O]
+    call sys%cv(2)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(2)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
+    call sys%cv(2)%x_z%v%init_const(0.1_WP, n_d)
+    sys%cv(2)%i_cv_mirror = 0
+    
+    call tests%integer_eq(size(sys%cv(1)%x%v%d), 2, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, n_d")
+    call check_sys(config, sys, m_start, e_start, t, status, exit_time_loop)
+    call tests%integer_eq(status%rc, MASS_DERIV_TOLERANCE_RUN_RC, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, status%rc")
+    call tests%integer_eq(size(status%data), 1, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, size(status%data)")
+    call tests%real_eq(status%data(1), 1.0_WP, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, status%data(1)")
+    
+    ! `ENERGY_DERIV_TOLERANCE_RUN_RC`
+    
+    call sys%cv(1)%x%v%init_const(0.1_WP, n_d)
+    call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%m(1)%v%init_const(0.25_WP, n_d)
+    call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
+    call sys%cv(1)%e%v%init(1.0_WP, 1, n_d)
+    call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    sys%cv(1)%label = "CV1"
+    sys%cv(1)%eos   = IDEAL_EOS
+    sys%cv(1)%type  = NORMAL_CV_TYPE
+    sys%cv(1)%gas   = [DRY_AIR, H2O]
+    call sys%cv(1)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(1)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
+    call sys%cv(1)%x_z%v%init_const(0.1_WP, n_d)
+    sys%cv(1)%i_cv_mirror = 0
+    
+    call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
+    call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%m(1)%v%init_const(0.25_WP, n_d)
+    call sys%cv(2)%m(2)%v%init_const(0.25_WP, n_d)
+    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    sys%cv(2)%label = "CV1"
+    sys%cv(2)%eos   = IDEAL_EOS
+    sys%cv(2)%type  = NORMAL_CV_TYPE
+    sys%cv(2)%gas   = [DRY_AIR, H2O]
+    call sys%cv(2)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(2)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
+    call sys%cv(2)%x_z%v%init_const(0.1_WP, n_d)
+    sys%cv(2)%i_cv_mirror = 0
+    
+    call tests%integer_eq(size(sys%cv(1)%x%v%d), 2, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, n_d")
+    call check_sys(config, sys, m_start, e_start, t, status, exit_time_loop)
+    call tests%integer_eq(status%rc, ENERGY_DERIV_TOLERANCE_RUN_RC, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, status%rc")
+    call tests%integer_eq(size(status%data), 1, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, size(status%data)")
+    call tests%real_eq(status%data(1), 1.0_WP, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, status%data(1)")
     
     ! TODO: `X_BLOW_UP_RUN_RC`
     ! TODO: `X_DOT_BLOW_UP_RUN_RC`

@@ -26,10 +26,10 @@ real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 real(WP), public, parameter :: X_STOP_DEFAULT         = 1.0e3_WP  ! m (If you have a barrel that's a km long, that's probably wrong.)
 real(WP), public, parameter :: DT_DEFAULT             = 1.0e-5_WP ! s
 real(WP), public, parameter :: T_STOP_DEFAULT         = 0.5_WP    ! s
-real(WP), public, parameter :: MASS_TOLERANCE         = 1.0e-4_WP ! unitless
-real(WP), public, parameter :: ENERGY_TOLERANCE       = 1.0e-3_WP ! unitless
-real(WP), public, parameter :: MASS_DERIV_TOLERANCE   = 1.0e-6_WP ! unitless
-real(WP), public, parameter :: ENERGY_DERIV_TOLERANCE = 1.0e-6_WP ! unitless
+real(WP), public, parameter :: MASS_TOLERANCE         = 1.0e-5_WP ! unitless
+real(WP), public, parameter :: ENERGY_TOLERANCE       = 1.0e-4_WP ! unitless
+real(WP), public, parameter :: MASS_DERIV_TOLERANCE   = 1.0e-8_WP ! unitless
+real(WP), public, parameter :: ENERGY_DERIV_TOLERANCE = 1.0e-8_WP ! unitless
 
 integer, public, parameter :: IDEAL_EOS = 1 ! ideal gas equation of state
 integer, public, parameter :: CONST_EOS = 2 ! constant pressure, temperature, density
@@ -1459,7 +1459,8 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
     logical, intent(out)                          :: exit_time_loop
     
     integer              :: n_cv, i_cv, j_cv, n_bad_cv, n_d, i_d
-    type(si_mass)        :: m_total_i, m_total_j
+    type(si_mass)        :: m_total_i, m_total_j, rel_m
+    type(si_energy)      :: rel_e
     type(si_temperature) :: temp_i, temp_j
     type(unitless)       :: rel_delta
     real(WP)             :: max_abs_m_deriv, max_abs_e_deriv
@@ -1543,9 +1544,11 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
         status%data(1) = rel_delta%v%v
     end if
     
+    ! It appears that dividing by `m_start` like with `rel_delta` makes the derivatives too small.
+    rel_m = sys%m_total() - m_start
     max_abs_m_deriv = 0.0_WP
     do i_d = 1, n_d
-        max_abs_m_deriv = max(max_abs_m_deriv, abs(rel_delta%v%d(i_d)))
+        max_abs_m_deriv = max(max_abs_m_deriv, abs(rel_m%v%d(i_d)))
     end do
     if (max_abs_m_deriv > MASS_DERIV_TOLERANCE) then
         status%rc = MASS_DERIV_TOLERANCE_RUN_RC
@@ -1561,9 +1564,10 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
         status%data(1) = rel_delta%v%v
     end if
     
+    rel_e = sys%e_total() - e_start
     max_abs_e_deriv = 0.0_WP
     do i_d = 1, n_d
-        max_abs_e_deriv = max(max_abs_e_deriv, abs(rel_delta%v%d(i_d)))
+        max_abs_e_deriv = max(max_abs_e_deriv, abs(rel_e%v%d(i_d)))
     end do
     if (max_abs_e_deriv > ENERGY_DERIV_TOLERANCE) then
         status%rc = ENERGY_DERIV_TOLERANCE_RUN_RC
