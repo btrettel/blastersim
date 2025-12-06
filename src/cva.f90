@@ -17,7 +17,7 @@ private
 public :: smooth_min
 public :: d_x_d_t, d_xdot_d_t, d_m_k_d_t, d_e_d_t, d_e_f_d_t
 public :: f_m_dot, g_m_dot
-public :: time_step, run, write_csv_row
+public :: time_step, run, check_sys, write_csv_row
 
 ! pressure ratio laminar flow nominally starts at
 ! based on first part of beater_pneumatic_2007 eq. 5.4
@@ -38,18 +38,18 @@ integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
 integer, public, parameter :: MAX_CV_TYPE    = 2
 
-integer, public, parameter :: CONTINUE_RUN_RC         = -1
-integer, public, parameter :: SUCCESS_RUN_RC          = 0
-integer, public, parameter :: TIMEOUT_RUN_RC          = 1
-integer, public, parameter :: NEGATIVE_MASS_RUN_RC    = 2
-integer, public, parameter :: NEGATIVE_TEMP_RUN_RC    = 3
-integer, public, parameter :: MASS_TOLERANCE_RUN_RC   = 4
-integer, public, parameter :: ENERGY_TOLERANCE_RUN_RC = 5
-integer, public, parameter :: X_BLOW_UP_RUN_RC        = 6
-integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC    = 7
-integer, public, parameter :: M_BLOW_UP_RUN_RC        = 8
-integer, public, parameter :: E_BLOW_UP_RUN_RC        = 9
-integer, public, parameter :: E_F_BLOW_UP_RUN_RC      = 10
+integer, public, parameter :: CONTINUE_RUN_RC            = -1
+integer, public, parameter :: SUCCESS_RUN_RC             = 0
+integer, public, parameter :: TIMEOUT_RUN_RC             = 1
+integer, public, parameter :: NEGATIVE_CV_M_TOTAL_RUN_RC = 2
+integer, public, parameter :: NEGATIVE_CV_TEMP_RUN_RC    = 3
+integer, public, parameter :: MASS_TOLERANCE_RUN_RC      = 4
+integer, public, parameter :: ENERGY_TOLERANCE_RUN_RC    = 5
+integer, public, parameter :: X_BLOW_UP_RUN_RC           = 6
+integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC       = 7
+integer, public, parameter :: M_BLOW_UP_RUN_RC           = 8
+integer, public, parameter :: E_BLOW_UP_RUN_RC           = 9
+integer, public, parameter :: E_F_BLOW_UP_RUN_RC         = 10
 
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
@@ -73,9 +73,9 @@ type, public :: cv_type ! control volume
     type(si_length)             :: x_z         ! zero force location for spring
     type(gas_type), allocatable :: gas(:)      ! gas data
     integer                     :: i_cv_mirror ! index of control volume to use in pressure difference calculation
-    type(si_pressure)           :: p_const    ! if `cv%eos = CONST_EOS`, then `cv%p() = p_const`
-    type(si_temperature)        :: temp_const ! if `cv%eos = CONST_EOS`, then `cv%temp() = temp_const`
-    type(si_length)             :: x_stop     ! `x` location where simulation will stop
+    type(si_pressure)           :: p_const     ! if `cv%eos = CONST_EOS`, then `cv%p() = p_const`
+    type(si_temperature)        :: temp_const  ! if `cv%eos = CONST_EOS`, then `cv%temp() = temp_const`
+    type(si_length)             :: x_stop      ! `x` location where simulation will stop
 contains
     procedure :: m_total
     procedure :: spring_pe
@@ -1335,14 +1335,14 @@ pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
     end do
 end subroutine rk_stage
 
-subroutine set_run_config(config, id, csv_output, csv_frequency, t_stop, dt, n_d)
+subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt)
     class(run_config_type), intent(out) :: config
     character(len=*), intent(in)        :: id ! CSV file name
+    integer, intent(in)                 :: n_d
     
     logical, intent(in), optional       :: csv_output
     integer, intent(in), optional       :: csv_frequency
     type(si_time), intent(in), optional :: t_stop, dt
-    integer, intent(in), optional       :: n_d
     
     config%id = id
     
@@ -1362,14 +1362,12 @@ subroutine set_run_config(config, id, csv_output, csv_frequency, t_stop, dt, n_d
     if (present(t_stop)) then
         config%t_stop = t_stop
     else
-        call assert(present(n_d), "cva (get_run_config, t_stop): n_d must be provided to use defaults")
         call config%t_stop%v%init_const(T_STOP_DEFAULT, n_d)
     end if
     
     if (present(dt)) then
         config%dt = dt
     else
-        call assert(present(n_d), "cva (get_run_config, t_stop): n_d must be provided to use defaults")
         call config%dt%v%init_const(DT_DEFAULT, n_d)
     end if
 end subroutine set_run_config
@@ -1475,7 +1473,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
         
         m_total_i = sys%cv(i_cv)%m_total()
         if (m_total_i%v%v < 0.0_WP) then
-            status%rc = NEGATIVE_MASS_RUN_RC
+            status%rc = NEGATIVE_CV_M_TOTAL_RUN_RC
             
             allocate(status%data(n_cv))
             n_bad_cv = 0
@@ -1489,8 +1487,11 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
             allocate(status%i_cv(n_bad_cv))
             n_bad_cv = 0
             do j_cv = 1, n_cv
-                n_bad_cv = n_bad_cv + 1
-                status%i_cv(n_bad_cv) = j_cv
+                m_total_j = sys%cv(j_cv)%m_total()
+                if (m_total_j%v%v < 0.0_WP) then
+                    n_bad_cv = n_bad_cv + 1
+                    status%i_cv(n_bad_cv) = j_cv
+                end if
             end do
             
             exit_time_loop = .true.
@@ -1499,7 +1500,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
         
         temp_i = sys%cv(i_cv)%temp()
         if (temp_i%v%v <= 0.0_WP) then
-            status%rc = NEGATIVE_TEMP_RUN_RC
+            status%rc = NEGATIVE_CV_TEMP_RUN_RC
             
             allocate(status%data(n_cv))
             n_bad_cv = 0
@@ -1514,8 +1515,11 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
             allocate(status%i_cv(n_bad_cv))
             n_bad_cv = 0
             do j_cv = 1, n_cv
-                n_bad_cv = n_bad_cv + 1
-                status%i_cv(n_bad_cv) = j_cv
+                temp_j = sys%cv(j_cv)%temp()
+                if (temp_j%v%v < 0.0_WP) then
+                    n_bad_cv = n_bad_cv + 1
+                    status%i_cv(n_bad_cv) = j_cv
+                end if
             end do
             
             exit_time_loop = .true.
@@ -1700,7 +1704,12 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 error stop "cva (write_csv_row, rho): invalid row_type"
         end select
         
-        ! TODO: m_dot, h_dot
+        ! TODO: spring_pe
+        ! TODO: m_p_ke
+        ! TODO: e_total
+        
+        ! TODO: m_dot
+        ! TODO: h_dot
     end do
     
     select case (row_type)

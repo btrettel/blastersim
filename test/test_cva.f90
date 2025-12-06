@@ -48,6 +48,8 @@ call test_conservation(tests)
 call test_mirror_1(tests)
 call test_mirror_2(tests)
 
+call test_check_sys(tests)
+
 call tests%end_tests()
 
 contains
@@ -1364,7 +1366,7 @@ subroutine test_conservation(tests)
     call sys_start%cv(4)%set(x_4, x_dot, y, p_4, temp_atm, "barrel", csa_4, 1.0_WP/m_p_4, p_fs_4, p_fd_4, k, &
                                 x_z, [DRY_AIR], 1, x_stop=x_stop_4)
     
-    call config%set("test_conservation", csv_output=.true., csv_frequency=1, n_d=0)
+    call config%set("test_conservation", 0, csv_output=.true., csv_frequency=1)
     call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_conservation, status%rc")
@@ -1465,7 +1467,7 @@ subroutine test_mirror_1(tests)
     call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp, "chamber 2", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
                                     x_z, [DRY_AIR], 1, type=MIRROR_CV_TYPE)
     
-    call config%set("test_mirror_1", t_stop=t_stop, n_d=0)
+    call config%set("test_mirror_1", 0, t_stop=t_stop)
     call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_mirror_1, status%rc")
@@ -1542,7 +1544,7 @@ subroutine test_mirror_2(tests)
     call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp, "chamber 2", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
                                     x_z, [DRY_AIR], 1, type=MIRROR_CV_TYPE)
     
-    call config%set("test_mirror_2", t_stop=t_stop, n_d=0)
+    call config%set("test_mirror_2", 0, t_stop=t_stop)
     call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_mirror_2, status%rc")
@@ -1555,5 +1557,233 @@ subroutine test_mirror_2(tests)
     call tests%real_eq(sys_end%cv(1)%x_dot%v%v, -sys_end%cv(2)%x_dot%v%v, &
                             "test_mirror_2, CV 1 x_dot = - CV 2 x_dot")
 end subroutine test_mirror_2
+
+subroutine test_check_sys(tests)
+    use gasdata, only: DRY_AIR, H2O
+    use cva, only: IDEAL_EOS, NORMAL_CV_TYPE, CONTINUE_RUN_RC, SUCCESS_RUN_RC, TIMEOUT_RUN_RC, NEGATIVE_CV_M_TOTAL_RUN_RC, &
+                    !NEGATIVE_CV_TEMP_RUN_RC, MASS_TOLERANCE_RUN_RC, ENERGY_TOLERANCE_RUN_RC, X_BLOW_UP_RUN_RC, X_DOT_BLOW_UP_RUN_RC, &
+                    !M_BLOW_UP_RUN_RC, E_BLOW_UP_RUN_RC, E_F_BLOW_UP_RUN_RC, &
+                    run_config_type, cv_system_type, run_status_type, check_sys
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    integer                           :: n_d
+    type(run_config_type)             :: config
+    type(cv_system_type), allocatable :: sys
+    type(si_mass)                     :: m_start
+    type(si_energy)                   :: e_start
+    type(si_time)                     :: t_stop, t
+    type(run_status_type)             :: status
+    logical                           :: exit_time_loop
+    
+    n_d = 2
+    
+    allocate(sys)
+    allocate(sys%cv(2))
+    ! `sys%con` doesn't need to be allocated for this test.
+    allocate(sys%cv(1)%m(2))
+    allocate(sys%cv(2)%m(2))
+    
+    call t_stop%v%init_const(1.0_WP, n_d)
+    call config%set("test_check_sys", n_d, t_stop=t_stop)
+    
+    call m_start%v%init_const(1.0_WP, n_d)
+    call e_start%v%init_const(2.0_WP, n_d)
+    call t%v%init_const(0.01_WP, n_d)
+    
+    ! `CONTINUE_RUN_RC`
+    
+    call sys%cv(1)%x%v%init_const(0.1_WP, n_d)
+    call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%m(1)%v%init_const(0.25_WP, n_d)
+    call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
+    call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    sys%cv(1)%label = "CV1"
+    sys%cv(1)%eos   = IDEAL_EOS
+    sys%cv(1)%type  = NORMAL_CV_TYPE
+    sys%cv(1)%gas   = [DRY_AIR, H2O]
+    call sys%cv(1)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(1)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
+    call sys%cv(1)%x_z%v%init_const(0.1_WP, n_d)
+    sys%cv(1)%i_cv_mirror = 0
+    
+    call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
+    call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%m(1)%v%init_const(0.25_WP, n_d)
+    call sys%cv(2)%m(2)%v%init_const(0.25_WP, n_d)
+    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    sys%cv(2)%label = "CV1"
+    sys%cv(2)%eos   = IDEAL_EOS
+    sys%cv(2)%type  = NORMAL_CV_TYPE
+    sys%cv(2)%gas   = [DRY_AIR, H2O]
+    call sys%cv(2)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(2)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
+    call sys%cv(2)%x_z%v%init_const(0.1_WP, n_d)
+    sys%cv(2)%i_cv_mirror = 0
+    
+    call check_sys(config, sys, m_start, e_start, t, status, exit_time_loop)
+    call tests%integer_eq(status%rc, CONTINUE_RUN_RC, "test_check_sys, CONTINUE_RUN_RC, status%rc")
+    
+    ! `SUCCESS_RUN_RC`
+    
+    call sys%cv(1)%x%v%init_const(4.0_WP, n_d)
+    call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%m(1)%v%init_const(0.25_WP, n_d)
+    call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
+    call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    sys%cv(1)%label = "CV1"
+    sys%cv(1)%eos   = IDEAL_EOS
+    sys%cv(1)%type  = NORMAL_CV_TYPE
+    sys%cv(1)%gas   = [DRY_AIR, H2O]
+    call sys%cv(1)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(1)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
+    call sys%cv(1)%x_z%v%init_const(4.0_WP, n_d)
+    sys%cv(1)%i_cv_mirror = 0
+    
+    call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
+    call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%m(1)%v%init_const(0.25_WP, n_d)
+    call sys%cv(2)%m(2)%v%init_const(0.25_WP, n_d)
+    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    sys%cv(2)%label = "CV1"
+    sys%cv(2)%eos   = IDEAL_EOS
+    sys%cv(2)%type  = NORMAL_CV_TYPE
+    sys%cv(2)%gas   = [DRY_AIR, H2O]
+    call sys%cv(2)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(2)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
+    call sys%cv(2)%x_z%v%init_const(0.1_WP, n_d)
+    sys%cv(2)%i_cv_mirror = 0
+    
+    call check_sys(config, sys, m_start, e_start, t, status, exit_time_loop)
+    call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_check_sys, SUCCESS_RUN_RC, status%rc")
+    call tests%integer_eq(size(status%i_cv), 1, "test_check_sys, SUCCESS_RUN_RC, size(status%i_cv)")
+    call tests%integer_eq(status%i_cv(1), 1, "test_check_sys, SUCCESS_RUN_RC, status%i_cv(1)")
+    
+    ! `TIMEOUT_RUN_RC`
+    
+    call t_stop%v%init_const(0.0_WP, n_d)
+    call config%set("test_check_sys", n_d, t_stop=t_stop)
+    
+    call sys%cv(1)%x%v%init_const(0.1_WP, n_d)
+    call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%m(1)%v%init_const(0.25_WP, n_d)
+    call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
+    call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    sys%cv(1)%label = "CV1"
+    sys%cv(1)%eos   = IDEAL_EOS
+    sys%cv(1)%type  = NORMAL_CV_TYPE
+    sys%cv(1)%gas   = [DRY_AIR, H2O]
+    call sys%cv(1)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(1)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
+    call sys%cv(1)%x_z%v%init_const(4.0_WP, n_d)
+    sys%cv(1)%i_cv_mirror = 0
+    
+    call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
+    call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%m(1)%v%init_const(0.25_WP, n_d)
+    call sys%cv(2)%m(2)%v%init_const(0.25_WP, n_d)
+    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    sys%cv(2)%label = "CV1"
+    sys%cv(2)%eos   = IDEAL_EOS
+    sys%cv(2)%type  = NORMAL_CV_TYPE
+    sys%cv(2)%gas   = [DRY_AIR, H2O]
+    call sys%cv(2)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(2)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
+    call sys%cv(2)%x_z%v%init_const(0.1_WP, n_d)
+    sys%cv(2)%i_cv_mirror = 0
+    
+    call check_sys(config, sys, m_start, e_start, t, status, exit_time_loop)
+    call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_check_sys, TIMEOUT_RUN_RC, status%rc")
+    
+    ! `NEGATIVE_CV_M_TOTAL_RUN_RC`
+    
+    call t_stop%v%init_const(1.0_WP, n_d)
+    call config%set("test_check_sys", n_d, t_stop=t_stop)
+    
+    call sys%cv(1)%x%v%init_const(0.1_WP, n_d)
+    call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%m(1)%v%init_const(-0.5_WP, n_d)
+    call sys%cv(1)%m(2)%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    sys%cv(1)%label = "CV1"
+    sys%cv(1)%eos   = IDEAL_EOS
+    sys%cv(1)%type  = NORMAL_CV_TYPE
+    sys%cv(1)%gas   = [DRY_AIR, H2O]
+    call sys%cv(1)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(1)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
+    call sys%cv(1)%x_z%v%init_const(4.0_WP, n_d)
+    sys%cv(1)%i_cv_mirror = 0
+    
+    call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
+    call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%m(1)%v%init_const(1.5_WP, n_d)
+    call sys%cv(2)%m(2)%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    sys%cv(2)%label = "CV1"
+    sys%cv(2)%eos   = IDEAL_EOS
+    sys%cv(2)%type  = NORMAL_CV_TYPE
+    sys%cv(2)%gas   = [DRY_AIR, H2O]
+    call sys%cv(2)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(2)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
+    call sys%cv(2)%x_z%v%init_const(0.1_WP, n_d)
+    sys%cv(2)%i_cv_mirror = 0
+    
+    call check_sys(config, sys, m_start, e_start, t, status, exit_time_loop)
+    call tests%integer_eq(status%rc, NEGATIVE_CV_M_TOTAL_RUN_RC, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, status%rc")
+    call tests%integer_eq(size(status%i_cv), 1, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, size(status%i_cv)")
+    call tests%integer_eq(status%i_cv(1), 1, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, status%i_cv(1)")
+    call tests%integer_eq(size(status%data), 2, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, size(status%data)")
+    call tests%real_eq(status%data(1), -0.5_WP, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, status%data(1)")
+    call tests%real_eq(status%data(2), 1.5_WP, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, status%data(2)")
+    
+    ! TODO: `NEGATIVE_CV_TEMP_RUN_RC`
+    ! TODO: `MASS_TOLERANCE_RUN_RC`
+    ! TODO: `ENERGY_TOLERANCE_RUN_RC`
+    ! TODO: `X_BLOW_UP_RUN_RC`
+    ! TODO: `X_DOT_BLOW_UP_RUN_RC`
+    ! TODO: `M_BLOW_UP_RUN_RC`
+    ! TODO: `E_BLOW_UP_RUN_RC`
+    ! TODO: `E_F_BLOW_UP_RUN_RC`
+end subroutine test_check_sys
 
 end program test_cva

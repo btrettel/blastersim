@@ -1,14 +1,15 @@
 - v0.1.0
     - `check_sys`
-        - Total energy and mass are within a tolerance.
-            - Derivatives of total mass and energy should be effectively zero.
+        - test each `status%rc` code for `check_sys`
+        - Derivatives of total mass and energy should be effectively zero.
         - All state variables don't exceed certain amounts.
             - Also check derivatives in stability checks.
         - `x` > 0
-        - Try "Lipschitz constant estimate" suggested by Gemini.
-        - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
+        - critical pressure check for ideal gases
     - `write_csv_row`
-        - Calculate flow rates for the current time step in there. Alternatively use `m_dot_eff = delta_m/dt` so that the outputs appear to satisfy conservation? Backing out `h_dot_eff` like that would be difficult due to the work term so perhaps don't bother with that approach.
+        - Make methods to get gas kinetic energy and internal energy, use in CSV output
+            - Test cases for temperature and internal energy with non-zero gas velocity.
+        - Print internal energy and gas kinetic energy in CSV output
         - Write each component of energy and total energy so that someone can create their own energy balance plots.
     - Order-of-accuracy test for single control volume
         - adiabatic test without atmospheric pressure and friction
@@ -17,13 +18,15 @@
         - constant pressure test with atmospheric pressure and friction
             - seigel_theory_1965 eq. 3-2 is a simpler version of this (just subtract atmospheric and friction pressures from the pressure to factor those in)
             - Can test the following: `x`, `x_dot`, `e_f`
+    - Test `sys_interp`.
     - Check that derivatives are correct in special cases where something is set to zero with no derivatives. Check for "TODO: Not sure the derivatives of this should be zero."
     - tests for `test_const`, `p_eos`, `temp_cv`, and others for `MIRROR_CV_TYPE`
     - Tests for io.f90
     - Test `d_x_d_t`, `d_xdot_d_t`, and `d_e_f_d_t` for `CONST_EOS` and `MIRROR_CV_TYPE`.
     - Input file reader generator
-        - Input checks:
+        - Input validation:
             - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
+            - p < p_c until RK EOS added
     - documentation
         - quick start
         - drawings of pneumatic and springer guns with lengths labeled
@@ -38,6 +41,7 @@
             - Too complex to simulate.
                 - <https://www.reddit.com/r/Nerf/comments/1ordwlk/optimising_for_fps_designing_springer_blasters/nnpwewz/>
                 - <https://www.reddit.com/r/Nerf/comments/dmgxeb/science_and_math_of_nerf_formulae_and_how_to/f50mx2c/>
+                - <https://discord.com/channels/146386512873783296/146680423173455872/1389713797173743788>
             - Simulation isn't worthwhile because it takes less time to figure things out experimentally. Not true from my perspective. In practice, the alternative to simulation has been speculation. People spend a huge amount of time working on things that a simulation could show is not plausible. That's a waste of time. If anything, simulation saves time by reducing the amount of experiments that need to be done. Simulation and experimentation are complementary.
             - How do I calculate optimal barrel length?
                 - Comment on some common formulas, give better approximate formulas based on adiabatic process relations, and say how to do it in BlasterSim.
@@ -76,7 +80,10 @@
 - Readd `smooth_min` assertions including new one from Wikipedia including some extra gap for floating point error
 - Add elevation angle
 - Add assertion for validity of lumped parameter approximation
+    - Does this require the pressure gradient? Can I do it with speed of sound?
 - transonic corrections in the barrel
+    - Input validation at first to not use this with RK EOS (if that's added first)
+    - Assert `CONST_EOS` or `IDEAL_EOS` with `p < p_c` to satisfy requirements of version in Corner's book.
 - pressure gradient
     - Is the pressure gradient necessary? The multiple control volumes will provide a pressure gradient of sorts.
 - exterior ballistics
@@ -84,7 +91,6 @@
     - When mass or temperature goes negative, suggest that perhaps the effective area is too large.
 - Make subroutine to fit `sys%con(:, :)%a_e`, `sys%con(:, :)%b`, `sys%cv(:)%p_fs`, `sys%cv(:)%p_fd` for all `con_types` and `cv_types`.
 - Valve opening time, valve poppet model using pressures from CVs
-- test each `status%rc` code for `check_sys`
 - Test if correct `sys` is output for `run` (old or new)
 - Data to collect from the open literature:
     - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
@@ -92,6 +98,15 @@
 - If I use a constant pressure/temperature CV to model a HPA or CO2 tank, then I'll still need a way to estimate the real gas internal energy and enthalpy. Going all the way with a better equation of state and thermodynamic properties might not be much more complex. I could make each control volume use a different EOS if I want to avoid iterations associated with a different EOS.
 - Arbitrary displacement vs. force curves, using cubic splines for smoothness
 - Why is there a small amount of backwards motion of the projectile in `test_conservation`? Is it due to friction?
+- Post-projectile-exit analysis to wait until plunger impact, but still interpolate to get muzzle velocity.
+- Constraints
+    - plunger impact energy
+    - to prevent projectile damage: maximum acceleration or maximum projectile pressure difference
+- `check_sys`
+    - Time step criteria based on flow rate to empty CV? This wouldn't work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV.
+    - Try "Lipschitz constant estimate" suggested by Gemini.
+    - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
+- Make BlasterSim handle zero volume CVs. For zero volume, use pressure on other side of connection? What should I do if there are multiple connections?
 
 ***
 
