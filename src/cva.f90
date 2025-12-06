@@ -23,11 +23,13 @@ public :: time_step, run, check_sys, write_csv_row
 ! based on first part of beater_pneumatic_2007 eq. 5.4
 real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 
-real(WP), public, parameter :: X_STOP_DEFAULT   = 1.0e3_WP  ! m (If you have a barrel that's a km long, that's probably wrong.)
-real(WP), public, parameter :: DT_DEFAULT       = 1.0e-5_WP ! s
-real(WP), public, parameter :: T_STOP_DEFAULT   = 0.5_WP    ! s
-real(WP), public, parameter :: MASS_TOLERANCE   = 1.0e-4_WP ! unitless
-real(WP), public, parameter :: ENERGY_TOLERANCE = 1.0e-3_WP ! unitless
+real(WP), public, parameter :: X_STOP_DEFAULT         = 1.0e3_WP  ! m (If you have a barrel that's a km long, that's probably wrong.)
+real(WP), public, parameter :: DT_DEFAULT             = 1.0e-5_WP ! s
+real(WP), public, parameter :: T_STOP_DEFAULT         = 0.5_WP    ! s
+real(WP), public, parameter :: MASS_TOLERANCE         = 1.0e-4_WP ! unitless
+real(WP), public, parameter :: ENERGY_TOLERANCE       = 1.0e-3_WP ! unitless
+real(WP), public, parameter :: MASS_DERIV_TOLERANCE   = 1.0e-6_WP ! unitless
+real(WP), public, parameter :: ENERGY_DERIV_TOLERANCE = 1.0e-6_WP ! unitless
 
 integer, public, parameter :: IDEAL_EOS = 1 ! ideal gas equation of state
 integer, public, parameter :: CONST_EOS = 2 ! constant pressure, temperature, density
@@ -38,18 +40,20 @@ integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
 integer, public, parameter :: MAX_CV_TYPE    = 2
 
-integer, public, parameter :: CONTINUE_RUN_RC            = -1
-integer, public, parameter :: SUCCESS_RUN_RC             = 0
-integer, public, parameter :: TIMEOUT_RUN_RC             = 1
-integer, public, parameter :: NEGATIVE_CV_M_TOTAL_RUN_RC = 2
-integer, public, parameter :: NEGATIVE_CV_TEMP_RUN_RC    = 3
-integer, public, parameter :: MASS_TOLERANCE_RUN_RC      = 4
-integer, public, parameter :: ENERGY_TOLERANCE_RUN_RC    = 5
-integer, public, parameter :: X_BLOW_UP_RUN_RC           = 6
-integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC       = 7
-integer, public, parameter :: M_BLOW_UP_RUN_RC           = 8
-integer, public, parameter :: E_BLOW_UP_RUN_RC           = 9
-integer, public, parameter :: E_F_BLOW_UP_RUN_RC         = 10
+integer, public, parameter :: CONTINUE_RUN_RC               = -1
+integer, public, parameter :: SUCCESS_RUN_RC                = 0
+integer, public, parameter :: TIMEOUT_RUN_RC                = 1
+integer, public, parameter :: NEGATIVE_CV_M_TOTAL_RUN_RC    = 2
+integer, public, parameter :: NEGATIVE_CV_TEMP_RUN_RC       = 3
+integer, public, parameter :: MASS_TOLERANCE_RUN_RC         = 4
+integer, public, parameter :: ENERGY_TOLERANCE_RUN_RC       = 5
+integer, public, parameter :: MASS_DERIV_TOLERANCE_RUN_RC   = 6
+integer, public, parameter :: ENERGY_DERIV_TOLERANCE_RUN_RC = 7
+integer, public, parameter :: X_BLOW_UP_RUN_RC              = 8
+integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 9
+integer, public, parameter :: M_BLOW_UP_RUN_RC              = 10
+integer, public, parameter :: E_BLOW_UP_RUN_RC              = 11
+integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 12
 
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
@@ -1454,12 +1458,14 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
     type(run_status_type), intent(out)            :: status
     logical, intent(out)                          :: exit_time_loop
     
-    integer              :: n_cv, i_cv, j_cv, n_bad_cv
+    integer              :: n_cv, i_cv, j_cv, n_bad_cv, n_d, i_d
     type(si_mass)        :: m_total_i, m_total_j
     type(si_temperature) :: temp_i, temp_j
     type(unitless)       :: rel_delta
+    real(WP)             :: max_abs_m_deriv, max_abs_e_deriv
     
-    n_cv = size(sys%cv)
+    n_cv           = size(sys%cv)
+    n_d            = size(sys%cv(1)%x%v%d)
     status%rc      = CONTINUE_RUN_RC
     exit_time_loop = .false.
     
@@ -1537,12 +1543,32 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
         status%data(1) = rel_delta%v%v
     end if
     
+    max_abs_m_deriv = 0.0_WP
+    do i_d = 1, n_d
+        max_abs_m_deriv = max(max_abs_m_deriv, abs(rel_delta%v%d(i_d)))
+    end do
+    if (max_abs_m_deriv > MASS_DERIV_TOLERANCE) then
+        status%rc = MASS_DERIV_TOLERANCE_RUN_RC
+        allocate(status%data(1))
+        status%data(1) = max_abs_m_deriv
+    end if
+    
     call assert(e_start%v%v > 0.0_WP, "cva (check_sys): e_start must be greater than zero")
     rel_delta = abs(sys%e_total() - e_start) / e_start
     if (rel_delta%v%v > ENERGY_TOLERANCE) then
         status%rc = ENERGY_TOLERANCE_RUN_RC
         allocate(status%data(1))
         status%data(1) = rel_delta%v%v
+    end if
+    
+    max_abs_e_deriv = 0.0_WP
+    do i_d = 1, n_d
+        max_abs_e_deriv = max(max_abs_e_deriv, abs(rel_delta%v%d(i_d)))
+    end do
+    if (max_abs_e_deriv > ENERGY_DERIV_TOLERANCE) then
+        status%rc = ENERGY_DERIV_TOLERANCE_RUN_RC
+        allocate(status%data(1))
+        status%data(1) = max_abs_e_deriv
     end if
     
     if (t >= config%t_stop) then
