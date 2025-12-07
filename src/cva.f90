@@ -49,11 +49,12 @@ integer, public, parameter :: MASS_TOLERANCE_RUN_RC         = 4
 integer, public, parameter :: ENERGY_TOLERANCE_RUN_RC       = 5
 integer, public, parameter :: MASS_DERIV_TOLERANCE_RUN_RC   = 6
 integer, public, parameter :: ENERGY_DERIV_TOLERANCE_RUN_RC = 7
-integer, public, parameter :: X_BLOW_UP_RUN_RC              = 8
-integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 9
-integer, public, parameter :: M_BLOW_UP_RUN_RC              = 10
-integer, public, parameter :: E_BLOW_UP_RUN_RC              = 11
-integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 12
+integer, public, parameter :: IDEAL_EOS_RUN_RC              = 8
+integer, public, parameter :: X_BLOW_UP_RUN_RC              = 9
+integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 10
+integer, public, parameter :: M_BLOW_UP_RUN_RC              = 11
+integer, public, parameter :: E_BLOW_UP_RUN_RC              = 12
+integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 13
 
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
@@ -219,8 +220,6 @@ pure function p_eos(cv, rho, temp)
             
             n_d   = size(rho%v%d)
             p_eos = rho * cv%r() * temp
-            
-            call assert(p_eos < cv%p_c(), "cva (p_eos, IDEAL_EOS): ideal gas law validity is questionable")
         case (CONST_EOS)
             call assert(is_close(temp%v%v, cv%temp_const%v%v), "cva (p_eos, CONST_EOS): temp /= temp_const")
             p_eos = cv%p_const
@@ -1394,7 +1393,6 @@ subroutine run(config, sys_start, sys_end, status)
     type(si_mass)     :: m_start
     type(si_energy)   :: e_start
     type(si_time)     :: t, t_old
-    logical           :: exit_time_loop
     
     n_d = size(sys_start%cv(1)%x%v%d)
     
@@ -1426,11 +1424,11 @@ subroutine run(config, sys_start, sys_end, status)
         
         !print *, t%v%v
         
-        call check_sys(config, sys_new, m_start, e_start, t, status, exit_time_loop)
+        call check_sys(config, sys_new, m_start, e_start, t, status)
         if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
             call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)
         end if
-        if (exit_time_loop) exit time_loop
+        if (status%rc >= 0) exit time_loop
         
         call move_alloc(from=sys_old,  to=sys_temp)
         call move_alloc(from=sys_new,  to=sys_old)
@@ -1449,34 +1447,31 @@ subroutine run(config, sys_start, sys_end, status)
     if (config%csv_output) close(unit=csv_unit)
 end subroutine run
 
-pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_loop)
+pure subroutine check_sys(config, sys, m_start, e_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys
     type(si_mass), intent(in)                     :: m_start
     type(si_energy), intent(in)                   :: e_start
     type(si_time), intent(in)                     :: t
     type(run_status_type), intent(out)            :: status
-    logical, intent(out)                          :: exit_time_loop
     
     integer              :: n_cv, i_cv, j_cv, n_bad_cv, n_d, i_d
     type(si_mass)        :: m_total_i, m_total_j, rel_m
     type(si_energy)      :: rel_e
     type(si_temperature) :: temp_i, temp_j
+    type(si_pressure)    :: p_j
     type(unitless)       :: rel_delta
     real(WP)             :: max_abs_m_deriv, max_abs_e_deriv
     
-    n_cv           = size(sys%cv)
-    n_d            = size(sys%cv(1)%x%v%d)
-    status%rc      = CONTINUE_RUN_RC
-    exit_time_loop = .false.
+    n_cv      = size(sys%cv)
+    n_d       = size(sys%cv(1)%x%v%d)
+    status%rc = CONTINUE_RUN_RC
     
     do i_cv = 1, n_cv
         if (sys%cv(i_cv)%x >= sys%cv(i_cv)%x_stop) then
             status%rc = SUCCESS_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
-            
-            exit_time_loop = .true.
             return
         end if
         
@@ -1503,7 +1498,6 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
                 end if
             end do
             
-            exit_time_loop = .true.
             return
         end if
         
@@ -1531,8 +1525,34 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
                 end if
             end do
             
-            exit_time_loop = .true.
             return
+        end if
+        
+        if (sys%cv(i_cv)%eos == IDEAL_EOS) then
+            if (sys%cv(i_cv)%p() >= sys%cv(i_cv)%p_c()) then
+                status%rc = IDEAL_EOS_RUN_RC
+                
+                allocate(status%data(n_cv))
+                n_bad_cv = 0
+                do j_cv = 1, n_cv
+                    p_j = sys%cv(j_cv)%p()
+                    if (p_j >= sys%cv(j_cv)%p_c()) n_bad_cv = n_bad_cv + 1
+                    status%data(j_cv) = p_j%v%v
+                end do
+                call assert(n_bad_cv >= 1, "cva (check_sys): number of control volumes with p >= p_c should be >= 1")
+                
+                allocate(status%i_cv(n_bad_cv))
+                n_bad_cv = 0
+                do j_cv = 1, n_cv
+                    p_j = sys%cv(j_cv)%p()
+                    if (p_j >= sys%cv(j_cv)%p_c()) then
+                        n_bad_cv = n_bad_cv + 1
+                        status%i_cv(n_bad_cv) = j_cv
+                    end if
+                end do
+                
+                return
+            end if
         end if
     end do
     
@@ -1542,6 +1562,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
         status%rc = MASS_TOLERANCE_RUN_RC
         allocate(status%data(1))
         status%data(1) = rel_delta%v%v
+        return
     end if
     
     ! It appears that dividing by `m_start` like with `rel_delta` makes the derivatives too small.
@@ -1554,6 +1575,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
         status%rc = MASS_DERIV_TOLERANCE_RUN_RC
         allocate(status%data(1))
         status%data(1) = max_abs_m_deriv
+        return
     end if
     
     call assert(e_start%v%v > 0.0_WP, "cva (check_sys): e_start must be greater than zero")
@@ -1562,6 +1584,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
         status%rc = ENERGY_TOLERANCE_RUN_RC
         allocate(status%data(1))
         status%data(1) = rel_delta%v%v
+        return
     end if
     
     rel_e = sys%e_total() - e_start
@@ -1573,11 +1596,11 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status, exit_time_lo
         status%rc = ENERGY_DERIV_TOLERANCE_RUN_RC
         allocate(status%data(1))
         status%data(1) = max_abs_e_deriv
+        return
     end if
     
     if (t >= config%t_stop) then
         status%rc = TIMEOUT_RUN_RC
-        exit_time_loop = .true.
         return
     end if
 end subroutine check_sys
