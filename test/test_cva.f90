@@ -47,6 +47,7 @@ call test_calculate_flows(tests)
 call test_conservation(tests)
 call test_mirror_1(tests)
 call test_mirror_2(tests)
+call test_one_cv(tests)
 
 call test_check_sys(tests)
 
@@ -641,7 +642,7 @@ subroutine test_set_normal_2(tests)
     call x_stop%v%init_const(1.0_WP, 0) ! to test non-default `x_stop`
     call assert(.not. is_close(x_stop%v%v, X_STOP_DEFAULT), "x_stop must not equal the default for this test")
     
-    call cv%set(x, x_dot, y, p, temp, "test_set_normal_2", csa, rm_p, p_fs, p_fd, k, x_z, gas, 2, x_stop)
+    call cv%set(x, x_dot, y, p, temp, "test_set_normal_2", csa, rm_p, p_fs, p_fd, k, x_z, gas, 2, x_stop=x_stop)
     
     ! All the masses are slightly off. This is expected, as total mass is not an input here.
     ! Pressure is the input setting the total mass, and it's only approximate.
@@ -1369,7 +1370,7 @@ subroutine test_conservation(tests)
     call sys_start%cv(4)%set(x_4, x_dot, y, p_4, temp_atm, "barrel", csa_4, 1.0_WP/m_p_4, p_fs_4, p_fd_4, k, &
                                 x_z, [DRY_AIR], 1, x_stop=x_stop_4)
     
-    call config%set("test_conservation", 1, csv_output=.true., csv_frequency=1)
+    call config%set("test_conservation", 1) !, csv_output=.true., csv_frequency=1)
     call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_conservation, status%rc")
@@ -1968,8 +1969,9 @@ subroutine test_check_sys(tests)
     call tests%integer_eq(size(sys%cv(1)%x%v%d), 2, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, n_d")
     call check_sys(config, sys, m_start, e_start, t, status)
     call tests%integer_eq(status%rc, MASS_DERIV_TOLERANCE_RUN_RC, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, status%rc")
-    call tests%integer_eq(size(status%data), 1, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, size(status%data)")
+    call tests%integer_eq(size(status%data), 2, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, size(status%data)")
     call tests%real_eq(status%data(1), 1.0_WP, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, status%data(1)")
+    call tests%real_eq(status%data(2), 1.0_WP, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, status%data(2)")
     
     ! `ENERGY_DERIV_TOLERANCE_RUN_RC`
     
@@ -2014,8 +2016,9 @@ subroutine test_check_sys(tests)
     call tests%integer_eq(size(sys%cv(1)%x%v%d), 2, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, n_d")
     call check_sys(config, sys, m_start, e_start, t, status)
     call tests%integer_eq(status%rc, ENERGY_DERIV_TOLERANCE_RUN_RC, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, status%rc")
-    call tests%integer_eq(size(status%data), 1, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, size(status%data)")
+    call tests%integer_eq(size(status%data), 2, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, size(status%data)")
     call tests%real_eq(status%data(1), 1.0_WP, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, status%data(1)")
+    call tests%real_eq(status%data(2), 1.0_WP, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, status%data(2)")
     
     ! `IDEAL_EOS_RUN_RC`
     
@@ -2073,5 +2076,117 @@ subroutine test_check_sys(tests)
     ! TODO: `E_BLOW_UP_RUN_RC`
     ! TODO: `E_F_BLOW_UP_RUN_RC`
 end subroutine test_check_sys
+
+pure function one_cv_x_dot(sys_0, x)
+    use checks, only: assert, is_close
+    use cva, only: IDEAL_EOS, CONST_EOS, NORMAL_CV_TYPE, MIRROR_CV_TYPE, cv_system_type
+    
+    type(cv_system_type), intent(in), allocatable :: sys_0
+    type(si_length), intent(in)                   :: x
+    
+    type(si_velocity) :: one_cv_x_dot
+    
+    type(si_area)         :: csa
+    type(si_inverse_mass) :: rm_p
+    type(si_pressure)     :: p_0, p_atm, p_f
+    real(WP)              :: gamma
+    type(si_length)       :: x_0
+    
+    call assert(size(sys_0%cv) == 2, "test_cva (one_cv_x_dot): sys_0%cv has the incorrect size")
+    call assert(sys_0%cv(1)%type == MIRROR_CV_TYPE, "test_cva (one_cv_x_dot): CV 1 must be MIRROR_CV_TYPE")
+    call assert(sys_0%cv(1)%eos  == CONST_EOS,      "test_cva (one_cv_x_dot): CV 1 must be CONST_EOS")
+    call assert(size(sys_0%cv(1)%gas) == 1,         "test_cva (one_cv_x_dot): CV 1 must have only 1 gas")
+    call assert(sys_0%cv(2)%type == NORMAL_CV_TYPE, "test_cva (one_cv_x_dot): CV 2 must be NORMAL_CV_TYPE")
+    call assert(sys_0%cv(2)%eos  == IDEAL_EOS,      "test_cva (one_cv_x_dot): CV 2 must be IDEAL_EOS")
+    call assert(size(sys_0%cv(2)%gas) == 1,         "test_cva (one_cv_x_dot): CV 2 must have only 1 gas")
+    
+    csa   = sys_0%cv(2)%csa
+    rm_p  = sys_0%cv(2)%rm_p
+    p_0   = sys_0%cv(2)%p()
+    x_0   = sys_0%cv(2)%x
+    gamma = sys_0%cv(2)%gas(1)%gamma
+    p_atm = sys_0%cv(1)%p()
+    p_f   = sys_0%cv(2)%p_fd
+    
+    call assert(is_close(sys_0%cv(2)%p_fd%v%v, sys_0%cv(2)%p_fs%v%v), &
+                    "test_cva (one_cv_x_dot): p_fs must equal p_fd")
+    
+    one_cv_x_dot = sqrt(2.0_WP*csa*rm_p * (p_0*(x*((x_0/x)**gamma) - x_0)/(1.0_WP - gamma) &
+                                        - (p_atm + p_f)*(x - x_0)))
+end function one_cv_x_dot
+
+subroutine test_one_cv(tests)
+    ! Test using exact solution with projectile and one internal control volume.
+    ! There is also an additional constant control volume for the atmosphere, but no real calculations are done by that.
+    
+    use gasdata, only: DRY_AIR
+    use cva, only: TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, run, &
+                    ENERGY_DERIV_TOLERANCE_RUN_RC, ENERGY_DERIV_TOLERANCE
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    type(run_config_type)             :: config
+    type(cv_system_type), allocatable :: sys_start, sys_end
+    type(run_status_type)             :: status
+    
+    integer              :: n_d
+    type(si_area)        :: csa
+    type(si_pressure)    :: p_atm, p_0, p_fs, p_fd
+    type(si_temperature) :: temp_atm
+    type(si_velocity)    :: x_dot, x_dot_exact
+    type(si_length)      :: x_0, x_z
+    type(si_mass)        :: m_p
+    type(si_stiffness)   :: k
+    type(unitless)       :: y(1)
+    type(si_time)        :: t_stop
+    
+    n_d = 9
+    
+    allocate(sys_start)
+    allocate(sys_start%cv(2))
+    allocate(sys_start%con(2, 2))
+    
+    sys_start%con(1, 1)%active = .false.
+    sys_start%con(1, 2)%active = .false.
+    sys_start%con(2, 1)%active = .false.
+    sys_start%con(2, 2)%active = .false.
+    
+    ! 1: atmosphere for barrel
+    
+    call csa%v%init(2.0e-2_WP, 1, n_d)
+    call p_atm%v%init(1.0e5_WP, 2, n_d)
+    call temp_atm%v%init(300.0_WP, 3, n_d)
+    
+    call sys_start%cv(1)%set_const("atmosphere for barrel", csa, p_atm, temp_atm, [DRY_AIR], 2)
+    
+    ! 2: barrel
+    
+    call x_dot%v%init_const(0.0_WP, n_d) ! The derivative of this is unstable? I made it constant.
+    call y(1)%v%init_const(1.0_WP, n_d)
+    call x_0%v%init(0.1_WP, 4, n_d)
+    call p_0%v%init(10.0e5_WP, 5, n_d)
+    call m_p%v%init(2.0_WP, 6, n_d)
+    call p_fs%v%init(0.1e5_WP, 7, n_d)
+    p_fd = p_fs
+    call k%v%init(0.0_WP, 8, n_d)
+    call x_z%v%init(0.0_WP, 9, n_d)
+    
+    call sys_start%cv(2)%set(x_0, x_dot, y, p_0, temp_atm, "barrel", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
+                                x_z, [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm)
+    
+    call t_stop%v%init_const(0.0273_WP, n_d)
+    call config%set("test_one_cv", n_d, t_stop=t_stop)
+    call run(config, sys_start, sys_end, status)
+    
+    x_dot_exact = one_cv_x_dot(sys_start, sys_end%cv(2)%x)
+    
+    call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_one_cv, status%rc")
+    if (status%rc == ENERGY_DERIV_TOLERANCE_RUN_RC) then
+        print *, "ENERGY_DERIV_TOLERANCE_RUN_RC"
+        print *, status%data(1), int(status%data(2)), ENERGY_DERIV_TOLERANCE
+    end if
+    
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, x_dot_exact%v%v, "test_one_cv, x_dot", abs_tol=1.0e-5_WP)
+end subroutine test_one_cv
 
 end program test_cva
