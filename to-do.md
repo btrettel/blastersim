@@ -1,6 +1,11 @@
 ### v0.1.0
 
+- Test added mass from spring.
 - Make CSV file includes interpolated stop time.
+- transonic corrections in the barrel (Corner eq. 123)
+    - Make this the default but optional if desired for testing.
+    - Input validation at first to not use this with RK EOS (if that's added first)
+    - Assert `CONST_EOS` or `IDEAL_EOS` with `p < p_c` to satisfy requirements of version in Corner's book.
 - Order-of-accuracy test for single control volume
     - adiabatic test without atmospheric pressure and friction
         - Can test the following: `x_dot`, `e`, `e_f`, `p`, `temp`
@@ -66,7 +71,6 @@
     - whether under- or over-barreled
 - Upload Windows BlasterSim to malware scanner to check. 
 - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
-- Added mass from spring.
 - Valve opening time, valve poppet model using pressures from CVs
     - Find what you saved on valve opening profiles.
 - Time step estimate?
@@ -106,9 +110,6 @@
     - test_fmad.f90: `test_num_deriv`
 - Readd `smooth_min` assertions including new one from Wikipedia including some extra gap for floating point error
 - Add elevation angle
-- transonic corrections in the barrel
-    - Input validation at first to not use this with RK EOS (if that's added first)
-    - Assert `CONST_EOS` or `IDEAL_EOS` with `p < p_c` to satisfy requirements of version in Corner's book.
 - pressure gradient
     - Is the pressure gradient necessary? The multiple control volumes will provide a pressure gradient of sorts.
     - After adding the pressure gradient, connections will need to know where they are connected.
@@ -119,6 +120,9 @@
 - Test if correct `sys` is output for `run` (old or new)
 - Data to collect from the open literature:
     - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
+    - Use loss coefficients to estimate effective area?
+    - Make regression for loss coefficient considering contraction ratio and entrance radius of curvature?
+- Couple BlasterSim with some sort of geometric analysis. Optimal transfer port geometry (considering dead space), optimal notch geometry to minimize weight, etc.
 - Have ability to run multiple cycles and terminate when mass gets low in any particular CV.
 - If I use a constant pressure/temperature CV to model a HPA or CO2 tank, then I'll still need a way to estimate the real gas internal energy and enthalpy. Going all the way with a better equation of state and thermodynamic properties might not be much more complex. I could make each control volume use a different EOS if I want to avoid iterations associated with a different EOS.
 - Arbitrary displacement vs. force curves, using cubic splines for smoothness

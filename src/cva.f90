@@ -23,6 +23,10 @@ public :: time_step, run, check_sys, write_csv_row
 ! based on first part of beater_pneumatic_2007 eq. 5.4
 real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 
+! fraction of spring mass to add to plunger mass to get effective mass
+! ruby_equivalent_2000
+real(WP), public, parameter :: C_MS = 1.0_WP/3.0_WP ! unitless
+
 real(WP), public, parameter :: X_STOP_DEFAULT         = 1.0e3_WP  ! m (If you have a barrel that's a km long, that's probably wrong.)
 real(WP), public, parameter :: DT_DEFAULT             = 1.0e-5_WP ! s
 real(WP), public, parameter :: T_STOP_DEFAULT         = 0.5_WP    ! s
@@ -81,6 +85,7 @@ type, public :: cv_type ! control volume
     type(si_pressure)           :: p_const     ! if `cv%eos = CONST_EOS`, then `cv%p() = p_const`
     type(si_temperature)        :: temp_const  ! if `cv%eos = CONST_EOS`, then `cv%temp() = temp_const`
     type(si_length)             :: x_stop      ! `x` location where simulation will stop
+    type(si_mass)               :: m_s         ! mass of spring
 contains
     procedure :: m_total
     procedure :: spring_pe
@@ -593,7 +598,7 @@ pure function gamma_cv(cv, y)
 end function gamma_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, x_z, gas, &
-                            i_cv_mirror, x_stop, isentropic_filling, p_atm, eos, type)
+                            i_cv_mirror, x_stop, isentropic_filling, p_atm, eos, type, m_s)
     class(cv_type), intent(in out) :: cv
     
     ! time varying
@@ -618,6 +623,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     type(si_pressure), intent(in), optional :: p_atm  ! atmospheric pressure (only requried if `isentropic_filling = .true.`
     integer, intent(in), optional           :: eos    ! equation of state to use
     integer, intent(in), optional           :: type   ! type of CV to use
+    type(si_mass), intent(in), optional     :: m_s    ! mass of spring
     
     integer              :: i, n_d
     type(si_temperature) :: temp
@@ -666,6 +672,18 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
         cv%type = NORMAL_CV_TYPE
     end if
     
+    if (present(m_s)) then
+        cv%m_s = m_s
+        
+        if (cv%k%v%v > 0.0_WP) then
+            call assert(cv%m_s%v%v > 0.0_WP, "cva (set): m_s must be set to > 0 if k > 0")
+        else
+            call assert(is_close(cv%m_s%v%v, 0.0_WP), "cva (set): m_s must be set to 0 if k == 0")
+        end if
+    else
+        call cv%m_s%v%init_const(0.0_WP, n_d)
+    end if
+    
     call assert(cv%x%v%v            >  0.0_WP, "cva (set): x > 0 violated")
     call assert(p%v%v               >  0.0_WP, "cva (set): p > 0 violated")
     call assert(temp_atm%v%v        >  0.0_WP, "cva (set): temp_atm > 0 violated")
@@ -675,6 +693,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     call assert(cv%p_fd%v%v         >= 0.0_WP, "cva (set): p_fd >= 0 violated")
     call assert(cv%k%v%v            >= 0.0_WP, "cva (set): k >= 0 violated")
     call assert(cv%i_cv_mirror      >= 0,      "cva (set): i_cv_mirror >= 0 violated")
+    call assert(cv%m_s%v%v          >= 0.0_WP, "cva (set): m_s >= 0 violated")
     
     call assert((cv%eos  >= 1) .and. (cv%eos <= MAX_EOS),      "cva (set): invalid EOS")
     call assert((cv%type >= 1) .and. (cv%type <= MAX_CV_TYPE), "cva (set): invalid control volume type")
@@ -876,7 +895,7 @@ pure function d_x_d_t(sys, i_cv)
         case (NORMAL_CV_TYPE)
             d_x_d_t = sys%cv(i_cv)%x_dot
         case (MIRROR_CV_TYPE)
-            call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_xdot_d_t): i_cv_mirror must be defined for a mirror CV")
+            call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_x_d_t): i_cv_mirror must be defined for a mirror CV")
             call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
                             "cva (d_x_d_t): mirror CV is not a NORMAL_CV_TYPE")
             d_x_d_t = -sys%cv(sys%cv(i_cv)%i_cv_mirror)%x_dot
@@ -926,8 +945,9 @@ pure function d_xdot_d_t_normal(sys, i_cv)
     
     type(si_acceleration) :: d_xdot_d_t_normal
     
-    type(si_pressure) :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
-    type(si_pressure) :: p_other
+    type(si_pressure)     :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
+    type(si_pressure)     :: p_other
+    type(si_inverse_mass) :: r_mp_eff ! effective mass of projectile/piston
     
     call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_xdot_d_t_normal): cv%csa > 0 violated")
     call assert(sys%cv(i_cv)%type == NORMAL_CV_TYPE, "cva (d_xdot_d_t_normal): CV needs to be NORMAL_CV_TYPE")
@@ -944,9 +964,10 @@ pure function d_xdot_d_t_normal(sys, i_cv)
     
     p_fe = sys%cv(i_cv)%p() - p_other - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
     
-    d_xdot_d_t_normal = sys%cv(i_cv)%csa*sys%cv(i_cv)%rm_p &
-                            * (sys%cv(i_cv)%p() - p_other - sys%cv(i_cv)%p_f(p_fe)) &
-                            - sys%cv(i_cv)%k*sys%cv(i_cv)%rm_p*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
+    r_mp_eff = sys%cv(i_cv)%rm_p / (1.0_WP + C_MS * sys%cv(i_cv)%m_s * sys%cv(i_cv)%rm_p)
+    
+    d_xdot_d_t_normal = sys%cv(i_cv)%csa*r_mp_eff*(sys%cv(i_cv)%p() - p_other - sys%cv(i_cv)%p_f(p_fe)) &
+                            - sys%cv(i_cv)%k*r_mp_eff*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
 end function d_xdot_d_t_normal
 
 pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
