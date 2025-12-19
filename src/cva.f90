@@ -964,6 +964,8 @@ pure function d_xdot_d_t_normal(sys, i_cv)
     
     p_fe = sys%cv(i_cv)%p() - p_other - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
     
+    ! This calculates the effective (inverse) mass of the projectile/piston factoring in the spring mass.
+    ! ruby_equivalent_2000
     r_mp_eff = sys%cv(i_cv)%rm_p / (1.0_WP + C_MS * sys%cv(i_cv)%m_s * sys%cv(i_cv)%rm_p)
     
     d_xdot_d_t_normal = sys%cv(i_cv)%csa*r_mp_eff*(sys%cv(i_cv)%p() - p_other - sys%cv(i_cv)%p_f(p_fe)) &

@@ -541,27 +541,28 @@ subroutine test_set_normal_1(tests)
     call tests%integer_eq(size(cv%gas), 1, "test_set_normal_1, size(gas)")
     call tests%character_eq(cv%gas(1)%label, "dry air", "test_set_normal_1, gas label")
     
-    call tests%real_eq(cv%k%v%v, k%v%v, "set 1, k")
-    call tests%real_eq(cv%x_z%v%v, x_z%v%v, "set 1, x_z")
-    call tests%real_eq(cv%x_stop%v%v, X_STOP_DEFAULT, "set 1, x_stop")
+    call tests%real_eq(cv%k%v%v, k%v%v, "test_set_normal_1, k")
+    call tests%real_eq(cv%x_z%v%v, x_z%v%v, "test_set_normal_1, x_z")
+    call tests%real_eq(cv%x_stop%v%v, X_STOP_DEFAULT, "test_set_normal_1, x_stop")
+    call tests%real_eq(cv%m_s%v%v, 0.0_WP, "test_set_normal_1, m_s")
     
     temp_cv = cv%temp()
-    call tests%real_eq(temp_cv%v%v, temp%v%v, "set 1, temp")
+    call tests%real_eq(temp_cv%v%v, temp%v%v, "test_set_normal_1, temp")
     
     vol_cv = cv%vol()
-    call tests%real_eq(vol_cv%v%v, 0.05_WP, "set 1, vol")
+    call tests%real_eq(vol_cv%v%v, 0.05_WP, "test_set_normal_1, vol")
     
     ! Not exact, based on multiple of ambient density for simplicity.
     rho_cv = cv%rho()
-    call tests%real_eq(rho_cv%v%v, sqrt(2.0_WP)*RHO_ATM, "set 1, rho", abs_tol=1.0e-3_WP)
+    call tests%real_eq(rho_cv%v%v, sqrt(2.0_WP)*RHO_ATM, "test_set_normal_1, rho", abs_tol=1.0e-3_WP)
     
     p_cv = cv%p()
-    call tests%real_eq(p_cv%v%v, p%v%v, "set 1, p")
+    call tests%real_eq(p_cv%v%v, p%v%v, "test_set_normal_1, p")
     
     ! Not exact, based on multiple of ambient density for simplicity.
     u = DRY_AIR%u(temp)
-    call tests%real_eq(cv%m(1)%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set 1, m(1)", abs_tol=1.0e-4_WP)
-    call tests%real_eq(cv%e%v%v, u%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP, "set 1, e", abs_tol=10.0_WP)
+    call tests%real_eq(cv%m(1)%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "test_set_normal_1, m(1)", abs_tol=1.0e-4_WP)
+    call tests%real_eq(cv%e%v%v, u%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP, "test_set_normal_1, e", abs_tol=10.0_WP)
 end subroutine test_set_normal_1
 
 subroutine test_set_normal_2(tests)
@@ -646,37 +647,37 @@ subroutine test_set_normal_2(tests)
     
     ! All the masses are slightly off. This is expected, as total mass is not an input here.
     ! Pressure is the input setting the total mass, and it's only approximate.
-    call tests%real_eq(cv%m(1)%v%v, m(1), "set 2, cv%m(1)", abs_tol=1.0e-1_WP)
-    call tests%real_eq(cv%m(2)%v%v, m(2), "set 2, cv%m(2)", abs_tol=1.0e-1_WP)
+    call tests%real_eq(cv%m(1)%v%v, m(1), "test_set_normal_2, cv%m(1)", abs_tol=1.0e-1_WP)
+    call tests%real_eq(cv%m(2)%v%v, m(2), "test_set_normal_2, cv%m(2)", abs_tol=1.0e-1_WP)
     m_total = cv%m_total()
-    call tests%real_eq(m_total%v%v, m(1) + m(2), "set 2, cv%m_total", abs_tol=1.0e-1_WP)
+    call tests%real_eq(m_total%v%v, m(1) + m(2), "test_set_normal_2, cv%m_total", abs_tol=1.0e-1_WP)
     m_total = cv%vol() * cv%rho_eos(p, temp, y)
-    call tests%real_eq(m_total%v%v, m(1) + m(2), "set 2, alt m_total", abs_tol=1.0e-1_WP)
+    call tests%real_eq(m_total%v%v, m(1) + m(2), "test_set_normal_2, alt m_total", abs_tol=1.0e-1_WP)
     
     ! p. 616: mole fractions, book is probably only accurate to 3 decimal points
     chi_cv = cv%chi()
-    call tests%real_eq(chi_cv(1)%v%v, 0.396_WP, "set 2, chi_cv(1)", abs_tol=1.0e-3_WP)
-    call tests%real_eq(chi_cv(2)%v%v, 0.604_WP, "set 2, chi_cv(2)", abs_tol=1.0e-3_WP)
+    call tests%real_eq(chi_cv(1)%v%v, 0.396_WP, "test_set_normal_2, chi_cv(1)", abs_tol=1.0e-3_WP)
+    call tests%real_eq(chi_cv(2)%v%v, 0.604_WP, "test_set_normal_2, chi_cv(2)", abs_tol=1.0e-3_WP)
     
     ! mass fractions
     y_cv = cv%y()
-    call tests%real_eq(y_cv(1)%v%v, y(1)%v%v, "set 2, y_cv(1)")
-    call tests%real_eq(y_cv(2)%v%v, y(2)%v%v, "set 2, y_cv(2)")
+    call tests%real_eq(y_cv(1)%v%v, y(1)%v%v, "test_set_normal_2, y_cv(1)")
+    call tests%real_eq(y_cv(2)%v%v, y(2)%v%v, "test_set_normal_2, y_cv(2)")
     
     vol_cv = cv%vol()
-    call tests%real_eq(vol_cv%v%v, 0.241_WP, "set 2, temp")
+    call tests%real_eq(vol_cv%v%v, 0.241_WP, "test_set_normal_2, vol")
     
     temp_cv = cv%temp()
-    call tests%real_eq(temp_cv%v%v, temp%v%v, "set 2, temp")
+    call tests%real_eq(temp_cv%v%v, temp%v%v, "test_set_normal_2, temp")
     
     p_cv = cv%p()
-    call tests%real_eq(p_cv%v%v, p%v%v, "set 2, p")
+    call tests%real_eq(p_cv%v%v, p%v%v, "test_set_normal_2, p")
     
-    call tests%real_eq(cv%x_stop%v%v, 1.0_WP, "set 2, x_stop")
+    call tests%real_eq(cv%x_stop%v%v, 1.0_WP, "test_set_normal_2, x_stop")
 end subroutine test_set_normal_2
 
 subroutine test_set_normal_3(tests)
-    ! Testing isentropic filling
+    ! Testing isentropic filling and `m_s`.
     
     use gasdata, only: DRY_AIR
     use cva, only: cv_type
@@ -695,6 +696,7 @@ subroutine test_set_normal_3(tests)
     type(si_pressure)     :: p_fs, p_fd, p_atm
     type(si_stiffness)    :: k
     type(si_length)       :: x_z
+    type(si_mass)         :: m_s
     
     call x%v%init_const(0.5_WP, 0)
     call x_dot%v%init_const(0.5_WP, 0)
@@ -708,13 +710,15 @@ subroutine test_set_normal_3(tests)
     call p_atm%v%init_const(1.0e5_WP, 0)
     call k%v%init_const(10.0_WP, 0)
     call x_z%v%init_const(3.0_WP, 0)
+    call m_s%v%init_const(2.5_WP, 0)
     
     call cv%set(x, x_dot, y, p, temp_atm, "test_set_normal_3", csa, rm_p, p_fs, p_fd, k, x_z, &
-                        [DRY_AIR], 2, isentropic_filling=.true., p_atm=p_atm)
+                        [DRY_AIR], 2, isentropic_filling=.true., p_atm=p_atm, m_s=m_s)
     
     temp_cv = cv%temp()
     call tests%real_eq(temp_cv%v%v, 300.0_WP*(2.0_WP**(0.4_WP/1.4_WP)), &
-                        "set 3, isentropic_filling=.true., cv%temp")
+                        "test_set_normal_3, isentropic_filling=.true., cv%temp")
+    call tests%real_eq(cv%m_s%v%v, 2.5_WP, "test_set_normal_3, cv%m_s")
 end subroutine test_set_normal_3
 
 subroutine test_set_const(tests)

@@ -1,6 +1,6 @@
 ### v0.1.0
 
-- Test added mass from spring.
+- Test `m_s` in `d_xdot_d_t`.
 - Make CSV file includes interpolated stop time.
 - transonic corrections in the barrel (Corner eq. 123)
     - Make this the default but optional if desired for testing.
@@ -113,6 +113,7 @@
 - pressure gradient
     - Is the pressure gradient necessary? The multiple control volumes will provide a pressure gradient of sorts.
     - After adding the pressure gradient, connections will need to know where they are connected.
+    - Model pressure drop over long tubes from the friction factor.
 - exterior ballistics
 - Error messages:
     - When mass or temperature goes negative, suggest that perhaps the effective area is too large.
