@@ -147,6 +147,7 @@ Questions to think about:
 
 - Why doesn't `u_cv` just get `u` from `e`?
 - Does plunger impact before the dart exits the barrel cause inaccuracy?
+- Why is the derivative of total energy with respect to `x_dot` unstable in the one CV exact solution test?
 
 ***
 

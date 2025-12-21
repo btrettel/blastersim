@@ -2144,7 +2144,7 @@ subroutine test_one_cv(tests)
     type(unitless)       :: y(1)
     type(si_time)        :: t_stop
     
-    n_d = 9
+    n_d = 7
     
     allocate(sys_start)
     allocate(sys_start%cv(2))
@@ -2172,8 +2172,8 @@ subroutine test_one_cv(tests)
     call m_p%v%init(2.0_WP, 6, n_d)
     call p_fs%v%init(0.1e5_WP, 7, n_d)
     p_fd = p_fs
-    call k%v%init(0.0_WP, 8, n_d)
-    call x_z%v%init(0.0_WP, 9, n_d)
+    call k%v%init_const(0.0_WP, n_d)
+    call x_z%v%init_const(0.0_WP, n_d)
     
     call sys_start%cv(2)%set(x_0, x_dot, y, p_0, temp_atm, "barrel", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
                                 x_z, [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm)
@@ -2191,6 +2191,13 @@ subroutine test_one_cv(tests)
     end if
     
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, x_dot_exact%v%v, "test_one_cv, x_dot", abs_tol=1.0e-5_WP)
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(1), x_dot_exact%v%d(1), "test_one_cv, d(x_dot)/d(csa)", abs_tol=1.0e-5_WP)
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(2), x_dot_exact%v%d(2), "test_one_cv, d(x_dot)/d(p_atm)", abs_tol=1.0e-11_WP)
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(3), x_dot_exact%v%d(3), "test_one_cv, d(x_dot)/d(temp_atm)", abs_tol=1.0e-5_WP)
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(4), x_dot_exact%v%d(4), "test_one_cv, d(x_dot)/d(x_0)", abs_tol=1.0e-5_WP)
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(5), x_dot_exact%v%d(5), "test_one_cv, d(x_dot)/d(p_0)", abs_tol=1.0e-11_WP)
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(6), x_dot_exact%v%d(6), "test_one_cv, d(x_dot)/d(m_p)", abs_tol=1.0e-7_WP)
+    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(7), x_dot_exact%v%d(7), "test_one_cv, d(x_dot)/d(p_f)", abs_tol=1.0e-9_WP)
 end subroutine test_one_cv
 
 end program test_cva
