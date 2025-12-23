@@ -2119,33 +2119,23 @@ pure function one_cv_x_dot(sys_0, x)
                                         - (p_atm + p_f)*(x - x_0)))
 end function one_cv_x_dot
 
-!subroutine one_cv_x_dot_de(n, de, de_dv)
-!    use gasdata, only: DRY_AIR
-!    use cva, only: TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, run, &
-!                    ENERGY_DERIV_TOLERANCE_RUN_RC, ENERGY_DERIV_TOLERANCE
-    
-!    integer, intent(in)                :: n
-!    type(ad), intent(out), allocatable :: de(:)
-!    real(WP), intent(out), allocatable :: de_dv(:, :)
-    
-    
-!end subroutine one_cv_x_dot_de
-
-subroutine test_one_cv(tests)
-    ! Test using exact solution with projectile and one internal control volume.
-    ! There is also an additional constant control volume for the atmosphere, but no real calculations are done by that.
-    
+subroutine one_cv_x_dot_de(n, ne, ne_d)
+    use fmad, only: ad
     use gasdata, only: DRY_AIR
-    use cva, only: TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, run, &
+    use cva, only: DT_DEFAULT, TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, run, &
                     ENERGY_DERIV_TOLERANCE_RUN_RC, ENERGY_DERIV_TOLERANCE
+    use checks, only: assert
     
-    type(test_results_type), intent(in out) :: tests
+    integer, intent(in)                :: n
+    type(ad), intent(out), allocatable :: ne(:)
+    real(WP), intent(out), allocatable :: ne_d(:, :)
     
     type(run_config_type)             :: config
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
-    integer, parameter   :: N_D = 7
+    integer, parameter   :: N_VAR = 1, N_D = 7
+    integer              :: i_var, i_d
     type(si_area)        :: csa
     type(si_pressure)    :: p_atm, p_0, p_fs, p_fd
     type(si_temperature) :: temp_atm
@@ -2154,7 +2144,10 @@ subroutine test_one_cv(tests)
     type(si_mass)        :: m_p
     type(si_stiffness)   :: k
     type(unitless)       :: y(1)
-    type(si_time)        :: t_stop
+    type(si_time)        :: t_stop, dt
+    
+    allocate(ne(N_VAR))
+    allocate(ne_d(N_VAR, N_D))
     
     allocate(sys_start)
     allocate(sys_start%cv(2))
@@ -2189,25 +2182,58 @@ subroutine test_one_cv(tests)
                                 x_z, [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm)
     
     call t_stop%v%init_const(0.0273_WP, N_D)
-    call config%set("test_one_cv", N_D, t_stop=t_stop)
+    call dt%v%init_const(DT_DEFAULT/real(n, WP), N_D)
+    call config%set("test_one_cv", N_D, t_stop=t_stop, dt=dt)
     call run(config, sys_start, sys_end, status)
     
     x_dot_exact = one_cv_x_dot(sys_start, sys_end%cv(2)%x)
     
-    call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_one_cv, status%rc")
     if (status%rc == ENERGY_DERIV_TOLERANCE_RUN_RC) then
         print *, "ENERGY_DERIV_TOLERANCE_RUN_RC"
         print *, status%data(1), int(status%data(2)), ENERGY_DERIV_TOLERANCE
     end if
+    call assert(status%rc == TIMEOUT_RUN_RC, "test_one_cv, status%rc")
     
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%v, x_dot_exact%v%v, "test_one_cv, x_dot", abs_tol=1.0e-5_WP)
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(1), x_dot_exact%v%d(1), "test_one_cv, d(x_dot)/d(csa)", abs_tol=1.0e-5_WP)
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(2), x_dot_exact%v%d(2), "test_one_cv, d(x_dot)/d(p_atm)", abs_tol=1.0e-11_WP)
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(3), x_dot_exact%v%d(3), "test_one_cv, d(x_dot)/d(temp_atm)", abs_tol=1.0e-5_WP)
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(4), x_dot_exact%v%d(4), "test_one_cv, d(x_dot)/d(x_0)", abs_tol=1.0e-5_WP)
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(5), x_dot_exact%v%d(5), "test_one_cv, d(x_dot)/d(p_0)", abs_tol=1.0e-11_WP)
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(6), x_dot_exact%v%d(6), "test_one_cv, d(x_dot)/d(m_p)", abs_tol=1.0e-7_WP)
-    call tests%real_eq(sys_end%cv(2)%x_dot%v%d(7), x_dot_exact%v%d(7), "test_one_cv, d(x_dot)/d(p_f)", abs_tol=1.0e-9_WP)
+    do i_var = 1, N_VAR
+        select case (i_var)
+            case (1)
+                ne(i_var) = abs(sys_end%cv(2)%x_dot%v - x_dot_exact%v)
+            case default
+                error stop "test_cva (one_cv_x_dot_de): invalid i_var (1)"
+        end select
+        
+        do i_d = 1, N_D
+            select case (i_var)
+                case (1)
+                    ne_d(i_var, i_d) = abs(sys_end%cv(2)%x_dot%v%d(i_d) - x_dot_exact%v%d(i_d))
+                case default
+                    error stop "test_cva (one_cv_x_dot_de): invalid i_var (2)"
+            end select
+        end do
+    end do
+end subroutine one_cv_x_dot_de
+
+subroutine test_one_cv(tests)
+    ! Tests using exact solution with projectile and one internal control volume.
+    ! There is also an additional constant control volume for the atmosphere, but no real calculations are done by that.
+    
+    use fmad, only: ad
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    type(ad), allocatable :: ne(:)
+    real(WP), allocatable :: ne_d(:, :)
+    
+    call one_cv_x_dot_de(1, ne, ne_d)
+    
+    call tests%real_eq(ne(1)%v, 0.0_WP, "test_one_cv, x_dot", abs_tol=1.0e-5_WP)
+    call tests%real_eq(ne_d(1, 1), 0.0_WP, "test_one_cv, d(x_dot)/d(csa)", abs_tol=1.0e-5_WP)
+    call tests%real_eq(ne_d(1, 2), 0.0_WP, "test_one_cv, d(x_dot)/d(p_atm)", abs_tol=1.0e-11_WP)
+    call tests%real_eq(ne_d(1, 3), 0.0_WP, "test_one_cv, d(x_dot)/d(temp_atm)", abs_tol=1.0e-5_WP)
+    call tests%real_eq(ne_d(1, 4), 0.0_WP, "test_one_cv, d(x_dot)/d(x_0)", abs_tol=1.0e-5_WP)
+    call tests%real_eq(ne_d(1, 5), 0.0_WP, "test_one_cv, d(x_dot)/d(p_0)", abs_tol=1.0e-11_WP)
+    call tests%real_eq(ne_d(1, 6), 0.0_WP, "test_one_cv, d(x_dot)/d(m_p)", abs_tol=1.0e-7_WP)
+    call tests%real_eq(ne_d(1, 7), 0.0_WP, "test_one_cv, d(x_dot)/d(p_f)", abs_tol=1.0e-9_WP)
 end subroutine test_one_cv
 
 end program test_cva
