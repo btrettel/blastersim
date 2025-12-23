@@ -86,6 +86,7 @@ type, public :: cv_type ! control volume
     type(si_temperature)        :: temp_const  ! if `cv%eos = CONST_EOS`, then `cv%temp() = temp_const`
     type(si_length)             :: x_stop      ! `x` location where simulation will stop
     type(si_mass)               :: m_s         ! mass of spring
+    logical                     :: constant_friction ! whether `p_f` will be constant or not
 contains
     procedure :: m_total
     procedure :: spring_pe
@@ -140,6 +141,7 @@ type, public :: run_config_type
     logical            :: csv_output
     integer            :: csv_frequency
     type(si_time)      :: t_stop, dt
+    logical            :: tolerance_checks
 contains
     procedure :: set => set_run_config
 end type run_config_type
@@ -598,7 +600,7 @@ pure function gamma_cv(cv, y)
 end function gamma_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, x_z, gas, &
-                            i_cv_mirror, x_stop, isentropic_filling, p_atm, eos, type, m_s)
+                            i_cv_mirror, x_stop, isentropic_filling, p_atm, eos, type, m_s, constant_friction)
     class(cv_type), intent(in out) :: cv
     
     ! time varying
@@ -624,6 +626,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     integer, intent(in), optional           :: eos    ! equation of state to use
     integer, intent(in), optional           :: type   ! type of CV to use
     type(si_mass), intent(in), optional     :: m_s    ! mass of spring
+    logical, intent(in), optional           :: constant_friction
     
     integer              :: i, n_d
     type(si_temperature) :: temp
@@ -658,6 +661,17 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
         isentropic_filling_ = isentropic_filling
     else
         isentropic_filling_ = .false.
+    end if
+    
+    if (present(constant_friction)) then
+        cv%constant_friction = constant_friction
+        
+        if (cv%constant_friction) then
+            call assert(is_close(p_fs%v%v, p_fd%v%v), &
+                    "cva (set): constant_friction = .true. requires that p_fs = p_fd as otherwise p_f would not be constant")
+        end if
+    else
+        cv%constant_friction = .false.
     end if
     
     if (present(eos)) then
@@ -831,7 +845,11 @@ pure function p_f(cv, p_fe)
     call assert(cv%p_fs%v%v >= 0.0_WP, "cva (p_f): cv%p_fs%v > 0 violated")
     call assert(cv%p_fd%v%v >= 0.0_WP, "cva (p_f): cv%p_fd%v > 0 violated")
     
-    p_f = p_f0(cv, p_fe) + (cv%p_fd - tanh(cv%x_dot/v_scale)*p_f0(cv, p_fe))*tanh(cv%x_dot/v_scale)
+    if (cv%constant_friction) then
+        p_f = cv%p_fs
+    else
+        p_f = p_f0(cv, p_fe) + (cv%p_fd - tanh(cv%x_dot/v_scale)*p_f0(cv, p_fe))*tanh(cv%x_dot/v_scale)
+    end if
     
     ! The 1.1 factor was added as I guess the inequality with a factor of 1.0 isn't guaranteed for numerical reasons?
     ! But even that is sometimes violated?
@@ -1364,7 +1382,7 @@ pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
     end do
 end subroutine rk_stage
 
-subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt)
+subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt, tolerance_checks)
     class(run_config_type), intent(out) :: config
     character(len=*), intent(in)        :: id ! CSV file name
     integer, intent(in)                 :: n_d
@@ -1372,6 +1390,7 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
     logical, intent(in), optional       :: csv_output
     integer, intent(in), optional       :: csv_frequency
     type(si_time), intent(in), optional :: t_stop, dt
+    logical, intent(in), optional       :: tolerance_checks
     
     config%id = id
     
@@ -1398,6 +1417,12 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
         config%dt = dt
     else
         call config%dt%v%init_const(DT_DEFAULT, n_d)
+    end if
+    
+    if (present(tolerance_checks)) then
+        config%tolerance_checks = tolerance_checks
+    else
+        config%tolerance_checks = .true.
     end if
 end subroutine set_run_config
 
@@ -1580,55 +1605,57 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status)
         end if
     end do
     
-    call assert(m_start%v%v > 0.0_WP, "cva (check_sys): m_start must be greater than zero")
-    rel_delta = abs(sys%m_total() - m_start) / m_start
-    if (rel_delta%v%v > MASS_TOLERANCE) then
-        status%rc = MASS_TOLERANCE_RUN_RC
-        allocate(status%data(1))
-        status%data(1) = rel_delta%v%v
-        return
-    end if
-    
-    ! It appears that dividing by `m_start` like with `rel_delta` makes the derivatives too small.
-    rel_m = sys%m_total() - m_start
-    max_abs_m_deriv = 0.0_WP
-    do i_d = 1, n_d
-        if (abs(rel_m%v%d(i_d)) > max_abs_m_deriv) then
-            max_abs_m_deriv = abs(rel_m%v%d(i_d))
-            i_d_max = i_d
+    if (config%tolerance_checks) then
+        call assert(m_start%v%v > 0.0_WP, "cva (check_sys): m_start must be greater than zero")
+        rel_delta = abs(sys%m_total() - m_start) / m_start
+        if (rel_delta%v%v > MASS_TOLERANCE) then
+            status%rc = MASS_TOLERANCE_RUN_RC
+            allocate(status%data(1))
+            status%data(1) = rel_delta%v%v
+            return
         end if
-    end do
-    if (max_abs_m_deriv > MASS_DERIV_TOLERANCE) then
-        status%rc = MASS_DERIV_TOLERANCE_RUN_RC
-        allocate(status%data(2))
-        status%data(1) = max_abs_m_deriv
-        status%data(2) = real(i_d_max, WP)
-        return
-    end if
-    
-    call assert(e_start%v%v > 0.0_WP, "cva (check_sys): e_start must be greater than zero")
-    rel_delta = abs(sys%e_total() - e_start) / e_start
-    if (rel_delta%v%v > ENERGY_TOLERANCE) then
-        status%rc = ENERGY_TOLERANCE_RUN_RC
-        allocate(status%data(1))
-        status%data(1) = rel_delta%v%v
-        return
-    end if
-    
-    rel_e = sys%e_total() - e_start
-    max_abs_e_deriv = 0.0_WP
-    do i_d = 1, n_d
-        if (abs(rel_e%v%d(i_d)) > max_abs_e_deriv) then
-            max_abs_e_deriv = abs(rel_e%v%d(i_d))
-            i_d_max = i_d
+        
+        ! It appears that dividing by `m_start` like with `rel_delta` makes the derivatives too small.
+        rel_m = sys%m_total() - m_start
+        max_abs_m_deriv = 0.0_WP
+        do i_d = 1, n_d
+            if (abs(rel_m%v%d(i_d)) > max_abs_m_deriv) then
+                max_abs_m_deriv = abs(rel_m%v%d(i_d))
+                i_d_max = i_d
+            end if
+        end do
+        if (max_abs_m_deriv > MASS_DERIV_TOLERANCE) then
+            status%rc = MASS_DERIV_TOLERANCE_RUN_RC
+            allocate(status%data(2))
+            status%data(1) = max_abs_m_deriv
+            status%data(2) = real(i_d_max, WP)
+            return
         end if
-    end do
-    if (max_abs_e_deriv > ENERGY_DERIV_TOLERANCE) then
-        status%rc = ENERGY_DERIV_TOLERANCE_RUN_RC
-        allocate(status%data(2))
-        status%data(1) = max_abs_e_deriv
-        status%data(2) = real(i_d_max, WP)
-        return
+        
+        call assert(e_start%v%v > 0.0_WP, "cva (check_sys): e_start must be greater than zero")
+        rel_delta = abs(sys%e_total() - e_start) / e_start
+        if (rel_delta%v%v > ENERGY_TOLERANCE) then
+            status%rc = ENERGY_TOLERANCE_RUN_RC
+            allocate(status%data(1))
+            status%data(1) = rel_delta%v%v
+            return
+        end if
+        
+        rel_e = sys%e_total() - e_start
+        max_abs_e_deriv = 0.0_WP
+        do i_d = 1, n_d
+            if (abs(rel_e%v%d(i_d)) > max_abs_e_deriv) then
+                max_abs_e_deriv = abs(rel_e%v%d(i_d))
+                i_d_max = i_d
+            end if
+        end do
+        if (max_abs_e_deriv > ENERGY_DERIV_TOLERANCE) then
+            status%rc = ENERGY_DERIV_TOLERANCE_RUN_RC
+            allocate(status%data(2))
+            status%data(1) = max_abs_e_deriv
+            status%data(2) = real(i_d_max, WP)
+            return
+        end if
     end if
     
     if (t >= config%t_stop) then

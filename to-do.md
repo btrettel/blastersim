@@ -7,11 +7,9 @@
     - Input validation at first to not use this with RK EOS (if that's added first)
     - Assert `CONST_EOS` or `IDEAL_EOS` with `p < p_c` to satisfy requirements of version in Corner's book.
 - Order-of-accuracy test for single control volume
-    - adiabatic test without atmospheric pressure and friction
+    - PENDING: adiabatic test without atmospheric pressure and friction
         - Can test the following: `x_dot`, `e`, `e_f`, `p`, `temp`
         - gas `m` is constant
-        - Make all input variables have derivatives to test the derivatives too.
-        - Need actually constant friction pressure for testing.
     - constant pressure test with atmospheric pressure and friction
         - seigel_theory_1965 eq. 3-2 is a simpler version of this (just subtract atmospheric and friction pressures from the pressure to factor those in)
         - Can test the following: `x`, `x_dot`, `e_f`
@@ -147,7 +145,8 @@ Questions to think about:
 
 - Why doesn't `u_cv` just get `u` from `e`?
 - Does plunger impact before the dart exits the barrel cause inaccuracy?
-- Why is the derivative of total energy with respect to `x_dot` unstable in the one CV exact solution test?
+- Why is the derivative of total energy with respect to initial `x_dot` unstable in `test_one_cv`?
+- Why is the order-of-accuracy of the derivative of `x_dot` with respect to `temp_atm` diverging in `test_one_cv`? I guess the exact solution doesn't depend on that? Wouldn't the derivative be zero there?
 
 ***
 

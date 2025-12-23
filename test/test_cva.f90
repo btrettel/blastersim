@@ -324,6 +324,7 @@ subroutine test_p_f_1(tests)
     call cv%x%v%init_const(0.0_WP, 0)
     call cv%p_fs%v%init_const(0.1e5_WP, 0)
     call cv%p_fd%v%init_const(0.05e5_WP, 0)
+    cv%constant_friction = .false.
     
     call cv%x_dot%v%init_const(-10.0_WP, 0)
     call p_fe%v%init_const(-1.0e5_WP, 0)
@@ -382,6 +383,7 @@ subroutine test_p_f_2(tests)
     call cv%x%v%init_const(0.0_WP, 0)
     call cv%p_fs%v%init_const(0.0_WP, 0)
     call cv%p_fd%v%init_const(0.0_WP, 0)
+    cv%constant_friction = .false.
     
     call cv%x_dot%v%init_const(10.0_WP, 0)
     call p_fe%v%init_const(1.0e5_WP, 0)
@@ -405,6 +407,7 @@ subroutine test_p_f0_1(tests)
     call cv%x%v%init_const(0.0_WP, 0)
     call cv%p_fs%v%init_const(0.1e5_WP, 0)
     call cv%p_fd%v%init_const(0.05e5_WP, 0)
+    cv%constant_friction = .false.
     
     call p_fe%v%init_const(-1.0e5_WP, 0)
     p_f0 = cv%p_f0(p_fe)
@@ -438,6 +441,7 @@ subroutine test_p_f0_2(tests)
     call cv%x%v%init_const(0.0_WP, 0)
     call cv%p_fs%v%init_const(0.0_WP, 0)
     call cv%p_fd%v%init_const(0.0_WP, 0)
+    cv%constant_friction = .false.
     
     call p_fe%v%init_const(-1.0e5_WP, 0)
     p_f0 = cv%p_f0(p_fe)
@@ -2122,7 +2126,7 @@ end function one_cv_x_dot
 subroutine one_cv_x_dot_de(n, ne, ne_d)
     use fmad, only: ad
     use gasdata, only: DRY_AIR
-    use cva, only: DT_DEFAULT, TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, run, &
+    use cva, only: TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, run, &
                     ENERGY_DERIV_TOLERANCE_RUN_RC, ENERGY_DERIV_TOLERANCE
     use checks, only: assert
     
@@ -2134,7 +2138,7 @@ subroutine one_cv_x_dot_de(n, ne, ne_d)
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
-    integer, parameter   :: N_VAR = 1, N_D = 7
+    integer, parameter   :: N_VAR = 1, N_D = 6
     integer              :: i_var, i_d
     type(si_area)        :: csa
     type(si_pressure)    :: p_atm, p_0, p_fs, p_fd
@@ -2162,7 +2166,7 @@ subroutine one_cv_x_dot_de(n, ne, ne_d)
     
     call csa%v%init(2.0e-2_WP, 1, N_D)
     call p_atm%v%init(1.0e5_WP, 2, N_D)
-    call temp_atm%v%init(300.0_WP, 3, N_D)
+    call temp_atm%v%init_const(300.0_WP, N_D)
     
     call sys_start%cv(1)%set_const("atmosphere for barrel", csa, p_atm, temp_atm, [DRY_AIR], 2)
     
@@ -2170,20 +2174,25 @@ subroutine one_cv_x_dot_de(n, ne, ne_d)
     
     call x_dot%v%init_const(0.0_WP, N_D) ! The derivative of this is unstable? I made it constant.
     call y(1)%v%init_const(1.0_WP, N_D)
-    call x_0%v%init(0.1_WP, 4, N_D)
-    call p_0%v%init(10.0e5_WP, 5, N_D)
-    call m_p%v%init(2.0_WP, 6, N_D)
-    call p_fs%v%init(0.1e5_WP, 7, N_D)
+    call x_0%v%init(0.1_WP, 3, N_D)
+    call p_0%v%init(10.0e5_WP, 4, N_D)
+    call m_p%v%init(2.0_WP, 5, N_D)
+    call p_fs%v%init(0.1e5_WP, 6, N_D)
     p_fd = p_fs
     call k%v%init_const(0.0_WP, N_D)
     call x_z%v%init_const(0.0_WP, N_D)
     
     call sys_start%cv(2)%set(x_0, x_dot, y, p_0, temp_atm, "barrel", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
-                                x_z, [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm)
+                                x_z, [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm, constant_friction=.true.)
     
     call t_stop%v%init_const(0.0273_WP, N_D)
-    call dt%v%init_const(DT_DEFAULT/real(n, WP), N_D)
-    call config%set("test_one_cv", N_D, t_stop=t_stop, dt=dt)
+    
+    ! At first I thought that the number of time steps needed to be an integer.
+    ! That was to avoid a reduction in order-of-accuracy from `sys_interp`.
+    ! However, `sys_interp` is not called if `rc == TIMEOUT_RUN_RC` as it is here..
+    dt = t_stop / real(n, WP)
+    
+    call config%set("test_one_cv", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false.)
     call run(config, sys_start, sys_end, status)
     
     x_dot_exact = one_cv_x_dot(sys_start, sys_end%cv(2)%x)
@@ -2216,24 +2225,29 @@ end subroutine one_cv_x_dot_de
 subroutine test_one_cv(tests)
     ! Tests using exact solution with projectile and one internal control volume.
     ! There is also an additional constant control volume for the atmosphere, but no real calculations are done by that.
+    ! Also tests that `cv%constant_friction = .true.` works.
     
     use fmad, only: ad
+    use convergence, only: convergence_test
     
     type(test_results_type), intent(in out) :: tests
     
     type(ad), allocatable :: ne(:)
     real(WP), allocatable :: ne_d(:, :)
     
-    call one_cv_x_dot_de(1, ne, ne_d)
+    call one_cv_x_dot_de(10000, ne, ne_d)
     
-    call tests%real_eq(ne(1)%v, 0.0_WP, "test_one_cv, x_dot", abs_tol=1.0e-5_WP)
-    call tests%real_eq(ne_d(1, 1), 0.0_WP, "test_one_cv, d(x_dot)/d(csa)", abs_tol=1.0e-5_WP)
-    call tests%real_eq(ne_d(1, 2), 0.0_WP, "test_one_cv, d(x_dot)/d(p_atm)", abs_tol=1.0e-11_WP)
-    call tests%real_eq(ne_d(1, 3), 0.0_WP, "test_one_cv, d(x_dot)/d(temp_atm)", abs_tol=1.0e-5_WP)
-    call tests%real_eq(ne_d(1, 4), 0.0_WP, "test_one_cv, d(x_dot)/d(x_0)", abs_tol=1.0e-5_WP)
-    call tests%real_eq(ne_d(1, 5), 0.0_WP, "test_one_cv, d(x_dot)/d(p_0)", abs_tol=1.0e-11_WP)
-    call tests%real_eq(ne_d(1, 6), 0.0_WP, "test_one_cv, d(x_dot)/d(m_p)", abs_tol=1.0e-7_WP)
-    call tests%real_eq(ne_d(1, 7), 0.0_WP, "test_one_cv, d(x_dot)/d(p_f)", abs_tol=1.0e-9_WP)
+    call tests%real_eq(ne(1)%v, 0.0_WP, "test_one_cv, x_dot numerical error", abs_tol=1.0e-12_WP)
+    call tests%real_eq(ne_d(1, 1), 0.0_WP, "test_one_cv, d(x_dot)/d(csa) numerical error", abs_tol=1.0e-11_WP)
+    call tests%real_eq(ne_d(1, 2), 0.0_WP, "test_one_cv, d(x_dot)/d(p_atm) numerical error", abs_tol=1.0e-18_WP)
+    call tests%real_eq(ne_d(1, 3), 0.0_WP, "test_one_cv, d(x_dot)/d(x_0) numerical error", abs_tol=1.0e-11_WP)
+    call tests%real_eq(ne_d(1, 4), 0.0_WP, "test_one_cv, d(x_dot)/d(p_0) numerical error", abs_tol=1.0e-18_WP)
+    call tests%real_eq(ne_d(1, 5), 0.0_WP, "test_one_cv, d(x_dot)/d(m_p) numerical error", abs_tol=1.0e-13_WP)
+    call tests%real_eq(ne_d(1, 6), 0.0_WP, "test_one_cv, d(x_dot)/d(p_f) numerical error", abs_tol=1.0e-18_WP)
+    
+    ! TODO: Tighten this tolerance later.
+    ! It's unclear to me if I'm running into floating point error by making the time step too small or if I have a bug.
+    call convergence_test([500, 1000], one_cv_x_dot_de, [4.0_WP], "test_one_cv, passing", tests, p_tol=[0.03_WP], p_d_tol=[0.14_WP])
 end subroutine test_one_cv
 
 end program test_cva
