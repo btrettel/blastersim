@@ -2185,6 +2185,8 @@ subroutine one_cv_x_dot_de(n, ne, ne_d)
     call sys_start%cv(2)%set(x_0, x_dot, y, p_0, temp_atm, "barrel", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
                                 x_z, [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm, constant_friction=.true.)
     
+    call assert(sys_start%cv(2)%constant_friction, "test_one_cv, cv%constant_friction")
+    
     call t_stop%v%init_const(0.0273_WP, N_D)
     
     ! At first I thought that the number of time steps needed to be an integer.
@@ -2245,8 +2247,8 @@ subroutine test_one_cv(tests)
     call tests%real_eq(ne_d(1, 5), 0.0_WP, "test_one_cv, d(x_dot)/d(m_p) numerical error", abs_tol=1.0e-13_WP)
     call tests%real_eq(ne_d(1, 6), 0.0_WP, "test_one_cv, d(x_dot)/d(p_f) numerical error", abs_tol=1.0e-18_WP)
     
-    ! TODO: Tighten this tolerance later.
-    ! It's unclear to me if I'm running into floating point error by making the time step too small or if I have a bug.
+    ! I guess that I'm running into floating point error if I make the time step smaller than around the default.
+    ! 4th order accuracy sure convergences fast!
     call convergence_test([500, 1000], one_cv_x_dot_de, [4.0_WP], "test_one_cv, passing", tests, p_tol=[0.03_WP], p_d_tol=[0.14_WP])
 end subroutine test_one_cv
 
