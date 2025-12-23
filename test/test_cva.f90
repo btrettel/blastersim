@@ -2119,6 +2119,18 @@ pure function one_cv_x_dot(sys_0, x)
                                         - (p_atm + p_f)*(x - x_0)))
 end function one_cv_x_dot
 
+!subroutine one_cv_x_dot_de(n, de, de_dv)
+!    use gasdata, only: DRY_AIR
+!    use cva, only: TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, run, &
+!                    ENERGY_DERIV_TOLERANCE_RUN_RC, ENERGY_DERIV_TOLERANCE
+    
+!    integer, intent(in)                :: n
+!    type(ad), intent(out), allocatable :: de(:)
+!    real(WP), intent(out), allocatable :: de_dv(:, :)
+    
+    
+!end subroutine one_cv_x_dot_de
+
 subroutine test_one_cv(tests)
     ! Test using exact solution with projectile and one internal control volume.
     ! There is also an additional constant control volume for the atmosphere, but no real calculations are done by that.
@@ -2133,7 +2145,7 @@ subroutine test_one_cv(tests)
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_status_type)             :: status
     
-    integer              :: n_d
+    integer, parameter   :: N_D = 7
     type(si_area)        :: csa
     type(si_pressure)    :: p_atm, p_0, p_fs, p_fd
     type(si_temperature) :: temp_atm
@@ -2143,8 +2155,6 @@ subroutine test_one_cv(tests)
     type(si_stiffness)   :: k
     type(unitless)       :: y(1)
     type(si_time)        :: t_stop
-    
-    n_d = 7
     
     allocate(sys_start)
     allocate(sys_start%cv(2))
@@ -2157,29 +2167,29 @@ subroutine test_one_cv(tests)
     
     ! 1: atmosphere for barrel
     
-    call csa%v%init(2.0e-2_WP, 1, n_d)
-    call p_atm%v%init(1.0e5_WP, 2, n_d)
-    call temp_atm%v%init(300.0_WP, 3, n_d)
+    call csa%v%init(2.0e-2_WP, 1, N_D)
+    call p_atm%v%init(1.0e5_WP, 2, N_D)
+    call temp_atm%v%init(300.0_WP, 3, N_D)
     
     call sys_start%cv(1)%set_const("atmosphere for barrel", csa, p_atm, temp_atm, [DRY_AIR], 2)
     
     ! 2: barrel
     
-    call x_dot%v%init_const(0.0_WP, n_d) ! The derivative of this is unstable? I made it constant.
-    call y(1)%v%init_const(1.0_WP, n_d)
-    call x_0%v%init(0.1_WP, 4, n_d)
-    call p_0%v%init(10.0e5_WP, 5, n_d)
-    call m_p%v%init(2.0_WP, 6, n_d)
-    call p_fs%v%init(0.1e5_WP, 7, n_d)
+    call x_dot%v%init_const(0.0_WP, N_D) ! The derivative of this is unstable? I made it constant.
+    call y(1)%v%init_const(1.0_WP, N_D)
+    call x_0%v%init(0.1_WP, 4, N_D)
+    call p_0%v%init(10.0e5_WP, 5, N_D)
+    call m_p%v%init(2.0_WP, 6, N_D)
+    call p_fs%v%init(0.1e5_WP, 7, N_D)
     p_fd = p_fs
-    call k%v%init_const(0.0_WP, n_d)
-    call x_z%v%init_const(0.0_WP, n_d)
+    call k%v%init_const(0.0_WP, N_D)
+    call x_z%v%init_const(0.0_WP, N_D)
     
     call sys_start%cv(2)%set(x_0, x_dot, y, p_0, temp_atm, "barrel", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
                                 x_z, [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm)
     
-    call t_stop%v%init_const(0.0273_WP, n_d)
-    call config%set("test_one_cv", n_d, t_stop=t_stop)
+    call t_stop%v%init_const(0.0273_WP, N_D)
+    call config%set("test_one_cv", N_D, t_stop=t_stop)
     call run(config, sys_start, sys_end, status)
     
     x_dot_exact = one_cv_x_dot(sys_start, sys_end%cv(2)%x)
