@@ -27,13 +27,14 @@ real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 ! ruby_equivalent_2000
 real(WP), public, parameter :: C_MS = 1.0_WP/3.0_WP ! unitless
 
-real(WP), public, parameter :: X_STOP_DEFAULT         = 1.0e3_WP  ! m (If you have a barrel that's a km long, that's probably wrong.)
-real(WP), public, parameter :: DT_DEFAULT             = 1.0e-5_WP ! s
-real(WP), public, parameter :: T_STOP_DEFAULT         = 0.5_WP    ! s
-real(WP), public, parameter :: MASS_TOLERANCE         = 1.0e-5_WP ! unitless
-real(WP), public, parameter :: ENERGY_TOLERANCE       = 1.0e-4_WP ! unitless
-real(WP), public, parameter :: MASS_DERIV_TOLERANCE   = 1.0e-8_WP ! unitless
-real(WP), public, parameter :: ENERGY_DERIV_TOLERANCE = 1.0e-5_WP ! unitless (TODO: decrease later and see what breaks)
+real(WP), public, parameter :: X_STOP_DEFAULT         = 1.0e3_WP   ! m (If you have a barrel that's a km long, that's probably wrong.)
+real(WP), public, parameter :: DT_DEFAULT             = 1.0e-5_WP  ! s
+real(WP), public, parameter :: T_STOP_DEFAULT         = 0.5_WP     ! s
+real(WP), public, parameter :: MASS_TOLERANCE         = 1.0e-5_WP  ! unitless
+real(WP), public, parameter :: ENERGY_TOLERANCE       = 1.0e-4_WP  ! unitless
+real(WP), public, parameter :: MASS_DERIV_TOLERANCE   = 1.0e-8_WP  ! unitless
+real(WP), public, parameter :: ENERGY_DERIV_TOLERANCE = 1.0e-5_WP  ! unitless (TODO: decrease later and see what breaks)
+real(WP), public, parameter :: MIRROR_X_TOLERANCE     = 1.0e-14_WP ! unitless
 
 integer, public, parameter :: IDEAL_EOS = 1 ! ideal gas equation of state
 integer, public, parameter :: CONST_EOS = 2 ! constant pressure, temperature, density
@@ -54,7 +55,7 @@ integer, public, parameter :: ENERGY_TOLERANCE_RUN_RC       = 5
 integer, public, parameter :: MASS_DERIV_TOLERANCE_RUN_RC   = 6
 integer, public, parameter :: ENERGY_DERIV_TOLERANCE_RUN_RC = 7
 integer, public, parameter :: IDEAL_EOS_RUN_RC              = 8
-integer, public, parameter :: MIRROR_TOLERANCE_RUN_RC       = 9
+integer, public, parameter :: MIRROR_X_TOLERANCE_RUN_RC     = 9
 integer, public, parameter :: X_BLOW_UP_RUN_RC              = 10
 integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 11
 integer, public, parameter :: M_BLOW_UP_RUN_RC              = 12
@@ -952,6 +953,8 @@ pure function d_xdot_d_t(sys, i_cv)
             call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_xdot_d_t): i_cv_mirror must be defined for a mirror CV")
             call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
                             "cva (d_xdot_d_t): mirror CV is not a NORMAL_CV_TYPE")
+            call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%i_cv_mirror == i_cv, &
+                            "cva (d_xdot_d_t): i_cv_mirror for the mirror CV is not i_cv (not matching)")
             d_xdot_d_t = -d_xdot_d_t_normal(sys, sys%cv(i_cv)%i_cv_mirror)
         case default
             error stop "cva (d_xdot_d_t): invalid cv%type"
@@ -1509,6 +1512,7 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
     type(si_pressure)    :: p_j
     type(unitless)       :: rel_delta
     real(WP)             :: max_abs_m_deriv, max_abs_e_deriv
+    type(si_length)      :: x_sum_start, x_sum
     
     n_cv      = size(sys%cv)
     n_d       = size(sys%cv(1)%x%v%d)
@@ -1609,9 +1613,26 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
             end if
         end if
         
-!        if ((sys%cv(i_cv)%type == NORMAL_CV_TYPE) .and. (sys%cv(i_cv)%i_cv_mirror >= 1)) then
-!            ! MIRROR_TOLERANCE_RUN_RC
-!        end if
+        ! Check that the mirror CV position invariant is satisfied.
+        ! If one CV's piston moves by a certain amount, the mirror CV's piston must move the same amount in the opposite direction.
+        ! I could also add a tolerance for `xdot`, but given that it's set to exactly the same, an assertion would make more sense.
+        if ((sys%cv(i_cv)%type == NORMAL_CV_TYPE) .and. (sys%cv(i_cv)%i_cv_mirror >= 1)) then
+            call assert(sys_start%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
+                            "cva (check_sys): mirror CV is not a mirror CV?")
+            
+            x_sum_start = sys_start%cv(i_cv)%x + sys_start%cv(sys%cv(i_cv)%i_cv_mirror)%x
+            x_sum       = sys%cv(i_cv)%x       + sys%cv(sys%cv(i_cv)%i_cv_mirror)%x
+            rel_delta   = abs(x_sum - x_sum_start) / x_sum_start
+            
+            if (rel_delta%v%v > MIRROR_X_TOLERANCE) then
+                status%rc = MIRROR_X_TOLERANCE_RUN_RC
+                allocate(status%data(1))
+                status%data(1) = rel_delta%v%v
+                allocate(status%i_cv(1))
+                status%i_cv(1) = i_cv
+                return
+            end if
+        end if
     end do
     
     if (config%tolerance_checks) then

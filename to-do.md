@@ -1,6 +1,7 @@
 ### v0.1.0
 
 - Test `m_s` in `d_xdot_d_t`.
+- Test `MIRROR_X_TOLERANCE_RUN_RC`.
 - transonic corrections in the barrel (Corner eq. 123)
     - Make this the default but optional if desired for testing.
     - Input validation at first to not use this with RK EOS (if that's added first)
@@ -11,7 +12,6 @@
     - `x` > 0
         - Could simply abort if there is piston bounce during shot rather than handle it. Piston bounce is undesirable anyway as it would reduce accuracy of the projectile.
         - Make test case where piston will impact end ($x = 0$) to see what happens and where piston impact detection needs to be added. Inside a RK stage? If the check is in `check_sys`, before getting to that point, an assertion might trigger or BlasterSim might go haywire.
-    - Add a length invariant: `x + x_mirror` = const.
     - Add check for whether transonic corrections are needed with the speed of sound.
     - Add check for validity of lumped parameter approximation
         - Does this require the pressure gradient? That's basically how the Biot number works.

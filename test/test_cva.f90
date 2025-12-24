@@ -1376,12 +1376,16 @@ subroutine test_conservation(tests)
     call x_z%v%init_const(0.0_WP, n_d)
     
     call sys_start%cv(4)%set(x_4, x_dot, y, p_4, temp_atm, "barrel", csa_4, 1.0_WP/m_p_4, p_fs_4, p_fd_4, k, &
-                                x_z, [DRY_AIR], 1, x_stop=x_stop_4)
+                                x_z, [DRY_AIR], 2, x_stop=x_stop_4)
     
-    call config%set("test_conservation", 1, csv_output=.true., csv_frequency=100)
+    call config%set("test_conservation", 1, csv_output=.true., csv_frequency=1)
     call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_conservation, status%rc")
+    
+    if (status%rc /= SUCCESS_RUN_RC) then
+        print *, status%data(1), status%i_cv(1)
+    end if
     
     spring_pe_3_start = sys_start%cv(3)%spring_pe()
     call tests%real_eq(spring_pe_3_start%v%v, 0.5_WP*(700.0_WP)*(9.0e-2_WP)**2, "test_conservation, spring_pe_3_start")
