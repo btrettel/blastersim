@@ -1474,10 +1474,10 @@ subroutine run(config, sys_start, sys_end, status)
         !print *, t%v%v
         
         call check_sys(config, sys_new, m_start, e_start, t, status)
+        if (status%rc >= 0) exit time_loop
         if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
             call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)
         end if
-        if (status%rc >= 0) exit time_loop
         
         call move_alloc(from=sys_old,  to=sys_temp)
         call move_alloc(from=sys_new,  to=sys_old)
@@ -1491,9 +1491,12 @@ subroutine run(config, sys_start, sys_end, status)
         sys_end = sys_new
     end if
     
-    status%t = t
+    if (config%csv_output) then
+        call write_csv_row(csv_unit, sys_end, t, status, NUMBER_ROW_TYPE)
+        close(unit=csv_unit)
+    end if
     
-    if (config%csv_output) close(unit=csv_unit)
+    status%t = t
 end subroutine run
 
 pure subroutine check_sys(config, sys, m_start, e_start, t, status)

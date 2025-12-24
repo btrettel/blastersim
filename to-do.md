@@ -1,7 +1,6 @@
 ### v0.1.0
 
 - Test `m_s` in `d_xdot_d_t`.
-- Make CSV file includes interpolated stop time.
 - transonic corrections in the barrel (Corner eq. 123)
     - Make this the default but optional if desired for testing.
     - Input validation at first to not use this with RK EOS (if that's added first)
@@ -29,6 +28,7 @@
         - Test cases for temperature and internal energy with non-zero gas velocity.
     - Print internal energy and gas kinetic energy in CSV output
     - Write each component of energy and total energy so that someone can create their own energy balance plots.
+    - Add Python code to test reading the output file.
 - Input file reader generator
     - Input validation:
         - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
