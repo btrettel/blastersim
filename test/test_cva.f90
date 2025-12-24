@@ -1588,7 +1588,6 @@ subroutine test_check_sys(tests)
     integer                           :: n_d
     type(run_config_type)             :: config
     type(cv_system_type), allocatable :: sys, sys_start
-    type(si_energy)                   :: e_start
     type(si_time)                     :: t_stop, t
     type(si_pressure)                 :: p
     type(run_status_type)             :: status
@@ -1650,9 +1649,6 @@ subroutine test_check_sys(tests)
     sys%cv(2)%i_cv_mirror = 0
     
     sys_start = sys
-    
-    ! The following are used in some other tests, not this one.
-    e_start = sys_start%e_total()
     
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, CONTINUE_RUN_RC, "test_check_sys, CONTINUE_RUN_RC, status%rc")
@@ -1825,7 +1821,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%m(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
-    sys%cv(1)%e = e_start - sys%cv(2)%e
+    sys%cv(1)%e = sys_start%e_total() - sys%cv(2)%e
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
