@@ -15,7 +15,7 @@ implicit none
 private
 
 public :: smooth_min
-public :: d_x_d_t, d_xdot_d_t, d_m_k_d_t, d_e_d_t, d_e_f_d_t
+public :: d_x_d_t, d_x_dot_d_t, d_m_k_d_t, d_e_d_t, d_e_f_d_t
 public :: f_m_dot, g_m_dot
 public :: time_step, run, check_sys, write_csv_row
 
@@ -924,61 +924,61 @@ pure function d_x_d_t(sys, i_cv)
     end select
 end function d_x_d_t
 
-pure function d_xdot_d_t(sys, i_cv)
+pure function d_x_dot_d_t(sys, i_cv)
     type(cv_system_type), intent(in) :: sys
     integer, intent(in)              :: i_cv
     
-    type(si_acceleration) :: d_xdot_d_t
+    type(si_acceleration) :: d_x_dot_d_t
     
     type(si_area)     :: csa_i_mirror
     character(len=3)  :: i_cv_string, i_cv_mirror_string
     
-    call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_xdot_d_t): i_cv_mirror must be a positive integer or zero")
-    call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_xdot_d_t): i_cv_mirror can't be larger than the cv array")
-    call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_xdot_d_t): i_cv_mirror can not equal i_cv")
+    call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_x_dot_d_t): i_cv_mirror must be a positive integer or zero")
+    call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_x_dot_d_t): i_cv_mirror can't be larger than the cv array")
+    call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_x_dot_d_t): i_cv_mirror can not equal i_cv")
     
     if (sys%cv(i_cv)%i_cv_mirror >= 1) then
         csa_i_mirror = sys%cv(sys%cv(i_cv)%i_cv_mirror)%csa
         write(unit=i_cv_string, fmt="(i0)") i_cv
         write(unit=i_cv_mirror_string, fmt="(i0)") sys%cv(i_cv)%i_cv_mirror
         call assert(is_close(sys%cv(i_cv)%csa%v%v, csa_i_mirror%v%v), &
-                        "cva (d_xdot_d_t): CSA for mirror CV (" // trim(i_cv_mirror_string) &
+                        "cva (d_x_dot_d_t): CSA for mirror CV (" // trim(i_cv_mirror_string) &
                         // ") assumed equal to CSA for current CV (" // trim(i_cv_string) // ")")
     end if
     
     select case (sys%cv(i_cv)%type)
         case (NORMAL_CV_TYPE)
-            d_xdot_d_t = d_xdot_d_t_normal(sys, i_cv)
+            d_x_dot_d_t = d_x_dot_d_t_normal(sys, i_cv)
         case (MIRROR_CV_TYPE)
-            call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_xdot_d_t): i_cv_mirror must be defined for a mirror CV")
+            call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_x_dot_d_t): i_cv_mirror must be defined for a mirror CV")
             call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
-                            "cva (d_xdot_d_t): mirror CV is not a NORMAL_CV_TYPE")
+                            "cva (d_x_dot_d_t): mirror CV is not a NORMAL_CV_TYPE")
             call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%i_cv_mirror == i_cv, &
-                            "cva (d_xdot_d_t): i_cv_mirror for the mirror CV is not i_cv (not matching)")
-            d_xdot_d_t = -d_xdot_d_t_normal(sys, sys%cv(i_cv)%i_cv_mirror)
+                            "cva (d_x_dot_d_t): i_cv_mirror for the mirror CV is not i_cv (not matching)")
+            d_x_dot_d_t = -d_x_dot_d_t_normal(sys, sys%cv(i_cv)%i_cv_mirror)
         case default
-            error stop "cva (d_xdot_d_t): invalid cv%type"
+            error stop "cva (d_x_dot_d_t): invalid cv%type"
     end select
-end function d_xdot_d_t
+end function d_x_dot_d_t
 
-pure function d_xdot_d_t_normal(sys, i_cv)
+pure function d_x_dot_d_t_normal(sys, i_cv)
     type(cv_system_type), intent(in) :: sys
     integer, intent(in)              :: i_cv
     
-    type(si_acceleration) :: d_xdot_d_t_normal
+    type(si_acceleration) :: d_x_dot_d_t_normal
     
     type(si_pressure)     :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
     type(si_pressure)     :: p_other
     type(si_inverse_mass) :: r_mp_eff ! effective mass of projectile/piston
     
-    call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_xdot_d_t_normal): cv%csa > 0 violated")
-    call assert(sys%cv(i_cv)%type == NORMAL_CV_TYPE, "cva (d_xdot_d_t_normal): CV needs to be NORMAL_CV_TYPE")
+    call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_x_dot_d_t_normal): cv%csa > 0 violated")
+    call assert(sys%cv(i_cv)%type == NORMAL_CV_TYPE, "cva (d_x_dot_d_t_normal): CV needs to be NORMAL_CV_TYPE")
     
     if (sys%cv(i_cv)%i_cv_mirror >= 1) then
         p_other = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
         
         call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
-                        "cva (d_xdot_d_t_normal): mirror CV not MIRROR_CV_TYPE")
+                        "cva (d_x_dot_d_t_normal): mirror CV not MIRROR_CV_TYPE")
     else
         ! If `i_cv_mirror == 0` then there is no mirror CV.
         call p_other%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
@@ -990,9 +990,9 @@ pure function d_xdot_d_t_normal(sys, i_cv)
     ! ruby_equivalent_2000
     r_mp_eff = sys%cv(i_cv)%rm_p / (1.0_WP + C_MS * sys%cv(i_cv)%m_s * sys%cv(i_cv)%rm_p)
     
-    d_xdot_d_t_normal = sys%cv(i_cv)%csa*r_mp_eff*(sys%cv(i_cv)%p() - p_other - sys%cv(i_cv)%p_f(p_fe)) &
+    d_x_dot_d_t_normal = sys%cv(i_cv)%csa*r_mp_eff*(sys%cv(i_cv)%p() - p_other - sys%cv(i_cv)%p_f(p_fe)) &
                             - sys%cv(i_cv)%k*r_mp_eff*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_z)
-end function d_xdot_d_t_normal
+end function d_x_dot_d_t_normal
 
 pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
     type(cv_type), intent(in)           :: cv
@@ -1060,7 +1060,7 @@ pure function d_e_f_d_t(sys, i_cv)
     call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_e_f_d_t): i_cv_mirror can't be larger than the cv array")
     call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_e_f_d_t): i_cv_mirror can not equal i_cv")
     
-    call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_xdot_d_t_normal): cv%csa > 0 violated")
+    call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_x_dot_d_t_normal): cv%csa > 0 violated")
     
     select case (sys%cv(i_cv)%type)
         case (NORMAL_CV_TYPE)
@@ -1068,7 +1068,7 @@ pure function d_e_f_d_t(sys, i_cv)
                 p_other = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
                 
                 call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
-                                "cva (d_xdot_d_t_normal): mirror CV not MIRROR_CV_TYPE")
+                                "cva (d_x_dot_d_t_normal): mirror CV not MIRROR_CV_TYPE")
             else
                 ! If `i_cv_mirror == 0` then there is no mirror CV.
                 call p_other%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
@@ -1377,7 +1377,7 @@ pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
     call sys%calculate_flows(m_dot, h_dot)
     do i_cv = 1, n_cv
         cv_delta_out(i_cv)%x     = dt*d_x_d_t(sys, i_cv)
-        cv_delta_out(i_cv)%x_dot = dt*d_xdot_d_t(sys, i_cv)
+        cv_delta_out(i_cv)%x_dot = dt*d_x_dot_d_t(sys, i_cv)
         cv_delta_out(i_cv)%e     = dt*d_e_d_t(sys%cv(i_cv), h_dot, i_cv)
         cv_delta_out(i_cv)%e_f   = dt*d_e_f_d_t(sys, i_cv)
         do k_gas = 1, n_gas
@@ -1615,7 +1615,7 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         
         ! Check that the mirror CV position invariant is satisfied.
         ! If one CV's piston moves by a certain amount, the mirror CV's piston must move the same amount in the opposite direction.
-        ! I could also add a tolerance for `xdot`, but given that it's set to exactly the same, an assertion would make more sense.
+        ! I could also add a tolerance for `x_dot`, but given that it's set to exactly the same, an assertion would make more sense.
         if ((sys%cv(i_cv)%type == NORMAL_CV_TYPE) .and. (sys%cv(i_cv)%i_cv_mirror >= 1)) then
             call assert(sys_start%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
                             "cva (check_sys): mirror CV is not a mirror CV?")

@@ -765,7 +765,7 @@ end subroutine test_set_const
 
 subroutine test_rates(tests)
     use gasdata, only: DRY_AIR
-    use cva, only: cv_system_type, d_x_d_t, d_xdot_d_t, d_m_k_d_t, d_e_d_t, d_e_f_d_t
+    use cva, only: cv_system_type, d_x_d_t, d_x_dot_d_t, d_m_k_d_t, d_e_d_t, d_e_f_d_t
     
     type(test_results_type), intent(in out) :: tests
 
@@ -780,7 +780,7 @@ subroutine test_rates(tests)
     type(si_inverse_mass)     :: rm_p
     type(si_stiffness)        :: k
     type(si_length)           :: x_z
-    type(si_acceleration)     :: d_xdot_d_t_
+    type(si_acceleration)     :: d_x_dot_d_t_
     type(si_mass_flow_rate)   :: m_dots(2, 2), d_m_1_d_t
     type(si_energy_flow_rate) :: h_dots(2, 2), d_e_d_t_, d_e_f_d_t_
     
@@ -805,8 +805,8 @@ subroutine test_rates(tests)
     d_x_d_t_ = d_x_d_t(sys, 2)
     call tests%real_eq(d_x_d_t_%v%v, x_dot%v%v, "d_x_d_t")
     
-    d_xdot_d_t_ = d_xdot_d_t(sys, 2)
-    call tests%real_eq(d_xdot_d_t_%v%v, 1.5e6_WP, "d_xdot_d_t")
+    d_x_dot_d_t_ = d_x_dot_d_t(sys, 2)
+    call tests%real_eq(d_x_dot_d_t_%v%v, 1.5e6_WP, "d_x_dot_d_t")
     
     call m_dots(1, 1)%v%init_const(0.0_WP, 0)
     call m_dots(1, 2)%v%init_const(2.0_WP, 0)
