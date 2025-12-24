@@ -16,11 +16,10 @@
         - Does this require the pressure gradient? That's basically how the Biot number works.
         - Ask Gemini for ideas on what to do here.
 - `write_csv_row`
+    - Add Python code to test reading the output file.
     - Make methods to get gas kinetic energy and internal energy, use in CSV output
         - Test cases for temperature and internal energy with non-zero gas velocity.
     - Print internal energy and gas kinetic energy in CSV output
-    - Write each component of energy and total energy so that someone can create their own energy balance plots.
-    - Add Python code to test reading the output file.
 - Input file reader generator
     - Input validation:
         - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.

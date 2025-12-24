@@ -2245,8 +2245,8 @@ subroutine test_one_cv(tests)
     ! There is also an additional constant control volume for the atmosphere, but no real calculations are done by that.
     ! Also tests that `cv%constant_friction = .true.` works.
     
-    ! TODO: Can additionally test the following: `e`, `e_f`, `p`, `temp`
-    ! I'm not sure these will show 4th order accuracy, however, as they aren't solved for directly via RK4.
+    ! TODO: Can additionally test the following: `e`, `e_f` (easy), `p`, `temp`
+    ! I'm not sure all of these will show 4th order accuracy, however, as not all are solved for directly via RK4.
     
     use fmad, only: ad
     use convergence, only: convergence_test

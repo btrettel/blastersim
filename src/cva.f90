@@ -1747,23 +1747,50 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     type(si_pressure)     :: p
     type(si_temperature)  :: temp
     type(si_mass_density) :: rho
+    type(si_mass)         :: m_total
+    type(si_energy)       :: e_total, spring_pe, m_p_ke
     
     inquire(unit=csv_unit, opened=csv_unit_opened)
     call assert(csv_unit_opened, "cva (write_csv_row): csv_unit needs to be open")
     
     n_cv = size(sys%cv)
     
+    ! for all CVs
+    
+    ! `t`, time
+    select case (row_type)
+        case (HEADER_ROW_TYPE)
+            write(unit=csv_unit, fmt="(a)", advance="no") '"t (s)",'
+        case (NUMBER_ROW_TYPE)
+            write(unit=csv_unit, fmt="(g0, a)", advance="no") t%v%v, ","
+        case default
+            error stop "cva (write_csv_row, t): invalid row_type"
+    end select
+    
+    ! `m_total`
+    m_total = sys%m_total()
+    select case (row_type)
+        case (HEADER_ROW_TYPE)
+            write(unit=csv_unit, fmt="(a)", advance="no") '"m_total (kg)",'
+        case (NUMBER_ROW_TYPE)
+            write(unit=csv_unit, fmt="(g0, a)", advance="no") m_total%v%v, ","
+        case default
+            error stop "cva (write_csv_row, m_total): invalid row_type"
+    end select
+    
+    ! `e_total`
+    e_total = sys%e_total()
+    select case (row_type)
+        case (HEADER_ROW_TYPE)
+            write(unit=csv_unit, fmt="(a)", advance="no") '"e_total (J)",'
+        case (NUMBER_ROW_TYPE)
+            write(unit=csv_unit, fmt="(g0, a)", advance="no") e_total%v%v, ","
+        case default
+            error stop "cva (write_csv_row, e_total): invalid row_type"
+    end select
+    
+    ! per CV
     do i_cv = 1, n_cv
-        ! `t`, time
-        select case (row_type)
-            case (HEADER_ROW_TYPE)
-                write(unit=csv_unit, fmt="(a)", advance="no") '"t (s)",'
-            case (NUMBER_ROW_TYPE)
-                write(unit=csv_unit, fmt="(g0, a)", advance="no") t%v%v, ","
-            case default
-                error stop "cva (write_csv_row, t): invalid row_type"
-        end select
-        
         if (sys%cv(i_cv)%type == NORMAL_CV_TYPE) then
             ! `x`, location of piston/projectile
             select case (row_type)
@@ -1820,7 +1847,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 error stop "cva (write_csv_row, e_f): invalid row_type"
         end select
         
-        ! p
+        ! `p`
         select case (row_type)
             case (HEADER_ROW_TYPE)
                 write(unit=csv_unit, fmt="(3a)", advance="no") '"p (Pa, ', trim(sys%cv(i_cv)%label), ')",'
@@ -1831,7 +1858,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 error stop "cva (write_csv_row, p): invalid row_type"
         end select
         
-        ! temp
+        ! `temp`
         select case (row_type)
             case (HEADER_ROW_TYPE)
                 write(unit=csv_unit, fmt="(3a)", advance="no") '"temp (K, ', trim(sys%cv(i_cv)%label), ')",'
@@ -1842,7 +1869,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 error stop "cva (write_csv_row, temp): invalid row_type"
         end select
         
-        ! rho
+        ! `rho`
         select case (row_type)
             case (HEADER_ROW_TYPE)
                 write(unit=csv_unit, fmt="(3a)", advance="no") '"rho (kg/m3, ', trim(sys%cv(i_cv)%label), ')",'
@@ -1853,14 +1880,36 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 error stop "cva (write_csv_row, rho): invalid row_type"
         end select
         
-        ! TODO: spring_pe
-        ! TODO: m_p_ke
-        ! TODO: e_total
-        
-        ! TODO: m_dot
-        ! TODO: h_dot
+        if (sys%cv(i_cv)%type == NORMAL_CV_TYPE) then
+            ! `spring_pe`
+            select case (row_type)
+                case (HEADER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(3a)", advance="no") '"spring_pe (J, ', trim(sys%cv(i_cv)%label), ')",'
+                case (NUMBER_ROW_TYPE)
+                    spring_pe = sys%cv(i_cv)%spring_pe()
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") spring_pe%v%v, ","
+                case default
+                    error stop "cva (write_csv_row, spring_pe): invalid row_type"
+            end select
+            
+            ! `m_p_ke`
+            select case (row_type)
+                case (HEADER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(3a)", advance="no") '"m_p_ke (J, ', trim(sys%cv(i_cv)%label), ')",'
+                case (NUMBER_ROW_TYPE)
+                    m_p_ke = sys%cv(i_cv)%m_p_ke()
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") m_p_ke%v%v, ","
+                case default
+                    error stop "cva (write_csv_row, m_p_ke): invalid row_type"
+            end select
+        end if
     end do
     
+    ! between CVs
+    
+    ! TODO: m_dot
+    ! TODO: h_dot
+
     select case (row_type)
         case (HEADER_ROW_TYPE)
             write(unit=csv_unit, fmt="(a)") '"return code"'
