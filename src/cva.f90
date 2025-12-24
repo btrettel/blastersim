@@ -1617,7 +1617,7 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         ! If one CV's piston moves by a certain amount, the mirror CV's piston must move the same amount in the opposite direction.
         ! I could also add a tolerance for `x_dot`, but given that it's set to exactly the same, an assertion would make more sense.
         if ((sys%cv(i_cv)%type == NORMAL_CV_TYPE) .and. (sys%cv(i_cv)%i_cv_mirror >= 1)) then
-            call assert(sys_start%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
+            call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
                             "cva (check_sys): mirror CV is not a mirror CV?")
             
             x_sum_start = sys_start%cv(i_cv)%x + sys_start%cv(sys%cv(i_cv)%i_cv_mirror)%x

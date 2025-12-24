@@ -1583,7 +1583,7 @@ subroutine test_check_sys(tests)
     use cva, only: IDEAL_EOS, NORMAL_CV_TYPE, CONTINUE_RUN_RC, SUCCESS_RUN_RC, TIMEOUT_RUN_RC, NEGATIVE_CV_M_TOTAL_RUN_RC, &
                     NEGATIVE_CV_TEMP_RUN_RC, MASS_TOLERANCE_RUN_RC, ENERGY_TOLERANCE_RUN_RC, &
                     MASS_DERIV_TOLERANCE_RUN_RC, ENERGY_DERIV_TOLERANCE_RUN_RC, IDEAL_EOS_RUN_RC, &
-                    !MIRROR_X_TOLERANCE_RUN_RC, &
+                    MIRROR_X_TOLERANCE_RUN_RC, MIRROR_CV_TYPE, &
                     !X_BLOW_UP_RUN_RC, M_BLOW_UP_RUN_RC, E_BLOW_UP_RUN_RC, E_F_BLOW_UP_RUN_RC, X_DOT_BLOW_UP_RUN_RC, &
                     run_config_type, cv_system_type, run_status_type, check_sys
     
@@ -2083,7 +2083,17 @@ subroutine test_check_sys(tests)
     call tests%real_gt(status%data(1), DRY_AIR%p_c, "test_check_sys, IDEAL_EOS_RUN_RC, status%data(1) sign")
     call tests%real_lt(status%data(2), DRY_AIR%p_c, "test_check_sys, IDEAL_EOS_RUN_RC, status%data(2) sign")
     
-    ! TODO: `MIRROR_TOLERANCE_RUN_RC`
+    ! `MIRROR_X_TOLERANCE_RUN_RC`
+    
+    sys = sys_start
+    sys%cv(1)%i_cv_mirror = 2
+    sys%cv(2)%i_cv_mirror = 1
+    sys%cv(2)%type        = MIRROR_CV_TYPE
+    call sys%cv(2)%x%v%init_const(0.2_WP, n_d)
+    
+    call check_sys(config, sys, sys_start, t, status)
+    call tests%integer_eq(status%rc, MIRROR_X_TOLERANCE_RUN_RC, "test_check_sys, MIRROR_X_TOLERANCE_RUN_RC, status%rc")
+    
     ! TODO: `X_BLOW_UP_RUN_RC`
     ! TODO: `X_DOT_BLOW_UP_RUN_RC`
     ! TODO: `M_BLOW_UP_RUN_RC`

@@ -1,7 +1,6 @@
 ### v0.1.0
 
 - Test `m_s` in `d_xdot_d_t`.
-- Test `MIRROR_X_TOLERANCE_RUN_RC`.
 - transonic corrections in the barrel (Corner eq. 123)
     - Make this the default but optional if desired for testing.
     - Input validation at first to not use this with RK EOS (if that's added first)
