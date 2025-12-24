@@ -5,13 +5,6 @@
     - Make this the default but optional if desired for testing.
     - Input validation at first to not use this with RK EOS (if that's added first)
     - Assert `CONST_EOS` or `IDEAL_EOS` with `p < p_c` to satisfy requirements of version in Corner's book.
-- Order-of-accuracy test for single control volume
-    - PENDING: adiabatic test without atmospheric pressure and friction
-        - Can test the following: `x_dot`, `e`, `e_f`, `p`, `temp`
-        - gas `m` is constant
-    - constant pressure test with atmospheric pressure and friction
-        - seigel_theory_1965 eq. 3-2 is a simpler version of this (just subtract atmospheric and friction pressures from the pressure to factor those in)
-        - Can test the following: `x`, `x_dot`, `e_f`
 - `check_sys`: test each `status%rc` code
     - All state variables don't exceed certain amounts.
         - Also check derivatives in stability checks.
@@ -22,7 +15,7 @@
     - Add check for whether transonic corrections are needed with the speed of sound.
     - Add check for validity of lumped parameter approximation
         - Does this require the pressure gradient? That's basically how the Biot number works.
-        - Some sort of CFL number? $u \, \Delta t / x$? What would $u$ be if there are multiple connections? It doesn't make sense to use this as whether the lumped parameter approximation is valid or not does not depend on $\Delta t$.        - Ask Gemini for ideas on what to do here.
+        - Ask Gemini for ideas on what to do here.
 - `write_csv_row`
     - Make methods to get gas kinetic energy and internal energy, use in CSV output
         - Test cases for temperature and internal energy with non-zero gas velocity.
@@ -137,6 +130,10 @@
     - need parallel RNG
 - Stopping criteria based on acceleration to find optimal barrel length
 - Check entropy conservation.
+- Order-of-accuracy tests
+    - single control volume constant pressure test with atmospheric pressure and friction
+        - seigel_theory_1965 eq. 3-2 is a simpler version of this (just subtract atmospheric and friction pressures from the pressure to factor those in)
+        - Can test the following: `x`, `x_dot`, `e_f`
 
 ***
 

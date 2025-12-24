@@ -54,11 +54,12 @@ integer, public, parameter :: ENERGY_TOLERANCE_RUN_RC       = 5
 integer, public, parameter :: MASS_DERIV_TOLERANCE_RUN_RC   = 6
 integer, public, parameter :: ENERGY_DERIV_TOLERANCE_RUN_RC = 7
 integer, public, parameter :: IDEAL_EOS_RUN_RC              = 8
-integer, public, parameter :: X_BLOW_UP_RUN_RC              = 9
-integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 10
-integer, public, parameter :: M_BLOW_UP_RUN_RC              = 11
-integer, public, parameter :: E_BLOW_UP_RUN_RC              = 12
-integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 13
+integer, public, parameter :: MIRROR_TOLERANCE_RUN_RC       = 9
+integer, public, parameter :: X_BLOW_UP_RUN_RC              = 10
+integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 11
+integer, public, parameter :: M_BLOW_UP_RUN_RC              = 12
+integer, public, parameter :: E_BLOW_UP_RUN_RC              = 13
+integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 14
 
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
@@ -1439,14 +1440,10 @@ subroutine run(config, sys_start, sys_end, status)
     
     character(len=CL) :: error_message
     integer           :: n_d, i, csv_unit
-    type(si_mass)     :: m_start
-    type(si_energy)   :: e_start
     type(si_time)     :: t, t_old
     
     n_d = size(sys_start%cv(1)%x%v%d)
     
-    m_start = sys_start%m_total()
-    e_start = sys_start%e_total()
     sys_old = sys_start
     call t%v%init_const(0.0_WP, n_d)
     i = 0
@@ -1473,7 +1470,7 @@ subroutine run(config, sys_start, sys_end, status)
         
         !print *, t%v%v
         
-        call check_sys(config, sys_new, m_start, e_start, t, status)
+        call check_sys(config, sys_new, sys_start, t, status)
         if (status%rc >= 0) exit time_loop
         if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
             call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)
@@ -1499,17 +1496,15 @@ subroutine run(config, sys_start, sys_end, status)
     status%t = t
 end subroutine run
 
-pure subroutine check_sys(config, sys, m_start, e_start, t, status)
+pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
-    type(cv_system_type), allocatable, intent(in) :: sys
-    type(si_mass), intent(in)                     :: m_start
-    type(si_energy), intent(in)                   :: e_start
+    type(cv_system_type), allocatable, intent(in) :: sys, sys_start
     type(si_time), intent(in)                     :: t
     type(run_status_type), intent(out)            :: status
     
     integer              :: n_cv, i_cv, j_cv, n_bad_cv, n_d, i_d, i_d_max
-    type(si_mass)        :: m_total_i, m_total_j, rel_m
-    type(si_energy)      :: rel_e
+    type(si_mass)        :: m_start, m_total_i, m_total_j, rel_m
+    type(si_energy)      :: e_start, rel_e
     type(si_temperature) :: temp_i, temp_j
     type(si_pressure)    :: p_j
     type(unitless)       :: rel_delta
@@ -1518,6 +1513,9 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status)
     n_cv      = size(sys%cv)
     n_d       = size(sys%cv(1)%x%v%d)
     status%rc = CONTINUE_RUN_RC
+    
+    m_start = sys_start%m_total()
+    e_start = sys_start%e_total()
     
     do i_cv = 1, n_cv
         ! Check whether the projectile left the barrel.
@@ -1610,6 +1608,10 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status)
                 return
             end if
         end if
+        
+!        if ((sys%cv(i_cv)%type == NORMAL_CV_TYPE) .and. (sys%cv(i_cv)%i_cv_mirror >= 1)) then
+!            ! MIRROR_TOLERANCE_RUN_RC
+!        end if
     end do
     
     if (config%tolerance_checks) then
