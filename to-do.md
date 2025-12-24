@@ -14,7 +14,6 @@
         - seigel_theory_1965 eq. 3-2 is a simpler version of this (just subtract atmospheric and friction pressures from the pressure to factor those in)
         - Can test the following: `x`, `x_dot`, `e_f`
 - `check_sys`: test each `status%rc` code
-    - Add a comment for each check to more easily figure out where each check is done.
     - All state variables don't exceed certain amounts.
         - Also check derivatives in stability checks.
     - `x` > 0
@@ -146,7 +145,6 @@ Questions to think about:
 - Why doesn't `u_cv` just get `u` from `e`?
 - Does plunger impact before the dart exits the barrel cause inaccuracy?
 - Why is the derivative of total energy with respect to initial `x_dot` unstable in `test_one_cv`?
-- Why is the order-of-accuracy of the derivative of `x_dot` with respect to `temp_atm` diverging in `test_one_cv`? I guess the exact solution doesn't depend on that? Wouldn't the derivative be zero there?
 
 ***
 

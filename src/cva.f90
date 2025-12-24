@@ -1517,6 +1517,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status)
     status%rc = CONTINUE_RUN_RC
     
     do i_cv = 1, n_cv
+        ! Check whether the projectile left the barrel.
         if (sys%cv(i_cv)%x >= sys%cv(i_cv)%x_stop) then
             status%rc = SUCCESS_RUN_RC
             allocate(status%i_cv(1))
@@ -1524,6 +1525,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status)
             return
         end if
         
+        ! Check that masses of each control volume are positive.
         m_total_i = sys%cv(i_cv)%m_total()
         if (m_total_i%v%v < 0.0_WP) then
             status%rc = NEGATIVE_CV_M_TOTAL_RUN_RC
@@ -1550,6 +1552,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status)
             return
         end if
         
+        ! Check that temperatures of each control volume are positive.
         temp_i = sys%cv(i_cv)%temp()
         if (temp_i%v%v <= 0.0_WP) then
             status%rc = NEGATIVE_CV_TEMP_RUN_RC
@@ -1578,6 +1581,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status)
         end if
         
         if (sys%cv(i_cv)%eos == IDEAL_EOS) then
+            ! Check that the ideal gas law is valid if it is used.
             if (sys%cv(i_cv)%p() >= sys%cv(i_cv)%p_c()) then
                 status%rc = IDEAL_EOS_RUN_RC
                 
@@ -1606,6 +1610,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status)
     end do
     
     if (config%tolerance_checks) then
+        ! Check that total system mass is staying constant.
         call assert(m_start%v%v > 0.0_WP, "cva (check_sys): m_start must be greater than zero")
         rel_delta = abs(sys%m_total() - m_start) / m_start
         if (rel_delta%v%v > MASS_TOLERANCE) then
@@ -1615,6 +1620,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status)
             return
         end if
         
+        ! Check that derivatives of mass are staying constant.
         ! It appears that dividing by `m_start` like with `rel_delta` makes the derivatives too small.
         rel_m = sys%m_total() - m_start
         max_abs_m_deriv = 0.0_WP
@@ -1632,6 +1638,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status)
             return
         end if
         
+        ! Check that total system energy is staying constant.
         call assert(e_start%v%v > 0.0_WP, "cva (check_sys): e_start must be greater than zero")
         rel_delta = abs(sys%e_total() - e_start) / e_start
         if (rel_delta%v%v > ENERGY_TOLERANCE) then
@@ -1641,6 +1648,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status)
             return
         end if
         
+        ! Check that derivatives of energy are staying constant.
         rel_e = sys%e_total() - e_start
         max_abs_e_deriv = 0.0_WP
         do i_d = 1, n_d
@@ -1658,6 +1666,7 @@ pure subroutine check_sys(config, sys, m_start, e_start, t, status)
         end if
     end if
     
+    ! Check if the simulation has timed out.
     if (t >= config%t_stop) then
         status%rc = TIMEOUT_RUN_RC
         return
