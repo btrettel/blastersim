@@ -34,7 +34,7 @@ real(WP), public, parameter :: MASS_TOLERANCE         = 1.0e-5_WP  ! unitless
 real(WP), public, parameter :: ENERGY_TOLERANCE       = 1.0e-4_WP  ! unitless
 real(WP), public, parameter :: MASS_DERIV_TOLERANCE   = 1.0e-8_WP  ! unitless
 real(WP), public, parameter :: ENERGY_DERIV_TOLERANCE = 1.0e-5_WP  ! unitless (TODO: decrease later and see what breaks)
-real(WP), public, parameter :: MIRROR_X_TOLERANCE     = 1.0e-14_WP ! unitless
+real(WP), public, parameter :: MIRROR_X_TOLERANCE     = 1.0e-12_WP ! unitless
 
 integer, public, parameter :: IDEAL_EOS = 1 ! ideal gas equation of state
 integer, public, parameter :: CONST_EOS = 2 ! constant pressure, temperature, density
