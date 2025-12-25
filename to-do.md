@@ -17,6 +17,8 @@
         - Ask Gemini for ideas on what to do here.
 - `write_csv_row`
     - Add Python code to test reading the output file.
+        - `rc` column is -1 until changing to something different on last row.
+        - Same number of columns for each row.
     - Make methods to get gas kinetic energy and internal energy, use in CSV output
         - Test cases for temperature and internal energy with non-zero gas velocity.
     - Print internal energy and gas kinetic energy in CSV output
@@ -82,10 +84,11 @@
         - No effect on piston trajectory when moving away from stopping point.
         - Make sure derivatives are correct after impact. I'm not sure what they should be, though.
 - Test `sys_interp`.
+- Make `sys_interp` higher order and/or preserve total energy? Looks like total energy decreases a bit based on `test_conservation`.
 - Check that derivatives are correct in special cases where something is set to zero with no derivatives. Check for "TODO: Not sure the derivatives of this should be zero."
 - tests for `test_const`, `p_eos`, `temp_cv`, and others for `MIRROR_CV_TYPE`
 - Tests for io.f90
-- Test `d_x_d_t`, `d_xdot_d_t`, and `d_e_f_d_t` for `CONST_EOS` and `MIRROR_CV_TYPE`.
+- Test `d_x_d_t`, `d_x_dot_d_t`, and `d_e_f_d_t` for `CONST_EOS` and `MIRROR_CV_TYPE`.
 - Functions to calculate input PE (spring and adiabatic compression) for efficiency calculation.
 - function to calculate efficiency
 - gnuplot subroutine for testing and generic output

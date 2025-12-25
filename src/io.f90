@@ -13,7 +13,7 @@ use checks, only: assert
 implicit none
 
 public :: create_barrel
-!public :: read_springer_namelist
+public :: read_springer_namelist
 
 contains
 
@@ -51,10 +51,18 @@ subroutine create_barrel(vol_dead, csa_barrel, p_atm, temp_atm, m_p, p_fs, p_fd,
                     i_cv_mirror, x_stop=x_stop)
 end subroutine create_barrel
 
-!subroutine read_springer_namelist(input_file, sys, rc)
-!    use gasdata, only: P_ATM_ => P_ATM, T_ATM_ => T_ATM
+subroutine read_springer_namelist(input_file, sys, rc)
+    use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
+    use cva, only: cv_system_type
+    use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM
+    use checks, only: is_close, check
+    use prec, only: CL
     
-!    include "geninput_springer_subroutine.f90"
-!end subroutine read_springer_namelist
+    character(len=*), intent(in)      :: input_file
+    type(cv_system_type), intent(out) :: sys
+    integer, intent(out)              :: rc
+    
+    include "geninput_springer_subroutine.f90"
+end subroutine read_springer_namelist
 
 end module io

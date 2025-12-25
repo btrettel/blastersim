@@ -84,6 +84,7 @@ type, public :: cv_type ! control volume
     type(si_length)             :: x_z         ! zero force location for spring
     type(gas_type), allocatable :: gas(:)      ! gas data
     integer                     :: i_cv_mirror ! index of control volume to use in pressure difference calculation
+    ! `i_cv_mirror = 0` disables mirror CVs. Use that for constant volume chambers.
     type(si_pressure)           :: p_const     ! if `cv%eos = CONST_EOS`, then `cv%p() = p_const`
     type(si_temperature)        :: temp_const  ! if `cv%eos = CONST_EOS`, then `cv%temp() = temp_const`
     type(si_length)             :: x_stop      ! `x` location where simulation will stop
