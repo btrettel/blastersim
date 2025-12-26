@@ -63,6 +63,8 @@ subroutine read_springer_namelist(input_file, sys, rc)
     integer, intent(out)              :: rc
     
     include "geninput_springer_subroutine.f90"
+    
+    ! TODO: construct `sys`
 end subroutine read_springer_namelist
 
 end module io

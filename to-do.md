@@ -1,5 +1,12 @@
 ### v0.1.0
 
+- Switch to assert with optional arrays printed.
+- Go through all assertions in BlasterSim and add optional data in arrays.
+- Make `sys_interp` preserve total energy via Hénon's trick. Looks like total energy decreases a bit based on `test_conservation`. henon_numerical_1982
+- Test `sys_interp`.
+- Run `check_sys` on interpolated point.
+- Make internal and input file variable names consistent
+- Make friction plot for debugging. Try typical case and also `p_fs = p_fd` to help debug what's going on with that. Why does `p_f` go so much higher than `p_fs`/`p_fd` in that case?
 - Test `m_s` in `d_xdot_d_t`.
 - transonic corrections in the barrel (Corner eq. 123)
     - Make this the default but optional if desired for testing.
@@ -83,8 +90,6 @@
         - Doesn't overshoot when approaching.
         - No effect on piston trajectory when moving away from stopping point.
         - Make sure derivatives are correct after impact. I'm not sure what they should be, though.
-- Test `sys_interp`.
-- Make `sys_interp` higher order and/or preserve total energy? Looks like total energy decreases a bit based on `test_conservation`.
 - Check that derivatives are correct in special cases where something is set to zero with no derivatives. Check for "TODO: Not sure the derivatives of this should be zero."
 - tests for `test_const`, `p_eos`, `temp_cv`, and others for `MIRROR_CV_TYPE`
 - Tests for io.f90
