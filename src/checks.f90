@@ -198,28 +198,31 @@ pure subroutine assert(condition, message, print_real, print_integer, print_logi
     character(len=CL) :: print_variable
     integer :: i
     
-    print_variables = ""
-    if (present(print_real)) then
-        do i = 1, size(print_real)
-            write(unit=print_variable, fmt="(2a, i0, a, g0)") new_line("a"), "real #", i, ": ", print_real(i)
-            print_variables = print_variables // trim(print_variable)
-        end do
-    end if
-    if (present(print_integer)) then
-        do i = 1, size(print_integer)
-            write(unit=print_variable, fmt="(2a, i0, a, i0)") new_line("a"), "integer #", i, ": ", print_integer(i)
-            print_variables = print_variables // trim(print_variable)
-        end do
-    end if
-    if (present(print_logical)) then
-        do i = 1, size(print_logical)
-            write(unit=print_variable, fmt="(2a, i0, a, l1)") new_line("a"), "logical #", i, ": ", print_logical(i)
-            print_variables = print_variables // trim(print_variable)
-        end do
-    end if
-    
     if (DEBUG) then
         if (.not. condition) then
+            print_variables = ""
+            if (present(print_real)) then
+                if (size(print_real) == 0) error stop "size(print_real) == 0, which likely is not desired"
+                do i = 1, size(print_real)
+                    write(unit=print_variable, fmt="(2a, i0, a, g0)") new_line("a"), "real #", i, ": ", print_real(i)
+                    print_variables = print_variables // trim(print_variable)
+                end do
+            end if
+            if (present(print_integer)) then
+                if (size(print_integer) == 0) error stop "size(print_integer) == 0, which likely is not desired"
+                do i = 1, size(print_integer)
+                    write(unit=print_variable, fmt="(2a, i0, a, i0)") new_line("a"), "integer #", i, ": ", print_integer(i)
+                    print_variables = print_variables // trim(print_variable)
+                end do
+            end if
+            if (present(print_logical)) then
+                if (size(print_logical) == 0) error stop "size(print_logical) == 0, which likely is not desired"
+                do i = 1, size(print_logical)
+                    write(unit=print_variable, fmt="(2a, i0, a, l1)") new_line("a"), "logical #", i, ": ", print_logical(i)
+                    print_variables = print_variables // trim(print_variable)
+                end do
+            end if
+            
             ! Why not concatenate the strings on the `error stop` line?
             ! That leads to ifx garbling the error message as of version `ifx (IFX) 2024.0.2 20231213`.
             full_message = "***" // new_line("a") // "ASSERTION FAILED. " // message // print_variables

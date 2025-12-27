@@ -576,7 +576,7 @@ pure function h_cv(cv)
         h_cv = h_cv + y*cv%gas(i)%h(temp)
     end do
     
-    call assert(h_cv%v%v >= 0.0_WP, "cva (h_cv): h_cv > 0 violated")
+    call assert(h_cv%v%v >= 0.0_WP, "cva (h_cv): h_cv > 0 violated", print_real=[h_cv%v%v])
 end function h_cv
 
 pure function gamma_cv(cv, y)
@@ -601,7 +601,7 @@ pure function gamma_cv(cv, y)
     
     gamma_cv = c_p_cv / c_v_cv
     
-    call assert(gamma_cv%v%v > 1.0_WP, "cva (gamma_cv): gamma_cv > 1 violated")
+    call assert(gamma_cv%v%v > 1.0_WP, "cva (gamma_cv): gamma_cv > 1 violated", print_real=[gamma_cv%v%v])
 end function gamma_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, x_z, gas, &
@@ -658,6 +658,9 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     
     if (present(x_stop)) then
         cv%x_stop = x_stop
+        
+        call assert(cv%x%v%v < cv%x_stop%v%v, "cva (set): x >= x_stop will cause immediate termination of run", &
+                    print_real=[cv%x%v%v, cv%x_stop%v%v])
     else
         call cv%x_stop%v%init_const(X_STOP_DEFAULT, n_d)
     end if
@@ -673,7 +676,8 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
         
         if (cv%constant_friction) then
             call assert(is_close(p_fs%v%v, p_fd%v%v), &
-                    "cva (set): constant_friction = .true. requires that p_fs = p_fd as otherwise p_f would not be constant")
+                    "cva (set): constant_friction = .true. requires that p_fs = p_fd as otherwise p_f would not be constant", &
+                    print_real=[p_fs%v%v, p_fd%v%v])
         end if
     else
         cv%constant_friction = .false.
@@ -695,47 +699,52 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
         cv%m_s = m_s
         
         if (cv%k%v%v > 0.0_WP) then
-            call assert(cv%m_s%v%v > 0.0_WP, "cva (set): m_s must be set to > 0 if k > 0")
+            call assert(cv%m_s%v%v > 0.0_WP, "cva (set): m_s must be set to > 0 if k > 0", &
+                            print_real=[cv%m_s%v%v])
         else
-            call assert(is_close(cv%m_s%v%v, 0.0_WP), "cva (set): m_s must be set to 0 if k == 0")
+            call assert(is_close(cv%m_s%v%v, 0.0_WP), "cva (set): m_s must be set to 0 if k == 0", &
+                            print_real=[cv%m_s%v%v])
         end if
     else
         call cv%m_s%v%init_const(0.0_WP, n_d)
     end if
     
-    call assert(cv%x%v%v            >  0.0_WP, "cva (set): x > 0 violated")
-    call assert(p%v%v               >  0.0_WP, "cva (set): p > 0 violated")
-    call assert(temp_atm%v%v        >  0.0_WP, "cva (set): temp_atm > 0 violated")
-    call assert(len(trim(cv%label)) >       0, "cva (set): len(label) > 0 violated")
-    call assert(cv%csa%v%v          >  0.0_WP, "cva (set): csa > 0 violated")
-    call assert(cv%p_fs%v%v         >= 0.0_WP, "cva (set): p_fs >= 0 violated")
-    call assert(cv%p_fd%v%v         >= 0.0_WP, "cva (set): p_fd >= 0 violated")
-    call assert(cv%k%v%v            >= 0.0_WP, "cva (set): k >= 0 violated")
-    call assert(cv%i_cv_mirror      >= 0,      "cva (set): i_cv_mirror >= 0 violated")
-    call assert(cv%m_s%v%v          >= 0.0_WP, "cva (set): m_s >= 0 violated")
+    call assert(cv%x%v%v            >  0.0_WP, "cva (set): x > 0 violated", print_real=[cv%x%v%v])
+    call assert(p%v%v               >  0.0_WP, "cva (set): p > 0 violated", print_real=[p%v%v])
+    call assert(temp_atm%v%v        >  0.0_WP, "cva (set): temp_atm > 0 violated", print_real=[temp_atm%v%v])
+    call assert(len(trim(cv%label)) >       0, "cva (set): len(label) > 0 violated", print_integer=[len(trim(cv%label))])
+    call assert(cv%csa%v%v          >  0.0_WP, "cva (set): csa > 0 violated", print_real=[cv%csa%v%v])
+    call assert(cv%p_fs%v%v         >= 0.0_WP, "cva (set): p_fs >= 0 violated", print_real=[cv%p_fs%v%v])
+    call assert(cv%p_fd%v%v         >= 0.0_WP, "cva (set): p_fd >= 0 violated", print_real=[cv%p_fd%v%v])
+    call assert(cv%k%v%v            >= 0.0_WP, "cva (set): k >= 0 violated", print_real=[cv%k%v%v])
+    call assert(cv%i_cv_mirror      >= 0,      "cva (set): i_cv_mirror >= 0 violated", print_integer=[cv%i_cv_mirror])
+    call assert(cv%m_s%v%v          >= 0.0_WP, "cva (set): m_s >= 0 violated", print_real=[cv%m_s%v%v])
     
-    call assert((cv%eos  >= 1) .and. (cv%eos <= MAX_EOS),      "cva (set): invalid EOS")
-    call assert((cv%type >= 1) .and. (cv%type <= MAX_CV_TYPE), "cva (set): invalid control volume type")
+    call assert((cv%eos  >= 1) .and. (cv%eos <= MAX_EOS),      "cva (set): invalid EOS", print_integer=[cv%eos])
+    call assert((cv%type >= 1) .and. (cv%type <= MAX_CV_TYPE), "cva (set): invalid control volume type", print_integer=[cv%type])
     
     call assert_dimension(y, cv%gas)
     allocate(cv%m(size(y)))
     call y_sum%v%init_const(0.0_WP, n_d)
     call m_total%v%init_const(1.0_WP, n_d)
     do i = 1, size(y)
-        call assert(gas(i)%gamma > 1.0_WP, "cva (set): gas%gamma > 1 violated")
-        call assert(gas(i)%mm    > 0.0_WP, "cva (set): gas%mm > 0 violated")
-        call assert(gas(i)%mm    < 0.1_WP, "cva (set): gas%mm < 0.1 violated") ! to catch using g/mol by mistake
-        call assert(gas(i)%p_c   > 0.0_WP, "cva (set): gas%p_c > 0 violated")
+        call assert(gas(i)%gamma > 1.0_WP, "cva (set): gas%gamma > 1 violated", print_real=[gas(i)%gamma])
+        call assert(gas(i)%mm    > 0.0_WP, "cva (set): gas%mm > 0 violated", print_real=[gas(i)%mm])
+        
+        ! to catch using g/mol by mistake
+        call assert(gas(i)%mm    < 0.1_WP, "cva (set): gas%mm < 0.1 violated", print_real=[gas(i)%mm])
+        
+        call assert(gas(i)%p_c   > 0.0_WP, "cva (set): gas%p_c > 0 violated", print_real=[gas(i)%p_c])
         
         y_sum = y_sum + y(i)
     end do
     
-    call assert(is_close(y_sum%v%v, 1.0_WP), "cva (set): mass fractions do not sum to 1")
+    call assert(is_close(y_sum%v%v, 1.0_WP), "cva (set): mass fractions do not sum to 1", print_real=[y_sum%v%v])
     
     ! Get correct temperature depending on how the chamber is filled.
     if (isentropic_filling_) then
         call assert(present(p_atm), "cva (set): isentropic_filling = .true. requires p_atm")
-        call assert(p_atm%v%v > 0.0_WP, "cva (set): p_atm > 0 required for isentropic_filling")
+        call assert(p_atm%v%v > 0.0_WP, "cva (set): p_atm > 0 required for isentropic_filling", print_real=[p_atm%v%v])
         gamma_cv = cv%gamma(y)
         temp = temp_atm * ((p / p_atm)**((gamma_cv - 1.0_WP)/gamma_cv))
     else
@@ -761,7 +770,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     
     if (cv%eos == IDEAL_EOS) then
         ! This is checked here and not in `rho_eos` as the masses are not defined when `rho_eos` is called.
-        call assert(p < cv%p_c(), "cva (set): ideal gas law validity is questionable")
+        call assert(p < cv%p_c(), "cva (set): ideal gas law validity is questionable", print_real=[p%v%v])
     end if
 end subroutine set
 
@@ -780,7 +789,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror,
     
     integer :: n_d, n_gas, i_gas
     
-    call assert(len(trim(cv%label)) > 0, "cva (set_const): len(label) > 0 violated")
+    call assert(len(trim(cv%label)) > 0, "cva (set_const): len(label) > 0 violated", print_integer=[len(trim(cv%label))])
     
     n_d   = size(p_const%v%d)
     n_gas = size(gas)
@@ -800,7 +809,8 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror,
     call cv%x_z%v%init_const(0.0_WP, n_d)
     call cv%x_stop%v%init_const(X_STOP_DEFAULT, n_d)
     
-    call assert(.not. is_close(cv%x%v%v, cv%x_stop%v%v), "cva (set_const): x = x_stop will cause immediate termination of run")
+    call assert(cv%x%v%v < cv%x_stop%v%v, "cva (set_const): x >= x_stop will cause immediate termination of run", &
+                    print_real=[cv%x%v%v, cv%x_stop%v%v])
     
     cv%label       = label
     cv%csa         = csa
@@ -810,8 +820,8 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror,
     cv%p_const     = p_const
     cv%temp_const  = temp_const
     
-    call assert(cv%p_const%v%v    > 0.0_WP, "cva (set_const): p_const > 0 violated")
-    call assert(cv%temp_const%v%v > 0.0_WP, "cva (set_const): temp_const > 0 violated")
+    call assert(cv%p_const%v%v    > 0.0_WP, "cva (set_const): p_const > 0 violated", print_real=[cv%p_const%v%v])
+    call assert(cv%temp_const%v%v > 0.0_WP, "cva (set_const): temp_const > 0 violated", print_real=[cv%temp_const%v%v])
     
     if (present(type)) then
         cv%type = type
@@ -827,9 +837,10 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror,
     
     select case (cv%type)
         case (NORMAL_CV_TYPE)
-            call assert(cv%i_cv_mirror >= 0, "cva (set_const): i_cv_mirror >= 0 violated")
+            call assert(cv%i_cv_mirror >= 0, "cva (set_const): i_cv_mirror >= 0 violated", print_integer=[cv%i_cv_mirror])
         case (MIRROR_CV_TYPE)
-            call assert(cv%i_cv_mirror >= 1, "cva (set_const, MIRROR_CV_TYPE): i_cv_mirror >= 1 violated")
+            call assert(cv%i_cv_mirror >= 1, "cva (set_const, MIRROR_CV_TYPE): i_cv_mirror >= 1 violated", &
+                            print_integer=[cv%i_cv_mirror])
         case default
             error stop "cva (set_const): invalid cv%type"
     end select
@@ -847,8 +858,8 @@ pure function p_f(cv, p_fe)
     
     call v_scale%v%init_const(0.1_WP, size(cv%x%v%d))
     
-    call assert(cv%p_fs%v%v >= 0.0_WP, "cva (p_f): cv%p_fs%v > 0 violated")
-    call assert(cv%p_fd%v%v >= 0.0_WP, "cva (p_f): cv%p_fd%v > 0 violated")
+    call assert(cv%p_fs%v%v >= 0.0_WP, "cva (p_f): cv%p_fs%v > 0 violated", print_real=[cv%p_fs%v%v])
+    call assert(cv%p_fd%v%v >= 0.0_WP, "cva (p_f): cv%p_fd%v > 0 violated", print_real=[cv%p_fd%v%v])
     
     if (cv%constant_friction) then
         p_f = cv%p_fs
@@ -858,7 +869,8 @@ pure function p_f(cv, p_fe)
     
     ! The 1.1 factor was added as I guess the inequality with a factor of 1.0 isn't guaranteed for numerical reasons?
     ! But even that is sometimes violated?
-    !call assert(abs(p_f%v%v) <= 1.1_WP*max(cv%p_fs%v%v, cv%p_fd%v%v), "cva (p_f): abs(p_f) <= 1.1*max(p_fs, p_fd) violated")
+    call assert(abs(p_f%v%v) <= 1.1_WP*max(cv%p_fs%v%v, cv%p_fd%v%v), "cva (p_f): abs(p_f) <= 1.1*max(p_fs, p_fd) violated", &
+                    print_real=[p_f%v%v, cv%p_fs%v%v, cv%p_fd%v%v])
 end function p_f
 
 pure function p_f0(cv, p_fe)
@@ -870,25 +882,25 @@ pure function p_f0(cv, p_fe)
     
     type(si_pressure) :: p_f0, p_s
     
-    call assert(cv%p_fs%v%v >= 0.0_WP, "cva (p_f0): cv%p_fs%v > 0 violated")
+    call assert(cv%p_fs%v%v >= 0.0_WP, "cva (p_f0): cv%p_fs%v > 0 violated", print_real=[cv%p_fs%v%v])
     
     p_s = 0.1_WP*cv%p_fs ! TODO: make a function of `dt`
-    call assert(p_s <= cv%p_fs, "cva (p_f0): p_s <= p_fs violated")
+    call assert(p_s <= cv%p_fs, "cva (p_f0): p_s <= p_fs violated", print_real=[p_s%v%v, cv%p_fs%v%v])
     
     if (p_fe <= -p_s) then
         p_f0 = -p_f0_high(p_fe, cv%p_fs, p_s)
         
-        call assert(p_f0 <= -p_s, "cva (p_f0), first branch: p_f0 <= -p_s violated")
+        call assert(p_f0 <= -p_s, "cva (p_f0), first branch: p_f0 <= -p_s violated", print_real=[p_f0%v%v, p_s%v%v])
     else if (p_fe <= p_s) then
         p_f0 = p_fe
     else
         p_f0 = p_f0_high(p_fe, cv%p_fs, p_s)
         
-        call assert(p_f0 >= p_s, "cva (p_f0), third branch: p_f0 >= p_s violated")
+        call assert(p_f0 >= p_s, "cva (p_f0), third branch: p_f0 >= p_s violated", print_real=[p_f0%v%v, p_s%v%v])
     end if
     
-    call assert(p_f0 >= -cv%p_fs, "cva (p_f0): p_f0 >= -p_fs violated")
-    call assert(p_f0 <= cv%p_fs, "cva (p_f0): p_f0 <= p_fs violated")
+    call assert(p_f0 >= -cv%p_fs, "cva (p_f0): p_f0 >= -p_fs violated", print_real=[p_f0%v%v, cv%p_fs%v%v])
+    call assert(p_f0 <= cv%p_fs, "cva (p_f0): p_f0 <= p_fs violated", print_real=[p_f0%v%v, cv%p_fs%v%v])
     
     contains
     
@@ -910,17 +922,22 @@ pure function d_x_d_t(sys, i_cv)
     
     type(si_velocity) :: d_x_d_t
     
-    call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_x_d_t): i_cv_mirror must be a positive integer or zero")
-    call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_x_d_t): i_cv_mirror can't be larger than the cv array")
-    call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_x_d_t): i_cv_mirror can not equal i_cv")
+    call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_x_d_t): i_cv_mirror must be a positive integer or zero", &
+                print_integer=[sys%cv(i_cv)%i_cv_mirror])
+    call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_x_d_t): i_cv_mirror can't be larger than the cv array", &
+                print_integer=[sys%cv(i_cv)%i_cv_mirror, size(sys%cv)])
+    call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_x_d_t): i_cv_mirror can not equal i_cv", &
+                    print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
     
     select case (sys%cv(i_cv)%type)
         case (NORMAL_CV_TYPE)
             d_x_d_t = sys%cv(i_cv)%x_dot
         case (MIRROR_CV_TYPE)
-            call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_x_d_t): i_cv_mirror must be defined for a mirror CV")
+            call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_x_d_t): i_cv_mirror must be defined for a mirror CV", &
+                            print_integer=[sys%cv(i_cv)%i_cv_mirror])
             call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
-                            "cva (d_x_d_t): mirror CV is not a NORMAL_CV_TYPE")
+                            "cva (d_x_d_t): mirror CV is not a NORMAL_CV_TYPE", &
+                            print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, NORMAL_CV_TYPE])
             d_x_d_t = -sys%cv(sys%cv(i_cv)%i_cv_mirror)%x_dot
         case default
             error stop "cva (d_x_d_t): invalid cv%type"
@@ -936,9 +953,12 @@ pure function d_x_dot_d_t(sys, i_cv)
     type(si_area)     :: csa_i_mirror
     character(len=3)  :: i_cv_string, i_cv_mirror_string
     
-    call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_x_dot_d_t): i_cv_mirror must be a positive integer or zero")
-    call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_x_dot_d_t): i_cv_mirror can't be larger than the cv array")
-    call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_x_dot_d_t): i_cv_mirror can not equal i_cv")
+    call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_x_dot_d_t): i_cv_mirror must be a positive integer or zero", &
+                print_integer=[sys%cv(i_cv)%i_cv_mirror])
+    call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_x_dot_d_t): i_cv_mirror can't be larger than the cv array", &
+                print_integer=[sys%cv(i_cv)%i_cv_mirror, size(sys%cv)])
+    call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_x_dot_d_t): i_cv_mirror can not equal i_cv", &
+                print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
     
     if (sys%cv(i_cv)%i_cv_mirror >= 1) then
         csa_i_mirror = sys%cv(sys%cv(i_cv)%i_cv_mirror)%csa
@@ -946,18 +966,22 @@ pure function d_x_dot_d_t(sys, i_cv)
         write(unit=i_cv_mirror_string, fmt="(i0)") sys%cv(i_cv)%i_cv_mirror
         call assert(is_close(sys%cv(i_cv)%csa%v%v, csa_i_mirror%v%v), &
                         "cva (d_x_dot_d_t): CSA for mirror CV (" // trim(i_cv_mirror_string) &
-                        // ") assumed equal to CSA for current CV (" // trim(i_cv_string) // ")")
+                        // ") assumed equal to CSA for current CV (" // trim(i_cv_string) // ")", &
+                        print_real=[sys%cv(i_cv)%csa%v%v, csa_i_mirror%v%v])
     end if
     
     select case (sys%cv(i_cv)%type)
         case (NORMAL_CV_TYPE)
             d_x_dot_d_t = d_x_dot_d_t_normal(sys, i_cv)
         case (MIRROR_CV_TYPE)
-            call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_x_dot_d_t): i_cv_mirror must be defined for a mirror CV")
+            call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_x_dot_d_t): i_cv_mirror must be defined for a mirror CV", &
+                            print_integer=[sys%cv(i_cv)%i_cv_mirror])
             call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
-                            "cva (d_x_dot_d_t): mirror CV is not a NORMAL_CV_TYPE")
+                            "cva (d_x_dot_d_t): mirror CV is not a NORMAL_CV_TYPE", &
+                            print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, NORMAL_CV_TYPE])
             call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%i_cv_mirror == i_cv, &
-                            "cva (d_x_dot_d_t): i_cv_mirror for the mirror CV is not i_cv (not matching)")
+                            "cva (d_x_dot_d_t): i_cv_mirror for the mirror CV is not i_cv (not matching)", &
+                            print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
             d_x_dot_d_t = -d_x_dot_d_t_normal(sys, sys%cv(i_cv)%i_cv_mirror)
         case default
             error stop "cva (d_x_dot_d_t): invalid cv%type"
@@ -974,14 +998,17 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
     type(si_pressure)     :: p_other
     type(si_inverse_mass) :: r_mp_eff ! effective mass of projectile/piston
     
-    call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_x_dot_d_t_normal): cv%csa > 0 violated")
-    call assert(sys%cv(i_cv)%type == NORMAL_CV_TYPE, "cva (d_x_dot_d_t_normal): CV needs to be NORMAL_CV_TYPE")
+    call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_x_dot_d_t_normal): cv%csa > 0 violated", &
+                    print_real=[sys%cv(i_cv)%csa%v%v])
+    call assert(sys%cv(i_cv)%type == NORMAL_CV_TYPE, "cva (d_x_dot_d_t_normal): CV needs to be NORMAL_CV_TYPE", &
+                        print_integer=[sys%cv(i_cv)%type, NORMAL_CV_TYPE])
     
     if (sys%cv(i_cv)%i_cv_mirror >= 1) then
         p_other = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
         
         call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
-                        "cva (d_x_dot_d_t_normal): mirror CV not MIRROR_CV_TYPE")
+                        "cva (d_x_dot_d_t_normal): mirror CV not MIRROR_CV_TYPE", &
+                        print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, MIRROR_CV_TYPE])
     else
         ! If `i_cv_mirror == 0` then there is no mirror CV.
         call p_other%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
@@ -1008,7 +1035,8 @@ pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
     type(si_mass)  :: m_total
     type(unitless) :: y_k
     
-    call assert(size(m_dot, 1) == size(m_dot, 2), "cva (d_m_k_d_t): m_dots must be square")
+    call assert(size(m_dot, 1) == size(m_dot, 2), "cva (d_m_k_d_t): m_dots must be square", &
+                    print_integer=[size(m_dot, 1), size(m_dot, 2)])
     call assert_dimension(m_dot(1, 1)%v%d, cv%x%v%d)
     
     n_d = size(cv%x%v%d)
@@ -1023,7 +1051,8 @@ pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
     end if
     
     do j_cv = 1, n_cv
-        call assert(is_close(m_dot(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_m_k_d_t): mass can not flow from self to self")
+        call assert(is_close(m_dot(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_m_k_d_t): mass can not flow from self to self", &
+                        print_real=[m_dot(j_cv, j_cv)%v%v])
         d_m_k_d_t = d_m_k_d_t + y_k*m_dot(j_cv, i_cv) - y_k*m_dot(i_cv, j_cv)
     end do
 end function d_m_k_d_t
@@ -1037,15 +1066,17 @@ pure function d_e_d_t(cv, h_dot, i_cv)
     
     integer :: n_cv, j_cv
     
-    call assert(size(h_dot, 1) == size(h_dot, 2), "cva (d_e_d_t): h_dots must be square")
+    call assert(size(h_dot, 1) == size(h_dot, 2), "cva (d_e_d_t): h_dots must be square", &
+                    print_integer=[size(h_dot, 1), size(h_dot, 2)])
     call assert_dimension(h_dot(1, 1)%v%d, cv%x%v%d)
-    call assert(cv%csa%v%v > 0.0_WP, "cva (d_e_d_t): cv%csa > 0 violated")
+    call assert(cv%csa%v%v > 0.0_WP, "cva (d_e_d_t): cv%csa > 0 violated", print_real=[cv%csa%v%v])
     
     d_e_d_t = -cv%p() * cv%csa * cv%x_dot
     
     n_cv = size(h_dot, 1)
     do j_cv = 1, n_cv
-        call assert(is_close(h_dot(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_e_d_t): energy can not flow from self to self")
+        call assert(is_close(h_dot(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_e_d_t): energy can not flow from self to self", &
+                        print_real=[h_dot(j_cv, j_cv)%v%v])
         d_e_d_t = d_e_d_t + h_dot(j_cv, i_cv) - h_dot(i_cv, j_cv)
     end do
 end function d_e_d_t
