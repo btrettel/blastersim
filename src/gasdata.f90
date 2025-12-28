@@ -157,7 +157,7 @@ pure function c_v_gas(gas, n_d)
     
     type(si_specific_heat) :: c_v_gas
     
-    call assert(gas%gamma > 1.0_WP, "gasdata (temp_cv): gamma > 1 violated")
+    call assert(gas%gamma > 1.0_WP, "gasdata (temp_cv): gamma > 1 violated", print_real=[gas%gamma])
     
     ! moran_fundamentals_2008 eq. 3.47b, p. 119
     c_v_gas = gas%r(n_d) / (gas%gamma - 1.0_WP)

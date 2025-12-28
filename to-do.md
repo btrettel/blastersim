@@ -1,14 +1,13 @@
 ### v0.1.0
 
-- Switch to assert with optional arrays printed.
-- Go through all assertions in BlasterSim and add optional data in arrays.
+- CSV output: don't say "pressure", say what type of pressure (gauge, absolute, etc.)
 - Make `sys_interp` preserve total energy via Hénon's trick. Looks like total energy decreases a bit based on `test_conservation`. henon_numerical_1982
 - Test `sys_interp`.
 - Run `check_sys` on interpolated point.
 - Make internal and input file variable names consistent
 - Make friction plot for debugging. Try typical case and also `p_fs = p_fd` to help debug what's going on with that. Why does `p_f` go so much higher than `p_fs`/`p_fd` in that case?
 - Test `m_s` in `d_xdot_d_t`.
-- transonic corrections in the barrel (Corner eq. 123)
+- transonic corrections in the barrel (corner_theory_1950 eq. 123)
     - Make this the default but optional if desired for testing.
     - Input validation at first to not use this with RK EOS (if that's added first)
     - Assert `CONST_EOS` or `IDEAL_EOS` with `p < p_c` to satisfy requirements of version in Corner's book.
@@ -33,6 +32,7 @@
     - Input validation:
         - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
         - p < p_c until RK EOS added
+        - Return error if ambient temperature is too low. Likely they gave the temperature in C or F.
 - documentation
     - quick start
     - Put all the drawings and equations on paper first.
@@ -69,12 +69,15 @@
 - Upload Windows BlasterSim to malware scanner to check. 
 - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
 - Valve opening time, valve poppet model using pressures from CVs
-    - Find what you saved on valve opening profiles.
+    - Find what you saved on valve opening profiles/valve characteristic curves.
+    - Have ability to model valve internals by getting pressures from other control volumes? Then you could model the movement of poppets and whatnot. You'll need some way to handle the "valve profile" or whatever it's called: relationship between poppet location and flow cross-sectional area.
 - Time step estimate?
     - <https://www.spudfiles.com/viewtopic.php?p=391877#p391877>: > So I try to pick a time step intelligently. I first make a very crude guesstimate of muzzle energy. That gives me a (crude estimate of) muzzle velocity. I then assume constant acceleration and determine how long it would take a projectile to clear the muzzle.
+    - Minimum of multiple time scales?
 
 ***
 
+- Use linters including fortitude
 - Plunger head motion bounds (lower and upper) (plunger impact)
     - Lower is not necessarily zero.
     - Use forcing to set x_min and x_max? Make how far the force extends out depend on `dt`. You'd have to track energy lost to this forcing for the energy balance and also the estimate of plunger impact energy.
@@ -102,6 +105,10 @@
     - Have function to construct `y` given relative humidity.
     - How to handle water condensing out of the air is not clear at the moment, but I suppose I can ignore that to start. All I should have to do to handle water vapor is add the right `gas_type`.
     - This is more complicated than I originally thought: Relative humidity from weather data is given at atmospheric conditions, not pressurized conditions. This means that as the air is compressed, the relative humidity decreases because the vapor pressure increases. So I need to model the compression process. Take ambient air at given relative humidity, and increase the pressure.
+    - other humidity effects
+        - <https://discord.com/channels/825852031239061545/1011329333949907105/1318103337568174121>
+        - The inconsistency could be from the dart material or other materials and not the gas.
+        - <https://discord.com/channels/1196986370573467668/1247341528561487892/1322273804029923358>: > The weirdest shit happens in the northeast from temperature and humidity fluctuations
 - Property test to compare BlasterSim derivatives against numerical derivatives of BlasterSim input.
     - test_fmad.f90: `test_num_deriv`
 - Readd `smooth_min` assertions including new one from Wikipedia including some extra gap for floating point error
@@ -109,7 +116,18 @@
 - pressure gradient
     - Is the pressure gradient necessary? The multiple control volumes will provide a pressure gradient of sorts.
     - After adding the pressure gradient, connections will need to know where they are connected.
-    - Model pressure drop over long tubes from the friction factor.
+    - $p_\text{l}$, $p_\text{r}$
+    - Related:
+        - Model pressure drop over long tubes from the friction factor.
+        - gas kinetic energy
+            - Need integrated gas kinetic energy equation.
+    - projectile base pressure is used in force calculation
+    - take spatial average of equation of state to relate average pressure to other average thermodynamic functions
+    - <https://apps.dtic.mil/sti/citations/ADA222590>
+    - also consider that the other side of the chamber may have a non-zero velocity (unlike normal Lagrange solution)
+- Include $\alpha$ in the energy equations.
+- Maybe: Add energy loss term for valves?
+- Maybe: Quadratic `u` and `h` can be easily solved explicitly
 - exterior ballistics
 - Error messages:
     - When mass or temperature goes negative, suggest that perhaps the effective area is too large.
@@ -123,23 +141,56 @@
 - Have ability to run multiple cycles and terminate when mass gets low in any particular CV.
 - If I use a constant pressure/temperature CV to model a HPA or CO2 tank, then I'll still need a way to estimate the real gas internal energy and enthalpy. Going all the way with a better equation of state and thermodynamic properties might not be much more complex. I could make each control volume use a different EOS if I want to avoid iterations associated with a different EOS.
 - Arbitrary displacement vs. force curves, using cubic splines for smoothness
-- Why is there a small amount of backwards motion of the projectile in `test_conservation`? Is it due to friction?
+- elastic tubing and other non-linear springs
 - Post-projectile-exit analysis to wait until plunger impact, but still interpolate to get muzzle velocity.
-- Constraints
-    - plunger impact energy
-    - to prevent projectile damage: maximum acceleration or maximum projectile pressure difference
 - `check_sys`
     - Time step criteria based on flow rate to empty CV? This wouldn't work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV.
     - Try "Lipschitz constant estimate" suggested by Gemini.
     - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
-- parallel optimization
-    - need parallel RNG
+- optimization
+    - common optimization activities: optimal barrel length
+    - objective functions: maximize muzzle velocity, minimize input energy, minimize input gas mass (to maximize number of shots per tank in a simpler way as minimum input gas mass assumes all gas in the tank can be extracted)
+    - optimize GA parameters to most quickly optimize an example pneumatic blaster
+    - parallel optimization
+        - need parallel RNG
+    - Constraints
+        - plunger impact energy
+        - to prevent projectile damage: maximum acceleration or maximum projectile pressure difference
+        - Make BlasterSim have a generic constraint that can handle any output. `output_constraint` namelist group?
+        - Kinetic energy density, muzzle velocity (target, upper limit, lower limit)
+        - min/max dart mass
+        - dart head decapitation
+        - pneumatics might want to use less gas mass per shot
 - Stopping criteria based on acceleration to find optimal barrel length
 - Check entropy conservation.
 - Order-of-accuracy tests
     - single control volume constant pressure test with atmospheric pressure and friction
         - seigel_theory_1965 eq. 3-2 is a simpler version of this (just subtract atmospheric and friction pressures from the pressure to factor those in)
         - Can test the following: `x`, `x_dot`, `e_f`
+- Fitting model coefficients to data
+    - Have a way to put muzzle velocity measurements in the input file as an array so there's only one file with everything.
+- Isometric icon and logo for BlasterSim? Check Super Soaker icons you have.
+    - Sell BlasterSim stickers to put on blasters that were designed using it? Getting a good logo for this is key.
+- Sensitivity analysis for muzzle velocity and optimal barrel length. For barrel length in particular it can be useful to show (if true) that the length doesn't depend much on the plunger mass, spring stiffness.
+- Determine when dart heads will be blown off and include that in BlasterSim. Add as a constraint too.
+- spring fatigue life, add as a constraint too
+- time integration continues after projectile leaves barrel to get the little extra bit of acceleration there
+- Determine terminology to use
+    - "core" for pressure chamber?
+    - GGDT confuses people, so have clearer documentation and names:
+        - <https://www.spudfiles.com/viewtopic.php?f=26&t=27224>
+- Make BlasterSim able to handle light gas guns (kinda) by making each side of a piston potentially different diameters. Force is transmitted between two control volumes.
+- Allow for modeling of porting with $x$-dependent connections.
+- Market research: Ask which types of blasters people want from a simulator and which features people want.
+    - <https://discord.com/channels/825852031239061545/825852033898774543/1257084202407428158>
+- springers
+    - Model the air behind the plunger too as it might be pulling a vacuum.
+        - <https://discord.com/channels/825852031239061545/825852033898774543/1219837257653944422>
+    - Data:
+        - <http://nerfhaven.com/forums/topic/21832-experimental-methods-for-determining-and-predicting-blaster-power/?p=307341>
+            - <http://www.danielbeaver.net/storage/projects/nerf/SpringerTesting/>
+        - Plunger position: <https://discord.com/channels/727038380054937610/1172390267890958366/1177752285703573504>
+        - pressure traces if available
 
 ***
 
@@ -147,7 +198,17 @@ Questions to think about:
 
 - Why doesn't `u_cv` just get `u` from `e`?
 - Does plunger impact before the dart exits the barrel cause inaccuracy?
-- Why is the derivative of total energy with respect to initial `x_dot` unstable in `test_one_cv`?
+- Problems maybe with the friction model:
+    - Why is the derivative of total energy with respect to initial `x_dot` unstable in `test_one_cv`?
+        - Does using constant `p_f` solve the `x_dot` derivative instability problem? `p_f` would change dramatically as `x_dot` changes for `x_dot == 0`.
+    - Why is there a small amount of backwards motion of the projectile in `test_conservation`? Is it due to friction?
+- How can I handle projectiles on the outside of the barrel?
+    - Initial barrel volume is the dead volume. CSA is the area the axial force is acting on.
+- How can I handle having a rod inside the barrel?
+    - If I use CSA instead of diameter, use the actual CSA and not the (outer) diameter.
+- How can I handle dead volume in the dart?
+    - This just increases the dead volume for the barrel.
+    - Could have normal dead volume and a separate dead volume for the projectile.
 
 ***
 
@@ -169,3 +230,91 @@ Atean Armory data:
 Notes:
 
 <https://discord.com/channels/825852031239061545/825852073382772758/1441916424942649354>: > if i'm not mistaken, they're the length in mm of the spring at rest in the blaster (so including precomp if there is any) and the length of the spring when primed [L1 and L2 respectively]
+
+corner_theory_1950 p. 58: > so the $R$ associated with the $A$ is in heat units, namely, calories per mole per degree.
+
+***
+
+Outline of planned advanced mode input file:
+
+    &bsim
+    stdout = 
+    /
+
+    &barrel
+    ! cv_id = 1 ! implicit
+    projectile_mass = 1.0e-3 ! kg
+    /
+
+    &pressure_chamber
+    ! cv_id = 2 ! implicit
+    p_initial = 5.0e5 ! Pa
+    /
+
+    &connection
+
+    effective_area = 1.0e-3 ! m2
+    b = 0.5
+    /
+
+    &external
+    ! cv_id = 1 ! implicit, to get projectile mass
+    C_d = 0.67
+    /
+
+inspiration for UI: SPICE, <https://en.wikipedia.org/wiki/Netlist>
+
+Simplified modes:
+
+- `springer` namelist
+- `pneumatic` namelist
+
+***
+
+GUI ideas:
+
+- Try WebAssembly to see what the limitations are. Having something that people can use without much effort and on their phones is important.
+    - Might need `bind(c)` subset to interface with webpage.
+    - I could write the core so that it will compile with LFortran as that seems to be the easiest way to get WebAssembly.
+    - LFortran
+        - I'd need to avoid custom derived type operators as I believe lfortran doesn't support those as of this writing (2024-06-29). Perhaps `interface` operators are okay? Then I could use genunits.
+        - <https://lfortran.org/blog/2024/05/fortran-on-web-using-lfortran/>
+            - <https://fortran-lang.discourse.group/t/fortran-on-web-using-lfortran/7957>
+            - <https://github.com/lfortran/mnist-classifier-blas-wasm/>
+        - <https://fortran-lang.discourse.group/t/flang-wasm-compiler/7589/8>
+        - <https://github.com/lfortran/Fortran-On-Web>
+    - Flang
+        - <https://gws.phd/posts/fortran_wasm/>
+            - <https://news.ycombinator.com/item?id=39944275>
+            - <https://hackaday.com/2024/04/08/fortran-and-webassembly-bringing-zippy-linear-algebra-to-nodejs-browsers/>
+        - <https://fortran-lang.discourse.group/t/flang-wasm-compiler/7589>
+        - <https://niconiconi.neocities.org/tech-notes/fortran-in-webassembly-and-field-solver/>
+- Look into running with a GUI using `iso_c_binding` (or otherwise). This should be started with early as it likely will limit the Fortran code in some way. Or perhaps not, if some sort of conversion subroutines will be needed.
+    - <https://docs.python.org/3/library/tk.html>
+- Order inputs by sensitivity. Do a sensitivity study first to know the order.
+- Get some ideas about how to make a good UI from Engine Simulator.
+    - <https://www.youtube.com/watch?v=ndUyNJEk4ng>
+    - <https://github.com/Engine-Simulator/engine-sim-community-edition>
+
+***
+
+- Make official website similar to some of the old 90s-style software websites you have links to saved. LaTeX documentation is available on the website per LaTeXML.
+    - Make old Nerf ballistics PDF file redirect to BlasterSim's docs when BlasterSim is released.
+    - Examples:
+        - <https://flatassembler.net/>
+            - <https://board.flatassembler.net/index.php>
+        - <https://systemd.io/>
+        - <https://zeta.asie.pl/>
+        - <https://webalizer.net/>
+        - <https://ice-wm.org/>
+            - <https://web.archive.org/web/20080302175539/http://www.icewm.org/>
+            - <https://web.archive.org/web/20020325091254/http://icewm.sourceforge.net/>
+            - <https://web.archive.org/web/20020328083952/http://www.icewm.com/>
+        - <https://unhaut.epizy.com/psxsdk/>
+        - <https://chenthread.asie.pl/fromage/>
+        - <https://plasma-gate.weizmann.ac.il/Grace/>
+        - Dark mode?
+            - <https://speeddemosarchive.com/>
+            - <https://hardforum.com/>
+- BlasterSim tutorial on YouTube, with slides showing each control volume and how they are connected to what's in the input file.
+    - This could also be good marketing.
