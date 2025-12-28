@@ -923,9 +923,9 @@ pure function d_x_d_t(sys, i_cv)
     type(si_velocity) :: d_x_d_t
     
     call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_x_d_t): i_cv_mirror must be a positive integer or zero", &
-                print_integer=[sys%cv(i_cv)%i_cv_mirror])
+                print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
     call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_x_d_t): i_cv_mirror can't be larger than the cv array", &
-                print_integer=[sys%cv(i_cv)%i_cv_mirror, size(sys%cv)])
+                print_integer=[sys%cv(i_cv)%i_cv_mirror, size(sys%cv), i_cv])
     call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_x_d_t): i_cv_mirror can not equal i_cv", &
                     print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
     
@@ -934,10 +934,10 @@ pure function d_x_d_t(sys, i_cv)
             d_x_d_t = sys%cv(i_cv)%x_dot
         case (MIRROR_CV_TYPE)
             call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_x_d_t): i_cv_mirror must be defined for a mirror CV", &
-                            print_integer=[sys%cv(i_cv)%i_cv_mirror])
+                            print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
             call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
                             "cva (d_x_d_t): mirror CV is not a NORMAL_CV_TYPE", &
-                            print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, NORMAL_CV_TYPE])
+                            print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, NORMAL_CV_TYPE, i_cv])
             d_x_d_t = -sys%cv(sys%cv(i_cv)%i_cv_mirror)%x_dot
         case default
             error stop "cva (d_x_d_t): invalid cv%type"
@@ -954,9 +954,9 @@ pure function d_x_dot_d_t(sys, i_cv)
     character(len=3)  :: i_cv_string, i_cv_mirror_string
     
     call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_x_dot_d_t): i_cv_mirror must be a positive integer or zero", &
-                print_integer=[sys%cv(i_cv)%i_cv_mirror])
+                print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
     call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_x_dot_d_t): i_cv_mirror can't be larger than the cv array", &
-                print_integer=[sys%cv(i_cv)%i_cv_mirror, size(sys%cv)])
+                print_integer=[sys%cv(i_cv)%i_cv_mirror, size(sys%cv), i_cv])
     call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_x_dot_d_t): i_cv_mirror can not equal i_cv", &
                 print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
     
@@ -967,7 +967,7 @@ pure function d_x_dot_d_t(sys, i_cv)
         call assert(is_close(sys%cv(i_cv)%csa%v%v, csa_i_mirror%v%v), &
                         "cva (d_x_dot_d_t): CSA for mirror CV (" // trim(i_cv_mirror_string) &
                         // ") assumed equal to CSA for current CV (" // trim(i_cv_string) // ")", &
-                        print_real=[sys%cv(i_cv)%csa%v%v, csa_i_mirror%v%v])
+                        print_real=[sys%cv(i_cv)%csa%v%v, csa_i_mirror%v%v], print_integer=[i_cv])
     end if
     
     select case (sys%cv(i_cv)%type)
@@ -975,10 +975,10 @@ pure function d_x_dot_d_t(sys, i_cv)
             d_x_dot_d_t = d_x_dot_d_t_normal(sys, i_cv)
         case (MIRROR_CV_TYPE)
             call assert(sys%cv(i_cv)%i_cv_mirror >= 1, "cva (d_x_dot_d_t): i_cv_mirror must be defined for a mirror CV", &
-                            print_integer=[sys%cv(i_cv)%i_cv_mirror])
+                            print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
             call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == NORMAL_CV_TYPE, &
                             "cva (d_x_dot_d_t): mirror CV is not a NORMAL_CV_TYPE", &
-                            print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, NORMAL_CV_TYPE])
+                            print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, NORMAL_CV_TYPE, i_cv])
             call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%i_cv_mirror == i_cv, &
                             "cva (d_x_dot_d_t): i_cv_mirror for the mirror CV is not i_cv (not matching)", &
                             print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
@@ -999,16 +999,16 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
     type(si_inverse_mass) :: r_mp_eff ! effective mass of projectile/piston
     
     call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_x_dot_d_t_normal): cv%csa > 0 violated", &
-                    print_real=[sys%cv(i_cv)%csa%v%v])
+                    print_real=[sys%cv(i_cv)%csa%v%v], print_integer=[i_cv])
     call assert(sys%cv(i_cv)%type == NORMAL_CV_TYPE, "cva (d_x_dot_d_t_normal): CV needs to be NORMAL_CV_TYPE", &
-                        print_integer=[sys%cv(i_cv)%type, NORMAL_CV_TYPE])
+                        print_integer=[sys%cv(i_cv)%type, NORMAL_CV_TYPE, i_cv])
     
     if (sys%cv(i_cv)%i_cv_mirror >= 1) then
         p_other = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
         
         call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
                         "cva (d_x_dot_d_t_normal): mirror CV not MIRROR_CV_TYPE", &
-                        print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, MIRROR_CV_TYPE])
+                        print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, MIRROR_CV_TYPE, i_cv])
     else
         ! If `i_cv_mirror == 0` then there is no mirror CV.
         call p_other%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
@@ -1090,11 +1090,15 @@ pure function d_e_f_d_t(sys, i_cv)
     type(si_pressure) :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
     type(si_pressure) :: p_other
     
-    call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_e_f_d_t): i_cv_mirror must be a positive integer or zero")
-    call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_e_f_d_t): i_cv_mirror can't be larger than the cv array")
-    call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_e_f_d_t): i_cv_mirror can not equal i_cv")
+    call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_e_f_d_t): i_cv_mirror must be a positive integer or zero", &
+                    print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
+    call assert(sys%cv(i_cv)%i_cv_mirror <= size(sys%cv), "cva (d_e_f_d_t): i_cv_mirror can't be larger than the cv array", &
+                    print_integer=[sys%cv(i_cv)%i_cv_mirror, size(sys%cv), i_cv])
+    call assert(sys%cv(i_cv)%i_cv_mirror /= i_cv, "cva (d_e_f_d_t): i_cv_mirror can not equal i_cv", &
+                    print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
     
-    call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_x_dot_d_t_normal): cv%csa > 0 violated")
+    call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_x_dot_d_t_normal): cv%csa > 0 violated", &
+                    print_real=[sys%cv(i_cv)%csa%v%v])
     
     select case (sys%cv(i_cv)%type)
         case (NORMAL_CV_TYPE)
@@ -1102,7 +1106,8 @@ pure function d_e_f_d_t(sys, i_cv)
                 p_other = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
                 
                 call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
-                                "cva (d_x_dot_d_t_normal): mirror CV not MIRROR_CV_TYPE")
+                                "cva (d_x_dot_d_t_normal): mirror CV not MIRROR_CV_TYPE", &
+                                print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, MIRROR_CV_TYPE])
             else
                 ! If `i_cv_mirror == 0` then there is no mirror CV.
                 call p_other%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
@@ -1113,7 +1118,8 @@ pure function d_e_f_d_t(sys, i_cv)
             d_e_f_d_t = sys%cv(i_cv)%p_f(p_fe) * sys%cv(i_cv)%csa * sys%cv(i_cv)%x_dot
         case (MIRROR_CV_TYPE)
             call d_e_f_d_t%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
-            call assert(is_close(sys%cv(i_cv)%e_f%v%v, 0.0_WP), "cva (d_e_f_d_t): e_f must be zero for MIRROR_CV_TYPE")
+            call assert(is_close(sys%cv(i_cv)%e_f%v%v, 0.0_WP), "cva (d_e_f_d_t): e_f must be zero for MIRROR_CV_TYPE", &
+                            print_real=[sys%cv(i_cv)%e_f%v%v])
         case default
             error stop "cva (d_e_f_d_t): invalid cv%type"
     end select
@@ -1132,15 +1138,18 @@ pure subroutine assert_mass(cv, procedure_name)
     call assert(len(trim(procedure_name)) > 0, "cva (assert_mass): procedure name should not be empty")
     
     do i = 1, size(cv%m)
-        call assert(cv%m(i)%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m >= 0 violated")
+        call assert(cv%m(i)%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m >= 0 violated", &
+                        print_real=[cv%m(i)%v%v], print_integer=[i])
     end do
     
     m_total = cv%m_total()
     select case (cv%eos)
         case (IDEAL_EOS)
-            call assert(m_total%v%v > 0.0_WP, "cva (" // trim(procedure_name) // ", IDEAL_EOS): cv%m_total > 0 violated")
+            call assert(m_total%v%v > 0.0_WP, "cva (" // trim(procedure_name) // ", IDEAL_EOS): cv%m_total > 0 violated", &
+                            print_real=[m_total%v%v])
         case (CONST_EOS)
-            call assert(m_total%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // ", CONST_EOS): cv%m_total >= 0 violated")
+            call assert(m_total%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // ", CONST_EOS): cv%m_total >= 0 violated", &
+                            print_real=[m_total%v%v])
         case default
             error stop "cva (assert_mass): invalid cv%eos"
     end select
@@ -1184,8 +1193,8 @@ pure function f_m_dot(p_r, b)
     
     type(unitless) :: p_rs, p_rl_ ! scales used to make function differentiable
     
-    call assert(p_r%v%v >= 0.0_WP, "cva (f_m_dot): p_r >= 0 violated")
-    call assert(p_r%v%v <= 1.0_WP, "cva (f_m_dot): p_r <= 1 violated")
+    call assert(p_r%v%v >= 0.0_WP, "cva (f_m_dot): p_r >= 0 violated", print_real=[p_r%v%v])
+    call assert(p_r%v%v <= 1.0_WP, "cva (f_m_dot): p_r <= 1 violated", print_real=[p_r%v%v])
     
     call assert_dimension(p_r%v%d, b%v%d)
     
@@ -1203,8 +1212,8 @@ pure function g_m_dot(p_r)
     
     type(unitless) :: g_m_dot
     
-    call assert(p_r%v%v >= 0.0_WP, "cva (g_m_dot): p_r >= 0 violated")
-    call assert(p_r%v%v <= 1.0_WP, "cva (g_m_dot): p_r <= 1 violated")
+    call assert(p_r%v%v >= 0.0_WP, "cva (g_m_dot): p_r >= 0 violated", print_real=[p_r%v%v])
+    call assert(p_r%v%v <= 1.0_WP, "cva (g_m_dot): p_r <= 1 violated", print_real=[p_r%v%v])
     
     if (p_r%v%v < P_RL) then
         call g_m_dot%v%init_const(0.0_WP, size(p_r%v%d))
@@ -1213,8 +1222,8 @@ pure function g_m_dot(p_r)
                     - 3.0_WP*((1.0_WP - p_r) / (1.0_WP - P_RL))*((1.0_WP - p_r) / (1.0_WP - P_RL)) + 1.0_WP
     end if
     
-    call assert(g_m_dot%v%v >= 0.0_WP, "cva (g_m_dot): g_m_dot >= 0 violated")
-    call assert(g_m_dot%v%v <= 1.0_WP, "cva (g_m_dot): g_m_dot <= 1 violated")
+    call assert(g_m_dot%v%v >= 0.0_WP, "cva (g_m_dot): g_m_dot >= 0 violated", print_real=[g_m_dot%v%v])
+    call assert(g_m_dot%v%v <= 1.0_WP, "cva (g_m_dot): g_m_dot <= 1 violated", print_real=[g_m_dot%v%v])
 end function g_m_dot
 
 pure function m_dot(con, cv_from, cv_to)
@@ -1236,8 +1245,8 @@ pure function m_dot(con, cv_from, cv_to)
         call assert_dimension(cv_from%x%v%d, con%a_e%v%d)
         
         p_r = cv_to%p() / cv_from%p()
-        call assert(p_r%v%v >= 0.0_WP, "cva (m_dot): p_r >= 0 violated")
-        call assert(p_r%v%v <= 1.0_WP, "cva (m_dot): p_r <= 1 violated")
+        call assert(p_r%v%v >= 0.0_WP, "cva (m_dot): p_r >= 0 violated", print_real=[p_r%v%v])
+        call assert(p_r%v%v <= 1.0_WP, "cva (m_dot): p_r <= 1 violated", print_real=[p_r%v%v])
         
         m_dot = con%a_e * (cv_from%p() - g_m_dot(p_r) * cv_to%p()) &
                     * sqrt((1.0_WP - con%b) / (cv_from%r() * cv_from%temp())) &
@@ -1259,17 +1268,20 @@ pure subroutine calculate_flows(sys, m_dot, h_dot)
     
     integer :: n_cv, i_from_cv, i_to_cv
     
-    call assert(size(sys%cv) == size(sys%con, 1), "cva (calculate_flows): inconsistent sys%cv and sys%con sizes")
+    call assert(size(sys%cv) == size(sys%con, 1), "cva (calculate_flows): inconsistent sys%cv and sys%con sizes", &
+                    print_integer=[size(sys%cv), size(sys%con, 1)])
     
     n_cv = size(sys%cv)
-    call assert(n_cv > 1, "cva (calculate_flows): there needs to be at least 2 control volumes to have flows")
+    call assert(n_cv > 1, "cva (calculate_flows): there needs to be at least 2 control volumes to have flows", &
+                    print_integer=[n_cv])
     
     allocate(m_dot(n_cv, n_cv))
     allocate(h_dot(n_cv, n_cv))
     do i_from_cv = 1, n_cv
         do i_to_cv = 1, n_cv
             if (i_from_cv == i_to_cv) call assert(.not. sys%con(i_from_cv, i_to_cv)%active, &
-                                                    "cva (calculate_flows): can't flow from self to self")
+                                                    "cva (calculate_flows): can't flow from self to self", &
+                                                    print_integer=[i_from_cv, i_to_cv])
             
             m_dot(i_from_cv, i_to_cv) = sys%con(i_from_cv, i_to_cv)%m_dot(sys%cv(i_from_cv), sys%cv(i_to_cv))
             h_dot(i_from_cv, i_to_cv) = sys%cv(i_from_cv)%h() * m_dot(i_from_cv, i_to_cv)
@@ -1439,7 +1451,8 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
     end if
     
     if (present(csv_frequency)) then
-        call assert(csv_output, "cva (set_run_config): Why set csv_frequency if csv_output=.false.?")
+        call assert(csv_output, "cva (set_run_config): Why set csv_frequency if csv_output=.false.?", &
+                        print_logical=[csv_output])
         config%csv_frequency = csv_frequency
     else
         config%csv_frequency = 10
@@ -1576,7 +1589,8 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
                 if (m_total_j%v%v < 0.0_WP) n_bad_cv = n_bad_cv + 1
                 status%data(j_cv) = m_total_j%v%v
             end do
-            call assert(n_bad_cv >= 1, "cva (check_sys): number of control volumes with negative mass should be >= 1")
+            call assert(n_bad_cv >= 1, "cva (check_sys): number of control volumes with negative mass should be >= 1", &
+                            print_integer=[n_bad_cv])
             
             allocate(status%i_cv(n_bad_cv))
             n_bad_cv = 0
@@ -1604,7 +1618,8 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
                 status%data(j_cv) = temp_j%v%v
             end do
             call assert(n_bad_cv >= 1, &
-                "cva (check_sys): number of control volumes with negative or zero temperature should be >= 1")
+                "cva (check_sys): number of control volumes with negative or zero temperature should be >= 1", &
+                            print_integer=[n_bad_cv])
             
             allocate(status%i_cv(n_bad_cv))
             n_bad_cv = 0
@@ -1631,7 +1646,8 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
                     if (p_j >= sys%cv(j_cv)%p_c()) n_bad_cv = n_bad_cv + 1
                     status%data(j_cv) = p_j%v%v
                 end do
-                call assert(n_bad_cv >= 1, "cva (check_sys): number of control volumes with p >= p_c should be >= 1")
+                call assert(n_bad_cv >= 1, "cva (check_sys): number of control volumes with p >= p_c should be >= 1", &
+                            print_integer=[n_bad_cv])
                 
                 allocate(status%i_cv(n_bad_cv))
                 n_bad_cv = 0
@@ -1652,7 +1668,8 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         ! I could also add a tolerance for `x_dot`, but given that it's set to exactly the same, an assertion would make more sense.
         if ((sys%cv(i_cv)%type == NORMAL_CV_TYPE) .and. (sys%cv(i_cv)%i_cv_mirror >= 1)) then
             call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
-                            "cva (check_sys): mirror CV is not a mirror CV?")
+                            "cva (check_sys): mirror CV is not a mirror CV?", &
+                            print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, MIRROR_CV_TYPE, i_cv, sys%cv(i_cv)%i_cv_mirror])
             
             x_sum_start = sys_start%cv(i_cv)%x + sys_start%cv(sys%cv(i_cv)%i_cv_mirror)%x
             x_sum       = sys%cv(i_cv)%x       + sys%cv(sys%cv(i_cv)%i_cv_mirror)%x
@@ -1671,7 +1688,7 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
     
     if (config%tolerance_checks) then
         ! Check that total system mass is staying constant.
-        call assert(m_start%v%v > 0.0_WP, "cva (check_sys): m_start must be greater than zero")
+        call assert(m_start%v%v > 0.0_WP, "cva (check_sys): m_start must be greater than zero", print_real=[m_start%v%v])
         rel_delta = abs(sys%m_total() - m_start) / m_start
         if (rel_delta%v%v > MASS_TOLERANCE) then
             status%rc = MASS_TOLERANCE_RUN_RC
@@ -1699,7 +1716,7 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         end if
         
         ! Check that total system energy is staying constant.
-        call assert(e_start%v%v > 0.0_WP, "cva (check_sys): e_start must be greater than zero")
+        call assert(e_start%v%v > 0.0_WP, "cva (check_sys): e_start must be greater than zero", print_real=[e_start%v%v])
         rel_delta = abs(sys%e_total() - e_start) / e_start
         if (rel_delta%v%v > ENERGY_TOLERANCE) then
             status%rc = ENERGY_TOLERANCE_RUN_RC
@@ -1746,7 +1763,8 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     integer        :: i_cv, n_cv, k_gas, n_gas
     
     call assert(is_close(sys_old%cv(i_cv_interp)%x_stop%v%v, sys_new%cv(i_cv_interp)%x_stop%v%v), &
-                    "cva (sys_interp): x_stop is inconsistent")
+                    "cva (sys_interp): x_stop is inconsistent", &
+                    print_real=[sys_old%cv(i_cv_interp)%x_stop%v%v, sys_new%cv(i_cv_interp)%x_stop%v%v])
     
     n_cv  = size(sys_old%cv)
     n_gas = size(sys_old%cv(1)%m)
@@ -1754,8 +1772,8 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     frac = (sys_new%cv(i_cv_interp)%x_stop - sys_old%cv(i_cv_interp)%x) &
                 / (sys_new%cv(i_cv_interp)%x - sys_old%cv(i_cv_interp)%x)
     
-    call assert(frac%v%v >= 0.0_WP, "cva (sys_interp): fraction >= 0 violated")
-    call assert(frac%v%v <= 1.0_WP, "cva (sys_interp): fraction <= 1 violated")
+    call assert(frac%v%v >= 0.0_WP, "cva (sys_interp): fraction >= 0 violated", print_real=[frac%v%v])
+    call assert(frac%v%v <= 1.0_WP, "cva (sys_interp): fraction <= 1 violated", print_real=[frac%v%v])
     
     sys_end = sys_old
     do i_cv = 1, n_cv
@@ -1785,7 +1803,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     type(si_energy)       :: e_total, spring_pe, m_p_ke
     
     inquire(unit=csv_unit, opened=csv_unit_opened)
-    call assert(csv_unit_opened, "cva (write_csv_row): csv_unit needs to be open")
+    call assert(csv_unit_opened, "cva (write_csv_row): csv_unit needs to be open", print_logical=[csv_unit_opened])
     
     n_cv = size(sys%cv)
     
