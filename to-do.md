@@ -1,6 +1,5 @@
 ### v0.1.0
 
-- CSV output: don't say "pressure", say what type of pressure (gauge, absolute, etc.)
 - Make `sys_interp` preserve total energy via Hénon's trick. Looks like total energy decreases a bit based on `test_conservation`. henon_numerical_1982
 - Test `sys_interp`.
 - Run `check_sys` on interpolated point.

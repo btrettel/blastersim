@@ -1902,7 +1902,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
         ! `p`
         select case (row_type)
             case (HEADER_ROW_TYPE)
-                write(unit=csv_unit, fmt="(3a)", advance="no") '"p (Pa, ', trim(sys%cv(i_cv)%label), ')",'
+                write(unit=csv_unit, fmt="(3a)", advance="no") '"p (Pa, absolute, ', trim(sys%cv(i_cv)%label), ')",'
             case (NUMBER_ROW_TYPE)
                 p = sys%cv(i_cv)%p()
                 write(unit=csv_unit, fmt="(g0, a)", advance="no") p%v%v, ","
