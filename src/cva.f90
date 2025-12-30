@@ -1532,8 +1532,11 @@ subroutine run(config, sys_start, sys_end, status)
     end do time_loop
     
     if (status%rc == SUCCESS_RUN_RC) then
-        ! If successful, interpolate to correct `x` value.
+        ! If successful, use Hénon's trick to ensure that `x == x_stop`.
         call sys_interp(t_old, config%dt, status%i_cv(1), sys_old, sys_new, t, sys_end)
+        
+        ! TODO: I need to make sure that the status rc stays the same.
+        ! call check_sys(config, sys_end, sys_start, t, status)
     else
         sys_end = sys_new
     end if
@@ -1751,7 +1754,8 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
 end subroutine check_sys
 
 pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
-    ! Linearly interpolate system to state between two systems based on `x_stop` for control volume number `i_cv_interp`.
+    ! Use Hénon's trick to ensure that `x == x_stop`.
+    ! Uses the secant method to find `dt` where `x == x_stop` for control volume number `i_cv_interp`.
     
     type(si_time), intent(in)                      :: t_old, dt
     integer, intent(in)                            :: i_cv_interp ! control volume number to interpolate based on
@@ -1759,32 +1763,67 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     type(si_time), intent(out)                     :: t
     type(cv_system_type), allocatable, intent(out) :: sys_end
     
-    type(unitless) :: frac
-    integer        :: i_cv, n_cv, k_gas, n_gas
+    integer       :: i
+    type(si_time) :: dt_i, dt_im1, dt_im2
+    real(WP)      :: x_tol
+    type(cv_system_type), allocatable :: sys_i, sys_im1, sys_im2, sys_temp
+    integer, parameter :: MAX_ITERS = 10
+    
+    x_tol = 100.0_WP*spacing(sys_old%cv(i_cv_interp)%x_stop%v%v)
     
     call assert(is_close(sys_old%cv(i_cv_interp)%x_stop%v%v, sys_new%cv(i_cv_interp)%x_stop%v%v), &
                     "cva (sys_interp): x_stop is inconsistent", &
                     print_real=[sys_old%cv(i_cv_interp)%x_stop%v%v, sys_new%cv(i_cv_interp)%x_stop%v%v])
     
-    n_cv  = size(sys_old%cv)
-    n_gas = size(sys_old%cv(1)%m)
+    dt_im2 = dt
+    dt_im1 = dt * (sys_new%cv(i_cv_interp)%x_stop - sys_old%cv(i_cv_interp)%x) &
+                        / (sys_new%cv(i_cv_interp)%x - sys_old%cv(i_cv_interp)%x)
     
-    frac = (sys_new%cv(i_cv_interp)%x_stop - sys_old%cv(i_cv_interp)%x) &
-                / (sys_new%cv(i_cv_interp)%x - sys_old%cv(i_cv_interp)%x)
+    sys_im2 = sys_new
+    call time_step(sys_old, dt_im1, sys_im1)
     
-    call assert(frac%v%v >= 0.0_WP, "cva (sys_interp): fraction >= 0 violated", print_real=[frac%v%v])
-    call assert(frac%v%v <= 1.0_WP, "cva (sys_interp): fraction <= 1 violated", print_real=[frac%v%v])
-    
-    sys_end = sys_old
-    do i_cv = 1, n_cv
-        sys_end%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + frac*(sys_new%cv(i_cv)%x     - sys_old%cv(i_cv)%x)
-        sys_end%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + frac*(sys_new%cv(i_cv)%x_dot - sys_old%cv(i_cv)%x_dot)
-        sys_end%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + frac*(sys_new%cv(i_cv)%e     - sys_old%cv(i_cv)%e)
-        do k_gas = 1, n_gas
-            sys_end%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + frac*(sys_new%cv(i_cv)%m(k_gas) - sys_old%cv(i_cv)%m(k_gas))
-        end do
+    do i = 1, MAX_ITERS
+        ! The stopping criteria is based on the difference between iterates due to risk of catastrophic cancellation.
+        if (abs(sys_im1%cv(i_cv_interp)%x%v%v - sys_im2%cv(i_cv_interp)%x%v%v) < x_tol) exit 
+        
+        ! <https://en.wikipedia.org/wiki/Secant_method#The_method>
+        dt_i = dt_im1 - (dt_im1 - dt_im2) * (sys_im1%cv(i_cv_interp)%x - sys_old%cv(i_cv_interp)%x_stop) &
+                    / (sys_im1%cv(i_cv_interp)%x - sys_im2%cv(i_cv_interp)%x)
+        
+        !print *, dt_i%v%v
+        
+        call assert(dt_i%v%v >= 0.0_WP, "cva (sys_interp): dt_i can not be negative", &
+                        print_real=[dt_i%v%v], print_integer=[i])
+        call assert(dt_i <= dt, "cva (sys_interp): dt_i can not be greater than dt", &
+                        print_real=[dt_i%v%v], print_integer=[i])
+        
+        call time_step(sys_old, dt_i, sys_i)
+        
+        call assert(sys_i%cv(i_cv_interp)%x >= sys_old%cv(i_cv_interp)%x, &
+                        "cva (sys_interp): x_i >= x_old violated", &
+                        print_real=[sys_old%cv(i_cv_interp)%x%v%v, sys_i%cv(i_cv_interp)%x%v%v, &
+                        sys_new%cv(i_cv_interp)%x%v%v, dt_i%v%v], print_integer=[i])
+        call assert(sys_i%cv(i_cv_interp)%x <= sys_new%cv(i_cv_interp)%x, &
+                        "cva (sys_interp): x_i <= x_new violated", &
+                        print_real=[sys_old%cv(i_cv_interp)%x%v%v, sys_i%cv(i_cv_interp)%x%v%v, &
+                        sys_new%cv(i_cv_interp)%x%v%v, dt_i%v%v], print_integer=[i])
+        
+        dt_im2 = dt_im1
+        dt_im1 = dt_i
+        
+        call move_alloc(from=sys_im2,  to=sys_temp)
+        call move_alloc(from=sys_im1,  to=sys_im2)
+        call move_alloc(from=sys_i,    to=sys_im1)
+        call move_alloc(from=sys_temp, to=sys_i)
     end do
-    t = t_old + frac*dt
+    
+    sys_end = sys_i
+    call assert(is_close(sys_end%cv(i_cv_interp)%x%v%v, sys_end%cv(i_cv_interp)%x_stop%v%v, &
+                            abs_tol=100.0_WP*x_tol), &
+                    "cva (sys_interp): x_end is not close to x_stop", &
+                    print_real=[sys_end%cv(i_cv_interp)%x%v%v, sys_end%cv(i_cv_interp)%x_stop%v%v])
+    
+    t = t_old + dt_i
 end subroutine sys_interp
 
 subroutine write_csv_row(csv_unit, sys, t, status, row_type)

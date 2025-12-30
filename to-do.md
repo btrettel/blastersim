@@ -1,8 +1,7 @@
 ### v0.1.0
 
-- Make `sys_interp` preserve total energy via Hénon's trick. Looks like total energy decreases a bit based on `test_conservation`. henon_numerical_1982
-- Test `sys_interp`.
 - Run `check_sys` on interpolated point.
+- Test `sys_interp`.
 - Make internal and input file variable names consistent
 - Make friction plot for debugging. Try typical case and also `p_fs = p_fd` to help debug what's going on with that. Why does `p_f` go so much higher than `p_fs`/`p_fd` in that case?
 - Test `m_s` in `d_xdot_d_t`.
