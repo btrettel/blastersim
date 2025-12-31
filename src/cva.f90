@@ -1488,9 +1488,10 @@ subroutine run(config, sys_start, sys_end, status)
     
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp
     
-    character(len=CL) :: error_message
-    integer           :: n_d, i, csv_unit
-    type(si_time)     :: t, t_old
+    character(len=CL)     :: error_message
+    integer               :: n_d, i, csv_unit
+    type(si_time)         :: t, t_old
+    type(run_status_type) :: status_final
     
     n_d = size(sys_start%cv(1)%x%v%d)
     
@@ -1535,8 +1536,11 @@ subroutine run(config, sys_start, sys_end, status)
         ! If successful, use Hénon's trick to ensure that `x == x_stop`.
         call sys_interp(t_old, config%dt, status%i_cv(1), sys_old, sys_new, t, sys_end)
         
-        ! TODO: I need to make sure that the status rc stays the same.
-        ! call check_sys(config, sys_end, sys_start, t, status)
+        call check_sys(config, sys_end, sys_start, t, status_final)
+        ! This will make sure that the status rc stays the same if everything is okay but `x` is a bit short.
+        if (status_final%rc /= CONTINUE_RUN_RC) then
+            status = status_final
+        end if
     else
         sys_end = sys_new
     end if
@@ -1819,7 +1823,7 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     
     sys_end = sys_i
     call assert(is_close(sys_end%cv(i_cv_interp)%x%v%v, sys_end%cv(i_cv_interp)%x_stop%v%v, &
-                            abs_tol=100.0_WP*x_tol), &
+                            abs_tol=max(100.0_WP*x_tol, 1.0e-6_WP)), &
                     "cva (sys_interp): x_end is not close to x_stop", &
                     print_real=[sys_end%cv(i_cv_interp)%x%v%v, sys_end%cv(i_cv_interp)%x_stop%v%v])
     

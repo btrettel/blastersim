@@ -189,6 +189,7 @@
             - <http://www.danielbeaver.net/storage/projects/nerf/SpringerTesting/>
         - Plunger position: <https://discord.com/channels/727038380054937610/1172390267890958366/1177752285703573504>
         - pressure traces if available
+- In `check_sys`, use something with less cancellation error? Pick different points for the derivative calculation to avoid catastrophic cancellation? ash_optimal_1981 eq. 2 won't be the best as it would require 4 function evaluations per iteration.
 
 ***
 

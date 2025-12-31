@@ -178,7 +178,7 @@ subroutine test_2010_08_07_30_psi(tests)
     call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_2010_08_07_30_psi, status%rc")
     
     !print *, 30, sys_end%cv(3)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(3)%x_dot%v%v
-    call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 23.831535000306918_WP, "test_2010_08_07_30_psi, muzzle velocity (characterization)")
+    call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 23.831546948664407_WP, "test_2010_08_07_30_psi, muzzle velocity (characterization)")
     v_exp = fps_const(80.465_WP, 0)
     call tests%real_eq(sys_end%cv(3)%x_dot%v%v, v_exp%v%v, "test_2010_08_07_30_psi, muzzle velocity (validation)", abs_tol=1.0_WP)
 end subroutine test_2010_08_07_30_psi
@@ -202,7 +202,7 @@ subroutine test_2010_08_07_40_psi(tests)
     call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_2010_08_07_40_psi, status%rc")
     
     !print *, 40, sys_end%cv(3)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(3)%x_dot%v%v
-    call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 36.185426086918270_WP, "test_2010_08_07_40_psi, muzzle velocity (characterization)")
+    call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 36.185438669785540_WP, "test_2010_08_07_40_psi, muzzle velocity (characterization)")
     v_exp = fps_const(120.353_WP, 0)
     call tests%real_eq(sys_end%cv(3)%x_dot%v%v, v_exp%v%v, "test_2010_08_07_40_psi, muzzle velocity (validation)", abs_tol=1.0_WP)
 end subroutine test_2010_08_07_40_psi
@@ -226,7 +226,7 @@ subroutine test_2010_08_07_50_psi(tests)
     call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_2010_08_07_50_psi, status%rc")
     
     !print *, 50, sys_end%cv(3)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(3)%x_dot%v%v
-    call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 45.224507289167370_WP, "test_2010_08_07_50_psi, muzzle velocity (characterization)")
+    call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 45.224522103623528_WP, "test_2010_08_07_50_psi, muzzle velocity (characterization)")
     v_exp = fps_const(145.664_WP, 0)
     call tests%real_eq(sys_end%cv(3)%x_dot%v%v, v_exp%v%v, "test_2010_08_07_50_psi, muzzle velocity (validation)", abs_tol=1.0_WP)
 end subroutine test_2010_08_07_50_psi
@@ -250,7 +250,7 @@ subroutine test_2010_08_07_60_psi(tests)
     call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_2010_08_07_60_psi, status%rc")
     
     !print *, 60, sys_end%cv(3)%x%v%v/sys_end%cv(2)%x_stop%v%v, sys_end%cv(3)%x_dot%v%v
-    call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 47.65430830618942_WP, "test_2010_08_07_60_psi, muzzle velocity (characterization)")
+    call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 47.654314066300785_WP, "test_2010_08_07_60_psi, muzzle velocity (characterization)")
     v_exp = fps_const(158.567_WP, 0)
     call tests%real_eq(sys_end%cv(3)%x_dot%v%v, v_exp%v%v, "test_2010_08_07_60_psi, muzzle velocity (validation)", abs_tol=1.0_WP)
 end subroutine test_2010_08_07_60_psi
@@ -278,7 +278,7 @@ subroutine test_2010_08_07_70_psi(tests)
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 0.0_WP, "test_2010_08_07_70_psi, chamber end velocity stays zero")
     
     !print *, 70, sys_end%cv(2)%x%v%v/sys_end%cv(3)%x_stop%v%v, sys_end%cv(3)%x_dot%v%v
-    call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 58.30938473018930_WP, "test_2010_08_07_70_psi, muzzle velocity (characterization)")
+    call tests%real_eq(sys_end%cv(3)%x_dot%v%v, 58.309389624669386_WP, "test_2010_08_07_70_psi, muzzle velocity (characterization)")
     v_exp = fps_const(190.987_WP, 0)
     call tests%real_eq(sys_end%cv(3)%x_dot%v%v, v_exp%v%v, "test_2010_08_07_70_psi, muzzle velocity (validation)", abs_tol=1.0_WP)
 end subroutine test_2010_08_07_70_psi
@@ -395,7 +395,7 @@ subroutine test_tinkershot_1(tests)
     
     v_exp = fps_const(359.7778_WP, 0)
     !print *, sys_end%cv(4)%x_dot%v%v, v_exp%v%v
-    call tests%real_eq(sys_end%cv(4)%x_dot%v%v, 109.92753263095905_WP, "test_tinkershot_1, muzzle velocity (characterization)")
+    call tests%real_eq(sys_end%cv(4)%x_dot%v%v, 109.92756479091035_WP, "test_tinkershot_1, muzzle velocity (characterization)")
     call tests%real_eq(sys_end%cv(4)%x_dot%v%v, v_exp%v%v, "test_tinkershot_1, muzzle velocity (validation)", abs_tol=1.0_WP)
 end subroutine test_tinkershot_1
 
