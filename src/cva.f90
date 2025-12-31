@@ -1779,12 +1779,11 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
                     "cva (sys_interp): x_stop is inconsistent", &
                     print_real=[sys_old%cv(i_cv_interp)%x_stop%v%v, sys_new%cv(i_cv_interp)%x_stop%v%v])
     
-    dt_im2 = dt
-    dt_im1 = dt * (sys_new%cv(i_cv_interp)%x_stop - sys_old%cv(i_cv_interp)%x) &
-                        / (sys_new%cv(i_cv_interp)%x - sys_old%cv(i_cv_interp)%x)
+    call dt_im2%v%init_const(0.0_WP, size(sys_new%cv(i_cv_interp)%x_stop%v%d))
+    dt_im1 = dt
     
-    sys_im2 = sys_new
-    call time_step(sys_old, dt_im1, sys_im1)
+    sys_im2 = sys_old
+    sys_im1 = sys_new
     
     do i = 1, MAX_ITERS
         ! The stopping criteria is based on the difference between iterates due to risk of catastrophic cancellation.
@@ -1794,7 +1793,7 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
         dt_i = dt_im1 - (dt_im1 - dt_im2) * (sys_im1%cv(i_cv_interp)%x - sys_old%cv(i_cv_interp)%x_stop) &
                     / (sys_im1%cv(i_cv_interp)%x - sys_im2%cv(i_cv_interp)%x)
         
-        !print *, dt_i%v%v
+        !print *, dt_i%v%v, dt_im1%v%v, dt_im2%v%v
         
         call assert(dt_i%v%v >= 0.0_WP, "cva (sys_interp): dt_i can not be negative", &
                         print_real=[dt_i%v%v], print_integer=[i])

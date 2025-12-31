@@ -1,7 +1,5 @@
 ### v0.1.0
 
-- Run `check_sys` on interpolated point.
-- Test `sys_interp`.
 - Make internal and input file variable names consistent
 - Make friction plot for debugging. Try typical case and also `p_fs = p_fd` to help debug what's going on with that. Why does `p_f` go so much higher than `p_fs`/`p_fd` in that case?
 - Test `m_s` in `d_xdot_d_t`.
@@ -9,7 +7,8 @@
     - Make this the default but optional if desired for testing.
     - Input validation at first to not use this with RK EOS (if that's added first)
     - Assert `CONST_EOS` or `IDEAL_EOS` with `p < p_c` to satisfy requirements of version in Corner's book.
-- `check_sys`: test each `status%rc` code
+- `check_sys`
+    - test each `status%rc` code
     - All state variables don't exceed certain amounts.
         - Also check derivatives in stability checks.
     - `x` > 0
@@ -190,6 +189,8 @@
         - Plunger position: <https://discord.com/channels/727038380054937610/1172390267890958366/1177752285703573504>
         - pressure traces if available
 - In `check_sys`, use something with less cancellation error? Pick different points for the derivative calculation to avoid catastrophic cancellation? ash_optimal_1981 eq. 2 won't be the best as it would require 4 function evaluations per iteration.
+- Test `sys_interp`.
+    - Comparison with `x_stop`. Is a test needed given the assertion?
 
 ***
 
