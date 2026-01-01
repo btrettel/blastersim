@@ -31,6 +31,15 @@
 *.out
 *.app
 
+# LaTeX documentation
+*.aux
+*.bbl
+*.blg
+*.log
+*.pdf
+*.toc
+*.html
+
 *.gcda
 *.gcno
 *.lst

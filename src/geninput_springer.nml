@@ -154,3 +154,16 @@ default_value         = "TEMP_ATM_"
 no_kind_default_value = .true.
 bound_fmt             = "f5.3"
 /
+
+&input_parameter
+parameter_name        = "a_e"
+type_definition       = "type(si_length)"
+required              = .true.
+tex_unit              = "m"
+tex_description       = "Effective area of the transfer port, including the vena contracta. In other words, likely the effective area is smaller than the actual area available."
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f5.3"
+/

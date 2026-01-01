@@ -1,5 +1,8 @@
 ### v0.1.0
 
+- Try compiling TeX documents including graphics with LaTeXML.
+    - Try TikZ, xfig, and raster image formats.
+        - Can I use a conditional statement to detect when LaTeXML is used if a vector format can't be used with LaTeXML? Yes, with `\iflatexml`.
 - Make internal and input file variable names consistent
 - Make friction plot for debugging. Try typical case and also `p_fs = p_fd` to help debug what's going on with that. Why does `p_f` go so much higher than `p_fs`/`p_fd` in that case?
 - Test `m_s` in `d_xdot_d_t`.
@@ -7,29 +10,12 @@
     - Make this the default but optional if desired for testing.
     - Input validation at first to not use this with RK EOS (if that's added first)
     - Assert `CONST_EOS` or `IDEAL_EOS` with `p < p_c` to satisfy requirements of version in Corner's book.
-- `check_sys`
-    - test each `status%rc` code
-    - All state variables don't exceed certain amounts.
-        - Also check derivatives in stability checks.
-    - `x` > 0
-        - Could simply abort if there is piston bounce during shot rather than handle it. Piston bounce is undesirable anyway as it would reduce accuracy of the projectile.
-        - Make test case where piston will impact end ($x = 0$) to see what happens and where piston impact detection needs to be added. Inside a RK stage? If the check is in `check_sys`, before getting to that point, an assertion might trigger or BlasterSim might go haywire.
-    - Add check for whether transonic corrections are needed with the speed of sound.
-    - Add check for validity of lumped parameter approximation
-        - Does this require the pressure gradient? That's basically how the Biot number works.
-        - Ask Gemini for ideas on what to do here.
-- `write_csv_row`
-    - Add Python code to test reading the output file.
-        - `rc` column is -1 until changing to something different on last row.
-        - Same number of columns for each row.
-    - Make methods to get gas kinetic energy and internal energy, use in CSV output
-        - Test cases for temperature and internal energy with non-zero gas velocity.
-    - Print internal energy and gas kinetic energy in CSV output
 - Input file reader generator
     - Input validation:
         - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
-        - p < p_c until RK EOS added
+        - `p < p_c` until RK EOS added
         - Return error if ambient temperature is too low. Likely they gave the temperature in C or F.
+        - `a_e` is not likely larger than the barrel diameter.
 - documentation
     - quick start
     - Put all the drawings and equations on paper first.
@@ -184,13 +170,34 @@
     - Model the air behind the plunger too as it might be pulling a vacuum.
         - <https://discord.com/channels/825852031239061545/825852033898774543/1219837257653944422>
     - Data:
-        - <http://nerfhaven.com/forums/topic/21832-experimental-methods-for-determining-and-predicting-blaster-power/?p=307341>
-            - <http://www.danielbeaver.net/storage/projects/nerf/SpringerTesting/>
         - Plunger position: <https://discord.com/channels/727038380054937610/1172390267890958366/1177752285703573504>
         - pressure traces if available
 - In `check_sys`, use something with less cancellation error? Pick different points for the derivative calculation to avoid catastrophic cancellation? ash_optimal_1981 eq. 2 won't be the best as it would require 4 function evaluations per iteration.
+- Daniel Beaver validation cases:
+    - <http://nerfhaven.com/forums/topic/21832-experimental-methods-for-determining-and-predicting-blaster-power/?p=307341>
+    - <http://www.danielbeaver.net/storage/projects/nerf/SpringerTesting/>
+    - Doesn't provide enough data to make a complete test case.
 - Test `sys_interp`.
     - Comparison with `x_stop`. Is a test needed given the assertion?
+    - Test with something that can be solved exactly by RK4. Then `x_dot` can be known exactly.
+- `check_sys`
+    - test each `status%rc` code
+    - All state variables don't exceed certain amounts.
+        - Also check derivatives in stability checks.
+    - `x` > 0
+        - Could simply abort if there is piston bounce during shot rather than handle it. Piston bounce is undesirable anyway as it would reduce accuracy of the projectile.
+        - Make test case where piston will impact end ($x = 0$) to see what happens and where piston impact detection needs to be added. Inside a RK stage? If the check is in `check_sys`, before getting to that point, an assertion might trigger or BlasterSim might go haywire.
+    - Add check for whether transonic corrections are needed with the speed of sound.
+    - Add check for validity of lumped parameter approximation
+        - Does this require the pressure gradient? That's basically how the Biot number works.
+        - Ask Gemini for ideas on what to do here.
+- `write_csv_row`
+    - Add Python code to test reading the output file.
+        - `rc` column is -1 until changing to something different on last row.
+        - Same number of columns for each row.
+    - Make methods to get gas kinetic energy and internal energy, use in CSV output
+        - Test cases for temperature and internal energy with non-zero gas velocity.
+    - Print internal energy and gas kinetic energy in CSV output
 
 ***
 

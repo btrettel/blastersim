@@ -1,0 +1,47 @@
+% !TEX root = ms.tex
+\documentclass[letterpaper,12pt,oneside]{report}
+\pdfoutput=1
+% <https://info.arxiv.org/help/submit_tex.html#pdflatex>
+
+% Template info:
+% $Date: 2025-09-01 15:40:24 -0400 (Mon, 01 Sep 2025) $
+% $Id: ms.tex 2582 2025-09-01 19:40:24Z ben $
+
+\usepackage{lmodern}
+
+% needs to load after fonts
+% <https://tex.stackexchange.com/a/586>
+\usepackage{microtype}
+
+\usepackage{amsbsy,mathtools,amssymb}
+
+\usepackage[square,numbers]{natbib}
+\bibliographystyle{plainnat}
+
+% For double spacing.
+% Needs to be loaded before hyperref.
+\usepackage{setspace}
+
+\usepackage{hyperref}
+
+% Needed for the `\iflatexml` macro.
+\usepackage{latexml}
+
+\author{Ben Trettel}
+\title{BlasterSim v0.0.1 User's Guide}
+\date{\today}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\input{01_usage.tex}
+\input{02_theory.tex}
+\input{03_verval.tex}
+
+\bibliography{blastersim}
+
+\end{document}
