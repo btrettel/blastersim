@@ -1,8 +1,8 @@
 ### v0.1.0
 
-- Try compiling TeX documents including graphics with LaTeXML.
-    - Try TikZ, xfig, and raster image formats.
-        - Can I use a conditional statement to detect when LaTeXML is used if a vector format can't be used with LaTeXML? Yes, with `\iflatexml`.
+- Index
+- Make normal Makefile call the documentation Makefile for now.
+- Make geninput generated TeX file as a dependency for 01_usage.tex.
 - Make internal and input file variable names consistent
 - Make friction plot for debugging. Try typical case and also `p_fs = p_fd` to help debug what's going on with that. Why does `p_f` go so much higher than `p_fs`/`p_fd` in that case?
 - Test `m_s` in `d_xdot_d_t`.
@@ -198,6 +198,7 @@
     - Make methods to get gas kinetic energy and internal energy, use in CSV output
         - Test cases for temperature and internal energy with non-zero gas velocity.
     - Print internal energy and gas kinetic energy in CSV output
+- Use normal Makefile to compile documentation. (Low priority for now.)
 
 ***
 

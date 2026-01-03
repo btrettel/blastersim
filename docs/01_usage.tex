@@ -1,13 +1,71 @@
 \chapter{Usage}
+\label{sec:usage}
+
+\section{Introduction}
+% TODO
 
 \section{Installation}
 % TODO
 
-\section{BlasterSim model framework}
+\subsection{Installation from binaries}
+% TODO
+
+\subsection{Installation from source tarball}
+% TODO
+
+\subsection{Installation from clone of Git repository}
+% TODO
+
+\section{BlasterSim inputs in general}
+% TODO
+
+BlasterSim uses Fortran namelist format input files.
+
+% TODO: Discuss namelist input files in general
+
+% TODO: Example namelist using listings package.
+
+BlasterSim uses SI units in its input files and internally.
+Support for other unit systems is not planned at the moment due to the complexity of supporting multiple unit systems.
+Scientific notation can be used to appropriately scale inputs. For example, instead of 13 mm being written as \texttt{0.013} m, the user can write \texttt{13.0e-3}.
+
+\section{Running BlasterSim}
 % TODO
 
 \section{Springer mode}
 % TODO
 
+\begin{figure}
+\centering
+\tikzmath{
+\dplunger = 3;
+\lplunger = 4;
+\dbarrel  = 1;
+\lbarrel  = 6;
+\ldead    = 2;
+\ylowbarrel  = (\dplunger - \dbarrel)/2; 
+\yhighbarrel = \ylowbarrel + \dbarrel;
+\xbarrelend = \lplunger + \ldead + \lbarrel;
+\xprojstart = \lplunger + \ldead;
+\lproj      = 2;
+\xplungerheadstart = 1;
+\lplungerhead      = 1;
+} 
+\begin{tikzpicture}
+\draw[thick] (0, 0)         -- (\lplunger, 0)         -- (\lplunger, \ylowbarrel)  -- (\xbarrelend, \ylowbarrel);
+\draw[thick] (0, \dplunger) -- (\lplunger, \dplunger) -- (\lplunger, \yhighbarrel) -- (\xbarrelend, \yhighbarrel);
+\fill[fill=gray,draw=black,thick] (\xprojstart, \ylowbarrel) rectangle ++(\lproj, \dbarrel);
+\fill[fill=gray,draw=black,thick] (\xplungerheadstart, 0) rectangle ++(\lplungerhead, \dplunger);
+\end{tikzpicture}
+\caption{Model spring blaster at time zero as represented in BlasterSim.}
+\label{fig:springer setup}
+\end{figure}
+
 \section{Pneumatic mode}
 % TODO
+
+\section{BlasterSim internal model}
+% TODO
+
+Internally, BlasterSim simulate blasters using control volumes with arbitrary flow connections between control volumes.
+This allows BlasterSim to simulates spring and pneumatic blasters with the same core simulation code. This also allows simulating more atypical blasters without major code changes.

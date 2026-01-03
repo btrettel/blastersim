@@ -1,7 +1,57 @@
 \chapter{Verification and validation}
+\label{sec:verval}
+
+The purpose of this chapter is to help users and potential users of BlasterSim understand how BlasterSim compares against experimental data and also what steps were taken to eliminate bugs in BlasterSim.
 
 \section{Verification}
+
+Verification tests check that the simulation model has been implemented consistently.
+In other words, verification tests check that the math of the simulator is consistent with the intended governing equations.
+These tests do not test that the governing equations are appropriate in the first place, which is done through BlasterSim's validation tests.
+
+\subsection{Run-time consistency checks}
 % TODO
 
-\section{Validation}
+Every time step, BlasterSim performs internal consistency checks to alert the user if the simulation is becoming inaccurate in a detectable way.
+These checks are made in the \texttt{check\_sys} subroutine of cva.f90.
+The specific checks performed include:
+\begin{itemize}
+    \item Whether the simulation ran for too long without the projectile leaving the barrel. (\texttt{run} subroutine return code 1)
+    \item Whether a control volume has negative mass. (\texttt{run} subroutine return code 2)
+    \item Whether a control volume has negative temperature. (\texttt{run} subroutine return code 3)
+    \item Whether the total system mass deviates from the starting mass by more than 0.001\%. (\texttt{run} subroutine return code 4)
+    \item Whether the total system energy deviates from the starting mass by more than 0.01\%. (\texttt{run} subroutine return code 5)
+    \item If automatic differentiation is used, whether any component of the gradient of the total system mass deviates by more than a set amount. (\texttt{run} subroutine return code 6)
+    \item If automatic differentiation is used, whether any component of the gradient of the total system energy deviates by more than a set amount. (\texttt{run} subroutine return code 7)
+    \item Whether the ideal gas equation of state has become inaccurate due to the pressure increasing above the critical pressure. (\texttt{run} subroutine return code 8)
+    \item Whether the coordinates of any piston become desynchronized between control volumes on either side of the mentioned piston. (\texttt{run} subroutine return code 9)
+\end{itemize}
+
+\subsection{Debugging run-time assertions}
+
+BlasterSim contains hundreds of run-time assertions which perform deeper internal consistency checks.
+These additional checks are disabled in the released versions of BlasterSim for speed but are enabled during all developer testing runs for debugging purposes.
+
+\subsection{Unit and integration testing}
 % TODO
+
+\subsection{Comparison with exact solution}
+% TODO
+% TODO Output order of accuracy in a table
+
+To test that the time integration in BlasterSim is working correctly, an exact solution for a simple case was constructed.
+This case has only two control volumes, one for the barrel, and one for the atmosphere.
+The barrel is initially filled with pressurized gas and the projectile has both dynamic and static friction pressure set to $p_\text{f}$.
+The 
+
+\section{Validation}
+
+BlasterSim's validation tests compare BlasterSim against experimental data. At present BlasterSim is validated with a series of pneumatic blaster tests that I made back in 2010.
+
+Unfortunately, to date, no spring blaster experiments have been detailed enough to provide all the inputs needed to run BlasterSim.
+While BlasterSim appears to give reasonable results when simulating spring blasters, a true test where inputs are not guessed or calibrated has not been made yet.
+Anyone willing to perform these tests is encouraged to contact Ben Trettel.
+
+\subsection{2010-08-07 pneumatic blaster tests}
+% TODO
+% TODO: Make table be written by test_verification.f90.

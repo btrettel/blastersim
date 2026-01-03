@@ -39,6 +39,7 @@
 *.pdf
 *.toc
 *.html
+*.css
 
 *.gcda
 *.gcno
