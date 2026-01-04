@@ -35,14 +35,11 @@ Scientific notation can be used to appropriately scale inputs. For example, inst
 \section{Springer mode}
 % TODO
 
-% TODO: d_barrel
-% TODO: d_plunger
-
 \tikzmath{
 \dplunger     = 3;
 \lplungertube = 5;
 \dbarrel      = 1;
-\lbarrel      = 6;
+\lbarrel      = 5;
 \ldead        = 1.5;
 \ylowbarrel   = (\dplunger - \dbarrel)/2; 
 \yhighbarrel  = \ylowbarrel + \dbarrel;
@@ -63,6 +60,9 @@ Scientific notation can be used to appropriately scale inputs. For example, inst
 \xdead = \lplungertube + \ldead/2;
 \xplungerheadunprimed = \lplungertube - \lplungerhead;
 \yxz = \ycenter - (\dplunger + \dbarrel)/4;
+\xdbarrel  = \xbarrelend - 1;
+\xdplunger = -0.5;
+\xdplungerline = -1;
 }
 
 \begin{figure}
@@ -79,6 +79,10 @@ Scientific notation can be used to appropriately scale inputs. For example, inst
 \draw[<->,thick] (\xplungerheadend, \ylbarrel) -- node[below] {$y_\text{0}$} (\lplungertube, \ylbarrel);
 \draw[<->,thick] (\lplungertube, \yxz) -- node[below] {$x_\text{0}$} (\xbarrelstart, \yxz);
 \draw[thick,dashed] (\xbarrelstart, 0) -- (\xbarrelstart, \ylowbarrel);
+\draw[<->,thick] (\xdbarrel, \ylowbarrel) -- node[right] {$d_\text{barrel}$} (\xdbarrel, \yhighbarrel);
+\draw[thick,dashed] (\xdplungerline, \dplunger) -- (0, \dplunger);
+\draw[thick,dashed] (\xdplungerline, 0) -- (0, 0);
+\draw[<->,thick] (\xdplunger, \dplunger) -- node[left] {$d_\text{plunger}$} (\xdplunger, 0);
 \end{tikzpicture}
 \caption{Model spring blaster at time zero ($x = x_0$, $y = y_0$) as represented in BlasterSim.}
 \label{fig:springer time zero}

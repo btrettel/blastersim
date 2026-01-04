@@ -1,6 +1,8 @@
 ### v0.1.0
 
-- Index
+- Change `x_z` to `x_pre` with different sign.
+- In V&V chapter, discuss running all the tests with `make check` (or jom or NMAKE)
+- Add index to docs.
 - Make normal Makefile call the documentation Makefile for now.
 - Make geninput generated TeX file as a dependency for 01_usage.tex.
 - Make internal and input file variable names consistent
