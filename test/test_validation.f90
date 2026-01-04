@@ -70,7 +70,7 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_2_)
     type(si_inverse_mass) :: rm_p_2
     type(si_mass)         :: m_projectile
     type(si_stiffness)    :: k
-    type(si_length)       :: x_z
+    type(si_length)       :: l_pre
     type(si_volume)       :: vol_2, vol_dead
     
     allocate(sys_start)
@@ -98,7 +98,7 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_2_)
     call p_atm%v%init_const(101350.0_WP, 0)
     call temp_atm%v%init_const(302.6_WP, 0)
     call k%v%init_const(0.0_WP, 0)
-    call x_z%v%init_const(0.0_WP, 0)
+    call l_pre%v%init_const(0.0_WP, 0)
     
     ! 1: atmosphere for barrel
     d_barrel = inch_const(0.527_WP, 0)
@@ -121,7 +121,7 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_2_)
     call p_fs_2%v%init_const(0.0_WP, 0)
     call p_fd_2%v%init_const(0.0_WP, 0)
     
-    call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_atm, "pressure chamber", csa_2, rm_p_2, p_fs_2, p_fd_2, k, x_z, &
+    call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp_atm, "pressure chamber", csa_2, rm_p_2, p_fs_2, p_fd_2, k, l_pre, &
                                 [DRY_AIR], 0, isentropic_filling=.true., p_atm=p_atm)
     
     ! 3: barrel
@@ -310,7 +310,7 @@ subroutine test_tinkershot_1(tests)
     type(si_area)        :: csa_3, csa_barrel
     type(si_mass)        :: m_p_3, m_projectile
     type(si_stiffness)   :: k
-    type(si_length)      :: x_z
+    type(si_length)      :: l_pre
     type(si_volume)      :: vol_dead
     
     allocate(sys_start)
@@ -367,9 +367,9 @@ subroutine test_tinkershot_1(tests)
     call p_fs_3%v%init_const(0.0_WP, 0)
     call p_fd_3%v%init_const(0.0_WP, 0)
     k = lbf_per_in_const(3.38_WP, 0)
-    call x_z%v%init_const(297.0e-3_WP-381.0e-3_WP, 0) ! TODO check
+    call l_pre%v%init_const(381.0e-3_WP-297.0e-3_WP, 0) ! TODO check
     
-    call sys_start%cv(3)%set(x_3, x_dot, y, p_atm, temp_atm, "piston chamber", csa_3, 1.0_WP/m_p_3, p_fs_3, p_fd_3, k, x_z, &
+    call sys_start%cv(3)%set(x_3, x_dot, y, p_atm, temp_atm, "piston chamber", csa_3, 1.0_WP/m_p_3, p_fs_3, p_fd_3, k, l_pre, &
                                 [DRY_AIR], 1)
     
     ! 4: barrel

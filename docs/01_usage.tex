@@ -75,6 +75,8 @@ Scientific notation can be used to appropriately scale inputs. For example, inst
 \fill[fill=gray,draw=black,thick] (\xplungerheadstart, 0) rectangle ++(\lplungerhead, \dplunger);
 \draw[spring] (0, \ycenter) -- (\xplungerheadstart, \ycenter);
 \draw[<->,thick] (\xbarrelstart, \ylbarrel) -- node[above] {$l_\text{barrel}$} (\xbarrelend, \ylbarrel);
+\draw[thick,dashed] (\xbarrelstart, \yhighbarrel) -- (\xbarrelstart, \dplunger);
+\draw[thick,dashed] (\xbarrelend, \yhighbarrel) -- (\xbarrelend, \dplunger);
 \node[draw=white] at (\xdead, \ycenter) {$V_\text{dead}$}; % `draw=white` added to make the text fully visible in LaTeXML
 \draw[<->,thick] (\xplungerheadend, \ylbarrel) -- node[below] {$y_\text{0}$} (\lplungertube, \ylbarrel);
 \draw[<->,thick] (\lplungertube, \yxz) -- node[below] {$x_\text{0}$} (\xbarrelstart, \yxz);
@@ -98,7 +100,7 @@ Scientific notation can be used to appropriately scale inputs. For example, inst
 \draw[spring_unprimed] (0, \ycenter) -- (\xplungerheadunprimed, \ycenter);
 \draw[spring_full] (0, \yfullspring) -- (\lfullspring, \yfullspring); % has a long straight line segment in LaTeXML for some reason
 \draw[<->,thick] (0, \yfullspringbelow) -- node[below] {$l_\text{spring}$} (\lfullspring, \yfullspringbelow);
-\draw[<->,thick] (\lfullspring, \halfyfullspringabove) -- node[above] {$y_\text{pre}$} (\xplungerheadunprimed, \halfyfullspringabove);
+\draw[<->,thick] (\lfullspring, \halfyfullspringabove) -- node[above] {$l_\text{pre}$} (\xplungerheadunprimed, \halfyfullspringabove);
 \draw[thick,dashed] (0, \yfullspringbelowbelow) -- (0, 0);
 \draw[thick,dashed] (\lfullspring, \yfullspringbelowbelow) -- (\lfullspring, 0);
 \draw[thick,dashed] (\xplungerheadunprimed, \yfullspringabove) -- (\xplungerheadunprimed, 0);

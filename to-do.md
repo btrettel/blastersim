@@ -1,6 +1,5 @@
 ### v0.1.0
 
-- Change `x_z` to `x_pre` with different sign.
 - In V&V chapter, discuss running all the tests with `make check` (or jom or NMAKE)
 - Add index to docs.
 - Make normal Makefile call the documentation Makefile for now.

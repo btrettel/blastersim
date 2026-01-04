@@ -32,7 +32,7 @@ subroutine create_barrel(vol_dead, csa_barrel, p_atm, temp_atm, m_p, p_fs, p_fd,
     integer, intent(in)              :: i_cv_mirror ! index of control volume to use in pressure difference calculation
     type(cv_type), intent(out)       :: cv
     
-    type(si_length)    :: x_d, x_stop, x_z
+    type(si_length)    :: x_d, x_stop, x_pre
     type(si_velocity)  :: x_dot
     type(unitless)     :: y(1)
     type(si_stiffness) :: k
@@ -44,10 +44,10 @@ subroutine create_barrel(vol_dead, csa_barrel, p_atm, temp_atm, m_p, p_fs, p_fd,
     call y(1)%v%init_const(1.0_WP, n_d)
     x_d = vol_dead/csa_barrel
     call k%v%init_const(0.0_WP, n_d)
-    call x_z%v%init_const(0.0_WP, n_d)
+    call x_pre%v%init_const(0.0_WP, n_d)
     x_stop = x_d + l_travel
     
-    call cv%set(x_d, x_dot, y, p_atm, temp_atm, "barrel", csa_barrel, 1.0_WP/m_p, p_fs, p_fd, k, x_z, gas, &
+    call cv%set(x_d, x_dot, y, p_atm, temp_atm, "barrel", csa_barrel, 1.0_WP/m_p, p_fs, p_fd, k, x_pre, gas, &
                     i_cv_mirror, x_stop=x_stop)
 end subroutine create_barrel
 

@@ -510,7 +510,7 @@ subroutine test_set_normal_1(tests)
     type(si_inverse_mass)    :: rm_p
     type(si_pressure)        :: p_fs, p_fd, p_atm
     type(si_stiffness)       :: k
-    type(si_length)          :: x_z
+    type(si_length)          :: l_pre
     type(si_specific_energy) :: u
     
     type(si_volume)       :: vol_cv
@@ -527,9 +527,9 @@ subroutine test_set_normal_1(tests)
     call p_fd%v%init_const(0.1e5_WP, 0)
     call p_atm%v%init_const(P_ATM_, 0)
     call k%v%init_const(10.0_WP, 0)
-    call x_z%v%init_const(3.0_WP, 0)
+    call l_pre%v%init_const(3.0_WP, 0)
     
-    call cv%set(x, x_dot, y, p, temp, "test_set_normal_1", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 2)
+    call cv%set(x, x_dot, y, p, temp, "test_set_normal_1", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     
     call tests%real_eq(cv%x%v%v, x%v%v, "set 1, x")
     call tests%real_eq(cv%x_dot%v%v, x_dot%v%v, "set 1, x_dot")
@@ -546,7 +546,7 @@ subroutine test_set_normal_1(tests)
     call tests%character_eq(cv%gas(1)%label, "dry air", "test_set_normal_1, gas label")
     
     call tests%real_eq(cv%k%v%v, k%v%v, "test_set_normal_1, k")
-    call tests%real_eq(cv%x_z%v%v, x_z%v%v, "test_set_normal_1, x_z")
+    call tests%real_eq(cv%l_pre%v%v, l_pre%v%v, "test_set_normal_1, l_pre")
     call tests%real_eq(cv%x_stop%v%v, X_STOP_DEFAULT, "test_set_normal_1, x_stop")
     call tests%real_eq(cv%m_s%v%v, 0.0_WP, "test_set_normal_1, m_s")
     
@@ -592,7 +592,7 @@ subroutine test_set_normal_2(tests)
     type(si_mass)         :: m_total
     type(si_pressure)     :: p_fs, p_fd, p_atm
     type(si_stiffness)    :: k
-    type(si_length)       :: x_z, x_stop
+    type(si_length)       :: l_pre, x_stop
     type(gas_type)        :: gas(2)
     
     real(WP)        :: n(2), m(2)
@@ -643,11 +643,11 @@ subroutine test_set_normal_2(tests)
     call p_fd%v%init_const(0.0_WP, 0)
     call p_atm%v%init_const(P_ATM_, 0)
     call k%v%init_const(0.0_WP, 0)
-    call x_z%v%init_const(0.0_WP, 0)
+    call l_pre%v%init_const(0.0_WP, 0)
     call x_stop%v%init_const(1.0_WP, 0) ! to test non-default `x_stop`
     call assert(.not. is_close(x_stop%v%v, X_STOP_DEFAULT), "x_stop must not equal the default for this test")
     
-    call cv%set(x, x_dot, y, p, temp, "test_set_normal_2", csa, rm_p, p_fs, p_fd, k, x_z, gas, 2, x_stop=x_stop)
+    call cv%set(x, x_dot, y, p, temp, "test_set_normal_2", csa, rm_p, p_fs, p_fd, k, l_pre, gas, 2, x_stop=x_stop)
     
     ! All the masses are slightly off. This is expected, as total mass is not an input here.
     ! Pressure is the input setting the total mass, and it's only approximate.
@@ -699,7 +699,7 @@ subroutine test_set_normal_3(tests)
     type(si_inverse_mass) :: rm_p
     type(si_pressure)     :: p_fs, p_fd, p_atm
     type(si_stiffness)    :: k
-    type(si_length)       :: x_z
+    type(si_length)       :: l_pre
     type(si_mass)         :: m_s
     
     call x%v%init_const(0.5_WP, 0)
@@ -713,10 +713,10 @@ subroutine test_set_normal_3(tests)
     call p_fd%v%init_const(0.1e5_WP, 0)
     call p_atm%v%init_const(1.0e5_WP, 0)
     call k%v%init_const(10.0_WP, 0)
-    call x_z%v%init_const(3.0_WP, 0)
+    call l_pre%v%init_const(3.0_WP, 0)
     call m_s%v%init_const(2.5_WP, 0)
     
-    call cv%set(x, x_dot, y, p, temp_atm, "test_set_normal_3", csa, rm_p, p_fs, p_fd, k, x_z, &
+    call cv%set(x, x_dot, y, p, temp_atm, "test_set_normal_3", csa, rm_p, p_fs, p_fd, k, l_pre, &
                         [DRY_AIR], 2, isentropic_filling=.true., p_atm=p_atm, m_s=m_s)
     
     temp_cv = cv%temp()
@@ -749,7 +749,7 @@ subroutine test_set_const(tests)
     call tests%real_eq(cv%p_fs%v%v, 0.0_WP, "test_set_const, p_fs")
     call tests%real_eq(cv%p_fd%v%v, 0.0_WP, "test_set_const, p_fd")
     call tests%real_eq(cv%k%v%v, 0.0_WP, "test_set_const, k")
-    call tests%real_eq(cv%x_z%v%v, 0.0_WP, "test_set_const, x_z")
+    call tests%real_eq(cv%l_pre%v%v, 0.0_WP, "test_set_const, l_pre")
     call tests%real_eq(cv%x_stop%v%v, X_STOP_DEFAULT, "test_set_const, x_stop")
     
     call tests%character_eq(cv%label, "test_set_const", "test_set_const, label")
@@ -779,7 +779,7 @@ subroutine test_rates(tests)
     type(si_area)             :: csa
     type(si_inverse_mass)     :: rm_p
     type(si_stiffness)        :: k
-    type(si_length)           :: x_z
+    type(si_length)           :: l_pre
     type(si_acceleration)     :: d_x_dot_d_t_
     type(si_mass_flow_rate)   :: m_dots(2, 2), d_m_1_d_t
     type(si_energy_flow_rate) :: h_dots(2, 2), d_e_d_t_, d_e_f_d_t_
@@ -795,12 +795,12 @@ subroutine test_rates(tests)
     call p_fd%v%init_const(1.0e5_WP, 0)
     call p_atm%v%init_const(1.0e5_WP, 0)
     call k%v%init_const(1.0e6_WP, 0)
-    call x_z%v%init_const(0.5_WP, 0)
+    call l_pre%v%init_const(-0.5_WP, 0)
     
     allocate(sys%cv(2))
     
     call sys%cv(1)%set_const("test_rates CV 1 (constant pressure)", csa, p_atm, temp, [DRY_AIR], 2)
-    call sys%cv(2)%set(x, x_dot, y, p, temp, "test_rates CV 2", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 1)
+    call sys%cv(2)%set(x, x_dot, y, p, temp, "test_rates CV 2", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 1)
     
     d_x_d_t_ = d_x_d_t(sys, 2)
     call tests%real_eq(d_x_d_t_%v%v, x_dot%v%v, "d_x_d_t")
@@ -850,7 +850,7 @@ subroutine test_u_h_cv(tests)
     type(si_area)            :: csa
     type(si_inverse_mass)    :: rm_p
     type(si_stiffness)       :: k
-    type(si_length)          :: x_z
+    type(si_length)          :: l_pre
     type(si_specific_energy) :: u, h
     
     real(WP) :: u_exact, h_exact
@@ -867,9 +867,9 @@ subroutine test_u_h_cv(tests)
     call p_fd%v%init_const(1.0e5_WP, 0)
     call p_atm%v%init_const(1.0e5_WP, 0)
     call k%v%init_const(1.0e6_WP, 0)
-    call x_z%v%init_const(0.5_WP, 0)
+    call l_pre%v%init_const(0.5_WP, 0)
     
-    call cv%set(x, x_dot, y, p, temp, "test_u_h_cv", csa, rm_p, p_fs, p_fd, k, x_z, [N2, H2O], 2)
+    call cv%set(x, x_dot, y, p, temp, "test_u_h_cv", csa, rm_p, p_fs, p_fd, k, l_pre, [N2, H2O], 2)
     
     u_exact = y(1)%v%v*N2%u_0 + y(2)%v%v*H2O%u_0
     h_exact = y(1)%v%v*N2%h_0 + y(2)%v%v*H2O%h_0
@@ -969,16 +969,16 @@ subroutine test_m_dot_1(tests)
     type(con_type)    :: con
     type(si_pressure) :: delta_p
     
-    type(si_length)          :: x
-    type(si_velocity)        :: x_dot
-    type(unitless)           :: y(1)
-    type(si_pressure)        :: p
-    type(si_temperature)     :: temp
-    type(si_area)            :: csa
-    type(si_inverse_mass)    :: rm_p
-    type(si_pressure)        :: p_fs, p_fd, p_atm
-    type(si_stiffness)       :: k
-    type(si_length)          :: x_z
+    type(si_length)       :: x
+    type(si_velocity)     :: x_dot
+    type(unitless)        :: y(1)
+    type(si_pressure)     :: p
+    type(si_temperature)  :: temp
+    type(si_area)         :: csa
+    type(si_inverse_mass) :: rm_p
+    type(si_pressure)     :: p_fs, p_fd, p_atm
+    type(si_stiffness)    :: k
+    type(si_length)       :: l_pre
     
     type(si_mass_flow_rate) :: m_dot_con
     real(WP) :: d_m_dot_d_delta_p
@@ -1000,10 +1000,10 @@ subroutine test_m_dot_1(tests)
     call p_fd%v%init_const(0.0_WP, 1)
     call p_atm%v%init_const(P_ATM_, 1)
     call k%v%init_const(0.0_WP, 1)
-    call x_z%v%init_const(0.0_WP, 1)
+    call l_pre%v%init_const(0.0_WP, 1)
     
-    call cv_from%set(x, x_dot, y, p, temp, "from", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 2)
-    call cv_to%set(x, x_dot, y, p - delta_p, temp, "to", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 2)
+    call cv_from%set(x, x_dot, y, p, temp, "from", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
+    call cv_to%set(x, x_dot, y, p - delta_p, temp, "to", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     
     m_dot_con = con%m_dot(cv_from, cv_to)
     
@@ -1038,7 +1038,7 @@ subroutine test_m_dot_2(tests)
     type(si_inverse_mass)    :: rm_p
     type(si_pressure)        :: p_fs, p_fd, p_atm
     type(si_stiffness)       :: k
-    type(si_length)          :: x_z
+    type(si_length)          :: l_pre
     
     type(si_mass_flow_rate) :: m_dot_con
     real(WP) :: m_dot_con_, d_m_dot_d_p_r
@@ -1062,12 +1062,12 @@ subroutine test_m_dot_2(tests)
     call p_fd%v%init_const(0.0_WP, 1)
     call p_atm%v%init_const(P_ATM_, 1)
     call k%v%init_const(0.0_WP, 1)
-    call x_z%v%init_const(0.0_WP, 1)
+    call l_pre%v%init_const(0.0_WP, 1)
     
     p_out = p_in*p_r
     
-    call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 2)
-    call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 2)
+    call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
+    call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     
     m_dot_con = con%m_dot(cv_from, cv_to)
     
@@ -1104,7 +1104,7 @@ subroutine test_m_dot_3(tests)
     type(si_inverse_mass)    :: rm_p
     type(si_pressure)        :: p_fs, p_fd, p_atm
     type(si_stiffness)       :: k
-    type(si_length)          :: x_z
+    type(si_length)          :: l_pre
     
     type(si_mass_flow_rate) :: m_dot_con
     real(WP) :: m_dot_con_
@@ -1127,12 +1127,12 @@ subroutine test_m_dot_3(tests)
     call p_fd%v%init_const(0.0_WP, 1)
     call p_atm%v%init_const(P_ATM_, 1)
     call k%v%init_const(0.0_WP, 1)
-    call x_z%v%init_const(0.0_WP, 1)
+    call l_pre%v%init_const(0.0_WP, 1)
     
     p_out = p_in*p_r
     
-    call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 2)
-    call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 2)
+    call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
+    call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     
     m_dot_con = con%m_dot(cv_from, cv_to)
     
@@ -1163,7 +1163,7 @@ subroutine test_m_dot_4(tests)
     type(si_inverse_mass)    :: rm_p
     type(si_pressure)        :: p_fs, p_fd, p_atm
     type(si_stiffness)       :: k
-    type(si_length)          :: x_z
+    type(si_length)          :: l_pre
     
     type(si_mass_flow_rate) :: m_dot_con
     
@@ -1183,10 +1183,10 @@ subroutine test_m_dot_4(tests)
     call p_fd%v%init_const(0.0_WP, 1)
     call p_atm%v%init_const(P_ATM_, 1)
     call k%v%init_const(0.0_WP, 1)
-    call x_z%v%init_const(0.0_WP, 1)
+    call l_pre%v%init_const(0.0_WP, 1)
     
-    call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 2)
-    call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 2)
+    call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
+    call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     
     m_dot_con = con%m_dot(cv_from, cv_to)
     
@@ -1211,7 +1211,7 @@ subroutine test_calculate_flows(tests)
     type(si_inverse_mass)    :: rm_p
     type(si_pressure)        :: p_fs, p_fd, p_atm
     type(si_stiffness)       :: k
-    type(si_length)          :: x_z
+    type(si_length)          :: l_pre
     real(WP)                 :: m_dot_12
     type(si_specific_energy) :: h_1
     
@@ -1242,12 +1242,12 @@ subroutine test_calculate_flows(tests)
     call p_fd%v%init_const(0.0_WP, 0)
     call p_atm%v%init_const(P_ATM_, 0)
     call k%v%init_const(0.0_WP, 0)
-    call x_z%v%init_const(0.0_WP, 0)
+    call l_pre%v%init_const(0.0_WP, 0)
     
     p_out = p_in*p_r
     
-    call sys%cv(1)%set(x, x_dot, y, p_in, temp, "1", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 3)
-    call sys%cv(2)%set(x, x_dot, y, p_out, temp, "2", csa, rm_p, p_fs, p_fd, k, x_z, [DRY_AIR], 3)
+    call sys%cv(1)%set(x, x_dot, y, p_in, temp, "1", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 3)
+    call sys%cv(2)%set(x, x_dot, y, p_out, temp, "2", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 3)
     
     m_dot_12 = sys%con(1, 2)%a_e%v%v * p_in%v%v * sqrt((1.0_WP - sys%con(1, 2)%b%v%v)/((R_BAR/DRY_AIR%mm) * temp%v%v))
     
@@ -1292,7 +1292,7 @@ subroutine test_conservation(tests)
     type(si_area)         :: csa_3, csa_4
     type(si_mass)         :: m_p_3, m_p_4, m_start, m_end
     type(si_stiffness)    :: k
-    type(si_length)       :: x_z
+    type(si_length)       :: l_pre
     type(si_energy)       :: e_start, e_end, spring_pe_3_start, m_p_ke_3_start, e_start_3, &
                                 e_chamber_atm, e_barrel_atm
     
@@ -1357,10 +1357,10 @@ subroutine test_conservation(tests)
     call p_fs_3%v%init_const(0.2e5_WP, n_d)
     call p_fd_3%v%init_const(0.1e5_WP, n_d)
     call k%v%init_const(700.0_WP, n_d)
-    call x_z%v%init_const(1.0e-2_WP, n_d)
+    call l_pre%v%init_const(-1.0e-2_WP, n_d)
     
     call sys_start%cv(3)%set(x_3, x_dot, y, p_3, temp_atm, "pressure chamber", csa_3, 1.0_WP/m_p_3, p_fs_3, p_fd_3, k, &
-                                    x_z, [DRY_AIR], 1)
+                                    l_pre, [DRY_AIR], 1)
     ! `isentropic_filling=.true.` requires that `p_atm > 0`, so it's not used here.
     
     ! 4: barrel
@@ -1373,10 +1373,10 @@ subroutine test_conservation(tests)
     call p_fd_4%v%init_const(0.1e5_WP, n_d)
     x_stop_4 = x_4 + inch_const(12.0_WP, n_d)
     call k%v%init_const(0.0_WP, n_d)
-    call x_z%v%init_const(0.0_WP, n_d)
+    call l_pre%v%init_const(0.0_WP, n_d)
     
     call sys_start%cv(4)%set(x_4, x_dot, y, p_4, temp_atm, "barrel", csa_4, 1.0_WP/m_p_4, p_fs_4, p_fd_4, k, &
-                                x_z, [DRY_AIR], 2, x_stop=x_stop_4)
+                                l_pre, [DRY_AIR], 2, x_stop=x_stop_4)
     
     call config%set("test_conservation", 1, csv_output=.true., csv_frequency=100)
     call run(config, sys_start, sys_end, status)
@@ -1455,7 +1455,7 @@ subroutine test_mirror_1(tests)
     type(si_area)        :: csa
     type(si_mass)        :: m_p
     type(si_stiffness)   :: k
-    type(si_length)      :: x_z
+    type(si_length)      :: l_pre
     type(si_time)        :: t_stop
     
     allocate(sys_start)
@@ -1479,13 +1479,13 @@ subroutine test_mirror_1(tests)
     call p_fs%v%init_const(0.0_WP, 0)
     call p_fd%v%init_const(0.1e5_WP, 0)
     call k%v%init_const(0.0_WP, 0)
-    call x_z%v%init_const(0.0_WP, 0)
+    call l_pre%v%init_const(0.0_WP, 0)
     call t_stop%v%init_const(0.1_WP, 0)
     
     call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp, "chamber 1", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
-                                    x_z, [DRY_AIR], 2)
+                                    l_pre, [DRY_AIR], 2)
     call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp, "chamber 2", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
-                                    x_z, [DRY_AIR], 1, type=MIRROR_CV_TYPE)
+                                    l_pre, [DRY_AIR], 1, type=MIRROR_CV_TYPE)
     
     call config%set("test_mirror_1", 0, t_stop=t_stop)
     call run(config, sys_start, sys_end, status)
@@ -1532,7 +1532,7 @@ subroutine test_mirror_2(tests)
     type(si_area)        :: csa
     type(si_mass)        :: m_p
     type(si_stiffness)   :: k
-    type(si_length)      :: x_z
+    type(si_length)      :: l_pre
     type(si_time)        :: t_stop
     
     allocate(sys_start)
@@ -1556,13 +1556,13 @@ subroutine test_mirror_2(tests)
     call p_fs%v%init_const(0.0_WP, 0)
     call p_fd%v%init_const(0.1e5_WP, 0)
     call k%v%init_const(0.0_WP, 0)
-    call x_z%v%init_const(0.0_WP, 0)
+    call l_pre%v%init_const(0.0_WP, 0)
     call t_stop%v%init_const(1.0e-3_WP, 0)
     
     call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp, "chamber 1", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
-                                    x_z, [DRY_AIR], 2)
+                                    l_pre, [DRY_AIR], 2)
     call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp, "chamber 2", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
-                                    x_z, [DRY_AIR], 1, type=MIRROR_CV_TYPE)
+                                    l_pre, [DRY_AIR], 1, type=MIRROR_CV_TYPE)
     
     call config%set("test_mirror_2", 0, t_stop=t_stop)
     call run(config, sys_start, sys_end, status)
@@ -1630,7 +1630,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(1)%x_z = sys%cv(1)%x
+    sys%cv(1)%l_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
@@ -1649,7 +1649,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(2)%x_z = sys%cv(2)%x
+    sys%cv(2)%l_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
     
     sys_start = sys
@@ -1675,7 +1675,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(1)%x_z = sys%cv(1)%x
+    sys%cv(1)%l_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
@@ -1694,7 +1694,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(2)%x_z = sys%cv(2)%x
+    sys%cv(2)%l_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
     
     call check_sys(config, sys, sys_start, t, status)
@@ -1723,7 +1723,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(1)%x_z = sys%cv(1)%x
+    sys%cv(1)%l_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
@@ -1742,7 +1742,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(2)%x_z = sys%cv(2)%x
+    sys%cv(2)%l_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
     
     call check_sys(config, sys, sys_start, t, status)
@@ -1769,7 +1769,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(1)%x_z = sys%cv(1)%x
+    sys%cv(1)%l_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
@@ -1788,7 +1788,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(2)%x_z = sys%cv(2)%x
+    sys%cv(2)%l_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
     
     call check_sys(config, sys, sys_start, t, status)
@@ -1818,7 +1818,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(2)%x_z = sys%cv(2)%x
+    sys%cv(2)%l_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
     
     call sys%cv(1)%x%v%init_const(0.1_WP, n_d)
@@ -1837,7 +1837,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(1)%x_z = sys%cv(1)%x
+    sys%cv(1)%l_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
     
     call check_sys(config, sys, sys_start, t, status)
@@ -1867,7 +1867,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(1)%x_z = sys%cv(1)%x
+    sys%cv(1)%l_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
@@ -1886,7 +1886,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(2)%x_z = sys%cv(2)%x
+    sys%cv(2)%l_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
     
     call check_sys(config, sys, sys_start, t, status)
@@ -1912,7 +1912,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(1)%x_z = sys%cv(1)%x
+    sys%cv(1)%l_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
@@ -1931,7 +1931,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(2)%x_z = sys%cv(2)%x
+    sys%cv(2)%l_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
     
     call check_sys(config, sys, sys_start, t, status)
@@ -1957,7 +1957,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(1)%x_z = sys%cv(1)%x
+    sys%cv(1)%l_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
@@ -1976,7 +1976,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(2)%x_z = sys%cv(2)%x
+    sys%cv(2)%l_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
     
     call tests%integer_eq(size(sys%cv(1)%x%v%d), 2, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, n_d")
@@ -2004,7 +2004,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(1)%x_z = sys%cv(1)%x
+    sys%cv(1)%l_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
@@ -2023,7 +2023,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(2)%x_z = sys%cv(2)%x
+    sys%cv(2)%l_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
     
     call tests%integer_eq(size(sys%cv(1)%x%v%d), 2, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, n_d")
@@ -2051,7 +2051,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(1)%x_z = sys%cv(1)%x
+    sys%cv(1)%l_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
@@ -2070,7 +2070,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
-    sys%cv(2)%x_z = sys%cv(2)%x
+    sys%cv(2)%l_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
     
     call check_sys(config, sys, sys_start, t, status)
@@ -2160,7 +2160,7 @@ subroutine one_cv_x_dot_de(n, ne, ne_d)
     type(si_pressure)    :: p_atm, p_0, p_fs, p_fd
     type(si_temperature) :: temp_atm
     type(si_velocity)    :: x_dot, x_dot_exact
-    type(si_length)      :: x_0, x_z
+    type(si_length)      :: x_0, l_pre
     type(si_mass)        :: m_p
     type(si_stiffness)   :: k
     type(unitless)       :: y(1)
@@ -2196,10 +2196,10 @@ subroutine one_cv_x_dot_de(n, ne, ne_d)
     call p_fs%v%init(0.1e5_WP, 6, N_D)
     p_fd = p_fs
     call k%v%init_const(0.0_WP, N_D)
-    call x_z%v%init_const(0.0_WP, N_D)
+    call l_pre%v%init_const(0.0_WP, N_D)
     
     call sys_start%cv(2)%set(x_0, x_dot, y, p_0, temp_atm, "barrel", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
-                                x_z, [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm, constant_friction=.true.)
+                                l_pre, [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm, constant_friction=.true.)
     
     call assert(sys_start%cv(2)%constant_friction, "test_one_cv, cv%constant_friction")
     
