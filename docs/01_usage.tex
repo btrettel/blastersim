@@ -35,30 +35,62 @@ Scientific notation can be used to appropriately scale inputs. For example, inst
 \section{Springer mode}
 % TODO
 
-\begin{figure}
-\centering
+% TODO: d_barrel
+% TODO: d_plunger
+
 \tikzmath{
-\dplunger = 3;
-\lplunger = 4;
-\dbarrel  = 1;
-\lbarrel  = 6;
-\ldead    = 2;
+\dplunger     = 3;
+\lplungertube = 5;
+\dbarrel      = 1;
+\lbarrel      = 6;
+\ldead        = 1.5;
 \ylowbarrel  = (\dplunger - \dbarrel)/2; 
 \yhighbarrel = \ylowbarrel + \dbarrel;
-\xbarrelend = \lplunger + \ldead + \lbarrel;
-\xprojstart = \lplunger + \ldead;
+\xbarrelend   = \lplungertube + \ldead + \lbarrel;
+\xbarrelstart = \lplungertube + \ldead;
 \lproj      = 2;
-\xplungerheadstart = 1;
-\lplungerhead      = 1;
-} 
+\xplungerheadstart = 1.5;
+\lplungerhead      = 0.5;
+\xplungerheadend   = \xplungerheadstart + \lplungerhead;
+\ycenter = \dplunger/2;
+\yfullspring = -\dplunger/2;
+\yfullspringbelow = -3*\dplunger/4;
+\lfullspring = 7;
+\ylbarrel = \ycenter + (\dplunger + \dbarrel)/4;
+\xdead = \lplungertube + \ldead/2;
+\xplungerheadunprimed = \lplungertube - \lplungerhead;
+}
+
+\begin{figure}
+\centering
 \begin{tikzpicture}
-\draw[thick] (0, 0)         -- (\lplunger, 0)         -- (\lplunger, \ylowbarrel)  -- (\xbarrelend, \ylowbarrel);
-\draw[thick] (0, \dplunger) -- (\lplunger, \dplunger) -- (\lplunger, \yhighbarrel) -- (\xbarrelend, \yhighbarrel);
-\fill[fill=gray,draw=black,thick] (\xprojstart, \ylowbarrel) rectangle ++(\lproj, \dbarrel);
+\tikzstyle{spring}=[thick,decorate,decoration={coil,amplitude=20,segment length=4pt}] % `zigzag` doesn't work right in LaTeXML, but `coil` does
+\draw[thick] (\xbarrelend, \yhighbarrel) -- (\lplungertube, \yhighbarrel) -- (\lplungertube, \dplunger) -- (0, \dplunger) -- (0, 0)         -- (\lplungertube, 0) -- (\lplungertube, \ylowbarrel) -- (\xbarrelend, \ylowbarrel);
+\draw[thick,dashed] (\lplungertube, \ylowbarrel) -- (\lplungertube, \yhighbarrel);
+\fill[fill=gray,draw=black,thick] (\xbarrelstart, \ylowbarrel) rectangle ++(\lproj, \dbarrel);
 \fill[fill=gray,draw=black,thick] (\xplungerheadstart, 0) rectangle ++(\lplungerhead, \dplunger);
+\draw[spring] (0, \ycenter) -- (\xplungerheadstart, \ycenter);
+\draw[<->,thick] (\xbarrelstart, \ylbarrel) -- node[above] {$l_\text{barrel}$} (\xbarrelend, \ylbarrel);
+\node[draw=white] at (\xdead, \ycenter) {$V_\text{dead}$}; % `draw=white` added to make the text fully visible in LaTeXML
+\draw[<->,thick] (\xplungerheadend, \ylbarrel) -- node[below] {$x_\text{p,0}$} (\lplungertube, \ylbarrel);
 \end{tikzpicture}
 \caption{Model spring blaster at time zero as represented in BlasterSim.}
-\label{fig:springer setup}
+\label{fig:springer time zero}
+\end{figure}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\tikzstyle{spring_unprimed}=[thick,decorate,decoration={coil,amplitude=20,segment length=18pt}]
+\tikzstyle{spring_full}=[thick,decorate,decoration={coil,amplitude=20,segment length=30pt}]
+\draw[thick] (\xbarrelend, \yhighbarrel) -- (\lplungertube, \yhighbarrel) -- (\lplungertube, \dplunger) -- (0, \dplunger) -- (0, 0)         -- (\lplungertube, 0) -- (\lplungertube, \ylowbarrel) -- (\xbarrelend, \ylowbarrel);
+\fill[fill=gray,draw=black,thick] (\xplungerheadunprimed, 0) rectangle ++(\lplungerhead, \dplunger);
+\draw[spring_unprimed] (0, \ycenter) -- (\xplungerheadunprimed, \ycenter);
+\draw[spring_full] (0, \yfullspring) -- (\lfullspring, \yfullspring); % has a long straight line segment in LaTeXML for some reason
+\draw[<->,thick] (0, \yfullspringbelow) -- node[below] {$l_\text{spring}$} (\lfullspring, \yfullspringbelow);
+\end{tikzpicture}
+\caption{Unprimed model spring blaster as represented in BlasterSim to show spring precompression.}
+\label{fig:springer unprimed}
 \end{figure}
 
 \section{Pneumatic mode}
