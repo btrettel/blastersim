@@ -47,7 +47,7 @@ call test_calculate_flows(tests)
 call test_conservation(tests)
 call test_mirror_1(tests)
 call test_mirror_2(tests)
-call test_one_cv(tests)
+call test_exact(tests)
 
 call test_check_sys(tests)
 
@@ -2101,14 +2101,14 @@ subroutine test_check_sys(tests)
     ! TODO: `E_F_BLOW_UP_RUN_RC`
 end subroutine test_check_sys
 
-pure function one_cv_x_dot(sys_0, x)
+pure function exact_x_dot(sys_0, x)
     use checks, only: assert, is_close
     use cva, only: IDEAL_EOS, CONST_EOS, NORMAL_CV_TYPE, MIRROR_CV_TYPE, cv_system_type
     
     type(cv_system_type), intent(in), allocatable :: sys_0
     type(si_length), intent(in)                   :: x
     
-    type(si_velocity) :: one_cv_x_dot
+    type(si_velocity) :: exact_x_dot
     
     type(si_area)         :: csa
     type(si_inverse_mass) :: rm_p
@@ -2116,13 +2116,13 @@ pure function one_cv_x_dot(sys_0, x)
     real(WP)              :: gamma
     type(si_length)       :: x_0
     
-    call assert(size(sys_0%cv) == 2, "test_cva (one_cv_x_dot): sys_0%cv has the incorrect size")
-    call assert(sys_0%cv(1)%type == MIRROR_CV_TYPE, "test_cva (one_cv_x_dot): CV 1 must be MIRROR_CV_TYPE")
-    call assert(sys_0%cv(1)%eos  == CONST_EOS,      "test_cva (one_cv_x_dot): CV 1 must be CONST_EOS")
-    call assert(size(sys_0%cv(1)%gas) == 1,         "test_cva (one_cv_x_dot): CV 1 must have only 1 gas")
-    call assert(sys_0%cv(2)%type == NORMAL_CV_TYPE, "test_cva (one_cv_x_dot): CV 2 must be NORMAL_CV_TYPE")
-    call assert(sys_0%cv(2)%eos  == IDEAL_EOS,      "test_cva (one_cv_x_dot): CV 2 must be IDEAL_EOS")
-    call assert(size(sys_0%cv(2)%gas) == 1,         "test_cva (one_cv_x_dot): CV 2 must have only 1 gas")
+    call assert(size(sys_0%cv) == 2, "test_cva (exact_x_dot): sys_0%cv has the incorrect size")
+    call assert(sys_0%cv(1)%type == MIRROR_CV_TYPE, "test_cva (exact_x_dot): CV 1 must be MIRROR_CV_TYPE")
+    call assert(sys_0%cv(1)%eos  == CONST_EOS,      "test_cva (exact_x_dot): CV 1 must be CONST_EOS")
+    call assert(size(sys_0%cv(1)%gas) == 1,         "test_cva (exact_x_dot): CV 1 must have only 1 gas")
+    call assert(sys_0%cv(2)%type == NORMAL_CV_TYPE, "test_cva (exact_x_dot): CV 2 must be NORMAL_CV_TYPE")
+    call assert(sys_0%cv(2)%eos  == IDEAL_EOS,      "test_cva (exact_x_dot): CV 2 must be IDEAL_EOS")
+    call assert(size(sys_0%cv(2)%gas) == 1,         "test_cva (exact_x_dot): CV 2 must have only 1 gas")
     
     csa   = sys_0%cv(2)%csa
     rm_p  = sys_0%cv(2)%rm_p
@@ -2133,13 +2133,13 @@ pure function one_cv_x_dot(sys_0, x)
     p_f   = sys_0%cv(2)%p_fd
     
     call assert(is_close(sys_0%cv(2)%p_fd%v%v, sys_0%cv(2)%p_fs%v%v), &
-                    "test_cva (one_cv_x_dot): p_fs must equal p_fd")
+                    "test_cva (exact_x_dot): p_fs must equal p_fd")
     
-    one_cv_x_dot = sqrt(2.0_WP*csa*rm_p * (p_0*(x*((x_0/x)**gamma) - x_0)/(1.0_WP - gamma) &
+    exact_x_dot = sqrt(2.0_WP*csa*rm_p * (p_0*(x*((x_0/x)**gamma) - x_0)/(1.0_WP - gamma) &
                                         - (p_atm + p_f)*(x - x_0)))
-end function one_cv_x_dot
+end function exact_x_dot
 
-subroutine one_cv_x_dot_de(n, ne, ne_d)
+subroutine exact_x_dot_de(n, ne, ne_d)
     use fmad, only: ad
     use gasdata, only: DRY_AIR
     use cva, only: TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, run, &
@@ -2201,7 +2201,7 @@ subroutine one_cv_x_dot_de(n, ne, ne_d)
     call sys_start%cv(2)%set(x_0, x_dot, y, p_0, temp_atm, "barrel", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
                                 l_pre, [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm, constant_friction=.true.)
     
-    call assert(sys_start%cv(2)%constant_friction, "test_one_cv, cv%constant_friction")
+    call assert(sys_start%cv(2)%constant_friction, "test_exact, cv%constant_friction")
     
     call t_stop%v%init_const(0.0273_WP, N_D)
     
@@ -2210,23 +2210,23 @@ subroutine one_cv_x_dot_de(n, ne, ne_d)
     ! However, `sys_interp` is not called if `rc == TIMEOUT_RUN_RC` as it is here..
     dt = t_stop / real(n, WP)
     
-    call config%set("test_one_cv", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false.)
+    call config%set("test_exact", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false.)
     call run(config, sys_start, sys_end, status)
     
-    x_dot_exact = one_cv_x_dot(sys_start, sys_end%cv(2)%x)
+    x_dot_exact = exact_x_dot(sys_start, sys_end%cv(2)%x)
     
     if (status%rc == ENERGY_DERIV_TOLERANCE_RUN_RC) then
         print *, "ENERGY_DERIV_TOLERANCE_RUN_RC"
         print *, status%data(1), int(status%data(2)), ENERGY_DERIV_TOLERANCE
     end if
-    call assert(status%rc == TIMEOUT_RUN_RC, "test_one_cv, status%rc")
+    call assert(status%rc == TIMEOUT_RUN_RC, "test_exact, status%rc")
     
     do i_var = 1, N_VAR
         select case (i_var)
             case (1)
                 ne(i_var) = abs(sys_end%cv(2)%x_dot%v - x_dot_exact%v)
             case default
-                error stop "test_cva (one_cv_x_dot_de): invalid i_var (1)"
+                error stop "test_cva (exact_x_dot_de): invalid i_var (1)"
         end select
         
         do i_d = 1, N_D
@@ -2234,13 +2234,13 @@ subroutine one_cv_x_dot_de(n, ne, ne_d)
                 case (1)
                     ne_d(i_var, i_d) = abs(sys_end%cv(2)%x_dot%v%d(i_d) - x_dot_exact%v%d(i_d))
                 case default
-                    error stop "test_cva (one_cv_x_dot_de): invalid i_var (2)"
+                    error stop "test_cva (exact_x_dot_de): invalid i_var (2)"
             end select
         end do
     end do
-end subroutine one_cv_x_dot_de
+end subroutine exact_x_dot_de
 
-subroutine test_one_cv(tests)
+subroutine test_exact(tests)
     ! Tests using exact solution with projectile and one internal control volume.
     ! There is also an additional constant control volume for the atmosphere, but no real calculations are done by that.
     ! Also tests that `cv%constant_friction = .true.` works.
@@ -2256,19 +2256,19 @@ subroutine test_one_cv(tests)
     type(ad), allocatable :: ne(:)
     real(WP), allocatable :: ne_d(:, :)
     
-    call one_cv_x_dot_de(10000, ne, ne_d)
+    call exact_x_dot_de(10000, ne, ne_d)
     
-    call tests%real_eq(ne(1)%v, 0.0_WP, "test_one_cv, x_dot numerical error", abs_tol=1.0e-12_WP)
-    call tests%real_eq(ne_d(1, 1), 0.0_WP, "test_one_cv, d(x_dot)/d(csa) numerical error", abs_tol=1.0e-11_WP)
-    call tests%real_eq(ne_d(1, 2), 0.0_WP, "test_one_cv, d(x_dot)/d(p_atm) numerical error", abs_tol=1.0e-18_WP)
-    call tests%real_eq(ne_d(1, 3), 0.0_WP, "test_one_cv, d(x_dot)/d(x_0) numerical error", abs_tol=1.0e-11_WP)
-    call tests%real_eq(ne_d(1, 4), 0.0_WP, "test_one_cv, d(x_dot)/d(p_0) numerical error", abs_tol=1.0e-18_WP)
-    call tests%real_eq(ne_d(1, 5), 0.0_WP, "test_one_cv, d(x_dot)/d(m_p) numerical error", abs_tol=1.0e-13_WP)
-    call tests%real_eq(ne_d(1, 6), 0.0_WP, "test_one_cv, d(x_dot)/d(p_f) numerical error", abs_tol=1.0e-18_WP)
+    call tests%real_eq(ne(1)%v, 0.0_WP, "test_exact, x_dot numerical error", abs_tol=1.0e-12_WP)
+    call tests%real_eq(ne_d(1, 1), 0.0_WP, "test_exact, d(x_dot)/d(csa) numerical error", abs_tol=1.0e-11_WP)
+    call tests%real_eq(ne_d(1, 2), 0.0_WP, "test_exact, d(x_dot)/d(p_atm) numerical error", abs_tol=1.0e-18_WP)
+    call tests%real_eq(ne_d(1, 3), 0.0_WP, "test_exact, d(x_dot)/d(x_0) numerical error", abs_tol=1.0e-11_WP)
+    call tests%real_eq(ne_d(1, 4), 0.0_WP, "test_exact, d(x_dot)/d(p_0) numerical error", abs_tol=1.0e-18_WP)
+    call tests%real_eq(ne_d(1, 5), 0.0_WP, "test_exact, d(x_dot)/d(m_p) numerical error", abs_tol=1.0e-13_WP)
+    call tests%real_eq(ne_d(1, 6), 0.0_WP, "test_exact, d(x_dot)/d(p_f) numerical error", abs_tol=1.0e-18_WP)
     
     ! I guess that I'm running into floating point error if I make the time step smaller than around the default.
     ! 4th order accuracy sure convergences fast!
-    call convergence_test([500, 1000], one_cv_x_dot_de, [4.0_WP], "test_one_cv, passing", tests, p_tol=[0.03_WP], p_d_tol=[0.14_WP])
-end subroutine test_one_cv
+    call convergence_test([500, 1000], exact_x_dot_de, [4.0_WP], "test_exact, passing", tests, p_tol=[0.03_WP], p_d_tol=[0.14_WP])
+end subroutine test_exact
 
 end program test_cva
