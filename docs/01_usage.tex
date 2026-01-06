@@ -125,6 +125,26 @@ Scientific notation can be used to appropriately scale inputs. For example, inst
 \label{fig:springer unprimed}
 \end{figure}
 
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\tikzstyle{cv}       = [rectangle, minimum width=12em, text centered, draw=black]
+\tikzstyle{cv_const} = [rectangle, rounded corners, minimum width=12em, text centered, draw=black]
+\tikzstyle{arrow}    = [thick, <->]
+
+\node (atm1)        [cv_const]                  {atmosphere~1};
+\node (plungertube) [cv, below of=atm1]         {plunger~tube};
+\node (barrel)      [cv, below of=plungertube]  {barrel};
+\node (atm2)        [cv_const, below of=barrel] {atmosphere~2};
+
+\draw [arrow] (atm1)        -- (plungertube);
+\draw [arrow] (plungertube) -- (barrel);
+\draw [arrow] (barrel)      -- (atm2);
+\end{tikzpicture}
+\caption{Abstract connected control volume view of a springer blaster.}
+\label{fig:springer control volumes}
+\end{figure}
+
 \section{Pneumatic mode}
 % TODO
 

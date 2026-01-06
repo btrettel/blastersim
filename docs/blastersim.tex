@@ -30,6 +30,25 @@
 \usepackage{tikz}
 \usetikzlibrary{math}
 \usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{arrows}
+
+% convenient commands for referencing equations, figures, and tables
+
+\renewcommand*{\eqref}[1]{equation~\ref{eq:#1}}
+\newcommand*{\Eqref}[1]{Equation~\ref{eq:#1}}
+\newcommand*{\eqsref}[2]{equations~\ref{eq:#1}~and~\ref{eq:#2}}
+\newcommand*{\Eqsref}[2]{Equations~\ref{eq:#1}~and~\ref{eq:#2}}
+\newcommand*{\eqssref}[3]{equations~\ref{eq:#1},~\ref{eq:#2},~and~\ref{eq:#3}}
+\newcommand*{\Eqssref}[3]{Equations~\ref{eq:#1},~\ref{eq:#2},~and~\ref{eq:#3}}
+\newcommand*{\eqstoref}[2]{equations~\ref{eq:#1}~to~\ref{eq:#2}}
+
+\newcommand*{\figref}[1]{figure~\ref{fig:#1}}
+\newcommand*{\Figref}[1]{Figure~\ref{fig:#1}}
+\newcommand*{\figsref}[2]{figures~\ref{fig:#1}~and~\ref{fig:#2}}
+\newcommand*{\Figsref}[2]{Figures~\ref{fig:#1}~and~\ref{fig:#2}}
+\newcommand*{\figstoref}[2]{figures~\ref{fig:#1}~to~\ref{fig:#2}}
+\newcommand*{\Figstoref}[2]{Figures~\ref{fig:#1}~to~\ref{fig:#2}}
 
 \author{Ben Trettel}
 \title{BlasterSim v0.1.0 User's Guide}

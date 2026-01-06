@@ -36,13 +36,80 @@ These additional checks are disabled in the released versions of BlasterSim for 
 % TODO
 
 \subsection{Comparison with exact solution}
-% TODO
-% TODO Output order of accuracy in a table
+% TODO: Add numerical comparison.
+% TODO: Output order of accuracy in a table
 
 To test that the time integration in BlasterSim is working correctly, an exact solution for a simple case was constructed.
 This case has only two control volumes, one for the barrel, and one for the atmosphere.
+See \figref{exact solution} for an illustration of this test case.
+
+\tikzmath{
+\dtube     = 1;
+\ltube     = 12;
+\lproj     = 2;
+\xproj     = 3;
+\lx        = -\dtube/2;
+\yxdash    = -\dtube;
+\ytubedash = 2*\dtube;
+\yxcvtext  = \dtube/2;
+\xbarreltext = \xproj/2;
+\xatmtext    = \xproj + \lproj + 3;
+}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\draw[thick] (\ltube, \dtube) -- (0, \dtube) -- (0, 0) -- (\ltube, 0);
+
+\fill[fill=gray,draw=black,thick] (\xproj, 0) rectangle ++(\lproj, \dtube);
+
+\draw[<->,thick]    (0, \lx)    -- node[below] {$x$} (\xproj, \lx);
+\draw[thick,dashed] (0, 0)      -- (0, \yxdash);
+\draw[thick,dashed] (\xproj, 0) -- (\xproj, \yxdash);
+
+% `draw=white` added to make the text fully visible in LaTeXML
+\node[draw=white] at (\xbarreltext, \yxcvtext) {barrel};
+\node[draw=white] at (\xatmtext,    \yxcvtext) {atmosphere};
+\end{tikzpicture}
+\caption{Test case which can be solved exactly.}
+\label{fig:exact solution}
+\end{figure}
+
 The barrel is initially filled with pressurized gas and the projectile has both dynamic and static friction pressure set to $p_\text{f}$.
-The 
+The tube has a constant cross-sectional area of $A$, so the volume of the barrel is $V = A\,x$.
+The gas is ideal with a constant ratio of specific heats, $\gamma$, and the process is adiabatic, so $p\,V^\gamma = \text{constant}$ in the barrel.
+So for any time $t$, the pressure in the barrel is
+\begin{equation}
+    p_0 (A\,x_0)^\gamma = p(t) (A\,x(t))^\gamma,
+\end{equation}
+which can be rearranged and simplified to
+\begin{equation}
+    p(t) = p_0 \left(\frac{x_0}{x(t)}\right)^\gamma,
+\end{equation}
+where $P_0$ and $x_0$ are the initial pressure and projectile position, respectively.
+
+The equation of motion of the projectile is
+\begin{align}
+    m_\text{p} \frac{\mathrm{d} \dot{x}}{\mathrm{d} t} &= A \left(p(t) - p_\text{atm} - p_\text{f}\right), \\
+                                                       &= A \left[p_0 \left(\frac{x_0}{x(t)}\right)^\gamma - p_\text{atm} - p_\text{f}\right].
+\end{align}
+
+The trick $\displaystyle \frac{\mathrm{d} \dot{x}}{\mathrm{d} t} \, \mathrm{d} x = \dot{x} \, \mathrm{d} \dot{x}$ can be applied to solve this non-linear differential equation for $\dot{x}$ as a function of $x$ rather than $t$.
+Substituting in the trick returns
+\begin{equation}
+    \dot{x} \, \mathrm{d} \dot{x} = \frac{A}{m_\text{p}} \left[p_0 \left(\frac{x_0}{x(t)}\right)^\gamma - p_\text{atm} - p_\text{f}\right] \, \mathrm{d} x,
+\end{equation}
+which can be integrated from rest ($\dot{x}(0) = 0$) to get the projectile kinetic energy as a function of time:
+\begin{equation}
+    \frac{1}{2} m_\text{p} \dot{x}^2 = A \left[\frac{p_0 \left(x_0^\gamma\,x^{1-\gamma} - x_0\right)}{1 - \gamma} - (p_\text{atm} + p_\text{f}) (x - x_0)\right].
+\end{equation}
+
+In terms of the projectile velocity, the result is
+\begin{equation}
+    \dot{x} = \sqrt{\frac{2 A}{m_\text{p}} \left[\frac{p_0 \left(x_0^\gamma\,x^{1-\gamma} - x_0\right)}{1 - \gamma} - (p_\text{atm} + p_\text{f}) (x - x_0)\right]}.
+\end{equation}
+
+This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_one\_cv}.
 
 \section{Validation}
 

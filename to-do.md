@@ -109,6 +109,7 @@
     - take spatial average of equation of state to relate average pressure to other average thermodynamic functions
     - <https://apps.dtic.mil/sti/citations/ADA222590>
     - also consider that the other side of the chamber may have a non-zero velocity (unlike normal Lagrange solution)
+    - One issue with the pressure gradient is that the assumed geometry might not be the actual geometry. The pressure gradient solution might be okay for the barrel and plunger tube where the assumed geometry matches the actual geometry, but other flow paths could deviate dramatically.
 - Include $\alpha$ in the energy equations.
 - Maybe: Add energy loss term for valves?
 - Maybe: Quadratic `u` and `h` can be easily solved explicitly

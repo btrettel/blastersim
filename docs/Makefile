@@ -53,8 +53,8 @@ $(KEY).bbl: $(KEY).tex $(KEY).bib $(DEPS)
 
 # <https://math.nist.gov/~BMiller/LaTeXML/manual/commands/latexml.html>
 # TODO: Fail if there are warnings. Try `--log=file`?
-$(KEY).html: $(KEY).tex $(KEY).bib $(DEPS)
-	latexmlc --strict --split --dest=$(KEY).html $(KEY).tex
+index.html: $(KEY).tex $(KEY).bib $(DEPS)
+	latexmlc --strict --split --dest=index.html $(KEY).tex
 
 .fig.tikz:
 	fig2dev -L tikz $<
