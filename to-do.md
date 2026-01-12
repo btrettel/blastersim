@@ -1,5 +1,20 @@
 ### v0.1.0
 
+- Add citation to Moran textbook for adiabatic process law in exact solution test case.
+- Add non-zero $\dot{x}_0$ to exact solution
+- Add integration step to exact solution derivation
+- Check that $\dot{x}_0$ derivative is now good with exact solution
+- Document friction model to understand what's there are present
+- Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion
+- Try hevea, tex4ht, and pandoc for HTML version of the docs.
+    - [HEVEA](https://hevea.inria.fr/)
+    - [latex2html](https://www.latex2html.org/)
+    - [lwarp](https://ctan.org/pkg/lwarp?lang=en)
+        - <https://github.com/DominikPeters/pgf-tikz-html-manual>
+    - pandoc
+        - <https://www.danwjoyce.com/data-blog/2018/2/20/latex-to-html-via-pandoc>
+        - <https://tex.stackexchange.com/questions/431719/how-to-use-pandoc-to-derive-output-from-latex-and-tikz-to-a-docx-file>
+    - [TeX4ht](https://www.tug.org/tex4ht/)
 - In V&V chapter, discuss running all the tests with `make check` (or jom or NMAKE)
 - Add index to docs.
 - Make normal Makefile call the documentation Makefile for now.
@@ -11,6 +26,21 @@
     - Make this the default but optional if desired for testing.
     - Input validation at first to not use this with RK EOS (if that's added first)
     - Assert `CONST_EOS` or `IDEAL_EOS` with `p < p_c` to satisfy requirements of version in Corner's book.
+- pressure gradient
+    - Is the pressure gradient necessary? The multiple control volumes will provide a pressure gradient of sorts.
+        - <https://www.spudfiles.com/viewtopic.php?f=5&t=26154>
+    - After adding the pressure gradient, connections will need to know where they are connected.
+    - $p_\text{l}$, $p_\text{r}$
+    - Related:
+        - Model pressure drop over long tubes from the friction factor.
+        - gas kinetic energy
+            - Need integrated gas kinetic energy equation.
+    - projectile base pressure is used in force calculation
+    - take spatial average of equation of state to relate average pressure to other average thermodynamic functions
+    - <https://apps.dtic.mil/sti/citations/ADA222590>
+    - also consider that the other side of the chamber may have a non-zero velocity (unlike normal Lagrange solution)
+    - One issue with the pressure gradient is that the assumed geometry might not be the actual geometry. The pressure gradient solution might be okay for the barrel and plunger tube where the assumed geometry matches the actual geometry, but other flow paths could deviate dramatically.
+- Include $\alpha$ in the energy equations.
 - Input file reader generator
     - Input validation:
         - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
@@ -97,20 +127,6 @@
     - test_fmad.f90: `test_num_deriv`
 - Readd `smooth_min` assertions including new one from Wikipedia including some extra gap for floating point error
 - Add elevation angle
-- pressure gradient
-    - Is the pressure gradient necessary? The multiple control volumes will provide a pressure gradient of sorts.
-    - After adding the pressure gradient, connections will need to know where they are connected.
-    - $p_\text{l}$, $p_\text{r}$
-    - Related:
-        - Model pressure drop over long tubes from the friction factor.
-        - gas kinetic energy
-            - Need integrated gas kinetic energy equation.
-    - projectile base pressure is used in force calculation
-    - take spatial average of equation of state to relate average pressure to other average thermodynamic functions
-    - <https://apps.dtic.mil/sti/citations/ADA222590>
-    - also consider that the other side of the chamber may have a non-zero velocity (unlike normal Lagrange solution)
-    - One issue with the pressure gradient is that the assumed geometry might not be the actual geometry. The pressure gradient solution might be okay for the barrel and plunger tube where the assumed geometry matches the actual geometry, but other flow paths could deviate dramatically.
-- Include $\alpha$ in the energy equations.
 - Maybe: Add energy loss term for valves?
 - Maybe: Quadratic `u` and `h` can be easily solved explicitly
 - exterior ballistics
@@ -200,7 +216,26 @@
     - Make methods to get gas kinetic energy and internal energy, use in CSV output
         - Test cases for temperature and internal energy with non-zero gas velocity.
     - Print internal energy and gas kinetic energy in CSV output
-- Use normal Makefile to compile documentation. (Low priority for now.)
+- Check /home/ben/svn/old/ballistics/text/ for more ideas.
+- docs:
+    - Use normal Makefile to compile documentation. (Low priority for now.)
+    - Thanks appendix
+    - Contributing appendix/chapter
+- promotion
+    - Post on:
+        - r/nerf
+        - r/nerfhomemades
+        - r/hpanerf
+        - Discord
+            - Atean Armory #the-workbench
+            - Kelly Industries #springer-science
+            - Roboman Automation #showoff
+            - Nerfcord #showoff
+            - Private server
+        - SpudFiles
+    - Distribution:
+        - GitHub
+        - <https://blasterdownloads.com/are-you-foam-dart-blaster-designer/>
 
 ***
 
