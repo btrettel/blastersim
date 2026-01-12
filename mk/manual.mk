@@ -17,7 +17,10 @@ src$(DIR_SEP)units.f90: src$(DIR_SEP)genunits.nml
 src$(DIR_SEP)geninput_springer_subroutine.f90: src$(DIR_SEP)geninput_springer.nml
 	geninput$(BINEXT) src$(DIR_SEP)geninput_springer.nml
 
-test_conservation.nml: test_cva$(BINEXT)
+test_conservation.csv: test_cva$(BINEXT)
+	$(RUN)test_cva$(BINEXT)
+
+test_exact.tex: test_cva$(BINEXT)
 	$(RUN)test_cva$(BINEXT)
 
 ###########################

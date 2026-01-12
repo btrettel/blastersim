@@ -1,5 +1,6 @@
 ### v0.1.0
 
+- Write and use function to write scientific notation LaTeX code in `test_exact.tex`.
 - Check that $\dot{x}_0$ derivative is now good with exact solution
 - Document friction model to understand what's there are present
 - Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion

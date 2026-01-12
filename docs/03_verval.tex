@@ -115,7 +115,8 @@ In terms of the projectile velocity, the result is
     \dot{x} = \sqrt{\dot{x}_0^2 + \frac{2 A}{m_\text{p}} \left[\frac{p_0 \left(x_0^\gamma\,x^{1-\gamma} - x_0\right)}{1 - \gamma} - (p_\text{atm} + p_\text{f}) (x - x_0)\right]}.
 \end{equation}
 
-This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact}.
+\input{test_exact.tex}
+This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact}. For $\Delta t = \testexactdt$~s, the numerical error was measured at $\xdoterror$~m/s, which is negligible. The numerical order-of-accuracy was measured at $\xdotorder$, which is close to the theoretically expected order-of-accuracy of 4 for the RK4 integrator. In other words, BlasterSim not only closely matches the exact solution, but also that the numerical error is decreasing at the theoretically expected rate. This is the most rigorous test that can be made with an exact solution. For more information on order-of-accuracy verification, see \citet[\S~2.3]{roy_review_2005}.
 
 \section{Validation}
 

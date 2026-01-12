@@ -14,6 +14,8 @@ implicit none
 
 type(test_results_type) :: tests
 
+real(WP), parameter :: TEST_EXACT_T_STOP = 0.0273_WP
+
 call tests%start_tests("cva.nml")
 
 call test_m_total(tests)
@@ -2203,7 +2205,7 @@ subroutine exact_x_dot_de(n, ne, ne_d)
     
     call assert(sys_start%cv(2)%constant_friction, "test_exact, cv%constant_friction")
     
-    call t_stop%v%init_const(0.0273_WP, N_D)
+    call t_stop%v%init_const(TEST_EXACT_T_STOP, N_D)
     
     ! At first I thought that the number of time steps needed to be an integer.
     ! That was to avoid a reduction in order-of-accuracy from `sys_interp`.
@@ -2250,25 +2252,39 @@ subroutine test_exact(tests)
     
     use fmad, only: ad
     use convergence, only: convergence_test
+    use checks, only: assert
     
     type(test_results_type), intent(in out) :: tests
     
-    type(ad), allocatable :: ne(:)
-    real(WP), allocatable :: ne_d(:, :)
+    type(ad), allocatable :: ne_fine(:)
+    real(WP), allocatable :: ne_d_fine(:, :), p(:), ne(:)
+    integer  :: n(2), tex_unit
+    real(WP) :: dt
     
-    call exact_x_dot_de(10000, ne, ne_d)
+    n  = [500, 1000]
+    dt = TEST_EXACT_T_STOP / real(n(2), WP)
     
-    call tests%real_eq(ne(1)%v, 0.0_WP, "test_exact, x_dot numerical error", abs_tol=1.0e-12_WP)
-    call tests%real_eq(ne_d(1, 1), 0.0_WP, "test_exact, d(x_dot)/d(csa) numerical error", abs_tol=1.0e-11_WP)
-    call tests%real_eq(ne_d(1, 2), 0.0_WP, "test_exact, d(x_dot)/d(p_atm) numerical error", abs_tol=1.0e-18_WP)
-    call tests%real_eq(ne_d(1, 3), 0.0_WP, "test_exact, d(x_dot)/d(x_0) numerical error", abs_tol=1.0e-11_WP)
-    call tests%real_eq(ne_d(1, 4), 0.0_WP, "test_exact, d(x_dot)/d(p_0) numerical error", abs_tol=1.0e-18_WP)
-    call tests%real_eq(ne_d(1, 5), 0.0_WP, "test_exact, d(x_dot)/d(m_p) numerical error", abs_tol=1.0e-13_WP)
-    call tests%real_eq(ne_d(1, 6), 0.0_WP, "test_exact, d(x_dot)/d(p_f) numerical error", abs_tol=1.0e-18_WP)
+    call exact_x_dot_de(10000, ne_fine, ne_d_fine)
+    
+    call tests%real_eq(ne_fine(1)%v, 0.0_WP, "test_exact, x_dot numerical error", abs_tol=1.0e-12_WP)
+    call tests%real_eq(ne_d_fine(1, 1), 0.0_WP, "test_exact, d(x_dot)/d(csa) numerical error", abs_tol=1.0e-11_WP)
+    call tests%real_eq(ne_d_fine(1, 2), 0.0_WP, "test_exact, d(x_dot)/d(p_atm) numerical error", abs_tol=1.0e-18_WP)
+    call tests%real_eq(ne_d_fine(1, 3), 0.0_WP, "test_exact, d(x_dot)/d(x_0) numerical error", abs_tol=1.0e-11_WP)
+    call tests%real_eq(ne_d_fine(1, 4), 0.0_WP, "test_exact, d(x_dot)/d(p_0) numerical error", abs_tol=1.0e-18_WP)
+    call tests%real_eq(ne_d_fine(1, 5), 0.0_WP, "test_exact, d(x_dot)/d(m_p) numerical error", abs_tol=1.0e-13_WP)
+    call tests%real_eq(ne_d_fine(1, 6), 0.0_WP, "test_exact, d(x_dot)/d(p_f) numerical error", abs_tol=1.0e-18_WP)
     
     ! I guess that I'm running into floating point error if I make the time step smaller than around the default.
     ! 4th order accuracy sure convergences fast!
-    call convergence_test([500, 1000], exact_x_dot_de, [4.0_WP], "test_exact, passing", tests, p_tol=[0.03_WP], p_d_tol=[0.14_WP])
+    call convergence_test(n, exact_x_dot_de, [4.0_WP], "test_exact, passing", tests, &
+                            p_tol=[0.03_WP], p_d_tol=[0.14_WP], p=p, ne=ne)
+    
+    call assert(size(p) == 1, "test_cva (test_exact): size(p) == 1 violated", print_integer=[size(p)])
+    open(newunit=tex_unit, action="write", status="replace", position="rewind", file="test_exact.tex", delim="quote")
+    write(unit=tex_unit, fmt="(a, es9.3, a)") "\newcommand*{\testexactdt}{", dt, "}"
+    write(unit=tex_unit, fmt="(a, es9.3, a)") "\newcommand*{\xdoterror}{", ne(1), "}"
+    write(unit=tex_unit, fmt="(a, f5.3, a)") "\newcommand*{\xdotorder}{", p(1), "}"
+    close(tex_unit)
 end subroutine test_exact
 
 end program test_cva

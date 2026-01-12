@@ -3,7 +3,7 @@
 ! Preprocessor: none
 ! Author: Ben Trettel (<http://trettel.us/>)
 ! Project: [BlasterSim](https://github.com/btrettel/blastersim)
-! License: [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
+! License: [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html)
 
 ! Notation follows luke_essentials_2013 p. 31 in most instances.
 ! Instead of "fitness" or "quality", I am using the term objective function.

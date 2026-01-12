@@ -17,7 +17,7 @@ MAKEFLAGS = --warn-undefined-variables
 # > Naming your primary (or toplevel) file ms.tex will cause AutoTeX to process that file first in (La)TeX mode. Under PDFLaTeX modes, and in all other cases, the tex files will be processed in alphanumeric order.
 KEY = blastersim
 
-DEPS = 01_usage.tex 02_theory.tex 03_verval.tex
+DEPS = 01_usage.tex 02_theory.tex 03_verval.tex test_exact.tex
 
 .SUFFIXES: .fig .gp .tikz
 
@@ -34,12 +34,17 @@ BL = \<
 BR = \>
 
 # Linux
-GREP = grep
-RM   = rm
+GREP    = grep
+RM      = rm
+CP      = cp
+DIR_SEP = /
 
 # Windows
 #GREP = findstr /n
 #RM   = del
+#CP   = copy
+# The `^` escapes the backslash. Otherwise, `\` would be a new line in NMAKE.
+#DIR_SEP = ^\
 
 # Why `-draftmode`? This will make compilation faster as I don't want a PDF file when generated the bbl file.
 
@@ -50,6 +55,9 @@ $(KEY).pdf $(KEY).log: $(KEY).tex $(KEY).bbl $(DEPS)
 $(KEY).bbl: $(KEY).tex $(KEY).bib $(DEPS)
 	$(TEX) $(TEXFLAGS) -draftmode $(KEY)
 	$(BIB) $(KEY)
+
+test_exact.tex: ..$(DIR_SEP)test_exact.tex
+	$(CP) ..$(DIR_SEP)test_exact.tex test_exact.tex
 
 # <https://math.nist.gov/~BMiller/LaTeXML/manual/commands/latexml.html>
 # TODO: Fail if there are warnings. Try `--log=file`?
