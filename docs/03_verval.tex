@@ -77,7 +77,7 @@ See \figref{exact solution} for an illustration of this test case.
 
 The barrel is initially filled with pressurized gas and the projectile has both dynamic and static friction pressure set to $p_\text{f}$.
 The tube has a constant cross-sectional area of $A$, so the volume of the barrel is $V = A\,x$.
-The gas is ideal with a constant ratio of specific heats, $\gamma$, and the process is adiabatic, so $p\,V^\gamma = \text{constant}$ in the barrel.
+The gas is ideal with a constant ratio of specific heats, $\gamma$, and the process is adiabatic, so $p\,V^\gamma = \text{constant}$ in the barrel~\citep[p.~129, eq.~3.53]{moran_fundamentals_2008}.
 So for any time $t$, the pressure in the barrel is
 \begin{equation}
     p_0 (A\,x_0)^\gamma = p(t) (A\,x(t))^\gamma,
@@ -97,16 +97,22 @@ The equation of motion of the projectile is
 The trick $\displaystyle \frac{\mathrm{d} \dot{x}}{\mathrm{d} t} \, \mathrm{d} x = \dot{x} \, \mathrm{d} \dot{x}$ can be applied to solve this non-linear differential equation for $\dot{x}$ as a function of $x$ rather than $t$.
 Substituting in the trick returns
 \begin{equation}
-    \dot{x} \, \mathrm{d} \dot{x} = \frac{A}{m_\text{p}} \left[p_0 \left(\frac{x_0}{x(t)}\right)^\gamma - p_\text{atm} - p_\text{f}\right] \, \mathrm{d} x,
+    m_\text{p} \dot{x} \, \mathrm{d} \dot{x} = A \left[p_0 \left(\frac{x_0}{x}\right)^\gamma - p_\text{atm} - p_\text{f}\right] \, \mathrm{d} x.
 \end{equation}
-which can be integrated from rest ($\dot{x}(0) = 0$) to get the projectile kinetic energy as a function of time:
+
+Now integrate from an initial velocity ($\dot{x}_0$):
 \begin{equation}
-    \frac{1}{2} m_\text{p} \dot{x}^2 = A \left[\frac{p_0 \left(x_0^\gamma\,x^{1-\gamma} - x_0\right)}{1 - \gamma} - (p_\text{atm} + p_\text{f}) (x - x_0)\right].
+    \int_{\dot{x}_0}^{\dot{x}} m_\text{p} \hat{\dot{x}} \, \mathrm{d} \hat{\dot{x}} = \int_{x_0}^x A \left[p_0 \left(\frac{x_0}{\hat{x}}\right)^\gamma - p_\text{atm} - p_\text{f}\right] \, \mathrm{d} \hat{x}.
+\end{equation}
+
+Evaluating the integrals returns the projectile kinetic energy as a function of $x$:
+\begin{equation}
+    \frac{1}{2} m_\text{p} \dot{x}^2 = \frac{1}{2} m_\text{p} \dot{x}_0^2 + A \left[\frac{p_0 \left(x_0^\gamma\,x^{1-\gamma} - x_0\right)}{1 - \gamma} - (p_\text{atm} + p_\text{f}) (x - x_0)\right].
 \end{equation}
 
 In terms of the projectile velocity, the result is
 \begin{equation}
-    \dot{x} = \sqrt{\frac{2 A}{m_\text{p}} \left[\frac{p_0 \left(x_0^\gamma\,x^{1-\gamma} - x_0\right)}{1 - \gamma} - (p_\text{atm} + p_\text{f}) (x - x_0)\right]}.
+    \dot{x} = \sqrt{\dot{x}_0^2 + \frac{2 A}{m_\text{p}} \left[\frac{p_0 \left(x_0^\gamma\,x^{1-\gamma} - x_0\right)}{1 - \gamma} - (p_\text{atm} + p_\text{f}) (x - x_0)\right]}.
 \end{equation}
 
 This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact}.

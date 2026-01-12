@@ -1,8 +1,5 @@
 ### v0.1.0
 
-- Add citation to Moran textbook for adiabatic process law in exact solution test case.
-- Add non-zero $\dot{x}_0$ to exact solution
-- Add integration step to exact solution derivation
 - Check that $\dot{x}_0$ derivative is now good with exact solution
 - Document friction model to understand what's there are present
 - Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion
