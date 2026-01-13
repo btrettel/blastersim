@@ -17,7 +17,7 @@ MAKEFLAGS = --warn-undefined-variables
 # > Naming your primary (or toplevel) file ms.tex will cause AutoTeX to process that file first in (La)TeX mode. Under PDFLaTeX modes, and in all other cases, the tex files will be processed in alphanumeric order.
 KEY = blastersim
 
-DEPS = 01_usage.tex 02_theory.tex 03_verval.tex test_exact.tex
+DEPS = usage.tex theory.tex verval.tex test_exact.tex
 
 .SUFFIXES: .fig .gp .tikz
 

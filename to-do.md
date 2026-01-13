@@ -72,12 +72,19 @@
     - Write Fortran code to output gas data table to put in documentation.
         - Can I use similar code generation to get other important values from the code?
 - Create subroutines in io.f90 to create different types of CVs. Use these in the tests.
+- Print some derived results initially.
+    - Plunger volume
 - At termination, print:
     - If a success, say so.
     - If a failure, say so.
     - Muzzle velocity including units.
     - efficiency
     - whether under- or over-barreled
+- Determine terminology to use
+    - draw for $y_0$
+    - "core" for pressure chamber?
+    - GGDT confuses people, so have clearer documentation and names:
+        - <https://www.spudfiles.com/viewtopic.php?f=26&t=27224>
 - Upload Windows BlasterSim to malware scanner to check. 
 - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
 - Valve opening time, valve poppet model using pressures from CVs
@@ -174,10 +181,6 @@
 - Determine when dart heads will be blown off and include that in BlasterSim. Add as a constraint too.
 - spring fatigue life, add as a constraint too
 - time integration continues after projectile leaves barrel to get the little extra bit of acceleration there
-- Determine terminology to use
-    - "core" for pressure chamber?
-    - GGDT confuses people, so have clearer documentation and names:
-        - <https://www.spudfiles.com/viewtopic.php?f=26&t=27224>
 - Make BlasterSim able to handle light gas guns (kinda) by making each side of a piston potentially different diameters. Force is transmitted between two control volumes.
 - Allow for modeling of porting with $x$-dependent connections.
 - Market research: Ask which types of blasters people want from a simulator and which features people want.

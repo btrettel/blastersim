@@ -2281,6 +2281,7 @@ subroutine test_exact(tests)
     
     call assert(size(p) == 1, "test_cva (test_exact): size(p) == 1 violated", print_integer=[size(p)])
     open(newunit=tex_unit, action="write", status="replace", position="rewind", file="test_exact.tex", delim="quote")
+    write(unit=tex_unit, fmt="(a)") "% auto-generated"
     write(unit=tex_unit, fmt="(a, es9.3, a)") "\newcommand*{\testexactdt}{", dt, "}"
     write(unit=tex_unit, fmt="(a, es9.3, a)") "\newcommand*{\xdoterror}{", ne(1), "}"
     write(unit=tex_unit, fmt="(a, f5.3, a)") "\newcommand*{\xdotorder}{", p(1), "}"
