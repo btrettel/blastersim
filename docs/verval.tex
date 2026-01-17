@@ -116,7 +116,7 @@ In terms of the projectile velocity, the result is
 \end{equation}
 
 \input{test_exact.tex}
-This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact}. For $\Delta t = \testexactdt$~s, the numerical error was measured at $\xdoterror$~m/s, which is negligible. The numerical order-of-accuracy was measured at $\xdotorder$, which is close to the theoretically expected order-of-accuracy of 4 for the RK4 integrator. In other words, BlasterSim not only closely matches the exact solution, but also that the numerical error is decreasing at the theoretically expected rate. This is the most rigorous test that can be made with an exact solution. For more information on order-of-accuracy verification, see \citet[\S~2.3]{roy_review_2005}.
+This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact}. For $\Delta t = \testexactdt$~s, the numerical error was measured at $\xdoterror$~m/s, which is negligible. The numerical order-of-accuracy was measured at $\xdotorder$, which is close to the theoretically expected order-of-accuracy of $4$ for the RK4 integrator. In other words, not only does BlasterSim closely match the exact solution, but BlasterSim's numerical error decreases at the theoretically expected rate as the time step decreases. This is the most rigorous test that can be made with an exact solution. For more information on order-of-accuracy verification, see \citet[\S~2.3]{roy_review_2005}.
 
 \section{Validation}
 

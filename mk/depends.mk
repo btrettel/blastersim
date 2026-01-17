@@ -48,8 +48,8 @@ test_convert$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJ
 convert.nml: test_convert$(BINEXT)
 	$(RUN)test_convert$(BINEXT)
 
-test_cva$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convergence.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_cva.f90
-	$(FC) $(OFLAG) $@ $(FFLAGS) src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convergence.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_cva.f90
+test_cva$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convergence.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)io.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) src$(DIR_SEP)geninput_springer_subroutine.f90 test$(DIR_SEP)test_cva.f90
+	$(FC) $(OFLAG) $@ $(FFLAGS) src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convergence.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)io.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_cva.f90
 
 cva.nml: test_cva$(BINEXT)
 	$(RUN)test_cva$(BINEXT)

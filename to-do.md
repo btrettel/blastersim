@@ -1,6 +1,5 @@
 ### v0.1.0
 
-- Write and use function to write scientific notation LaTeX code in `test_exact.tex`.
 - Check that $\dot{x}_0$ derivative is now good with exact solution
 - Document friction model to understand what's there are present
 - Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion
@@ -17,6 +16,7 @@
 - Add index to docs.
 - Make normal Makefile call the documentation Makefile for now.
 - Make geninput generated TeX file as a dependency for 01_usage.tex.
+- Use [Intel Fortran's namelist terminology](https://www.intel.com/content/www/us/en/docs/fortran-compiler/developer-guide-reference/2024-2/namelist.html): namelist group and variable.
 - Make internal and input file variable names consistent
 - Make friction plot for debugging. Try typical case and also `p_fs = p_fd` to help debug what's going on with that. Why does `p_f` go so much higher than `p_fs`/`p_fd` in that case?
 - Test `m_s` in `d_xdot_d_t`.
@@ -81,7 +81,7 @@
     - efficiency
     - whether under- or over-barreled
 - Determine terminology to use
-    - draw for $y_0$
+    - $y_0$: draw or draw length
     - "core" for pressure chamber?
     - GGDT confuses people, so have clearer documentation and names:
         - <https://www.spudfiles.com/viewtopic.php?f=26&t=27224>
