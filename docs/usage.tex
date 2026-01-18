@@ -7,14 +7,55 @@
 \section{Installation}
 % TODO
 
+Note: At present, no binary or source distributions are available yet.
+The following sections were written in anticipation of the future release of the BlasterSim beta version.
+
 \subsection{Installation from binaries}
-% TODO
+
+The \texttt{blastersim} executable on Linux and the \texttt{blastersim.exe} executable on Windows can either be placed in the directory you want to run BlasterSim from or placed on your \texttt{PATH}.
 
 \subsection{Installation from source tarball}
-% TODO
+\label{sec:installation from source tarball}
+
+The provided source distribution has no dependencies other than a modern Fortran compiler and a Make program like GNU Make on Linux or \href{https://wiki.qt.io/Jom}{jom} or \href{https://learn.microsoft.com/en-us/cpp/build/reference/nmake-reference?view=msvc-170}{NMAKE} on Windows.
+Unfortunately, BlasterSim will not compile with every Fortran compiler due to the units module being too large.
+BlasterSim will compile with gfortran and for that reason gfortran is recommended.
+
+After extracting the provided source archive, \texttt{cd} into the directory and build BlasterSim.
+
+On Linux you can type \texttt{make blastersim}.
+
+On Windows you can type (if using jom) \texttt{jom blastersim.exe}
+
+Note that compilation of BlasterSim can be slow.
+
+Once built, a BlasterSim executable can be placed appropriately as discussed in the ``From the binary'' section.
 
 \subsection{Installation from clone of Git repository}
 % TODO
+
+Building from the Git repository requires first building genunits from Ben Trettel's \href{https://github.com/btrettel/flt/}{FLT} repository.
+The requirement for a modern Fortran compiler remains the same as that from \secref{installation from source tarball}.
+
+Clone the FLT repository and build genunits:
+\begin{verbatim}
+git clone https://github.com/btrettel/flt.git
+cd flt
+make genunits geninput
+\end{verbatim}
+
+On Windows with jom, you should replace \texttt{make genunits geninput} with \texttt{jom genunits.exe geninput.exe}.
+
+Place \texttt{genunits} or \texttt{genunits.exe} on your \texttt{PATH}.
+Now you can build BlasterSim by cloning the BlasterSim repository, \texttt{cd}ing into the clone, and following the instructions in \secref{installation from source tarball}.
+To be more specific for GNU Make:
+\begin{verbatim}
+git clone https://github.com/btrettel/blastersim.git
+cd blastersim
+make blastersim
+\end{verbatim}
+
+On Windows with jom, you should replace \texttt{make blastersim} with \texttt{jom blastersim.exe}.
 
 \section{BlasterSim inputs in general}
 % TODO
@@ -34,6 +75,11 @@ Scientific notation can be used to appropriately scale inputs. For example, inst
 
 \section{Springer mode}
 % TODO
+
+As shown in \figref{springer time zero}, BlasterSim geometrically models the plunger tube and barrel are treated as cylindrical.
+However, BlasterSim does not assume a sudden contraction exists between the plunger tube and barrel as shown by the figure.
+That part of the figure is for illustration only.
+The connection between the plunger tube and barrel can take any form.
 
 \tikzmath{
 \dplunger     = 3;

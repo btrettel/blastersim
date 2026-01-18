@@ -24,7 +24,7 @@ lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /
 
 &input_variable
@@ -38,7 +38,7 @@ lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /
 
 &input_variable
@@ -52,7 +52,7 @@ lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /
 
 &input_variable
@@ -66,7 +66,7 @@ lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /
 
 &input_variable
@@ -80,7 +80,7 @@ lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /
 
 &input_variable
@@ -95,7 +95,7 @@ lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /
 
 &input_variable
@@ -109,7 +109,7 @@ lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /
 
 &input_variable
@@ -123,7 +123,7 @@ lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /
 
 &input_variable
@@ -137,7 +137,7 @@ lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /
 
 &input_variable
@@ -151,7 +151,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "P_ATM_"
 no_kind_default_value = .true.
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /
 
 &input_variable
@@ -165,7 +165,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "TEMP_ATM_"
 no_kind_default_value = .true.
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /
 
 &input_variable
@@ -180,14 +180,14 @@ lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /
 
 &input_variable
 variable_name         = "b"
-type_definition       = "type(si_length)"
+type_definition       = "type(unitless)"
 required              = .false.
-tex_unit              = "m"
+tex_unit              = "1"
 tex_description       = "Critical pressure ratio of the contraction."
 tex_variable_name     = "$b$"
 lower_bound_active    = .true.
@@ -197,5 +197,5 @@ upper_bound_active    = .true.
 upper_bound           = 1.0
 upper_bound_not_equal = .false.
 default_value         = "0.5"
-bound_fmt             = "f5.3"
+bound_fmt             = "f3.1"
 /

@@ -122,7 +122,7 @@ subroutine read_springer_namelist(input_file, sys, rc)
     sys%con(4, 3) = sys%con(3, 4)
     sys%con(4, 4)%active = .false.
     
-    ! TODO: `sys%cv(1)`: atmosphere for plunger tube
+    ! `sys%cv(1)`: atmosphere for plunger tube
     call d_plunger_u%v%init_const(d_plunger, n_d)
     csa_plunger = (PI/4.0_WP)*square(d_plunger_u)
     call p_atm_u%v%init_const(p_atm, n_d)
