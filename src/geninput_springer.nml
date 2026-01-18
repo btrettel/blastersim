@@ -6,7 +6,7 @@ write_tex          = .true.
 /
 
 &input_variable
-parameter_name    = "id"
+variable_name     = "id"
 type_definition   = "character(len=128)"
 tex_description   = "Unique identifier for the current simulation."
 tex_description_2 = 'String of a maximum of 128 characters. Used in the CSV file name, for example, for \texttt{id = "abc"}, the file abc.csv is written.'
@@ -14,7 +14,7 @@ default_value     = "output"
 /
 
 &input_variable
-parameter_name        = "d_plunger"
+variable_name         = "d_plunger"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
@@ -28,7 +28,7 @@ bound_fmt             = "f5.3"
 /
 
 &input_variable
-parameter_name        = "m_plunger"
+variable_name         = "m_plunger"
 type_definition       = "type(si_mass)"
 required              = .true.
 tex_unit              = "kg"
@@ -42,7 +42,7 @@ bound_fmt             = "f5.3"
 /
 
 &input_variable
-parameter_name        = "l_draw"
+variable_name         = "l_draw"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
@@ -56,7 +56,7 @@ bound_fmt             = "f5.3"
 /
 
 &input_variable
-parameter_name        = "l_precompress"
+variable_name         = "l_precompress"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
@@ -70,7 +70,7 @@ bound_fmt             = "f5.3"
 /
 
 &input_variable
-parameter_name        = "d_barrel"
+variable_name         = "d_barrel"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
@@ -84,7 +84,7 @@ bound_fmt             = "f5.3"
 /
 
 &input_variable
-parameter_name        = "l_travel"
+variable_name         = "l_travel"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
@@ -99,7 +99,7 @@ bound_fmt             = "f5.3"
 /
 
 &input_variable
-parameter_name        = "vol_dead"
+variable_name         = "vol_dead"
 type_definition       = "type(si_volume)"
 required              = .true.
 tex_unit              = "m$^3$"
@@ -113,7 +113,7 @@ bound_fmt             = "f5.3"
 /
 
 &input_variable
-parameter_name        = "k"
+variable_name         = "k"
 type_definition       = "type(si_stiffness)"
 required              = .true.
 tex_unit              = "N/m"
@@ -127,7 +127,7 @@ bound_fmt             = "f5.3"
 /
 
 &input_variable
-parameter_name        = "m_spring"
+variable_name         = "m_spring"
 type_definition       = "type(si_mass)"
 required              = .true.
 tex_unit              = "kg"
@@ -141,7 +141,7 @@ bound_fmt             = "f5.3"
 /
 
 &input_variable
-parameter_name        = "p_atm"
+variable_name         = "p_atm"
 type_definition       = "type(si_pressure)"
 tex_unit              = "Pa"
 tex_description       = "Atmospheric pressure."
@@ -155,7 +155,7 @@ bound_fmt             = "f5.3"
 /
 
 &input_variable
-parameter_name        = "temp_atm"
+variable_name         = "temp_atm"
 type_definition       = "type(si_temperature)"
 tex_unit              = "K"
 tex_description       = "Atmospheric temperature."
@@ -169,7 +169,7 @@ bound_fmt             = "f5.3"
 /
 
 &input_variable
-parameter_name        = "a_e"
+variable_name         = "a_e"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
@@ -180,5 +180,22 @@ lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
+bound_fmt             = "f5.3"
+/
+
+&input_variable
+variable_name         = "b"
+type_definition       = "type(si_length)"
+required              = .false.
+tex_unit              = "m"
+tex_description       = "Critical pressure ratio of the contraction."
+tex_variable_name     = "$b$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+upper_bound_active    = .true.
+upper_bound           = 1.0
+upper_bound_not_equal = .false.
+default_value         = "0.5"
 bound_fmt             = "f5.3"
 /
