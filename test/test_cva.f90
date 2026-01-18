@@ -550,7 +550,7 @@ subroutine test_set_normal_1(tests)
     call tests%real_eq(cv%k%v%v, k%v%v, "test_set_normal_1, k")
     call tests%real_eq(cv%l_pre%v%v, l_pre%v%v, "test_set_normal_1, l_pre")
     call tests%real_eq(cv%x_stop%v%v, X_STOP_DEFAULT, "test_set_normal_1, x_stop")
-    call tests%real_eq(cv%m_s%v%v, 0.0_WP, "test_set_normal_1, m_s")
+    call tests%real_eq(cv%m_spring%v%v, 0.0_WP, "test_set_normal_1, m_spring")
     
     temp_cv = cv%temp()
     call tests%real_eq(temp_cv%v%v, temp%v%v, "test_set_normal_1, temp")
@@ -683,7 +683,7 @@ subroutine test_set_normal_2(tests)
 end subroutine test_set_normal_2
 
 subroutine test_set_normal_3(tests)
-    ! Testing isentropic filling and `m_s`.
+    ! Testing isentropic filling and `m_spring`.
     
     use gasdata, only: DRY_AIR
     use cva, only: cv_type
@@ -702,7 +702,7 @@ subroutine test_set_normal_3(tests)
     type(si_pressure)     :: p_fs, p_fd, p_atm
     type(si_stiffness)    :: k
     type(si_length)       :: l_pre
-    type(si_mass)         :: m_s
+    type(si_mass)         :: m_spring
     
     call x%v%init_const(0.5_WP, 0)
     call x_dot%v%init_const(0.5_WP, 0)
@@ -716,15 +716,15 @@ subroutine test_set_normal_3(tests)
     call p_atm%v%init_const(1.0e5_WP, 0)
     call k%v%init_const(10.0_WP, 0)
     call l_pre%v%init_const(3.0_WP, 0)
-    call m_s%v%init_const(2.5_WP, 0)
+    call m_spring%v%init_const(2.5_WP, 0)
     
     call cv%set(x, x_dot, y, p, temp_atm, "test_set_normal_3", csa, rm_p, p_fs, p_fd, k, l_pre, &
-                        [DRY_AIR], 2, isentropic_filling=.true., p_atm=p_atm, m_s=m_s)
+                        [DRY_AIR], 2, isentropic_filling=.true., p_atm=p_atm, m_spring=m_spring)
     
     temp_cv = cv%temp()
     call tests%real_eq(temp_cv%v%v, 300.0_WP*(2.0_WP**(0.4_WP/1.4_WP)), &
                         "test_set_normal_3, isentropic_filling=.true., cv%temp")
-    call tests%real_eq(cv%m_s%v%v, 2.5_WP, "test_set_normal_3, cv%m_s")
+    call tests%real_eq(cv%m_spring%v%v, 2.5_WP, "test_set_normal_3, cv%m_spring")
 end subroutine test_set_normal_3
 
 subroutine test_set_const(tests)

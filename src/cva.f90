@@ -88,7 +88,7 @@ type, public :: cv_type ! control volume
     type(si_pressure)           :: p_const     ! if `cv%eos = CONST_EOS`, then `cv%p() = p_const`
     type(si_temperature)        :: temp_const  ! if `cv%eos = CONST_EOS`, then `cv%temp() = temp_const`
     type(si_length)             :: x_stop      ! `x` location where simulation will stop
-    type(si_mass)               :: m_s         ! mass of spring
+    type(si_mass)               :: m_spring    ! mass of spring
     logical                     :: constant_friction ! whether `p_f` will be constant or not
 contains
     procedure :: m_total
@@ -605,7 +605,7 @@ pure function gamma_cv(cv, y)
 end function gamma_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, l_pre, gas, &
-                            i_cv_mirror, x_stop, isentropic_filling, p_atm, eos, type, m_s, constant_friction)
+                            i_cv_mirror, x_stop, isentropic_filling, p_atm, eos, type, m_spring, constant_friction)
     class(cv_type), intent(in out) :: cv
     
     ! time varying
@@ -625,12 +625,12 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     type(gas_type), intent(in)        :: gas(:)      ! gas data
     integer, intent(in)               :: i_cv_mirror ! index of control volume to use in pressure difference calculation
     
-    type(si_length), intent(in), optional   :: x_stop ! `x` location where simulation will stop
+    type(si_length), intent(in), optional   :: x_stop   ! `x` location where simulation will stop
     logical, intent(in), optional           :: isentropic_filling
-    type(si_pressure), intent(in), optional :: p_atm  ! atmospheric pressure (only requried if `isentropic_filling = .true.`
-    integer, intent(in), optional           :: eos    ! equation of state to use
-    integer, intent(in), optional           :: type   ! type of CV to use
-    type(si_mass), intent(in), optional     :: m_s    ! mass of spring
+    type(si_pressure), intent(in), optional :: p_atm    ! atmospheric pressure (only requried if `isentropic_filling = .true.`
+    integer, intent(in), optional           :: eos      ! equation of state to use
+    integer, intent(in), optional           :: type     ! type of CV to use
+    type(si_mass), intent(in), optional     :: m_spring ! mass of spring
     logical, intent(in), optional           :: constant_friction
     
     integer              :: i, n_d
@@ -695,18 +695,18 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
         cv%type = NORMAL_CV_TYPE
     end if
     
-    if (present(m_s)) then
-        cv%m_s = m_s
+    if (present(m_spring)) then
+        cv%m_spring = m_spring
         
         if (cv%k%v%v > 0.0_WP) then
-            call assert(cv%m_s%v%v > 0.0_WP, "cva (set): m_s must be set to > 0 if k > 0", &
-                            print_real=[cv%m_s%v%v])
+            call assert(cv%m_spring%v%v > 0.0_WP, "cva (set): m_spring must be set to > 0 if k > 0", &
+                            print_real=[cv%m_spring%v%v])
         else
-            call assert(is_close(cv%m_s%v%v, 0.0_WP), "cva (set): m_s must be set to 0 if k == 0", &
-                            print_real=[cv%m_s%v%v])
+            call assert(is_close(cv%m_spring%v%v, 0.0_WP), "cva (set): m_spring must be set to 0 if k == 0", &
+                            print_real=[cv%m_spring%v%v])
         end if
     else
-        call cv%m_s%v%init_const(0.0_WP, n_d)
+        call cv%m_spring%v%init_const(0.0_WP, n_d)
     end if
     
     call assert(cv%x%v%v            >  0.0_WP, "cva (set): x > 0 violated", print_real=[cv%x%v%v])
@@ -718,7 +718,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     call assert(cv%p_fd%v%v         >= 0.0_WP, "cva (set): p_fd >= 0 violated", print_real=[cv%p_fd%v%v])
     call assert(cv%k%v%v            >= 0.0_WP, "cva (set): k >= 0 violated", print_real=[cv%k%v%v])
     call assert(cv%i_cv_mirror      >= 0,      "cva (set): i_cv_mirror >= 0 violated", print_integer=[cv%i_cv_mirror])
-    call assert(cv%m_s%v%v          >= 0.0_WP, "cva (set): m_s >= 0 violated", print_real=[cv%m_s%v%v])
+    call assert(cv%m_spring%v%v     >= 0.0_WP, "cva (set): m_spring >= 0 violated", print_real=[cv%m_spring%v%v])
     
     call assert((cv%eos  >= 1) .and. (cv%eos <= MAX_EOS),      "cva (set): invalid EOS", print_integer=[cv%eos])
     call assert((cv%type >= 1) .and. (cv%type <= MAX_CV_TYPE), "cva (set): invalid control volume type", print_integer=[cv%type])
@@ -1018,7 +1018,7 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
     
     ! This calculates the effective (inverse) mass of the projectile/piston factoring in the spring mass.
     ! ruby_equivalent_2000
-    r_mp_eff = sys%cv(i_cv)%rm_p / (1.0_WP + C_MS * sys%cv(i_cv)%m_s * sys%cv(i_cv)%rm_p)
+    r_mp_eff = sys%cv(i_cv)%rm_p / (1.0_WP + C_MS * sys%cv(i_cv)%m_spring * sys%cv(i_cv)%rm_p)
     
     d_x_dot_d_t_normal = sys%cv(i_cv)%csa*r_mp_eff*(sys%cv(i_cv)%p() - p_other - sys%cv(i_cv)%p_f(p_fe)) &
                             - sys%cv(i_cv)%k*r_mp_eff*(sys%cv(i_cv)%x + sys%cv(i_cv)%l_pre)

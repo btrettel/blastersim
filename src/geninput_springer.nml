@@ -64,10 +64,13 @@ tex_description       = "Precompression length of the spring. In other words, th
 tex_variable_name     = "$l_\text{pre}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
-lower_bound_not_equal = .true.
+lower_bound_not_equal = .false.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
 /
+! TODO: Allow for negative precompression.
+! This would require changing the spring force law.
+! The spring typically would not apply a restoring force (opposite direction) as it's not firmly attached to the plunger.
 
 &input_variable
 variable_name         = "d_barrel"
@@ -197,5 +200,75 @@ upper_bound_active    = .true.
 upper_bound           = 1.0
 upper_bound_not_equal = .false.
 default_value         = "0.5"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "p_fs_plunger"
+type_definition       = "type(si_pressure)"
+required              = .true.
+tex_unit              = "Pa"
+tex_description       = "Pressure required to overcome static friction on the plunger."
+tex_variable_name     = "$p_\text{fs,plunger}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "p_fd_plunger"
+type_definition       = "type(si_pressure)"
+required              = .true.
+tex_unit              = "Pa"
+tex_description       = "Equivalent pressure of dynamic friction on the plunger."
+tex_variable_name     = "$p_\text{fd,plunger}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "p_fs_proj"
+type_definition       = "type(si_pressure)"
+required              = .true.
+tex_unit              = "Pa"
+tex_description       = "Pressure required to overcome static friction on the projectile."
+tex_variable_name     = "$p_\text{fs,proj}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "p_fd_proj"
+type_definition       = "type(si_pressure)"
+required              = .true.
+tex_unit              = "Pa"
+tex_description       = "Equivalent pressure of dynamic friction on the projectile."
+tex_variable_name     = "$p_\text{fd,proj}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "m_proj"
+type_definition       = "type(si_mass)"
+required              = .true.
+tex_unit              = "kg"
+tex_description       = "Mass of the projectile."
+tex_variable_name     = "$m_\text{proj}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
 bound_fmt             = "f3.1"
 /

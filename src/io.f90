@@ -81,7 +81,11 @@ subroutine read_springer_namelist(input_file, sys, rc)
     type(cv_system_type), allocatable, intent(out) :: sys
     integer, intent(out)                           :: rc
     
-    type(si_area) :: csa_plunger
+    type(si_velocity) :: x_dot
+    type(unitless)    :: y(1)
+    type(si_area)     :: csa_plunger, csa_barrel
+    
+    integer, parameter :: I_PLUNGER_ATM = 1, I_BARREL_ATM  = 2
     
     include "geninput_springer.f90"
     
@@ -115,15 +119,26 @@ subroutine read_springer_namelist(input_file, sys, rc)
     sys%con(4, 3) = sys%con(3, 4)
     sys%con(4, 4)%active = .false.
     
+    ! The same for every control volume.
+    call x_dot%v%init_const(0.0_WP, 0)
+    call y(1)%v%init_const(1.0_WP, 0)
+    
     ! `sys%cv(1)`: atmosphere for plunger tube
     csa_plunger = (PI/4.0_WP)*square(d_plunger_u)
     call sys%cv(1)%set_const("atmosphere for chamber", csa_plunger, p_atm_u, temp_atm_u, [DRY_AIR], 3)
     
-    ! TODO: `sys%cv(2)`: atmosphere for barrel
+    ! `sys%cv(2)`: atmosphere for barrel
+    csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
+    call sys%cv(2)%set_const("atmosphere for barrel", csa_barrel, p_atm_u, temp_atm_u, [DRY_AIR], 4)
     
-    ! TODO: `sys%cv(3)`: plunger tube
+    ! `sys%cv(3)`: plunger tube
+    call sys%cv(3)%set(l_draw_u, x_dot, y, p_atm_u, temp_atm_u, "plunger tube", csa_plunger, &
+                        1.0_WP/m_plunger_u, p_fs_plunger_u, p_fd_plunger_u, k_u, l_pre_u, [DRY_AIR], I_PLUNGER_ATM, &
+                        m_spring=m_spring_u)
     
-    ! TODO: `sys%cv(4)`: barrel
+    ! `sys%cv(4)`: barrel
+    call create_barrel(vol_dead_u, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
+                        [DRY_AIR], I_BARREL_ATM, sys%cv(4))
 end subroutine read_springer_namelist
 
 end module io
