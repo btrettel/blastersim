@@ -5,7 +5,7 @@ kind_parameter     = "WP"
 write_tex          = .true.
 /
 
-&input_parameter
+&input_variable
 parameter_name    = "id"
 type_definition   = "character(len=128)"
 tex_description   = "Unique identifier for the current simulation."
@@ -13,13 +13,13 @@ tex_description_2 = 'String of a maximum of 128 characters. Used in the CSV file
 default_value     = "output"
 /
 
-&input_parameter
+&input_variable
 parameter_name        = "d_plunger"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
 tex_description       = "Diameter of the plunger tube."
-tex_parameter_name    = "$d_\text{plunger}$"
+tex_variable_name     = "$d_\text{plunger}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
@@ -27,13 +27,13 @@ default_value         = "-1.0"
 bound_fmt             = "f5.3"
 /
 
-&input_parameter
+&input_variable
 parameter_name        = "m_plunger"
 type_definition       = "type(si_mass)"
 required              = .true.
 tex_unit              = "kg"
 tex_description       = "Mass of the plunger, excluding the spring."
-tex_parameter_name    = "$m_\text{plunger}$"
+tex_variable_name     = "$m_\text{plunger}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
@@ -41,13 +41,13 @@ default_value         = "-1.0"
 bound_fmt             = "f5.3"
 /
 
-&input_parameter
+&input_variable
 parameter_name        = "l_draw"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
 tex_description       = "Plunger draw length."
-tex_parameter_name    = "$l_\text{draw}$"
+tex_variable_name     = "$l_\text{draw}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
@@ -55,13 +55,13 @@ default_value         = "-1.0"
 bound_fmt             = "f5.3"
 /
 
-&input_parameter
+&input_variable
 parameter_name        = "l_precompress"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
 tex_description       = "Precompression length of the spring. In other words, the amount the spring is compressed at zero draw length."
-tex_parameter_name    = "$l_\text{pre}$"
+tex_variable_name     = "$l_\text{pre}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
@@ -69,13 +69,13 @@ default_value         = "-1.0"
 bound_fmt             = "f5.3"
 /
 
-&input_parameter
+&input_variable
 parameter_name        = "d_barrel"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
 tex_description       = "Barrel diameter."
-tex_parameter_name    = "$d_\text{barrel}$"
+tex_variable_name     = "$d_\text{barrel}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
@@ -83,14 +83,14 @@ default_value         = "-1.0"
 bound_fmt             = "f5.3"
 /
 
-&input_parameter
+&input_variable
 parameter_name        = "l_travel"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
 tex_description       = "Distance base of projectile moves before exiting the barrel."
 tex_description_2     = "Sometimes called the barrel length, which could be misleading as the material the barrel is constructed from is often longer."
-tex_parameter_name    = "$l_\text{travel}$"
+tex_variable_name     = "$l_\text{travel}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
@@ -98,13 +98,13 @@ default_value         = "-1.0"
 bound_fmt             = "f5.3"
 /
 
-&input_parameter
+&input_variable
 parameter_name        = "vol_dead"
 type_definition       = "type(si_volume)"
 required              = .true.
 tex_unit              = "m$^3$"
 tex_description       = "Dead volume. Volume in the barrel at the dart's initial position."
-tex_parameter_name    = "$V_\text{dead}$"
+tex_variable_name     = "$V_\text{dead}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
@@ -112,13 +112,13 @@ default_value         = "-1.0"
 bound_fmt             = "f5.3"
 /
 
-&input_parameter
+&input_variable
 parameter_name        = "k"
 type_definition       = "type(si_stiffness)"
 required              = .true.
 tex_unit              = "N/m"
 tex_description       = "Spring stiffness."
-tex_parameter_name    = "$k$"
+tex_variable_name     = "$k$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
@@ -126,13 +126,13 @@ default_value         = "-1.0"
 bound_fmt             = "f5.3"
 /
 
-&input_parameter
+&input_variable
 parameter_name        = "m_spring"
 type_definition       = "type(si_mass)"
 required              = .true.
 tex_unit              = "kg"
 tex_description       = "Mass of the spring."
-tex_parameter_name    = "$m_\text{spring}$"
+tex_variable_name     = "$m_\text{spring}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
@@ -140,12 +140,12 @@ default_value         = "-1.0"
 bound_fmt             = "f5.3"
 /
 
-&input_parameter
+&input_variable
 parameter_name        = "p_atm"
 type_definition       = "type(si_pressure)"
 tex_unit              = "Pa"
 tex_description       = "Atmospheric pressure."
-tex_parameter_name    = "$p_\text{atm}$"
+tex_variable_name     = "$p_\text{atm}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
@@ -154,12 +154,12 @@ no_kind_default_value = .true.
 bound_fmt             = "f5.3"
 /
 
-&input_parameter
+&input_variable
 parameter_name        = "temp_atm"
 type_definition       = "type(si_temperature)"
 tex_unit              = "K"
 tex_description       = "Atmospheric temperature."
-tex_parameter_name    = "$T_\text{atm}$"
+tex_variable_name     = "$T_\text{atm}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
@@ -168,14 +168,14 @@ no_kind_default_value = .true.
 bound_fmt             = "f5.3"
 /
 
-&input_parameter
+&input_variable
 parameter_name        = "a_e"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
 tex_description       = "Effective area of the transfer port."
 tex_description_2     = "This includes the vena contracta, so likely the effective area is smaller than the actual area available."
-tex_parameter_name    = "$a_\text{e}$"
+tex_variable_name     = "$a_\text{e}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
