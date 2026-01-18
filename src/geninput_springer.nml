@@ -170,9 +170,9 @@ bound_fmt             = "f3.1"
 
 &input_variable
 variable_name         = "a_e"
-type_definition       = "type(si_length)"
+type_definition       = "type(si_area)"
 required              = .true.
-tex_unit              = "m"
+tex_unit              = "m$^2$"
 tex_description       = "Effective area of the transfer port."
 tex_description_2     = "This includes the vena contracta, so likely the effective area is smaller than the actual area available."
 tex_variable_name     = "$a_\text{e}$"

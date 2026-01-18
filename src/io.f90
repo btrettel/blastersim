@@ -81,16 +81,9 @@ subroutine read_springer_namelist(input_file, sys, rc)
     type(cv_system_type), allocatable, intent(out) :: sys
     integer, intent(out)                           :: rc
     
-    integer :: n_d
+    type(si_area) :: csa_plunger
     
-    type(si_length)      :: d_plunger_u
-    type(si_area)        :: csa_plunger
-    type(si_pressure)    :: p_atm_u
-    type(si_temperature) :: temp_atm_u
-    
-    include "geninput_springer_subroutine.f90"
-    
-    n_d = 0
+    include "geninput_springer.f90"
     
     ! construct `sys`
     
@@ -114,8 +107,8 @@ subroutine read_springer_namelist(input_file, sys, rc)
     sys%con(3, 2)%active = .false.
     sys%con(3, 3)%active = .false.
     sys%con(3, 4)%active = .true.
-    call sys%con(3, 4)%a_e%v%init_const(a_e, n_d)
-    call sys%con(3, 4)%b%v%init_const(b, n_d)
+    sys%con(3, 4)%a_e = a_e_u
+    sys%con(3, 4)%b   = b_u
     
     sys%con(4, 1)%active = .false.
     sys%con(4, 2)%active = .false.
@@ -123,10 +116,7 @@ subroutine read_springer_namelist(input_file, sys, rc)
     sys%con(4, 4)%active = .false.
     
     ! `sys%cv(1)`: atmosphere for plunger tube
-    call d_plunger_u%v%init_const(d_plunger, n_d)
     csa_plunger = (PI/4.0_WP)*square(d_plunger_u)
-    call p_atm_u%v%init_const(p_atm, n_d)
-    call temp_atm_u%v%init_const(temp_atm, n_d)
     call sys%cv(1)%set_const("atmosphere for chamber", csa_plunger, p_atm_u, temp_atm_u, [DRY_AIR], 3)
     
     ! TODO: `sys%cv(2)`: atmosphere for barrel

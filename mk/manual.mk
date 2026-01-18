@@ -14,7 +14,7 @@ depends: src$(DIR_SEP)units.f90
 src$(DIR_SEP)units.f90: src$(DIR_SEP)genunits.nml
 	genunits$(BINEXT) src$(DIR_SEP)genunits.nml
 
-src$(DIR_SEP)geninput_springer_subroutine.f90 src$(DIR_SEP)geninput_springer.tex: src$(DIR_SEP)geninput_springer.nml
+src$(DIR_SEP)geninput_springer.f90 src$(DIR_SEP)geninput_springer.tex: src$(DIR_SEP)geninput_springer.nml
 	geninput$(BINEXT) src$(DIR_SEP)geninput_springer.nml
 
 test_conservation.csv: test_cva$(BINEXT)
@@ -23,8 +23,8 @@ test_conservation.csv: test_cva$(BINEXT)
 test_exact.tex: test_cva$(BINEXT)
 	$(RUN)test_cva$(BINEXT)
 
-###########################
-# Files to manually clean #
-###########################
+#############################
+# Additional files to clean #
+#############################
 
-CLEAN_MANUAL = test_conservation.nml
+CLEAN_MANUAL = src$(DIR_SEP)units.f90 test_conservation.nml test_exact.tex src$(DIR_SEP)geninput_springer.f90 src$(DIR_SEP)geninput_springer.tex

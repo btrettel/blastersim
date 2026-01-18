@@ -11,29 +11,31 @@ Note: At present, no binary or source distributions are available yet.
 The following sections were written in anticipation of the future release of the BlasterSim beta version.
 
 \subsection{Installation from binaries}
+\label{sec:installation from binaries}
 
 Obtain the latest BlasterSim binary from \url{http://trettel.us/blastersim/releases/}.
 For Linux, this is blastersim-\gittag-linux.tgz.
-For Windows, this is blastersim-\gittag-win.zip.
+For Windows, this is blastersim-\gittag-windows.zip.
+For macOS, this is blastersim-\gittag-mac.zip.
 
-The \texttt{blastersim} executable on Linux and the \texttt{blastersim.exe} executable on Windows can either be placed in the directory you want to run BlasterSim from or placed on your \texttt{PATH}.
+The \texttt{blastersim} executable on Linux and macOS and the \texttt{blastersim.exe} executable on Windows can either be placed in the directory you want to run BlasterSim from or placed on your \texttt{PATH}.
 
 \subsection{Installation from source tarball}
 \label{sec:installation from source tarball}
 
-The provided source distribution has no dependencies other than a modern Fortran compiler and a Make program like GNU Make on Linux or \href{https://wiki.qt.io/Jom}{jom} or \href{https://learn.microsoft.com/en-us/cpp/build/reference/nmake-reference?view=msvc-170}{NMAKE} on Windows.
+The provided source distribution has no dependencies other than a modern Fortran compiler and a Make program like GNU Make on Linux and macOS or \href{https://wiki.qt.io/Jom}{jom} or \href{https://learn.microsoft.com/en-us/cpp/build/reference/nmake-reference?view=msvc-170}{NMAKE} on Windows.
 Unfortunately, BlasterSim will not compile with every Fortran compiler due to the units module being too large.
 BlasterSim will compile with gfortran and for that reason gfortran is recommended.
 
 After extracting the provided source archive, \texttt{cd} into the directory and build BlasterSim.
 
-On Linux you can type \texttt{make blastersim}.
+On Linux and macOS you can type \texttt{make blastersim}.
 
 On Windows you can type (if using jom) \texttt{jom blastersim.exe}
 
 Note that compilation of BlasterSim can be slow.
 
-Once built, a BlasterSim executable can be placed appropriately as discussed in the ``From the binary'' section.
+Once built, a BlasterSim executable should be moved to a directory on your \texttt{PATH} as discussed in \secref{installation from binaries}.
 
 \subsection{Installation from clone of Git repository}
 % TODO
@@ -41,7 +43,7 @@ Once built, a BlasterSim executable can be placed appropriately as discussed in 
 Building from the Git repository requires first building genunits from Ben Trettel's \href{https://github.com/btrettel/flt/}{FLT} repository.
 The requirement for a modern Fortran compiler remains the same as that from \secref{installation from source tarball}.
 
-Clone the FLT repository and build genunits:
+On Linux and macOS, clone the FLT repository and build genunits:
 \begin{verbatim}
 git clone https://github.com/btrettel/flt.git
 cd flt
@@ -52,7 +54,7 @@ On Windows with jom, you should replace \texttt{make genunits geninput} with \te
 
 Place \texttt{genunits} or \texttt{genunits.exe} on your \texttt{PATH}.
 Now you can build BlasterSim by cloning the BlasterSim repository, \texttt{cd}ing into the clone, and following the instructions in \secref{installation from source tarball}.
-To be more specific for GNU Make:
+To be more specific for GNU Make for Linux and macOS:
 \begin{verbatim}
 git clone https://github.com/btrettel/blastersim.git
 cd blastersim
@@ -61,14 +63,17 @@ make blastersim
 
 On Windows with jom, you should replace \texttt{make blastersim} with \texttt{jom blastersim.exe}.
 
+And again, a BlasterSim executable should be moved to a directory on your \texttt{PATH} as discussed in \secref{installation from binaries}.
+
 \section{BlasterSim inputs in general}
 % TODO
 
 BlasterSim uses Fortran namelist format input files.
 
+% <https://www.intel.com/content/www/us/en/docs/fortran-compiler/developer-guide-reference/2023-0/namelist.html>
 % TODO: Discuss namelist input files in general
 
-% TODO: Example namelist using listings package.
+% TODO: Example namelist
 
 BlasterSim uses SI units in its input files and internally.
 Support for other unit systems is not planned at the moment due to the complexity of supporting multiple unit systems.
