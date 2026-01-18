@@ -56,7 +56,7 @@ bound_fmt             = "f3.1"
 /
 
 &input_variable
-variable_name         = "l_precompress"
+variable_name         = "l_pre"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
