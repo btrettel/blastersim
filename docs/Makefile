@@ -17,7 +17,7 @@ MAKEFLAGS = --warn-undefined-variables
 # > Naming your primary (or toplevel) file ms.tex will cause AutoTeX to process that file first in (La)TeX mode. Under PDFLaTeX modes, and in all other cases, the tex files will be processed in alphanumeric order.
 KEY = blastersim
 
-DEPS = usage.tex theory.tex verval.tex test_exact.tex
+DEPS = usage.tex theory.tex verval.tex test_exact.tex geninput_springer.tex
 
 .SUFFIXES: .fig .gp .tikz
 
@@ -58,6 +58,9 @@ $(KEY).bbl: $(KEY).tex $(KEY).bib $(DEPS)
 
 test_exact.tex: ..$(DIR_SEP)test_exact.tex
 	$(CP) ..$(DIR_SEP)test_exact.tex test_exact.tex
+
+geninput_springer.tex: ..$(DIR_SEP)src$(DIR_SEP)geninput_springer.tex
+	$(CP) ..$(DIR_SEP)src$(DIR_SEP)geninput_springer.tex geninput_springer.tex
 
 # <https://math.nist.gov/~BMiller/LaTeXML/manual/commands/latexml.html>
 # TODO: Fail if there are warnings. Try `--log=file`?

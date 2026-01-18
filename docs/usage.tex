@@ -79,7 +79,7 @@ Scientific notation can be used to appropriately scale inputs. For example, inst
 \tikzstyle{spring}=[thick,decorate,decoration={coil,amplitude=20,segment length=4pt}] % `zigzag` doesn't work right in LaTeXML, but `coil` does
 \draw[spring] (0, \ycenter) -- (\xplungerheadstart, \ycenter);
 
-\draw[<->,thick] (\xbarrelstart, \ylbarrel) -- node[above] {$l_\text{barrel}$} (\xbarrelend, \ylbarrel);
+\draw[<->,thick] (\xbarrelstart, \ylbarrel) -- node[above] {$l_\text{travel}$} (\xbarrelend, \ylbarrel);
 \draw[thick,dashed] (\xbarrelend, \yhighbarrel) -- (\xbarrelend, \dplunger);
 
 \node[draw=white] at (\xdead, \ycenter) {$V_\text{dead}$}; % `draw=white` added to make the text fully visible in LaTeXML
@@ -144,6 +144,8 @@ Scientific notation can be used to appropriately scale inputs. For example, inst
 \caption{Abstract connected control volume view of a springer blaster.}
 \label{fig:springer control volumes}
 \end{figure}
+
+\input{geninput_springer.tex}
 
 \section{Pneumatic mode}
 % TODO

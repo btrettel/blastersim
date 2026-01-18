@@ -53,6 +53,8 @@ test_*
 src/rev.f90
 src/units.f90
 src/geninput_*.f90
+src/geninput_*.tex
+docs/geninput_*.tex
 missed.txt
 *.opt.yaml
 *.optrpt
