@@ -2,7 +2,7 @@
 # Manual dependencies #
 #######################
 
-src$(DIR_SEP)rev.f90: $(ALLSRC)
+src$(DIR_SEP)rev.f90 rev.tex: $(ALLSRC)
 	$(PYTHON) py$(DIR_SEP)gitrev.py
 
 # jom needs explicit dependencies listed for all files.
