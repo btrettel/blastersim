@@ -16,26 +16,21 @@ contains
 
 subroutine get_input_file_name_from_cli(prog, input_file_name)
     use, intrinsic :: iso_fortran_env, only: compiler_options, compiler_version, error_unit
+    use prec, only: CL
     use build, only: DEBUG
     use rev, only: TAG, REVISION_DATE, MODIFIED
     use checks, only: assert
     use stopcodes, only: EX_OK, EX_NOINPUT
 
-    character(len=*), intent(in)               :: prog
-    character(len=:), intent(out), allocatable :: input_file_name
+    character(len=*), intent(in)   :: prog
+    character(len=CL), intent(out) :: input_file_name
     
     character(len=:), allocatable :: modified_string
-    integer :: arg_len
     logical :: input_file_exists
     
-    call assert(.not. allocated(input_file_name), "cli (get_input_file_name_from_cli): input_file_name already allocated")
-    
-    call get_command_argument(1, length=arg_len)
-    allocate(character(len=arg_len) :: input_file_name)
-    call assert(arg_len >= 0, "cli (get_input_file_name_from_cli): arg_len is negative")
     call get_command_argument(1, value=input_file_name)
 
-    if ((len(input_file_name) == 0) .or. &
+    if ((len(trim(input_file_name)) == 0) .or. &
             (trim(input_file_name) == "--help") .or. &
             (trim(input_file_name) == "-help") .or. &
             (trim(input_file_name) == "-h") .or. &
@@ -63,12 +58,11 @@ subroutine get_input_file_name_from_cli(prog, input_file_name)
         
         stop EX_OK
     end if
-    call assert(allocated(input_file_name), "cli (get_input_file_name_from_cli): input_file_name should be allocated")
     
     inquire(file=input_file_name, exist=input_file_exists)
     
     if (.not. input_file_exists) then
-        write(unit=error_unit, fmt="(3a)") 'ERROR: Input file "', input_file_name, '" does not exist.'
+        write(unit=error_unit, fmt="(3a)") 'ERROR: Input file "', trim(input_file_name), '" does not exist.'
         stop EX_NOINPUT
     end if
 end subroutine get_input_file_name_from_cli

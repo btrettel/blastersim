@@ -60,3 +60,6 @@ missed.txt
 *.opt.yaml
 *.optrpt
 *.pdb
+blastersim
+blastersim.exe
+example.csv

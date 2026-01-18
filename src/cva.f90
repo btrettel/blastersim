@@ -190,7 +190,8 @@ end function spring_pe
 pure function m_p_ke(cv)
     class(cv_type), intent(in) :: cv
     
-    type(si_energy) :: m_p_ke
+    type(si_energy)       :: m_p_ke
+    type(si_inverse_mass) :: r_mp_eff ! effective mass of projectile/piston
     
     if (is_close(cv%rm_p%v%v, 0.0_WP) .or. (cv%type == MIRROR_CV_TYPE)) then
         if (is_close(cv%rm_p%v%v, 0.0_WP)) then
@@ -201,7 +202,8 @@ pure function m_p_ke(cv)
         
         call m_p_ke%v%init_const(0.0_WP, size(cv%x_dot%v%d))
     else
-        m_p_ke = 0.5_WP*square(cv%x_dot)/cv%rm_p
+        r_mp_eff = cv%rm_p / (1.0_WP + C_MS * cv%m_spring * cv%rm_p)
+        m_p_ke = 0.5_WP*square(cv%x_dot)/r_mp_eff
     end if
 end function m_p_ke
 

@@ -20,7 +20,7 @@ The specific checks performed include:
     \item Whether a control volume has negative mass. (\texttt{run} subroutine return code 2)
     \item Whether a control volume has negative temperature. (\texttt{run} subroutine return code 3)
     \item Whether the total system mass deviates from the starting mass by more than 0.001\%. (\texttt{run} subroutine return code 4)
-    \item Whether the total system energy deviates from the starting mass by more than 0.01\%. (\texttt{run} subroutine return code 5)
+    \item Whether the total system energy deviates from the starting energy by more than 0.01\%. (\texttt{run} subroutine return code 5)
     \item If automatic differentiation is used, whether any component of the gradient of the total system mass deviates by more than a set amount. (\texttt{run} subroutine return code 6)
     \item If automatic differentiation is used, whether any component of the gradient of the total system energy deviates by more than a set amount. (\texttt{run} subroutine return code 7)
     \item Whether the ideal gas equation of state has become inaccurate due to the pressure increasing above the critical pressure. (\texttt{run} subroutine return code 8)
