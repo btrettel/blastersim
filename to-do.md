@@ -1,5 +1,7 @@
 ### v0.1.0
 
+- Make `a_e` and `b` different for reverse flow in the springer case.
+- Allow for negative precompression. This would require changing the spring force law. The spring typically would not apply a restoring force (opposite direction) as it's not firmly attached to the plunger.
 - Check that $\dot{x}_0$ derivative is now good with exact solution
 - Document friction model to understand what's there are present
 - Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion

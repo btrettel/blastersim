@@ -68,9 +68,6 @@ lower_bound_not_equal = .false.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
 /
-! TODO: Allow for negative precompression.
-! This would require changing the spring force law.
-! The spring typically would not apply a restoring force (opposite direction) as it's not firmly attached to the plunger.
 
 &input_variable
 variable_name         = "d_barrel"
@@ -172,13 +169,13 @@ bound_fmt             = "f3.1"
 /
 
 &input_variable
-variable_name         = "a_e"
-type_definition       = "type(si_area)"
+variable_name         = "d_e"
+type_definition       = "type(si_length)"
 required              = .true.
-tex_unit              = "m$^2$"
-tex_description       = "Effective area of the transfer port."
+tex_unit              = "m"
+tex_description       = "Effective diameter of the transfer port."
 tex_description_2     = "This includes the vena contracta, so likely the effective area is smaller than the actual area available."
-tex_variable_name     = "$a_\text{e}$"
+tex_variable_name     = "$d_\text{e}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.

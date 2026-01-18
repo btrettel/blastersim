@@ -24,6 +24,8 @@ src$(DIR_SEP)gasdata.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)conve
 
 src$(DIR_SEP)io.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)geninput_springer.f90 src$(DIR_SEP)io.f90
 
+src$(DIR_SEP)port.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)port.f90
+
 src$(DIR_SEP)prec.$(OBJEXT): src$(DIR_SEP)prec.f90
 
 src$(DIR_SEP)purerng.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)purerng.f90
@@ -59,6 +61,12 @@ test_gasdata$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJ
 
 gasdata.nml: test_gasdata$(BINEXT)
 	$(RUN)test_gasdata$(BINEXT)
+
+test_io$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)io.$(OBJEXT) src$(DIR_SEP)port.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) src$(DIR_SEP)geninput_springer.f90 test$(DIR_SEP)test_io.f90
+	$(FC) $(OFLAG) $@ $(FFLAGS) src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)io.$(OBJEXT) src$(DIR_SEP)port.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_io.f90
+
+io.nml: test_io$(BINEXT)
+	$(RUN)test_io$(BINEXT)
 
 test_validation$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)io.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) src$(DIR_SEP)geninput_springer.f90 test$(DIR_SEP)test_validation.f90
 	$(FC) $(OFLAG) $@ $(FFLAGS) src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)io.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_validation.f90

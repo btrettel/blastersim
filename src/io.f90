@@ -70,22 +70,23 @@ subroutine create_barrel(vol_dead, csa_barrel, p_atm, temp_atm, m_p, p_fs, p_fd,
                     i_cv_mirror, x_stop=x_stop)
 end subroutine create_barrel
 
-subroutine read_springer_namelist(input_file, sys, rc)
+subroutine read_springer_namelist(input_file, sys, config, rc)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
-    use cva, only: cv_system_type
+    use cva, only: cv_system_type, run_config_type
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
     use checks, only: is_close, check
     use prec, only: CL, PI
     
     character(len=*), intent(in)                   :: input_file
     type(cv_system_type), allocatable, intent(out) :: sys
+    type(run_config_type), intent(out)             :: config
     integer, intent(out)                           :: rc
     
     type(si_velocity) :: x_dot
     type(unitless)    :: y(1)
     type(si_area)     :: csa_plunger, csa_barrel
     
-    integer, parameter :: I_PLUNGER_ATM = 1, I_BARREL_ATM  = 2
+    integer, parameter :: I_PLUNGER_ATM = 1, I_BARREL_ATM  = 2, I_PLUNGER = 3, I_BARREL = 4
     
     include "geninput_springer.f90"
     
@@ -97,27 +98,27 @@ subroutine read_springer_namelist(input_file, sys, rc)
     
     ! `sys%con`
     
-    sys%con(1, 1)%active = .false.
-    sys%con(1, 2)%active = .false.
-    sys%con(1, 3)%active = .false.
-    sys%con(1, 4)%active = .false.
+    sys%con(I_PLUNGER_ATM, I_PLUNGER_ATM)%active = .false.
+    sys%con(I_PLUNGER_ATM, I_BARREL_ATM)%active  = .false.
+    sys%con(I_PLUNGER_ATM, I_PLUNGER)%active     = .false.
+    sys%con(I_PLUNGER_ATM, I_BARREL)%active      = .false.
     
-    sys%con(2, 1)%active = .false.
-    sys%con(2, 2)%active = .false.
-    sys%con(2, 3)%active = .false.
-    sys%con(2, 4)%active = .false.
+    sys%con(I_BARREL_ATM, I_PLUNGER_ATM)%active = .false.
+    sys%con(I_BARREL_ATM, I_BARREL_ATM)%active  = .false.
+    sys%con(I_BARREL_ATM, I_PLUNGER)%active     = .false.
+    sys%con(I_BARREL_ATM, I_BARREL)%active      = .false.
     
-    sys%con(3, 1)%active = .false.
-    sys%con(3, 2)%active = .false.
-    sys%con(3, 3)%active = .false.
-    sys%con(3, 4)%active = .true.
-    sys%con(3, 4)%a_e = a_e_u
-    sys%con(3, 4)%b   = b_u
+    sys%con(I_PLUNGER, I_PLUNGER_ATM)%active = .false.
+    sys%con(I_PLUNGER, I_BARREL_ATM)%active  = .false.
+    sys%con(I_PLUNGER, I_PLUNGER)%active     = .false.
+    sys%con(I_PLUNGER, I_BARREL)%active      = .true.
+    sys%con(I_PLUNGER, I_BARREL)%a_e         = (PI/4.0_WP)*square(d_e_u)
+    sys%con(I_PLUNGER, I_BARREL)%b           = b_u
     
-    sys%con(4, 1)%active = .false.
-    sys%con(4, 2)%active = .false.
-    sys%con(4, 3) = sys%con(3, 4)
-    sys%con(4, 4)%active = .false.
+    sys%con(I_BARREL, I_PLUNGER_ATM)%active = .false.
+    sys%con(I_BARREL, I_BARREL_ATM)%active  = .false.
+    sys%con(I_BARREL, I_PLUNGER)            = sys%con(I_PLUNGER, I_BARREL)
+    sys%con(I_BARREL, I_BARREL)%active      = .false.
     
     ! The same for every control volume.
     call x_dot%v%init_const(0.0_WP, 0)
@@ -125,20 +126,22 @@ subroutine read_springer_namelist(input_file, sys, rc)
     
     ! `sys%cv(1)`: atmosphere for plunger tube
     csa_plunger = (PI/4.0_WP)*square(d_plunger_u)
-    call sys%cv(1)%set_const("atmosphere for chamber", csa_plunger, p_atm_u, temp_atm_u, [DRY_AIR], 3)
+    call sys%cv(I_PLUNGER_ATM)%set_const("atmosphere for chamber", csa_plunger, p_atm_u, temp_atm_u, [DRY_AIR], I_PLUNGER)
     
     ! `sys%cv(2)`: atmosphere for barrel
     csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
-    call sys%cv(2)%set_const("atmosphere for barrel", csa_barrel, p_atm_u, temp_atm_u, [DRY_AIR], 4)
+    call sys%cv(I_BARREL_ATM)%set_const("atmosphere for barrel", csa_barrel, p_atm_u, temp_atm_u, [DRY_AIR], I_BARREL)
     
     ! `sys%cv(3)`: plunger tube
-    call sys%cv(3)%set(l_draw_u, x_dot, y, p_atm_u, temp_atm_u, "plunger tube", csa_plunger, &
+    call sys%cv(I_PLUNGER)%set(l_draw_u, x_dot, y, p_atm_u, temp_atm_u, "plunger tube", csa_plunger, &
                         1.0_WP/m_plunger_u, p_fs_plunger_u, p_fd_plunger_u, k_u, l_pre_u, [DRY_AIR], I_PLUNGER_ATM, &
                         m_spring=m_spring_u)
     
     ! `sys%cv(4)`: barrel
     call create_barrel(vol_dead_u, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
-                        [DRY_AIR], I_BARREL_ATM, sys%cv(4))
+                        [DRY_AIR], I_BARREL_ATM, sys%cv(I_BARREL))
+    
+    call config%set(id, n_d=0)
 end subroutine read_springer_namelist
 
 end module io

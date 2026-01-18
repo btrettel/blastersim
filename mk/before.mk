@@ -4,11 +4,11 @@
 # Test namelists #
 ##################
 
-TESTNML = convert.nml cva.nml gasdata.nml validation.nml
+TESTNML = convert.nml cva.nml gasdata.nml io.nml validation.nml
 .PRECIOUS: $(TESTNML)
 
 ####################
 # All source files #
 ####################
 
-ALLSRC = mk$(DIR_SEP)before.mk mk$(DIR_SEP)common.mk mk$(DIR_SEP)crayftn.mk mk$(DIR_SEP)depends.mk mk$(DIR_SEP)flang.mk mk$(DIR_SEP)gfortran.mk mk$(DIR_SEP)ifort_linux.mk mk$(DIR_SEP)ifort_windows.mk mk$(DIR_SEP)ifx_linux.mk mk$(DIR_SEP)ifx_windows.mk mk$(DIR_SEP)linux_2.mk mk$(DIR_SEP)linux_defaults.mk mk$(DIR_SEP)manual.mk mk$(DIR_SEP)nagfor.mk mk$(DIR_SEP)nvfortran.mk mk$(DIR_SEP)windows_2.mk mk$(DIR_SEP)windows_defaults.mk mk$(DIR_SEP)xlf.mk src$(DIR_SEP)checks.f90 src$(DIR_SEP)cli.f90 src$(DIR_SEP)convergence.f90 src$(DIR_SEP)convert.f90 src$(DIR_SEP)cva.f90 src$(DIR_SEP)debug.f90 src$(DIR_SEP)fmad.f90 src$(DIR_SEP)ga.f90 src$(DIR_SEP)gasdata.f90 src$(DIR_SEP)geninput_springer.nml src$(DIR_SEP)geninput_springer_subroutine.f90 src$(DIR_SEP)genunits.nml src$(DIR_SEP)io.f90 src$(DIR_SEP)prec.f90 src$(DIR_SEP)purerng.f90 src$(DIR_SEP)release.f90 src$(DIR_SEP)stopcodes.f90 src$(DIR_SEP)timer.f90 src$(DIR_SEP)units.f90 src$(DIR_SEP)unittest.f90 test$(DIR_SEP)test_convert.f90 test$(DIR_SEP)test_cva.f90 test$(DIR_SEP)test_gasdata.f90 test$(DIR_SEP)test_validation.f90
+ALLSRC = mk$(DIR_SEP)before.mk mk$(DIR_SEP)common.mk mk$(DIR_SEP)crayftn.mk mk$(DIR_SEP)depends.mk mk$(DIR_SEP)flang.mk mk$(DIR_SEP)gfortran.mk mk$(DIR_SEP)ifort_linux.mk mk$(DIR_SEP)ifort_windows.mk mk$(DIR_SEP)ifx_linux.mk mk$(DIR_SEP)ifx_windows.mk mk$(DIR_SEP)linux_2.mk mk$(DIR_SEP)linux_defaults.mk mk$(DIR_SEP)manual.mk mk$(DIR_SEP)nagfor.mk mk$(DIR_SEP)nvfortran.mk mk$(DIR_SEP)windows_2.mk mk$(DIR_SEP)windows_defaults.mk mk$(DIR_SEP)xlf.mk src$(DIR_SEP)checks.f90 src$(DIR_SEP)cli.f90 src$(DIR_SEP)convergence.f90 src$(DIR_SEP)convert.f90 src$(DIR_SEP)cva.f90 src$(DIR_SEP)debug.f90 src$(DIR_SEP)fmad.f90 src$(DIR_SEP)ga.f90 src$(DIR_SEP)gasdata.f90 src$(DIR_SEP)geninput_springer.f90 src$(DIR_SEP)geninput_springer.nml src$(DIR_SEP)genunits.nml src$(DIR_SEP)io.f90 src$(DIR_SEP)port.f90 src$(DIR_SEP)prec.f90 src$(DIR_SEP)purerng.f90 src$(DIR_SEP)release.f90 src$(DIR_SEP)stopcodes.f90 src$(DIR_SEP)timer.f90 src$(DIR_SEP)units.f90 src$(DIR_SEP)unittest.f90 test$(DIR_SEP)test_convert.f90 test$(DIR_SEP)test_cva.f90 test$(DIR_SEP)test_gasdata.f90 test$(DIR_SEP)test_io.f90 test$(DIR_SEP)test_validation.f90
