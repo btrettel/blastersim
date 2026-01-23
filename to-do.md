@@ -1,27 +1,36 @@
 ### v0.1.0
 
-- Make `a_e` and `b` different for reverse flow in the springer case.
-- Allow for negative precompression. This would require changing the spring force law. The spring typically would not apply a restoring force (opposite direction) as it's not firmly attached to the plunger.
+- docs:
+    - Use normal Makefile to compile documentation.
+        - `cd docs && ...`
+    - Thanks appendix
+        - Andrew Trettel for macOS binary
+    - Development appendix/chapter
+    - Add BlasterSim usage in documentation
+    - In V&V chapter, discuss running all the tests with `make check` (or jom or NMAKE)
+    - Add index to docs.
+        - <https://www.overleaf.com/learn/latex/Indices>
+        - <https://en.wikibooks.org/wiki/LaTeX/Indexing>
+    - Use [Intel Fortran's namelist terminology](https://www.intel.com/content/www/us/en/docs/fortran-compiler/developer-guide-reference/2024-2/namelist.html): namelist group and variable.
+    - Example springer input file in documentation (use listings package?)
+    - Document friction model to understand what's there are present
+    - Quick-start guide for Windows
+- BlasterSim output
+    - Check acceleration to know if under-barreled or over-barreled.
+    - Explain the meaning of the return code if there is an error.
+    - efficiency
+- Make going on level deeper (`%v`) optional in geninput when using genunits.
+- Add option for `*_stdev` variables to geninput.
+- Pneumatic mode.
+- Get documentation done before sensitivity analysis.
+    - Get sensitivity analysis done before UQ.
+    - Get UQ done before optimization so that all optimization is robust for simplicity (no need to have both non-robust and robust optimization set up).
+
+***
+
 - Check that $\dot{x}_0$ derivative is now good with exact solution
-- Document friction model to understand what's there are present
-- Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion
-- Try hevea, tex4ht, and pandoc for HTML version of the docs.
-    - [HEVEA](https://hevea.inria.fr/)
-    - [latex2html](https://www.latex2html.org/)
-    - [lwarp](https://ctan.org/pkg/lwarp?lang=en)
-        - <https://github.com/DominikPeters/pgf-tikz-html-manual>
-    - pandoc
-        - <https://www.danwjoyce.com/data-blog/2018/2/20/latex-to-html-via-pandoc>
-        - <https://tex.stackexchange.com/questions/431719/how-to-use-pandoc-to-derive-output-from-latex-and-tikz-to-a-docx-file>
-    - [TeX4ht](https://www.tug.org/tex4ht/)
-- In V&V chapter, discuss running all the tests with `make check` (or jom or NMAKE)
-- Add index to docs.
-- Make normal Makefile call the documentation Makefile for now.
-- Make geninput generated TeX file as a dependency for 01_usage.tex.
-- Use [Intel Fortran's namelist terminology](https://www.intel.com/content/www/us/en/docs/fortran-compiler/developer-guide-reference/2024-2/namelist.html): namelist group and variable.
-- Make internal and input file variable names consistent
 - Make friction plot for debugging. Try typical case and also `p_fs = p_fd` to help debug what's going on with that. Why does `p_f` go so much higher than `p_fs`/`p_fd` in that case?
-- Test `m_s` in `d_xdot_d_t`.
+- Test `m_spring` in `d_xdot_d_t` and `m_p_ke`.
 - transonic corrections in the barrel (corner_theory_1950 eq. 123)
     - Make this the default but optional if desired for testing.
     - Input validation at first to not use this with RK EOS (if that's added first)
@@ -76,12 +85,6 @@
 - Create subroutines in io.f90 to create different types of CVs. Use these in the tests.
 - Print some derived results initially.
     - Plunger volume
-- At termination, print:
-    - If a success, say so.
-    - If a failure, say so.
-    - Muzzle velocity including units.
-    - efficiency
-    - whether under- or over-barreled
 - Determine terminology to use
     - $y_0$: draw or draw length
     - "core" for pressure chamber?
@@ -220,10 +223,20 @@
         - Test cases for temperature and internal energy with non-zero gas velocity.
     - Print internal energy and gas kinetic energy in CSV output
 - Check /home/ben/svn/old/ballistics/text/ for more ideas.
-- docs:
-    - Use normal Makefile to compile documentation. (Low priority for now.)
-    - Thanks appendix
-    - Contributing appendix/chapter
+- Add spring $k$ calculator
+    - Then you could optimize the length of the spring to cut to.
+- Make `a_e` and `b` different for reverse flow in the springer case.
+- Allow for negative precompression. This would require changing the spring force law. The spring typically would not apply a restoring force (opposite direction) as it's not firmly attached to the plunger.
+- Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion
+- Try hevea, tex4ht, and pandoc for HTML version of the docs.
+    - [HEVEA](https://hevea.inria.fr/)
+    - [latex2html](https://www.latex2html.org/)
+    - [lwarp](https://ctan.org/pkg/lwarp?lang=en)
+        - <https://github.com/DominikPeters/pgf-tikz-html-manual>
+    - pandoc
+        - <https://www.danwjoyce.com/data-blog/2018/2/20/latex-to-html-via-pandoc>
+        - <https://tex.stackexchange.com/questions/431719/how-to-use-pandoc-to-derive-output-from-latex-and-tikz-to-a-docx-file>
+    - [TeX4ht](https://www.tug.org/tex4ht/)
 - promotion
     - Post on:
         - r/nerf

@@ -3,8 +3,6 @@
 # Project: [BlasterSim](https://github.com/btrettel/blastersim)
 # License: [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html)
 
-# Partially tested with NMAKE on Windows. Some tests will fail due to non-portable code. Should eventually work with `nmake /f Nmakefile`.
-
 # defaults
 !ifndef FC
 FC=gfortran
