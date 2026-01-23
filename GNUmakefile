@@ -21,7 +21,7 @@ OS_FILENAME = windows
 $(error GNU Make building is disabled at the moment on Windows due to weird problems. Try NMAKE or jom.)
 # Why use NMAKE or jom on Windows? Some things about GNU Make don't work as well. [Windows directory separators require escaping in a weird way], and [sometimes you need to specify the shell on Windows](https://stackoverflow.com/a/47896799/1124489) as GNU Make will want to use sh.exe. And if you do specify the shell, GNU Make will exit into a new shell.
 else
-# Despite saying Linux here, I expect this to work on Mac OS and BSD.
+# Despite saying Linux here, I expect this to work on macOS and BSD.
 OS_FILENAME = linux
 include mk/linux_defaults.mk
 endif
@@ -104,4 +104,5 @@ include mk$(DIR_SEP)before.mk
 include mk$(DIR_SEP)common.mk
 include mk$(DIR_SEP)manual.mk
 include mk$(DIR_SEP)depends.mk
+include mk$(DIR_SEP)latex.mk
 include mk$(DIR_SEP)$(OS_FILENAME)_2.mk

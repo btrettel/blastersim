@@ -20,7 +20,7 @@ check: $(TESTNML)
 
 .PHONY: clean
 clean:
-	-$(RM) $(CLEAN) $(CLEAN_MANUAL)
+	-$(RM) $(CLEAN) $(CLEAN_MANUAL) $(CLEAN_TEX)
 
 ###########################
 # Portable Python scripts #

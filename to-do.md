@@ -1,8 +1,7 @@
 ### v0.1.0
 
 - docs:
-    - Use normal Makefile to compile documentation.
-        - `cd docs && ...`
+    - Test building docs on Windows.
     - Thanks appendix
         - Andrew Trettel for macOS binary
     - Development appendix/chapter

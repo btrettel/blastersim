@@ -64,4 +64,5 @@ FFLAGS = $(FFLAGS)
 !include mk\before.mk
 !include mk\common.mk
 !include mk\manual.mk
+!include mk\latex.mk
 !include mk\depends.mk
