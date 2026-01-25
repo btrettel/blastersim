@@ -1,6 +1,56 @@
 \chapter{Development}
 \label{sec:dev}
 
+\section{Compiling BlasterSim}
+\label{sec:compiling}
+
+\subsection{Compiling from source tarball}
+\label{sec:compiling from source tarball}
+
+Obtain the latest BlasterSim source code from \url{http://trettel.us/blastersim/releases/blastersim-\gittag-source.zip}.
+
+The provided source code has no dependencies other than a modern Fortran compiler and a Make program like GNU Make on Linux and macOS or \href{https://wiki.qt.io/Jom}{jom} or \href{https://learn.microsoft.com/en-us/cpp/build/reference/nmake-reference?view=msvc-170}{NMAKE} on Windows.
+Unfortunately, BlasterSim will not compile with every Fortran compiler due to the units module being too large.
+gfortran is recommended, but BlasterSim is also regularly tested with LLVM flang.
+\href{https://community.intel.com/t5/Intel-Fortran-Compiler/Increasing-the-size-of-the-interface-contains-stack/td-p/1594824}{The Intel Fortran Compiler unfortunately will not compile BlasterSim due to a bug in their front end}.
+
+After extracting the provided source archive, \texttt{cd} into the directory and build BlasterSim.
+
+On Linux and macOS you can type \texttt{make BUILD=release blastersim}.
+On Windows you can type (if using jom) \texttt{jom BUILD=release blastersim.exe}
+
+Note that compilation of BlasterSim can be slow.
+
+Once built, a BlasterSim executable should be moved to a directory on your \texttt{PATH} as discussed in \secref{installation}.
+
+\subsection{Compiling from clone of Git repository}
+% TODO
+
+Building from the Git repository requires first building genunits and geninput from Ben Trettel's \href{https://github.com/btrettel/flt/}{FLT} repository.
+The requirement for a modern Fortran compiler remains the same as that from \secref{compiling from source tarball}.
+
+On Linux and macOS, clone the FLT repository and build genunits and geninput:
+\begin{verbatim}
+git clone https://github.com/btrettel/flt.git
+cd flt
+make BUILD=release genunits geninput
+\end{verbatim}
+
+On Windows with jom, you should replace \texttt{make genunits geninput} with \texttt{jom genunits.exe geninput.exe}.
+
+Place \texttt{genunits} or \texttt{genunits.exe} on your \texttt{PATH}.
+Now you can build BlasterSim by cloning the BlasterSim repository, \texttt{cd}ing into the clone, and following the instructions in \secref{compiling from source tarball}.
+To be more specific for GNU Make for Linux and macOS:
+\begin{verbatim}
+git clone https://github.com/btrettel/blastersim.git
+cd blastersim
+make BUILD=release blastersim
+\end{verbatim}
+
+On Windows with jom, you should replace \texttt{make BUILD=release blastersim} with \texttt{jom BUILD=release blastersim.exe}.
+
+And again, a BlasterSim executable should be moved to a directory on your \texttt{PATH} as discussed in \secref{installation}.
+
 \section{Contributing}
 % TODO
 % add tests
@@ -12,19 +62,25 @@
 \section{Compiling BlasterSim releases}
 % TODO
 
-\texttt{make BUILD=release STATIC=yes blastersim}
+BlasterSim releases are static binaries so that BlasterSim has no dependencies.
+The Makefiles will build static binaries if \texttt{STATIC=yes} is added to the Make command.
+
+On Linux, run \texttt{make BUILD=release STATIC=yes blastersim} to build a release version of BlasterSim.
+
+On Windows, run \texttt{jom BUILD=release STATIC=yes blastersim.exe} to build a release version of BlasterSim.
+
+On macOS, it appears that static binaries can not be built.
+I do not yet have a good solution to this problem, but I'm working on it.
 
 \section{Compiling BlasterSim documentation}
 % TODO
 
-\texttt{make docs/blastersim.pdf}
+BlasterSim's PDF documentation can be compiled by running \texttt{make docs/blastersim.pdf}.
+BlasterSim's HTML documentation can be compiled by running \texttt{make docs/index.html}.
 
-%make clean
-%make BUILD=release STATIC=yes blastersim
-%make BUILD=release STATIC=yes check
-%cd docs
-%make
-%make index.html
+Note that these Make commands will run some BlasterSim tests to generate some numbers to print in the documentation.
+This will slow down compilation of the documentation
+For speed, once the documentation numbers are generated, these BlasterSim tests will not be run again when compiling the documentation unless BlasterSim's code changes.
 
 %\section{Generative AI}
 

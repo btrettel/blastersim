@@ -14,6 +14,11 @@ DIR_SEP = ^\
 GREP    = findstr /n
 CP      = copy
 
-LOOP_START  = for %i in (
-LOOP_MIDDLE = ) do 
-LOOP_END    = %%i
+# These loop variables would be used for spell checking all .tex and .html files. But aspell is uncommon on Windows, so I'm making them simply skip the spell checking.
+#LOOP_START  = for %i in (
+#LOOP_MIDDLE = ) do 
+#LOOP_END    = %%i
+
+LOOP_START  = rem
+LOOP_MIDDLE = 
+LOOP_END    = 
