@@ -1,16 +1,19 @@
 \chapter{Verification and validation}
-\label{sec:verval}
+\label{verval}
 
 The purpose of this chapter is to help users and potential users of BlasterSim understand how BlasterSim compares against experimental data and also what steps were taken to eliminate bugs in BlasterSim.
 
+BlasterSim has over 200 verification and validation tests at present.
+These can be run with \texttt{make check} on Linux and macOS and \texttt{jom check} on Windows.
+
 \section{Verification}
+\label{verification}
 
 Verification tests check that the simulation model has been implemented consistently.
 In other words, verification tests check that the math of the simulator is consistent with the intended governing equations.
 These tests do not test that the governing equations are appropriate in the first place, which is done through BlasterSim's validation tests.
 
 \subsection{Run-time consistency checks}
-% TODO
 
 Every time step, BlasterSim performs internal consistency checks to alert the user if the simulation is becoming inaccurate in a detectable way.
 These checks are made in the \texttt{check\_sys} subroutine of cva.f90.
@@ -32,12 +35,7 @@ The specific checks performed include:
 BlasterSim contains hundreds of run-time assertions which perform deeper internal consistency checks.
 These additional checks are disabled in the released versions of BlasterSim for speed but are enabled during all developer testing runs for debugging purposes.
 
-\subsection{Unit and integration testing}
-% TODO
-
 \subsection{Comparison with exact solution}
-% TODO: Add numerical comparison.
-% TODO: Output order of accuracy in a table
 
 To test that the time integration in BlasterSim is working correctly, an exact solution for a simple case was constructed.
 This case has only two control volumes, one for the barrel, and one for the atmosphere.
@@ -119,6 +117,7 @@ In terms of the projectile velocity, the result is
 This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact}. For $\Delta t = \testexactdt$~s, the numerical error was measured at $\xdoterror$~m/s, which is negligible. The numerical order-of-accuracy was measured at $\xdotorder$, which is close to the theoretically expected order-of-accuracy of $4$ for the RK4 integrator. In other words, not only does BlasterSim closely match the exact solution, but BlasterSim's numerical error decreases at the theoretically expected rate as the time step decreases. This is the most rigorous test that can be made with an exact solution. For more information on order-of-accuracy verification, see \citet[\S~2.3]{roy_review_2005}.
 
 \section{Validation}
+\label{validation}
 
 BlasterSim's validation tests compare BlasterSim against experimental data. At present BlasterSim is validated with a series of pneumatic blaster tests that I made back in 2010.
 
@@ -127,5 +126,6 @@ While BlasterSim appears to give reasonable results when simulating spring blast
 Anyone willing to perform these tests is encouraged to contact Ben Trettel.
 
 \subsection{2010-08-07 pneumatic blaster tests}
+\label{pneumatic-validation}
 % TODO
-% TODO: Make table be written by test_verification.f90.
+% TODO: Make table be written by test_validation.f90.

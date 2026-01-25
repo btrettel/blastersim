@@ -1,21 +1,14 @@
 \chapter{Usage}
-\label{sec:usage}
+\label{usage}
 
 \section{Introduction}
-% TODO
+\label{intro}
 
 \section{Installation}
+\label{installation}
 
-Note: At present, no binary or source distributions are available yet.
-The following sections were written in anticipation of the future release of the BlasterSim beta version.
-
-\subsection{System requirements}
-
-BlasterSim is written in Fortran 2018 and will run on any computer a modern Fortran compiler allows.
 BlasterSim has no dependencies.
-
-\subsection{Installation}
-\label{sec:installation}
+BlasterSim is written in Fortran 2018 and will run on any computer a modern Fortran compiler allows.
 
 Obtain the latest BlasterSim binary from \url{http://trettel.us/blastersim/releases/}.
 For Linux, this is blastersim-\gittag-linux-x86-64.tgz.
@@ -41,9 +34,11 @@ Support for other unit systems is not planned at the moment due to the complexit
 Scientific notation can be used to appropriately scale inputs. For example, instead of 13 mm being written as \texttt{0.013} m, the user can write \texttt{13.0e-3}.
 
 \section{Running BlasterSim}
+\label{running}
 % TODO
 
 \section{Springer mode}
+\label{springer}
 % TODO
 
 As shown in \figref{springer time zero}, BlasterSim geometrically models the plunger tube and barrel are treated as cylindrical.
@@ -162,6 +157,7 @@ The connection between the plunger tube and barrel can take any form.
 \end{figure}
 
 \subsection{\texttt{springer} namelist group variables}
+\label{springer-namelist}
 
 The following variables are in the springer namelist group.
 If there is a corresponding typeset variable, the notation for that variable is also listed.
@@ -169,10 +165,15 @@ If there is a corresponding typeset variable, the notation for that variable is 
 \input{geninput_springer.tex}
 
 \section{Pneumatic mode}
+\label{pneumatic}
 % TODO
 
 \section{BlasterSim internal model}
+\label{internal-model}
 % TODO
 
 Internally, BlasterSim simulate blasters using control volumes with arbitrary flow connections between control volumes.
 This allows BlasterSim to simulates spring and pneumatic blasters with the same core simulation code. This also allows simulating more atypical blasters without major code changes.
+
+This section describes the internal model in an abstract way.
+See \secref{interior-ballistics} for details on the specific equations solved.

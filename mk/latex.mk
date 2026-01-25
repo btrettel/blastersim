@@ -53,10 +53,10 @@ docs$(DIR_SEP)geninput_springer.tex: src$(DIR_SEP)geninput_springer.tex
 	$(CP) src$(DIR_SEP)geninput_springer.tex docs$(DIR_SEP)geninput_springer.tex
 
 # <https://math.nist.gov/~BMiller/LaTeXML/manual/commands/latexml.html>
-# TODO: Fail if there are warnings. Try `--log=file`?
 docs$(DIR_SEP)index.html: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS)
-	cd docs && latexmlc --strict --split --dest=index.html $(TEX_KEY).tex
+	cd docs && latexmlc --strict --split --splitnaming=label --dest=index.html $(TEX_KEY).tex
 	$(LOOP_START) docs$(DIR_SEP)*.html $(LOOP_MIDDLE) $(SPELL_HTML) $(LOOP_END)
+	-$(GREP) "$(BL)Warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).latexml.log
 
 docs$(DIR_SEP)$(TEX_KEY).txt: docs$(DIR_SEP)$(TEX_KEY).pdf
 	cd docs && $(PDFTOTEXT) $(TEX_KEY).pdf $(TEX_KEY).txt

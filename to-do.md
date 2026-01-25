@@ -19,7 +19,9 @@
     - Check acceleration to know if under-barreled or over-barreled.
     - Explain the meaning of the return code if there is an error.
     - efficiency
+- Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion
 - Optimal barrel length mode where the barrel length is not specified and BlasterSim stops where acceleration is zero.
+    - It would be important to stop the backwards motion before adding this, otherwise BlasterSim will stop at the wrong time.
 - Make going on level deeper (`%v`) optional in geninput when using genunits.
 - Add option for `*_stdev` variables to geninput.
 - Pneumatic mode.
@@ -228,7 +230,6 @@
     - Then you could optimize the length of the spring to cut to.
 - Make `a_e` and `b` different for reverse flow in the springer case.
 - Allow for negative precompression. This would require changing the spring force law. The spring typically would not apply a restoring force (opposite direction) as it's not firmly attached to the plunger.
-- Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion
 - Try hevea, tex4ht, and pandoc for HTML version of the docs.
     - [HEVEA](https://hevea.inria.fr/)
     - [latex2html](https://www.latex2html.org/)

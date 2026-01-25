@@ -1,15 +1,33 @@
 \chapter{Development}
-\label{sec:dev}
+\label{dev}
+
+\section{Contributing}
+\label{contributing}
+
+Contributions are welcome.
+Contributors can file issues and pull requests on GitHub at \url{https://github.com/btrettel/blastersim}.
+
+Validation data is particularly welcome.
+To contribute validation data, recreate the experimental conditions in BlasterSim and file an issue with the BlasterSim inputs, file a pull request, or contact Ben Trettel directly.
+
+BlasterSim follows a rigorous software development process.
+Tests should be developed to make sure that BlasterSim features work as intended.
+All new and existing tests must pass.
+Existing tests can be run with \texttt{make check} on Linux and macOS and \texttt{jom check} on Windows as discussed in \secref{verval}.
+The tests themselves are in the test directory and are Fortran code.
+Contributors should examine existing tests to understand the testing system.
+Additionally, new features should be documented.
+See the docs directory for this documentation's source code in LaTeX.
 
 \section{Compiling BlasterSim}
-\label{sec:compiling}
+\label{compiling}
 
 \subsection{Compiling from source tarball}
-\label{sec:compiling from source tarball}
+\label{compiling-from-source-tarball}
 
 Obtain the latest BlasterSim source code from \url{http://trettel.us/blastersim/releases/blastersim-\gittag-source.zip}.
 
-The provided source code has no dependencies other than a modern Fortran compiler and a Make program like GNU Make on Linux and macOS or \href{https://wiki.qt.io/Jom}{jom} or \href{https://learn.microsoft.com/en-us/cpp/build/reference/nmake-reference?view=msvc-170}{NMAKE} on Windows.
+Compiling BlasterSim requires only a modern Fortran compiler and a Make program like GNU Make on Linux and macOS or \href{https://wiki.qt.io/Jom}{jom} or \href{https://learn.microsoft.com/en-us/cpp/build/reference/nmake-reference?view=msvc-170}{NMAKE} on Windows.
 Unfortunately, BlasterSim will not compile with every Fortran compiler due to the units module being too large.
 gfortran is recommended, but BlasterSim is also regularly tested with LLVM flang.
 \href{https://community.intel.com/t5/Intel-Fortran-Compiler/Increasing-the-size-of-the-interface-contains-stack/td-p/1594824}{The Intel Fortran Compiler unfortunately will not compile BlasterSim due to a bug in their front end}.
@@ -23,11 +41,11 @@ Note that compilation of BlasterSim can be slow.
 
 Once built, a BlasterSim executable should be moved to a directory on your \texttt{PATH} as discussed in \secref{installation}.
 
-\subsection{Compiling from clone of Git repository}
-% TODO
+\subsection{Compiling from Git}
+\label{compiling-git}
 
 Building from the Git repository requires first building genunits and geninput from Ben Trettel's \href{https://github.com/btrettel/flt/}{FLT} repository.
-The requirement for a modern Fortran compiler remains the same as that from \secref{compiling from source tarball}.
+The requirement for a modern Fortran compiler remains the same as that from \secref{compiling-from-source-tarball}.
 
 On Linux and macOS, clone the FLT repository and build genunits and geninput:
 \begin{verbatim}
@@ -39,7 +57,7 @@ make BUILD=release genunits geninput
 On Windows with jom, you should replace \texttt{make genunits geninput} with \texttt{jom genunits.exe geninput.exe}.
 
 Place \texttt{genunits} or \texttt{genunits.exe} on your \texttt{PATH}.
-Now you can build BlasterSim by cloning the BlasterSim repository, \texttt{cd}ing into the clone, and following the instructions in \secref{compiling from source tarball}.
+Now you can build BlasterSim by cloning the BlasterSim repository, \texttt{cd}ing into the clone, and following the instructions in \secref{compiling-from-source-tarball}.
 To be more specific for GNU Make for Linux and macOS:
 \begin{verbatim}
 git clone https://github.com/btrettel/blastersim.git
@@ -51,16 +69,8 @@ On Windows with jom, you should replace \texttt{make BUILD=release blastersim} w
 
 And again, a BlasterSim executable should be moved to a directory on your \texttt{PATH} as discussed in \secref{installation}.
 
-\section{Contributing}
-% TODO
-% add tests
-% all tests must pass
-
-% TODO: Mention GitHub URL
-% TODO: filing issues
-
-\section{Compiling BlasterSim releases}
-% TODO
+\subsection{Compiling BlasterSim releases}
+\label{compiling-releases}
 
 BlasterSim releases are static binaries so that BlasterSim has no dependencies.
 The Makefiles will build static binaries if \texttt{STATIC=yes} is added to the Make command.
@@ -72,8 +82,12 @@ On Windows, run \texttt{jom BUILD=release STATIC=yes blastersim.exe} to build a 
 On macOS, it appears that static binaries can not be built.
 I do not yet have a good solution to this problem, but I'm working on it.
 
-\section{Compiling BlasterSim documentation}
-% TODO
+\subsection{Compiling BlasterSim documentation}
+\label{compiling-docs}
+
+BlasterSim uses LaTeX for this documentation.
+A LaTeX distribution like \href{https://www.tug.org/texlive/}{TeX Live} for Linux or \href{https://miktex.org/}{MikTeX} for Windows is required to compile the documentation.
+On Linux, \href{http://aspell.net/}{Aspell} is also required for spell checking.
 
 BlasterSim's PDF documentation can be compiled by running \texttt{make docs/blastersim.pdf}.
 BlasterSim's HTML documentation can be compiled by running \texttt{make docs/index.html}.
@@ -81,6 +95,23 @@ BlasterSim's HTML documentation can be compiled by running \texttt{make docs/ind
 Note that these Make commands will run some BlasterSim tests to generate some numbers to print in the documentation.
 This will slow down compilation of the documentation
 For speed, once the documentation numbers are generated, these BlasterSim tests will not be run again when compiling the documentation unless BlasterSim's code changes.
+
+\section{Road map}
+\label{road-map}
+
+The following features are planned for the future:
+\begin{itemize}
+\item An exterior ballistics calculator.
+\item Uncertainty quantification.
+\item Design optimization.
+\item A pressure gradient model to improve accuracy for long barrels.
+\item A transonic correction model to account for potential shock waves in front of the projectile.
+\item BlasterSim features are taking priority to this at the moment, however, the following are planned once BlasterSim is feature-complete:
+\begin{itemize}
+    \item A graphical user interface for computers.
+    \item A web-based interface for informal use and use on mobile devices.
+\end{itemize}
+\end{itemize}
 
 %\section{Generative AI}
 
