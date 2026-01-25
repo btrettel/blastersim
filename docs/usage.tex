@@ -19,9 +19,9 @@ BlasterSim has no dependencies.
 \label{sec:installation from binaries}
 
 Obtain the latest BlasterSim binary from \url{http://trettel.us/blastersim/releases/}.
-For Linux, this is blastersim-\gittag-linux.tgz.
-For Windows, this is blastersim-\gittag-windows.zip.
-For macOS, this is blastersim-\gittag-mac.tgz.
+For Linux, this is blastersim-\gittag-linux-x86-64.tgz.
+For Windows, this is blastersim-\gittag-windows-x86-64.zip.
+For macOS, this is blastersim-\gittag-mac-x86-64.tgz.
 
 The \texttt{blastersim} executable on Linux and macOS and the \texttt{blastersim.exe} executable on Windows can either be placed in the directory you want to run BlasterSim from or placed on your \texttt{PATH}.
 
@@ -194,14 +194,14 @@ The connection between the plunger tube and barrel can take any form.
 \tikzstyle{cv_const} = [rectangle, rounded corners, minimum width=12em, text centered, draw=black]
 \tikzstyle{arrow}    = [thick, <->]
 
-\node (atm1)        [cv_const]                  {atmosphere~1};
-\node (plungertube) [cv, below of=atm1]         {plunger~tube};
-\node (barrel)      [cv, below of=plungertube]  {barrel};
-\node (atm2)        [cv_const, below of=barrel] {atmosphere~2};
+\node (atm1)         [cv_const]                  {atmosphere~1};
+\node (plunger tube) [cv, below of=atm1]         {plunger~tube};
+\node (barrel)       [cv, below of=plunger tube] {barrel};
+\node (atm2)         [cv_const, below of=barrel] {atmosphere~2};
 
-\draw [arrow] (atm1)        -- (plungertube);
-\draw [arrow] (plungertube) -- (barrel);
-\draw [arrow] (barrel)      -- (atm2);
+\draw [arrow] (atm1)         -- (plunger tube);
+\draw [arrow] (plunger tube) -- (barrel);
+\draw [arrow] (barrel)       -- (atm2);
 \end{tikzpicture}
 \caption{Abstract connected control volume view of a springer blaster.}
 \label{fig:springer control volumes}

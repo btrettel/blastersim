@@ -1,5 +1,6 @@
 ### v0.1.0
 
+- `make dist`
 - docs:
     - Test building docs on Windows.
     - Thanks appendix
@@ -18,6 +19,7 @@
     - Check acceleration to know if under-barreled or over-barreled.
     - Explain the meaning of the return code if there is an error.
     - efficiency
+- Optimal barrel length mode where the barrel length is not specified and BlasterSim stops where acceleration is zero.
 - Make going on level deeper (`%v`) optional in geninput when using genunits.
 - Add option for `*_stdev` variables to geninput.
 - Pneumatic mode.
@@ -373,6 +375,8 @@ GUI ideas:
         - <https://unhaut.epizy.com/psxsdk/>
         - <https://chenthread.asie.pl/fromage/>
         - <https://plasma-gate.weizmann.ac.il/Grace/>
+        - <https://www.nongnu.org/chktex/>
+        - <http://aspell.net/>
         - Dark mode?
             - <https://speeddemosarchive.com/>
             - <https://hardforum.com/>

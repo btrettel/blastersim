@@ -13,3 +13,7 @@ PYTHON   = python3
 ARCH     = 
 GREP     = grep
 CP       = cp
+
+LOOP_START  = for i in 
+LOOP_MIDDLE = ; do 
+LOOP_END    = $$i ; done

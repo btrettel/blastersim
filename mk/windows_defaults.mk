@@ -13,3 +13,7 @@ ARCH     =
 DIR_SEP = ^\
 GREP    = findstr /n
 CP      = copy
+
+LOOP_START  = for %i in (
+LOOP_MIDDLE = ) do 
+LOOP_END    = %%i
