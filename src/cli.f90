@@ -25,7 +25,7 @@ subroutine get_input_file_name_from_cli(prog, input_file_name)
     character(len=*), intent(in)   :: prog
     character(len=CL), intent(out) :: input_file_name
     
-    character(len=:), allocatable :: modified_string
+    character(len=CL) :: modified_string
     logical :: input_file_exists
     
     call get_command_argument(1, value=input_file_name)
@@ -45,7 +45,7 @@ subroutine get_input_file_name_from_cli(prog, input_file_name)
            modified_string = "" 
         end if
         
-        write(unit=*, fmt="(a)") "Version: " // TAG // " (" // REVISION_DATE // modified_string // ")"
+        write(unit=*, fmt="(a)") "Version: " // TAG // " (" // REVISION_DATE // trim(modified_string) // ")"
         
         if (DEBUG) then
             write(unit=*, fmt="(a)") "Build: debug"

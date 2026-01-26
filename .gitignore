@@ -56,6 +56,10 @@ src/units.f90
 src/geninput_*.f90
 src/geninput_*.tex
 docs/geninput_*.tex
+!test/test_read_springer_namelist.nml
+docs/springer-example.nml
+docs/pneumatic-example.nml
+docs/blastersim-out.txt
 missed.txt
 *.opt.yaml
 *.optrpt

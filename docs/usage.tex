@@ -4,6 +4,17 @@
 \section{Introduction}
 \label{intro}
 
+BlasterSim simulates pneumatic and spring compressed gas guns with a \href{https://en.wikipedia.org/wiki/Lumped-element_model}{lumped parameter} model.
+
+With BlasterSim, you simulate a foam dart blaster or any other compressed gas gun before building.
+BlasterSim can also help answer hypothetical questions about an existing build, like whether performance will benefit from a particular change.
+Optimal barrel length can be accurately calculated, avoiding inaccurate rules-of-thumb and tedious experiments with varying lengths of barrel.
+
+This guide starts with the usage (\secref{usage}) and theory (\secref{theory}) of BlasterSim.
+Later chapters include comparisons of BlasterSim against experimental measurements (\secref{validation}), details of how BlasterSim is tested otherwise (\secref{verification}, how to contribute to BlasterSim (\secref{dev}), and notes on developing BlasterSim (\secref{compiling}).
+
+BlasterSim is under development and not yet feature-complete.
+
 \section{Installation}
 \label{installation}
 
@@ -19,23 +30,52 @@ The \texttt{blastersim} executable on Linux and macOS and the \texttt{blastersim
 
 See \secref{compiling} for instruction on how to compile BlasterSim from the source tarball or clone of the Git repository.
 
-\section{BlasterSim inputs in general}
-% TODO
-
-BlasterSim uses Fortran namelist format input files.
-
-% <https://www.intel.com/content/www/us/en/docs/fortran-compiler/developer-guide-reference/2023-0/namelist.html>
-% TODO: Discuss namelist input files in general
-
-% TODO: Example namelist
-
-BlasterSim uses SI units in its input files and internally.
-Support for other unit systems is not planned at the moment due to the complexity of supporting multiple unit systems.
-Scientific notation can be used to appropriately scale inputs. For example, instead of 13 mm being written as \texttt{0.013} m, the user can write \texttt{13.0e-3}.
-
 \section{Running BlasterSim}
 \label{running}
-% TODO
+
+With BlasterSim placed in the current directory or your \texttt{PATH}, you can run BlasterSim by typing \texttt{blastersim} in your terminal.
+
+The first command line argument is the input file.
+For example, to run BlasterSim on input.nml, type \texttt{blastersim input.nml}.
+
+If BlasterSim is run without an input file (running the command \texttt{blastersim} by itself), BlasterSim will print a message containing information about how to run BlasterSim, the BlasterSim version, and debugging information:
+\lstinputlisting[breaklines=true]{blastersim-out.txt}
+
+\section{BlasterSim inputs in general}
+\label{inputs-general}
+
+BlasterSim uses Fortran namelist format input files.
+Namelist files are broken into groups and variables.
+A group starts with the \texttt{\&} symbol, then the name of the group, and contains one or more variables which themselves are the actual input data.
+A group ends with the \texttt{/} symbol.
+For example, in the example namelist input file below, see that \texttt{group1} group contains the variables \texttt{a}, \texttt{b}, and \texttt{c}.
+\texttt{a} is an integer, \texttt{b} is a floating point number (decimal number), and \texttt{c} is a string (which must be quoted).
+A namelist file can contain multiple groups.
+The example below has two groups, \texttt{group1} and \texttt{group2}.
+Comments can be added with the \texttt{!} symbol.
+Comments can take up an entire line as in the \texttt{group1} namelist below, or be placed at the end of a line as in the \texttt{group2} namelist below.
+
+\begin{lstlisting}
+&group1
+a = 0
+b = -1.01
+c = "string1"
+! comment
+/
+
+&group2
+x = 1
+y = 2.05 ! comment
+z = "string2"
+/
+\end{lstlisting}
+
+For more details of the namelist format, refer to the Intel Fortran Compiler documentation~\cite{noauthor_namelist_2025}.
+
+BlasterSim uses SI units in its input files and internally.
+Support for other unit systems is not planned due to the complexity of supporting multiple unit systems.
+Scientific notation can be used to appropriately scale inputs.
+For example, instead of 13 mm being written as \texttt{0.013}, the user can write \texttt{13.0e-3}.
 
 \section{Springer mode}
 \label{springer}
@@ -164,9 +204,24 @@ If there is a corresponding typeset variable, the notation for that variable is 
 
 \input{geninput_springer.tex}
 
+\subsection{Example springer input file}
+\label{springer-example}
+% TODO: Go through file and explain what it means.
+
+\lstinputlisting{springer-example.nml}
+
 \section{Pneumatic mode}
 \label{pneumatic}
 % TODO
+
+\subsection{\texttt{pneumatic} namelist group variables}
+\label{pneumatic-namelist}
+%TODO
+
+\subsection{Example pneumatic input file}
+\label{pneumatic-example}
+% TODO: Add example
+% TODO: Go through file and explain what it means.
 
 \section{BlasterSim internal model}
 \label{internal-model}

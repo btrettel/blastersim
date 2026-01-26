@@ -48,22 +48,22 @@ Building from the Git repository requires first building genunits and geninput f
 The requirement for a modern Fortran compiler remains the same as that from \secref{compiling-from-source-tarball}.
 
 On Linux and macOS, clone the FLT repository and build genunits and geninput:
-\begin{verbatim}
+\begin{lstlisting}
 git clone https://github.com/btrettel/flt.git
 cd flt
 make BUILD=release genunits geninput
-\end{verbatim}
+\end{lstlisting}
 
 On Windows with jom, you should replace \texttt{make genunits geninput} with \texttt{jom genunits.exe geninput.exe}.
 
 Place \texttt{genunits} or \texttt{genunits.exe} on your \texttt{PATH}.
 Now you can build BlasterSim by cloning the BlasterSim repository, \texttt{cd}ing into the clone, and following the instructions in \secref{compiling-from-source-tarball}.
 To be more specific for GNU Make for Linux and macOS:
-\begin{verbatim}
+\begin{lstlisting}
 git clone https://github.com/btrettel/blastersim.git
 cd blastersim
 make BUILD=release blastersim
-\end{verbatim}
+\end{lstlisting}
 
 On Windows with jom, you should replace \texttt{make BUILD=release blastersim} with \texttt{jom BUILD=release blastersim.exe}.
 

@@ -1,5 +1,6 @@
 ### v0.1.0
 
+- Add BlasterSim URL to cli.f90.
 - `make dist`
 - docs:
     - Test building docs on Windows.
