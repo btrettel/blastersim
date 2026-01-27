@@ -60,6 +60,7 @@ docs/geninput_*.tex
 docs/springer-example.nml
 docs/pneumatic-example.nml
 docs/blastersim-out.txt
+docs/blastersim.txt
 missed.txt
 *.opt.yaml
 *.optrpt

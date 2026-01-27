@@ -38,4 +38,5 @@ with open(os.path.join("src", "rev.f90"), "w") as f90_output_handler:
     
     with open(os.path.join("rev.tex"), "w") as tex_output_handler:
         tex_output_handler.write("% auto-generated\n")
+        tex_output_handler.write("% chktex-file 8\n")
         tex_output_handler.write(r"\newcommand*{\gittag}{"+tag+"}")

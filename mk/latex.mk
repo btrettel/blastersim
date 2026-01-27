@@ -3,9 +3,12 @@ TEX_KEY = blastersim
 SPELL_DEPS = docs$(DIR_SEP)usage.tex \
 docs$(DIR_SEP)theory.tex \
 docs$(DIR_SEP)verval.tex \
-docs$(DIR_SEP)dev.tex
+docs$(DIR_SEP)dev.tex \
+docs$(DIR_SEP)springer-figures.tex \
+docs$(DIR_SEP)exact-solution-figure.tex
 
-TEX_DEPS = $(SPELL_DEPS) \
+TEX_DEPS = mk$(DIR_SEP)/latex.mk \
+$(SPELL_DEPS) \
 docs$(DIR_SEP)rev.tex \
 docs$(DIR_SEP)test_exact.tex \
 docs$(DIR_SEP)geninput_springer.tex \
@@ -45,8 +48,12 @@ docs$(DIR_SEP)$(TEX_KEY).pdf docs$(DIR_SEP)$(TEX_KEY).log: docs$(DIR_SEP)$(TEX_K
 
 docs$(DIR_SEP)$(TEX_KEY).bbl: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS)
 	$(LOOP_START) docs$(DIR_SEP)$(TEX_KEY).tex $(SPELL_DEPS) $(LOOP_MIDDLE) $(SPELL_TEX) $(LOOP_END)
+	chktex docs$(DIR_SEP)$(TEX_KEY).tex
 	cd docs && $(TEX) $(TEX_FLAGS) -draftmode $(TEX_KEY)
 	cd docs && $(BIB) $(TEX_KEY)
+
+docs$(DIR_SEP)$(TEX_KEY).txt: docs$(DIR_SEP)$(TEX_KEY).pdf
+	$(PDFTOTEXT) docs$(DIR_SEP)$(TEX_KEY).pdf docs$(DIR_SEP)$(TEX_KEY).txt
 
 # Why move these files here? I don't know how to go up a directory in a cross-platform way in LaTeX. So putting everything in this directory is the easiest approach.
 docs$(DIR_SEP)rev.tex: rev.tex
@@ -62,7 +69,7 @@ docs$(DIR_SEP)springer-example.nml: test$(DIR_SEP)test_read_springer_namelist.nm
 	$(CP) test$(DIR_SEP)test_read_springer_namelist.nml docs$(DIR_SEP)springer-example.nml
 
 docs$(DIR_SEP)blastersim-out.txt: blastersim$(BINEXT)
-	$(RUN)blastersim$(BINEXT) > docs$(DIR_SEP)blastersim-out.txt
+	$(RUN)blastersim$(BINEXT) > docs$(DIR_SEP)blastersim-out.txt 2>&1
 
 # <https://math.nist.gov/~BMiller/LaTeXML/manual/commands/latexml.html>
 # Spell checking all HTML files is commented out as it's hard to get aspell to skip code blocks.
@@ -74,9 +81,25 @@ docs$(DIR_SEP)index.html: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).
 	$(SPELL_HTML) docs$(DIR_SEP)bib.html
 	-$(GREP) "$(BL)Warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).latexml.log
 
-docs$(DIR_SEP)$(TEX_KEY).txt: docs$(DIR_SEP)$(TEX_KEY).pdf
-	cd docs && $(PDFTOTEXT) $(TEX_KEY).pdf $(TEX_KEY).txt
-
 .PHONY: clean_tex
 clean_tex:
 	$(RM) $(CLEAN_TEX)
+
+# Why not put `$(SPELL_TEX) $(TEX_KEY).tex` in `$(TEX_KEY).bbl`? I get the error "Error: Stdin not a terminal." if I do that.
+# `lacheck $(TEX_KEY).tex` has lots of false positives.
+# TODO: Check log files (both LaTeX and BibTeX) for warnings.
+# TODO: Validate HTML and CSS
+# <https://github.com/dspinellis/latex-advice#latex-formatting>: > Users can define their own rules, too, for example to enforce consistency in the spelling of certain phrases. Now it is up to you to create ChkTeX rules to enforce the guidelines in this document. If you do, please share them.
+# TODO: Try other BibTeX linters.
+# TODO: <https://github.com/sylvainhalle/textidote>
+# TODO: /home/ben/git/bmtreport/diction/
+.PHONY: lint_tex
+lint_tex: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib docs$(DIR_SEP)index.html docs$(DIR_SEP)$(TEX_KEY).txt docs$(DIR_SEP)$(TEX_KEY).log
+	-$(GREP) ?? docs$(DIR_SEP)$(TEX_KEY).txt
+	-$(GREP) "$(BL)pdfTeX warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).log
+	-$(GREP) "$(BL)Overfull \\\hbox$(BR)" docs$(DIR_SEP)$(TEX_KEY).log
+	-$(GREP) "$(BL)Underfull \\\hbox$(BR)" docs$(DIR_SEP)$(TEX_KEY).log
+	biber --tool --validate-datamodel --dieondatamodel --quiet docs$(DIR_SEP)$(TEX_KEY).bib
+	#diction --beginner --suggest docs$(DIR_SEP)$(TEX_KEY).txt
+	#style --print-ari 20 docs$(DIR_SEP)$(TEX_KEY).txt
+	linkchecker --check-extern docs$(DIR_SEP)index.html

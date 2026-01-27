@@ -1,0 +1,32 @@
+% chktex-file 1
+
+\tikzmath{
+\dtube     = 1;
+\ltube     = 12;
+\lproj     = 2;
+\xproj     = 3;
+\lx        = -\dtube/2;
+\yxdash    = -\dtube;
+\ytubedash = 2*\dtube;
+\yxcvtext  = \dtube/2;
+\xbarreltext = \xproj/2;
+\xatmtext    = \xproj + \lproj + 3;
+}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\draw[thick] (\ltube, \dtube) -- (0, \dtube) -- (0, 0) -- (\ltube, 0);
+
+\fill[fill=gray,draw=black,thick] (\xproj, 0) rectangle ++(\lproj, \dtube);
+
+\draw[<->,thick]    (0, \lx)    -- node[below] {$x$} (\xproj, \lx);
+\draw[thick,dashed] (0, 0)      -- (0, \yxdash);
+\draw[thick,dashed] (\xproj, 0) -- (\xproj, \yxdash);
+
+% `draw=white` added to make the text fully visible in LaTeXML
+\node[draw=white] at (\xbarreltext, \yxcvtext) {barrel};
+\node[draw=white] at (\xatmtext,    \yxcvtext) {atmosphere};
+\end{tikzpicture}
+\caption{Test case which can be solved exactly.\label{fig:exact solution}}
+\end{figure}

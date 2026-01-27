@@ -3,6 +3,8 @@
 - Add BlasterSim URL to cli.f90.
 - `make dist`
 - docs:
+    - Use `physics` package for derivatives
+        - <https://tex.stackexchange.com/a/238805/9945>
     - Test building docs on Windows.
     - Thanks appendix
         - Andrew Trettel for macOS binary
@@ -21,6 +23,7 @@
     - Explain the meaning of the return code if there is an error.
     - efficiency
 - Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion
+    - New requirement: $p_\text{f0} \leq p_\text{fe}$ to avoid backwards motion.
 - Optimal barrel length mode where the barrel length is not specified and BlasterSim stops where acceleration is zero.
     - It would be important to stop the backwards motion before adding this, otherwise BlasterSim will stop at the wrong time.
 - Make going on level deeper (`%v`) optional in geninput when using genunits.
@@ -252,8 +255,9 @@
             - Nerfcord #showoff
             - Private server
         - SpudFiles
+        - Title: BlasterSim: simulate your blasters, calculate optimal barrel length, and more
     - Distribution:
-        - GitHub
+        - trettel.us
         - <https://blasterdownloads.com/are-you-foam-dart-blaster-designer/>
 
 ***

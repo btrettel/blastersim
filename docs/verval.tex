@@ -1,33 +1,31 @@
-\chapter{Verification and validation}
-\label{verval}
+\chapter{Verification and validation}\label{verval}
 
 The purpose of this chapter is to help users and potential users of BlasterSim understand how BlasterSim compares against experimental data and also what steps were taken to eliminate bugs in BlasterSim.
 
 BlasterSim has over 200 verification and validation tests at present.
 These can be run with \texttt{make check} on Linux and macOS and \texttt{jom check} on Windows.
 
-\section{Verification}
-\label{verification}
+\section{Verification}\label{verification}
 
 Verification tests check that the simulation model has been implemented consistently.
 In other words, verification tests check that the math of the simulator is consistent with the intended governing equations.
 These tests do not test that the governing equations are appropriate in the first place, which is done through BlasterSim's validation tests.
 
-\subsection{Run-time consistency checks}
+\subsection{Run-time consistency checks}\label{run-time-checks}
 
 Every time step, BlasterSim performs internal consistency checks to alert the user if the simulation is becoming inaccurate in a detectable way.
 These checks are made in the \texttt{check\_sys} subroutine of cva.f90.
 The specific checks performed include:
 \begin{itemize}
-    \item Whether the simulation ran for too long without the projectile leaving the barrel. (\texttt{run} subroutine return code 1)
-    \item Whether a control volume has negative mass. (\texttt{run} subroutine return code 2)
-    \item Whether a control volume has negative temperature. (\texttt{run} subroutine return code 3)
-    \item Whether the total system mass deviates from the starting mass by more than 0.001\%. (\texttt{run} subroutine return code 4)
-    \item Whether the total system energy deviates from the starting energy by more than 0.01\%. (\texttt{run} subroutine return code 5)
-    \item If automatic differentiation is used, whether any component of the gradient of the total system mass deviates by more than a set amount. (\texttt{run} subroutine return code 6)
-    \item If automatic differentiation is used, whether any component of the gradient of the total system energy deviates by more than a set amount. (\texttt{run} subroutine return code 7)
-    \item Whether the ideal gas equation of state has become inaccurate due to the pressure increasing above the critical pressure. (\texttt{run} subroutine return code 8)
-    \item Whether the coordinates of any piston become desynchronized between control volumes on either side of the mentioned piston. (\texttt{run} subroutine return code 9)
+    \item Whether the simulation ran for too long without the projectile leaving the barrel. (\texttt{run} subroutine return code 1) % chktex 12
+    \item Whether a control volume has negative mass. (\texttt{run} subroutine return code 2) % chktex 12
+    \item Whether a control volume has negative temperature. (\texttt{run} subroutine return code 3) % chktex 12
+    \item Whether the total system mass deviates from the starting mass by more than 0.001\%. (\texttt{run} subroutine return code 4) % chktex 12
+    \item Whether the total system energy deviates from the starting energy by more than 0.01\%. (\texttt{run} subroutine return code 5) % chktex 12
+    \item If automatic differentiation is used, whether any component of the gradient of the total system mass deviates by more than a set amount. (\texttt{run} subroutine return code 6) % chktex 12
+    \item If automatic differentiation is used, whether any component of the gradient of the total system energy deviates by more than a set amount. (\texttt{run} subroutine return code 7) % chktex 12
+    \item Whether the ideal gas equation of state has become inaccurate due to the pressure increasing above the critical pressure. (\texttt{run} subroutine return code 8) % chktex 12
+    \item Whether the coordinates of any piston become desynchronized between control volumes on either side of the mentioned piston. (\texttt{run} subroutine return code 9) % chktex 12
 \end{itemize}
 
 \subsection{Debugging run-time assertions}
@@ -41,66 +39,36 @@ To test that the time integration in BlasterSim is working correctly, an exact s
 This case has only two control volumes, one for the barrel, and one for the atmosphere.
 See \figref{exact solution} for an illustration of this test case.
 
-\tikzmath{
-\dtube     = 1;
-\ltube     = 12;
-\lproj     = 2;
-\xproj     = 3;
-\lx        = -\dtube/2;
-\yxdash    = -\dtube;
-\ytubedash = 2*\dtube;
-\yxcvtext  = \dtube/2;
-\xbarreltext = \xproj/2;
-\xatmtext    = \xproj + \lproj + 3;
-}
-
-\begin{figure}
-\centering
-\begin{tikzpicture}
-\draw[thick] (\ltube, \dtube) -- (0, \dtube) -- (0, 0) -- (\ltube, 0);
-
-\fill[fill=gray,draw=black,thick] (\xproj, 0) rectangle ++(\lproj, \dtube);
-
-\draw[<->,thick]    (0, \lx)    -- node[below] {$x$} (\xproj, \lx);
-\draw[thick,dashed] (0, 0)      -- (0, \yxdash);
-\draw[thick,dashed] (\xproj, 0) -- (\xproj, \yxdash);
-
-% `draw=white` added to make the text fully visible in LaTeXML
-\node[draw=white] at (\xbarreltext, \yxcvtext) {barrel};
-\node[draw=white] at (\xatmtext,    \yxcvtext) {atmosphere};
-\end{tikzpicture}
-\caption{Test case which can be solved exactly.}
-\label{fig:exact solution}
-\end{figure}
+\input{exact-solution-figure.tex}
 
 The barrel is initially filled with pressurized gas and the projectile has both dynamic and static friction pressure set to $p_\text{f}$.
 The tube has a constant cross-sectional area of $A$, so the volume of the barrel is $V = A\,x$.
 The gas is ideal with a constant ratio of specific heats, $\gamma$, and the process is adiabatic, so $p\,V^\gamma = \text{constant}$ in the barrel~\citep[p.~129, eq.~3.53]{moran_fundamentals_2008}.
 So for any time $t$, the pressure in the barrel is
 \begin{equation}
-    p_0 (A\,x_0)^\gamma = p(t) (A\,x(t))^\gamma,
+    p_0 {(A\,x_0)}^\gamma = p(t) {(A\,x(t))}^\gamma,
 \end{equation}
 which can be rearranged and simplified to
 \begin{equation}
-    p(t) = p_0 \left(\frac{x_0}{x(t)}\right)^\gamma,
+    p(t) = p_0 {\left(\frac{x_0}{x(t)}\right)}^\gamma,
 \end{equation}
 where $P_0$ and $x_0$ are the initial pressure and projectile position, respectively.
 
 The equation of motion of the projectile is
 \begin{align}
     m_\text{p} \frac{\mathrm{d} \dot{x}}{\mathrm{d} t} &= A \left(p(t) - p_\text{atm} - p_\text{f}\right), \\
-                                                       &= A \left[p_0 \left(\frac{x_0}{x(t)}\right)^\gamma - p_\text{atm} - p_\text{f}\right].
+                                                       &= A \left[p_0 {\left(\frac{x_0}{x(t)}\right)}^\gamma - p_\text{atm} - p_\text{f}\right].
 \end{align}
 
 The trick $\displaystyle \frac{\mathrm{d} \dot{x}}{\mathrm{d} t} \, \mathrm{d} x = \dot{x} \, \mathrm{d} \dot{x}$ can be applied to solve this non-linear differential equation for $\dot{x}$ as a function of $x$ rather than $t$.
 Substituting in the trick returns
 \begin{equation}
-    m_\text{p} \dot{x} \, \mathrm{d} \dot{x} = A \left[p_0 \left(\frac{x_0}{x}\right)^\gamma - p_\text{atm} - p_\text{f}\right] \, \mathrm{d} x.
+    m_\text{p} \dot{x} \, \mathrm{d} \dot{x} = A \left[p_0 {\left(\frac{x_0}{x}\right)}^\gamma - p_\text{atm} - p_\text{f}\right] \, \mathrm{d} x.
 \end{equation}
 
 Now integrate from an initial velocity ($\dot{x}_0$):
 \begin{equation}
-    \int_{\dot{x}_0}^{\dot{x}} m_\text{p} \hat{\dot{x}} \, \mathrm{d} \hat{\dot{x}} = \int_{x_0}^x A \left[p_0 \left(\frac{x_0}{\hat{x}}\right)^\gamma - p_\text{atm} - p_\text{f}\right] \, \mathrm{d} \hat{x}.
+    \int_{\dot{x}_0}^{\dot{x}} m_\text{p} \hat{\dot{x}} \, \mathrm{d} \hat{\dot{x}} = \int_{x_0}^x A \left[p_0 {\left(\frac{x_0}{\hat{x}}\right)}^\gamma - p_\text{atm} - p_\text{f}\right] \, \mathrm{d} \hat{x}.
 \end{equation}
 
 Evaluating the integrals returns the projectile kinetic energy as a function of $x$:
@@ -116,8 +84,7 @@ In terms of the projectile velocity, the result is
 \input{test_exact.tex}
 This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact}. For $\Delta t = \testexactdt$~s, the numerical error was measured at $\xdoterror$~m/s, which is negligible. The numerical order-of-accuracy was measured at $\xdotorder$, which is close to the theoretically expected order-of-accuracy of $4$ for the RK4 integrator. In other words, not only does BlasterSim closely match the exact solution, but BlasterSim's numerical error decreases at the theoretically expected rate as the time step decreases. This is the most rigorous test that can be made with an exact solution. For more information on order-of-accuracy verification, see \citet[\S~2.3]{roy_review_2005}.
 
-\section{Validation}
-\label{validation}
+\section{Validation}\label{validation}
 
 BlasterSim's validation tests compare BlasterSim against experimental data. At present BlasterSim is validated with a series of pneumatic blaster tests that I made back in 2010.
 
@@ -125,7 +92,6 @@ Unfortunately, to date, no spring blaster experiments have been detailed enough 
 While BlasterSim appears to give reasonable results when simulating spring blasters, a true test where inputs are not guessed or calibrated has not been made yet.
 Anyone willing to perform these tests is encouraged to provide data as discussed in \secref{contributing}.
 
-\subsection{2010-08-07 pneumatic blaster tests}
-\label{pneumatic-validation}
+\subsection{2010-08-07 pneumatic blaster tests}\label{pneumatic-validation} % chktex 8
 % TODO
-% TODO: Make table be written by test_validation.f90.
+% TODO: Make plot be written by test_validation.f90.

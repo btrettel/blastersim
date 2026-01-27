@@ -3,9 +3,12 @@
 \pdfoutput=1
 % <https://info.arxiv.org/help/submit_tex.html#pdflatex>
 
-% Template info:
-% $Date: 2025-09-01 15:40:24 -0400 (Mon, 01 Sep 2025) $
-% $Id: ms.tex 2582 2025-09-01 19:40:24Z ben $
+% Needed for the `\iflatexml` macro.
+\usepackage{latexml}
+\iflatexml\else%
+\usepackage[l2tabu, orthodox]{nag} % <https://tex.stackexchange.com/a/589/9945>
+\usepackage[all]{onlyamsmath} % <https://tex.stackexchange.com/a/680/9945>
+\fi%
 
 \usepackage{lmodern}
 
@@ -32,9 +35,6 @@
   columns=fullflexible,
   keepspaces=true,
 }
-
-% Needed for the `\iflatexml` macro.
-\usepackage{latexml}
 
 \usepackage{tikz}
 \usetikzlibrary{math}
@@ -89,7 +89,6 @@
 \input{verval.tex}
 \input{dev.tex}
 
-\bibliography{blastersim}
-\label{bib}
+\bibliography{blastersim}\label{bib}
 
 \end{document}

@@ -1,8 +1,6 @@
-\chapter{Development}
-\label{dev}
+\chapter{Development}\label{dev}
 
-\section{Contributing}
-\label{contributing}
+\section{Contributing}\label{contributing}
 
 Contributions are welcome.
 Contributors can file issues and pull requests on GitHub at \url{https://github.com/btrettel/blastersim}.
@@ -19,11 +17,9 @@ Contributors should examine existing tests to understand the testing system.
 Additionally, new features should be documented.
 See the docs directory for this documentation's source code in LaTeX.
 
-\section{Compiling BlasterSim}
-\label{compiling}
+\section{Compiling BlasterSim}\label{compiling}
 
-\subsection{Compiling from source tarball}
-\label{compiling-from-source-tarball}
+\subsection{Compiling from source tarball}\label{compiling-from-source-tarball}
 
 Obtain the latest BlasterSim source code from \url{http://trettel.us/blastersim/releases/blastersim-\gittag-source.zip}.
 
@@ -41,8 +37,7 @@ Note that compilation of BlasterSim can be slow.
 
 Once built, a BlasterSim executable should be moved to a directory on your \texttt{PATH} as discussed in \secref{installation}.
 
-\subsection{Compiling from Git}
-\label{compiling-git}
+\subsection{Compiling from Git}\label{compiling-git}
 
 Building from the Git repository requires first building genunits and geninput from Ben Trettel's \href{https://github.com/btrettel/flt/}{FLT} repository.
 The requirement for a modern Fortran compiler remains the same as that from \secref{compiling-from-source-tarball}.
@@ -58,7 +53,7 @@ On Windows with jom, you should replace \texttt{make genunits geninput} with \te
 
 Place \texttt{genunits} or \texttt{genunits.exe} on your \texttt{PATH}.
 Now you can build BlasterSim by cloning the BlasterSim repository, \texttt{cd}ing into the clone, and following the instructions in \secref{compiling-from-source-tarball}.
-To be more specific for GNU Make for Linux and macOS:
+To be more specific for GNU Make for Linux and macOS: % chktex 13
 \begin{lstlisting}
 git clone https://github.com/btrettel/blastersim.git
 cd blastersim
@@ -69,8 +64,7 @@ On Windows with jom, you should replace \texttt{make BUILD=release blastersim} w
 
 And again, a BlasterSim executable should be moved to a directory on your \texttt{PATH} as discussed in \secref{installation}.
 
-\subsection{Compiling BlasterSim releases}
-\label{compiling-releases}
+\subsection{Compiling BlasterSim releases}\label{compiling-releases}
 
 BlasterSim releases are static binaries so that BlasterSim has no dependencies.
 The Makefiles will build static binaries if \texttt{STATIC=yes} is added to the Make command.
@@ -82,8 +76,7 @@ On Windows, run \texttt{jom BUILD=release STATIC=yes blastersim.exe} to build a 
 On macOS, it appears that static binaries can not be built.
 I do not yet have a good solution to this problem, but I'm working on it.
 
-\subsection{Compiling BlasterSim documentation}
-\label{compiling-docs}
+\subsection{Compiling BlasterSim documentation}\label{compiling-docs}
 
 BlasterSim uses LaTeX for this documentation.
 A LaTeX distribution like \href{https://www.tug.org/texlive/}{TeX Live} for Linux or \href{https://miktex.org/}{MikTeX} for Windows is required to compile the documentation.
@@ -96,8 +89,7 @@ Note that these Make commands will run some BlasterSim tests to generate some nu
 This will slow down compilation of the documentation
 For speed, once the documentation numbers are generated, these BlasterSim tests will not be run again when compiling the documentation unless BlasterSim's code changes.
 
-\section{Road map}
-\label{road-map}
+\section{Road map}\label{road-map}
 
 The following features are planned for the future:
 \begin{itemize}
