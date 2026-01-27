@@ -7,7 +7,8 @@
 \usepackage{latexml}
 \iflatexml\else%
 \usepackage[l2tabu, orthodox]{nag} % <https://tex.stackexchange.com/a/589/9945>
-\usepackage[all]{onlyamsmath} % <https://tex.stackexchange.com/a/680/9945>
+\usepackage[all,error]{onlyamsmath} % <https://tex.stackexchange.com/a/680/9945>
+% Discussion of a possible conflict between onlyamsmath and TikZ: <https://tex.stackexchange.com/q/31860/9945>
 \fi%
 
 \usepackage{lmodern}

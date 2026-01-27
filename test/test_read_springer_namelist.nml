@@ -15,7 +15,7 @@ m_spring     = 10.0e-3 ! kg
 p_fs_plunger = 0.0     ! Pa
 p_fd_plunger = 0.0     ! Pa
 
-! transfer port
+! flow restriction
 d_e = 5.0e-3 ! m
 b   = 0.528  ! unitless (optional)
 
