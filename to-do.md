@@ -3,6 +3,13 @@
 - Add BlasterSim URL to cli.f90.
 - `make dist`
 - docs:
+    - Look at Zotero "BibTeX quality report" lines
+    - chktex custom regex option
+        - Example: /etc/chktexrc
+        - `UserWarn`
+        - `UserWarnRegex`
+    - BlasterSim output for a working case
+    - Put springer and pneumatic governing equations in usage chapter
     - Use `physics` package for derivatives
         - <https://tex.stackexchange.com/a/238805/9945>
     - Test building docs on Windows.

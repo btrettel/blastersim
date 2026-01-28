@@ -56,14 +56,14 @@ subroutine get_input_file_name_from_cli(prog, input_file_name)
         write(unit=*, fmt="(a, a)") "Compiler: ", compiler_version()
         write(unit=*, fmt="(a, a)") "Compiler flags: ", compiler_options()
         
-        stop EX_OK
+        stop EX_OK, quiet=.true.
     end if
     
     inquire(file=input_file_name, exist=input_file_exists)
     
     if (.not. input_file_exists) then
         write(unit=error_unit, fmt="(3a)") 'ERROR: Input file "', trim(input_file_name), '" does not exist.'
-        stop EX_NOINPUT
+        stop EX_NOINPUT, quiet=.true.
     end if
 end subroutine get_input_file_name_from_cli
 

@@ -31,10 +31,10 @@ call run(config, sys_start, sys_end, status)
 if (status%rc == SUCCESS_RUN_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
     write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(4)%x_dot%v%v, " m/s"
-    stop EX_OK
+    stop EX_OK, quiet=.true.
 else
     write(unit=ERROR_UNIT, fmt="(a, i0)") "ERROR: return code ", status%rc
-    stop EX_USAGE
+    stop EX_USAGE, quiet=.true.
 end if
 
 end program blastersim
