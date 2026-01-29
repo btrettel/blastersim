@@ -33,6 +33,13 @@ The specific checks performed include:
 BlasterSim contains hundreds of run-time assertions which perform deeper internal consistency checks.
 These additional checks are disabled in the released versions of BlasterSim for speed but are enabled during all developer testing runs for debugging purposes.
 
+\subsection{Compile-time unit checking}
+
+Variables in BlasterSim are assigned units like meters or seconds, allowing the Fortran compiler to check for inconsistencies.
+This is achieved through a system called genunits which generates a custom Fortran module containing the required Fortran types~\cite{trettel_compile-time_2025,trettel_btrettelflt_2026}.
+This system has proved useful to locate bugs as the compiler will know precisely where the unit inconsistency is.
+A failing test will rarely provide such precision.
+
 \subsection{Comparison with exact solution}
 
 To test that the time integration in BlasterSim is working correctly, an exact solution for a simple case was constructed.

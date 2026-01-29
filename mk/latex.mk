@@ -45,6 +45,8 @@ docs$(DIR_SEP)$(TEX_KEY).pdf docs$(DIR_SEP)$(TEX_KEY).log: docs$(DIR_SEP)$(TEX_K
 	cd docs && $(TEX) $(TEX_FLAGS) -draftmode $(TEX_KEY)
 	cd docs && $(TEX) $(TEX_FLAGS) $(TEX_KEY)
 	-$(GREP) "$(BL)Warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).log
+	-$(GREP) "$(BL)pdfTeX warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).log
+	-$(GREP) "$(BL)Overfull \\\hbox$(BR)" docs$(DIR_SEP)$(TEX_KEY).log
 	-$(GREP) "$(BL)Warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).blg
 
 docs$(DIR_SEP)$(TEX_KEY).bbl: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS)
@@ -96,8 +98,6 @@ clean_tex:
 .PHONY: lint_tex
 lint_tex: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib docs$(DIR_SEP)index.html docs$(DIR_SEP)$(TEX_KEY).txt docs$(DIR_SEP)$(TEX_KEY).log
 	-$(GREP) ?? docs$(DIR_SEP)$(TEX_KEY).txt
-	-$(GREP) "$(BL)pdfTeX warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).log
-	-$(GREP) "$(BL)Overfull \\\hbox$(BR)" docs$(DIR_SEP)$(TEX_KEY).log
 	-$(GREP) "$(BL)Underfull \\\hbox$(BR)" docs$(DIR_SEP)$(TEX_KEY).log
 	#diction --beginner --suggest docs$(DIR_SEP)$(TEX_KEY).txt
 	#style --print-ari 20 docs$(DIR_SEP)$(TEX_KEY).txt

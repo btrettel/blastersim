@@ -2,8 +2,10 @@
 
 - Add BlasterSim URL to cli.f90.
 - `make dist`
+- Try exact solution for springers
 - docs:
     - Look at Zotero "BibTeX quality report" lines
+        - Export to BibLaTeX for even more checks?
     - chktex custom regex option
         - Example: /etc/chktexrc
         - `UserWarn`
@@ -186,6 +188,8 @@
         - min/max dart mass
         - dart head decapitation
         - pneumatics might want to use less gas mass per shot
+        - spring compression
+            - <https://discord.com/channels/727038380054937610/1172390267890958366/1466253503151476877>
 - Stopping criteria based on acceleration to find optimal barrel length
 - Check entropy conservation.
 - Order-of-accuracy tests
