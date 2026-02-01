@@ -3,12 +3,13 @@
 - Fix `d_m_k_d_t` in cva.f90 so that the mass fraction for the correct control volumes are used.
     - Add tests to prevent this bug from happening again.
     - First make sure tests fail ("red-green")
+    - Indirect test using `run`: Two CVs, one containing gas 1, one containing gas 2. The pressure in one CV is higher, causing one gas to flow into the other. The mass of each gas should stay constant.
     - `d_m_k_d_t` direct test
-    - indirect test using `run`
-    - Make sure there's a run-time check that the mass of each gas species is constant. (This won't apply if there is combustion.)
+    - Add a run-time check that the mass of each gas species is constant? (This won't apply if there is combustion, though.)
 - Add BlasterSim URL to cli.f90.
 - `make dist`
 - Try exact solution for springers
+- Try multiple CV exact solution. One constant pressure chamber, one barrel?
 - docs:
     - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.
     - Also refer to code in docs and link to GitHub.
@@ -20,8 +21,6 @@
         - `UserWarnRegex`
     - BlasterSim output for a working case
     - Put springer and pneumatic governing equations in usage chapter
-    - Use `physics` package for derivatives
-        - <https://tex.stackexchange.com/a/238805/9945>
     - Test building docs on Windows.
     - Thanks appendix
         - Andrew Trettel for macOS binary

@@ -46,7 +46,8 @@ call test_m_dot_3(tests)
 call test_m_dot_4(tests)
 
 call test_calculate_flows(tests)
-call test_conservation(tests)
+call test_conservation_1(tests)
+call test_conservation_2(tests)
 call test_mirror_1(tests)
 call test_mirror_2(tests)
 call test_exact(tests)
@@ -1272,7 +1273,7 @@ subroutine test_calculate_flows(tests)
     call tests%real_eq(h_dot(2, 2)%v%v, 0.0_WP, "m_dots(2, 2)")
 end subroutine test_calculate_flows
 
-subroutine test_conservation(tests)
+subroutine test_conservation_1(tests)
     use convert
     use gasdata, only: DRY_AIR
     use prec, only: PI
@@ -1433,7 +1434,76 @@ subroutine test_conservation(tests)
     
     call tests%real_gt(sys_end%cv(3)%e_f%v%v, 0.0_WP, "test_conservation, chamber friction loss is non-zero")
     call tests%real_gt(sys_end%cv(4)%e_f%v%v, 0.0_WP, "test_conservation, barrel friction loss is non-zero")
-end subroutine test_conservation
+end subroutine test_conservation_1
+
+subroutine test_conservation_2(tests)
+    ! Testing gas species mass conservation.
+    
+    use gasdata, only: DRY_AIR, H2O
+    use cva, only: TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, run
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    type(run_config_type)             :: config
+    type(cv_system_type), allocatable :: sys_start, sys_end
+    type(run_status_type)             :: status
+    
+    integer               :: n_d
+    type(si_length)       :: x
+    type(si_velocity)     :: x_dot
+    type(unitless)        :: one, y_1(2), y_2(2)
+    type(si_pressure)     :: p_1, p_2, p_fs, p_fd
+    type(si_temperature)  :: temp
+    type(si_area)         :: csa
+    type(si_inverse_mass) :: rm_p
+    type(si_stiffness)    :: k
+    type(si_length)       :: l_pre
+    type(si_time)         :: t_stop
+    
+    n_d = 2 ! Look at derivatives of mass fraction.
+    
+    call one%v%init_const(1.0_WP, n_d)
+    call y_1(1)%v%init(1.0_WP, 1, n_d) ! CV 1 is `DRY_AIR`
+    y_1(2) = one - y_1(1)
+    call y_2(2)%v%init(1.0_WP, 2, n_d) ! CV 2 is `H2O`
+    y_2(1) = one - y_2(2)
+    
+    call x%v%init_const(10.0e-2_WP, n_d)
+    call x_dot%v%init_const(0.0_WP, n_d)
+    call p_1%v%init_const(5.0e5_WP, n_d)
+    call p_2%v%init_const(1.0e5_WP, n_d)
+    call temp%v%init_const(300.0_WP, n_d)
+    call csa%v%init_const(0.0025_WP, n_d)
+    call rm_p%v%init_const(0.0_WP, n_d)
+    call p_fs%v%init_const(0.0_WP, n_d)
+    call p_fd%v%init_const(0.0_WP, n_d)
+    call k%v%init_const(0.0_WP, n_d)
+    call l_pre%v%init_const(0.0_WP, n_d)
+    call t_stop%v%init_const(0.1_WP, n_d)
+    
+    allocate(sys_start)
+    allocate(sys_start%cv(2))
+    allocate(sys_start%con(2, 2))
+    
+    sys_start%con(1, 1)%active = .false.
+    sys_start%con(1, 2)%active = .true.
+    sys_start%con(1, 2)%a_e = 0.25_WP*csa
+    call sys_start%con(1, 2)%b%v%init_const(0.5_WP, n_d)
+    sys_start%con(2, 1)%active = .false.
+    sys_start%con(2, 2)%active = .false.
+    
+    call sys_start%cv(1)%set(x, x_dot, y_1, p_1, temp, "chamber 1", csa, rm_p, p_fs, p_fd, k, &
+                                    l_pre, [DRY_AIR, H2O], 0)
+    call sys_start%cv(2)%set(x, x_dot, y_2, p_2, temp, "chamber 2", csa, rm_p, p_fs, p_fd, k, &
+                                    l_pre, [DRY_AIR, H2O], 0)
+    
+    call config%set("test_conservation_2", n_d, t_stop=t_stop)
+    call run(config, sys_start, sys_end, status)
+    
+    call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_conservation_2, status%rc")
+    
+    ! TODO: complete this
+end subroutine test_conservation_2
 
 subroutine test_mirror_1(tests)
     ! equilibrium test where velocities will be small
