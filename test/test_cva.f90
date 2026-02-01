@@ -1459,6 +1459,7 @@ subroutine test_conservation_2(tests)
     type(si_stiffness)    :: k
     type(si_length)       :: l_pre
     type(si_time)         :: t_stop
+    type(si_mass)         :: m_dry_air_start, m_dry_air_end, m_h2o_start, m_h2o_end
     
     n_d = 2 ! Look at derivatives of mass fraction.
     
@@ -1502,7 +1503,16 @@ subroutine test_conservation_2(tests)
     
     call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_conservation_2, status%rc")
     
-    ! TODO: complete this
+    m_dry_air_start = sys_start%cv(1)%m(1) + sys_start%cv(2)%m(1)
+    m_dry_air_end   = sys_end%cv(1)%m(1)   + sys_end%cv(2)%m(1)
+    m_h2o_start     = sys_start%cv(1)%m(2) + sys_start%cv(2)%m(2)
+    m_h2o_end       = sys_end%cv(1)%m(2)   + sys_end%cv(2)%m(2)
+    
+    call tests%real_eq(sys_start%cv(1)%m(2)%v%v, 0.0_WP, "test_conservation_2, CV 1 at start has no H2O")
+    call tests%real_eq(sys_start%cv(2)%m(1)%v%v, 0.0_WP, "test_conservation_2, CV 2 at start has no DRY_AIR")
+    
+    call tests%real_eq(m_dry_air_start%v%v, m_dry_air_end%v%v, "test_conservation_2, DRY_AIR mass is conserved")
+    call tests%real_eq(m_h2o_start%v%v, m_h2o_end%v%v, "test_conservation_2, H2O mass is conserved")
 end subroutine test_conservation_2
 
 subroutine test_mirror_1(tests)
