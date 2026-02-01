@@ -103,7 +103,7 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_2_)
     ! 1: atmosphere for barrel
     d_barrel = inch_const(0.527_WP, 0)
     csa_barrel = (PI/4.0_WP)*square(d_barrel)
-    call sys_start%cv(1)%set_const("atmosphere", csa_barrel, p_atm, temp_atm, [DRY_AIR], 3)
+    call sys_start%cv(1)%set_const("atmosphere", csa_barrel, p_atm, temp_atm, [DRY_AIR], y, 3)
     
     ! 2: chamber
     ! Appears to be constructed about 6 inches of 3/8" NPT threaded steel nipple from the photo I have.
@@ -349,12 +349,12 @@ subroutine test_tinkershot_1(tests)
     ! 1: atmosphere for chamber
     call d_3%v%init_const(30.0e-3_WP, 0)
     csa_3 = (PI/4.0_WP)*square(d_3)
-    call sys_start%cv(1)%set_const("atmosphere for chamber", csa_3, p_atm, temp_atm, [DRY_AIR], 3)
+    call sys_start%cv(1)%set_const("atmosphere for chamber", csa_3, p_atm, temp_atm, [DRY_AIR], y, 3)
     
     ! 2: atmosphere for barrel
     call d_barrel%v%init_const(13.0e-3_WP, 0) ! TODO check
     csa_barrel = (PI/4.0_WP)*square(d_barrel)
-    call sys_start%cv(2)%set_const("atmosphere for barrel", csa_barrel, p_atm, temp_atm, [DRY_AIR], 4)
+    call sys_start%cv(2)%set_const("atmosphere for barrel", csa_barrel, p_atm, temp_atm, [DRY_AIR], y, 4)
     
     ! 3: chamber
     call x_3%v%init_const(157.0e-3_WP, 0) ! TODO: Assuming no dead volume

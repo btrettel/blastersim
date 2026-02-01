@@ -87,6 +87,7 @@ type, public :: cv_type ! control volume
     ! `i_cv_mirror = 0` disables mirror CVs. Use that for constant volume chambers.
     type(si_pressure)           :: p_const     ! if `cv%eos = CONST_EOS`, then `cv%p() = p_const`
     type(si_temperature)        :: temp_const  ! if `cv%eos = CONST_EOS`, then `cv%temp() = temp_const`
+    type(unitless), allocatable :: y_const(:)  ! if `cv%eos = CONST_EOS`, then this mass fraction will be used
     type(si_length)             :: x_stop      ! `x` location where simulation will stop
     type(si_mass)               :: m_spring    ! mass of spring
     logical                     :: constant_friction ! whether `p_f` will be constant or not
@@ -776,7 +777,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     end if
 end subroutine set
 
-pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror, type, x_dot)
+pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_cv_mirror, type, x_dot)
     class(cv_type), intent(in out) :: cv
     
     character(len=*), intent(in)     :: label       ! human-readable label for control volume
@@ -784,12 +785,13 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror,
     type(si_pressure), intent(in)    :: p_const     ! pressure
     type(si_temperature), intent(in) :: temp_const  ! temperature
     type(gas_type), intent(in)       :: gas(:)      ! gas data
+    type(unitless), intent(in)       :: y_const(:)  ! mass fractions of each gas
     integer, intent(in)              :: i_cv_mirror ! index of control volume to use in pressure difference calculation
     
     integer, intent(in), optional           :: type  ! type of CV to use
     type(si_velocity), intent(in), optional :: x_dot ! initial velocity of piston/projectile
     
-    integer :: n_d, n_gas, i_gas
+    integer :: n_d, n_gas, k_gas
     
     call assert(len(trim(cv%label)) > 0, "cva (set_const): len(label) > 0 violated", print_integer=[len(trim(cv%label))])
     
@@ -797,8 +799,10 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror,
     n_gas = size(gas)
     
     allocate(cv%m(n_gas))
-    do i_gas = 1, n_gas
-        call cv%m(i_gas)%v%init_const(0.0_WP, n_d)
+    do k_gas = 1, n_gas
+        call cv%m(k_gas)%v%init_const(0.0_WP, n_d)
+        call assert(y_const(k_gas)%v%v >= 0.0_WP, "cva (set_const): y_const must be >= 0")
+        call assert(y_const(k_gas)%v%v <= 1.0_WP, "cva (set_const): y_const must be <= 1")
     end do
     
     call cv%x%v%init_const(1.0_WP, n_d)
@@ -821,6 +825,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, i_cv_mirror,
     cv%i_cv_mirror = i_cv_mirror
     cv%p_const     = p_const
     cv%temp_const  = temp_const
+    cv%y_const     = y_const
     
     call assert(cv%p_const%v%v    > 0.0_WP, "cva (set_const): p_const > 0 violated", print_real=[cv%p_const%v%v])
     call assert(cv%temp_const%v%v > 0.0_WP, "cva (set_const): temp_const > 0 violated", print_real=[cv%temp_const%v%v])
@@ -1026,8 +1031,8 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
                             - sys%cv(i_cv)%k*r_mp_eff*(sys%cv(i_cv)%x + sys%cv(i_cv)%l_pre)
 end function d_x_dot_d_t_normal
 
-pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
-    type(cv_type), intent(in)           :: cv
+pure function d_m_k_d_t(sys, m_dot, k_gas, i_cv)
+    type(cv_system_type), intent(in)    :: sys
     type(si_mass_flow_rate), intent(in) :: m_dot(:, :)
     integer, intent(in)                 :: k_gas, i_cv
     
@@ -1035,27 +1040,43 @@ pure function d_m_k_d_t(cv, m_dot, k_gas, i_cv)
     
     integer :: n_d, n_cv, j_cv
     type(si_mass)  :: m_total
-    type(unitless) :: y_k
+    type(unitless) :: y_k_i, y_k_j
     
     call assert(size(m_dot, 1) == size(m_dot, 2), "cva (d_m_k_d_t): m_dots must be square", &
                     print_integer=[size(m_dot, 1), size(m_dot, 2)])
-    call assert_dimension(m_dot(1, 1)%v%d, cv%x%v%d)
+    call assert_dimension(m_dot(1, 1)%v%d, sys%cv(i_cv)%x%v%d)
     
-    n_d = size(cv%x%v%d)
+    n_d = size(sys%cv(i_cv)%x%v%d)
     call d_m_k_d_t%v%init_const(0.0_WP, n_d)
     
     n_cv = size(m_dot, 1)
-    m_total = cv%m_total()
-    if (.not. is_close(m_total%v%v, 0.0_WP)) then
-        y_k = cv%m(k_gas) / m_total
+    if (sys%cv(i_cv)%eos == CONST_EOS) then
+        y_k_i = sys%cv(i_cv)%y_const(k_gas)
     else
-        call y_k%v%init_const(0.0_WP, n_d) ! TODO: Not sure the derivatives of this should be zero.
+        m_total = sys%cv(i_cv)%m_total()
+        if (.not. is_close(m_total%v%v, 0.0_WP)) then
+            y_k_i = sys%cv(i_cv)%m(k_gas) / m_total
+        else
+            call y_k_i%v%init_const(0.0_WP, n_d) ! TODO: Not sure the derivatives of this should be zero.
+        end if
     end if
     
     do j_cv = 1, n_cv
         call assert(is_close(m_dot(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_m_k_d_t): mass can not flow from self to self", &
                         print_real=[m_dot(j_cv, j_cv)%v%v])
-        d_m_k_d_t = d_m_k_d_t + y_k*m_dot(j_cv, i_cv) - y_k*m_dot(i_cv, j_cv)
+        
+        if (sys%cv(j_cv)%eos == CONST_EOS) then
+            y_k_j = sys%cv(j_cv)%y_const(k_gas)
+        else
+            m_total = sys%cv(j_cv)%m_total()
+            if (.not. is_close(m_total%v%v, 0.0_WP)) then
+                y_k_j = sys%cv(j_cv)%m(k_gas) / m_total
+            else
+                call y_k_j%v%init_const(0.0_WP, n_d) ! TODO: Not sure the derivatives of this should be zero.
+            end if
+        end if
+        
+        d_m_k_d_t = d_m_k_d_t + y_k_j*m_dot(j_cv, i_cv) - y_k_i*m_dot(i_cv, j_cv)
     end do
 end function d_m_k_d_t
 
@@ -1429,7 +1450,7 @@ pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
         cv_delta_out(i_cv)%e     = dt*d_e_d_t(sys%cv(i_cv), h_dot, i_cv)
         cv_delta_out(i_cv)%e_f   = dt*d_e_f_d_t(sys, i_cv)
         do k_gas = 1, n_gas
-            cv_delta_out(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys%cv(i_cv), m_dot, k_gas, i_cv)
+            cv_delta_out(i_cv)%m(k_gas) = dt*d_m_k_d_t(sys, m_dot, k_gas, i_cv)
         end do
     end do
 end subroutine rk_stage

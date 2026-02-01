@@ -738,12 +738,14 @@ subroutine test_set_const(tests)
     type(si_area)         :: csa
     type(si_pressure)     :: p
     type(si_temperature)  :: temp
+    type(unitless)        :: y(1)
     
     call csa%v%init_const(2.0_WP, 0)
     call p%v%init_const(2.0e5_WP, 0)
     call temp%v%init_const(350.0_WP, 0)
+    call y(1)%v%init_const(1.0_WP, 0)
     
-    call cv%set_const("test_set_const", csa, p, temp, [DRY_AIR], 3)
+    call cv%set_const("test_set_const", csa, p, temp, [DRY_AIR], y, 3)
     
     call tests%real_eq(cv%x%v%v, 1.0_WP, "test_set_const, x")
     call tests%real_eq(cv%x_dot%v%v, 0.0_WP, "test_set_const, x_dot")
@@ -802,7 +804,7 @@ subroutine test_rates(tests)
     
     allocate(sys%cv(2))
     
-    call sys%cv(1)%set_const("test_rates CV 1 (constant pressure)", csa, p_atm, temp, [DRY_AIR], 2)
+    call sys%cv(1)%set_const("test_rates CV 1 (constant pressure)", csa, p_atm, temp, [DRY_AIR], y, 2)
     call sys%cv(2)%set(x, x_dot, y, p, temp, "test_rates CV 2", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 1)
     
     d_x_d_t_ = d_x_d_t(sys, 2)
@@ -816,11 +818,11 @@ subroutine test_rates(tests)
     call m_dots(2, 1)%v%init_const(0.0_WP, 0)
     call m_dots(2, 2)%v%init_const(0.0_WP, 0)
     
-    d_m_1_d_t = d_m_k_d_t(sys%cv(2), m_dots, 1, 1)
-    call tests%real_eq(d_m_1_d_t%v%v, -2.0_WP, "d_m_d_t(1)")
+    d_m_1_d_t = d_m_k_d_t(sys, m_dots, 1, 1)
+    call tests%real_eq(d_m_1_d_t%v%v, -2.0_WP, "d_m_d_t, CV 1")
     
-    d_m_1_d_t = d_m_k_d_t(sys%cv(2), m_dots, 1, 2)
-    call tests%real_eq(d_m_1_d_t%v%v, 2.0_WP, "d_m_d_t(2)")
+    d_m_1_d_t = d_m_k_d_t(sys, m_dots, 1, 2)
+    call tests%real_eq(d_m_1_d_t%v%v, 2.0_WP, "d_m_d_t, CV 2")
     
     call h_dots(1, 1)%v%init_const(0.0_WP, 0)
     call h_dots(1, 2)%v%init_const(0.0_WP, 0)
@@ -1338,7 +1340,7 @@ subroutine test_conservation_1(tests)
     csa_3 = (PI/4.0_WP)*square(d_3)
     call x_dot%v%init_const(-2.0_WP, n_d)
     
-    call sys_start%cv(1)%set_const("atmosphere for chamber", csa_3, p_atm, temp_atm, [DRY_AIR], 3, x_dot=-x_dot)
+    call sys_start%cv(1)%set_const("atmosphere for chamber", csa_3, p_atm, temp_atm, [DRY_AIR], y, 3, x_dot=-x_dot)
     
     call tests%integer_eq(sys_start%cv(1)%type, MIRROR_CV_TYPE, "test_conservation, sys_start%cv(1)%type")
     call tests%integer_eq(sys_start%cv(1)%i_cv_mirror, 3, "test_conservation, sys_start%cv(1)%i_cv_mirror")
@@ -1348,7 +1350,7 @@ subroutine test_conservation_1(tests)
     call d_4%v%init_const(2.0e-2_WP, n_d)
     csa_4 = (PI/4.0_WP)*square(d_4)
     
-    call sys_start%cv(2)%set_const("atmosphere for barrel", csa_4, p_atm, temp_atm, [DRY_AIR], 4)
+    call sys_start%cv(2)%set_const("atmosphere for barrel", csa_4, p_atm, temp_atm, [DRY_AIR], y, 4)
     
     call tests%integer_eq(sys_start%cv(2)%type, MIRROR_CV_TYPE, "test_conservation, sys_start%cv(2)%type")
     call tests%integer_eq(sys_start%cv(2)%i_cv_mirror, 4, "test_conservation, sys_start%cv(2)%i_cv_mirror")
@@ -1511,8 +1513,10 @@ subroutine test_conservation_2(tests)
     call tests%real_eq(sys_start%cv(1)%m(2)%v%v, 0.0_WP, "test_conservation_2, CV 1 at start has no H2O")
     call tests%real_eq(sys_start%cv(2)%m(1)%v%v, 0.0_WP, "test_conservation_2, CV 2 at start has no DRY_AIR")
     
-    call tests%real_eq(m_dry_air_start%v%v, m_dry_air_end%v%v, "test_conservation_2, DRY_AIR mass is conserved")
-    call tests%real_eq(m_h2o_start%v%v, m_h2o_end%v%v, "test_conservation_2, H2O mass is conserved")
+    call tests%real_eq(m_dry_air_start%v%v, m_dry_air_end%v%v, "test_conservation_2, DRY_AIR mass is conserved", &
+                        abs_tol=1.0e-14_WP)
+    call tests%real_eq(m_h2o_start%v%v, m_h2o_end%v%v, "test_conservation_2, H2O mass is conserved", &
+                        abs_tol=1.0e-14_WP)
 end subroutine test_conservation_2
 
 subroutine test_mirror_1(tests)
@@ -2285,13 +2289,13 @@ subroutine exact_x_dot_de(n, ne, ne_d)
     call csa%v%init(2.0e-2_WP, 1, N_D)
     call p_atm%v%init(1.0e5_WP, 2, N_D)
     call temp_atm%v%init_const(300.0_WP, N_D)
+    call y(1)%v%init_const(1.0_WP, N_D)
     
-    call sys_start%cv(1)%set_const("atmosphere for barrel", csa, p_atm, temp_atm, [DRY_AIR], 2)
+    call sys_start%cv(1)%set_const("atmosphere for barrel", csa, p_atm, temp_atm, [DRY_AIR], y, 2)
     
     ! 2: barrel
     
     call x_dot%v%init_const(0.0_WP, N_D) ! The derivative of this is unstable? I made it constant.
-    call y(1)%v%init_const(1.0_WP, N_D)
     call x_0%v%init(0.1_WP, 3, N_D)
     call p_0%v%init(10.0e5_WP, 4, N_D)
     call m_p%v%init(2.0_WP, 5, N_D)

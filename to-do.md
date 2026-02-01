@@ -1,9 +1,6 @@
 ### v0.1.0
 
 - Fix `d_m_k_d_t` in cva.f90 so that the mass fraction for the correct control volumes are used.
-    - Add tests to prevent this bug from happening again.
-    - First make sure tests fail ("red-green")
-    - Indirect test using `run`: Two CVs, one containing gas 1, one containing gas 2. The pressure in one CV is higher, causing one gas to flow into the other. The mass of each gas should stay constant.
     - `d_m_k_d_t` direct test
     - Add a run-time check that the mass of each gas species is constant? (This won't apply if there is combustion, though.)
 - Add BlasterSim URL to cli.f90.
