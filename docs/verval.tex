@@ -63,19 +63,19 @@ where $P_0$ and $x_0$ are the initial pressure and projectile position, respecti
 
 The equation of motion of the projectile is
 \begin{align}
-    m_\text{p} \frac{\mathrm{d} \dot{x}}{\mathrm{d} t} &= A \left(p(t) - p_\text{atm} - p_\text{f}\right), \\
+    m_\text{p} \dv{\dot{x}}{t} &= A \left(p(t) - p_\text{atm} - p_\text{f}\right), \\
                                                        &= A \left[p_0 {\left(\frac{x_0}{x(t)}\right)}^\gamma - p_\text{atm} - p_\text{f}\right].
 \end{align}
 
-The trick $\displaystyle \frac{\mathrm{d} \dot{x}}{\mathrm{d} t} \, \mathrm{d} x = \dot{x} \, \mathrm{d} \dot{x}$ can be applied to solve this non-linear differential equation for $\dot{x}$ as a function of $x$ rather than $t$.
+The trick $\displaystyle \dv{\dot{x}}{t} \, \dd x = \dot{x} \, \dd \dot{x}$ can be applied to solve this non-linear differential equation for $\dot{x}$ as a function of $x$ rather than $t$.
 Substituting in the trick returns
 \begin{equation}
-    m_\text{p} \dot{x} \, \mathrm{d} \dot{x} = A \left[p_0 {\left(\frac{x_0}{x}\right)}^\gamma - p_\text{atm} - p_\text{f}\right] \, \mathrm{d} x.
+    m_\text{p} \dot{x} \, \dd \dot{x} = A \left[p_0 {\left(\frac{x_0}{x}\right)}^\gamma - p_\text{atm} - p_\text{f}\right] \, \dd x.
 \end{equation}
 
 Now integrate from an initial velocity ($\dot{x}_0$):
 \begin{equation}
-    \int_{\dot{x}_0}^{\dot{x}} m_\text{p} \hat{\dot{x}} \, \mathrm{d} \hat{\dot{x}} = \int_{x_0}^x A \left[p_0 {\left(\frac{x_0}{\hat{x}}\right)}^\gamma - p_\text{atm} - p_\text{f}\right] \, \mathrm{d} \hat{x}.
+    \int_{\dot{x}_0}^{\dot{x}} m_\text{p} \hat{\dot{x}} \, \dd \hat{\dot{x}} = \int_{x_0}^x A \left[p_0 {\left(\frac{x_0}{\hat{x}}\right)}^\gamma - p_\text{atm} - p_\text{f}\right] \, \dd \hat{x}.
 \end{equation}
 
 Evaluating the integrals returns the projectile kinetic energy as a function of $x$:

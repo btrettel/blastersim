@@ -1,9 +1,17 @@
 ### v0.1.0
 
+- Fix `d_m_k_d_t` in cva.f90 so that the mass fraction for the correct control volumes are used.
+    - Add tests to prevent this bug from happening again.
+    - First make sure tests fail ("red-green")
+    - `d_m_k_d_t` direct test
+    - indirect test using `run`
+    - Make sure there's a run-time check that the mass of each gas species is constant. (This won't apply if there is combustion.)
 - Add BlasterSim URL to cli.f90.
 - `make dist`
 - Try exact solution for springers
 - docs:
+    - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.
+    - Also refer to code in docs and link to GitHub.
     - Look at Zotero "BibTeX quality report" lines
         - Export to BibLaTeX for even more checks?
     - chktex custom regex option
@@ -27,6 +35,10 @@
     - Example springer input file in documentation (use listings package?)
     - Document friction model to understand what's there are present
     - Quick-start guide for Windows
+    - Code documentation
+        - <https://fortranwiki.org/fortran/show/Automatic+documentation>
+            - Not listed: Sphinx-Fortran
+        - LaTeX output: ROBODoc, Doxygen
 - BlasterSim output
     - Check acceleration to know if under-barreled or over-barreled.
     - Explain the meaning of the return code if there is an error.

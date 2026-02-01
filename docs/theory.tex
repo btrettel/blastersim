@@ -2,10 +2,26 @@
 
 \section{Interior ballistics}\label{interior-ballistics}
 
+\subsection{Notation}
+
+% i, j = control volume numbers
+% k = gas species
+% y = mass fraction
+
 \subsection{Conservation laws}\label{conservation-laws}
 % TODO
 % mass conservation
 % energy conservation
+
+% TODO: note that definition of $E_i$ could include more than thermal energy.
+
+\begin{equation}
+    \dv{\dot{m}_{k,i}}{t} = \sum_j \left(y_{k,j} \dot{m}_{j \rightarrow i} - y_{k,i} \dot{m}_{i \rightarrow j}\right)\label{eq:mass conservation}
+\end{equation}
+
+\begin{equation}
+    \dv{E_i}{t} = -p_i \, A_i \, \dot{x}_i + \sum_j \left(\dot{m}_{j \rightarrow i} h_j - \dot{m}_{i \rightarrow j} h_i\right)\label{eq:energy conservation}
+\end{equation}
 
 \subsection{Equations of state}\label{equations-of-state}
 % TODO
