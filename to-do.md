@@ -1,8 +1,5 @@
 ### v0.1.0
 
-- Fix `d_m_k_d_t` in cva.f90 so that the mass fraction for the correct control volumes are used.
-    - `d_m_k_d_t` direct test
-    - Add a run-time check that the mass of each gas species is constant? (This won't apply if there is combustion, though.)
 - Add BlasterSim URL to cli.f90.
 - `make dist`
 - Try exact solution for springers
@@ -262,6 +259,7 @@
         - <https://www.danwjoyce.com/data-blog/2018/2/20/latex-to-html-via-pandoc>
         - <https://tex.stackexchange.com/questions/431719/how-to-use-pandoc-to-derive-output-from-latex-and-tikz-to-a-docx-file>
     - [TeX4ht](https://www.tug.org/tex4ht/)
+- Test `d_m_k_d_t` with multiple gases.
 - promotion
     - Post on:
         - r/nerf

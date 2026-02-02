@@ -168,11 +168,11 @@ pure function m_total(cv)
     
     type(si_mass) :: m_total
     
-    integer :: i_gas
+    integer :: k_gas
     
     call m_total%v%init_const(0.0_WP, size(cv%m(1)%v%d))
-    do i_gas = 1, size(cv%m)
-        m_total = m_total + cv%m(i_gas)
+    do k_gas = 1, size(cv%m)
+        m_total = m_total + cv%m(k_gas)
     end do
 end function m_total
 
@@ -1727,6 +1727,9 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
             return
         end if
         
+        ! Why not check that the total system mass *of each species* is staying constant?
+        ! I might want to add combustion to this later, and mass of each species won't remain constant in that case.
+        
         ! Check that derivatives of mass are staying constant.
         ! It appears that dividing by `m_start` like with `rel_delta` makes the derivatives too small.
         rel_m = sys%m_total() - m_start
@@ -1859,7 +1862,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     type(run_status_type), intent(in)             :: status
     integer, intent(in)                           :: row_type
     
-    integer :: i_cv, n_cv, i_gas, n_gas
+    integer :: i_cv, n_cv, k_gas, n_gas
     logical :: csv_unit_opened
     type(si_pressure)     :: p
     type(si_temperature)  :: temp
@@ -1931,11 +1934,11 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
         end if
         
         ! `m(:)`, mass(es) of gas(es) in control volume
-        do i_gas = 1, n_gas
+        do k_gas = 1, n_gas
             select case (row_type)
                 case (HEADER_ROW_TYPE)
                     write(unit=csv_unit, fmt="(4a)", advance="no") '"m (kg, ', &
-                            trim(sys%cv(i_cv)%gas(i_gas)%label), ', ', &
+                            trim(sys%cv(i_cv)%gas(k_gas)%label), ', ', &
                             trim(sys%cv(i_cv)%label), ')",'
                 case (NUMBER_ROW_TYPE)
                     write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%m%v%v, ","
