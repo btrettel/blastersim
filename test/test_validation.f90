@@ -369,7 +369,7 @@ subroutine test_tinkershot_1(tests)
     k = lbf_per_in_const(3.38_WP, 0)
     call l_pre%v%init_const(381.0e-3_WP-297.0e-3_WP, 0) ! TODO check
     
-    call sys_start%cv(3)%set(x_3, x_dot, y, p_atm, temp_atm, "piston chamber", csa_3, 1.0_WP/m_p_3, p_fs_3, p_fd_3, k, l_pre, &
+    call sys_start%cv(3)%set(x_3, x_dot, y, p_atm, temp_atm, "plunger chamber", csa_3, 1.0_WP/m_p_3, p_fs_3, p_fd_3, k, l_pre, &
                                 [DRY_AIR], 1)
     
     ! 4: barrel

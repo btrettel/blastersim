@@ -2,6 +2,11 @@
 
 \section{Interior ballistics}\label{interior-ballistics}
 
+\subsection{Control volume variables}
+% TODO
+
+% list all member variables
+
 \subsection{Notation}
 
 % i, j = control volume numbers
@@ -13,8 +18,6 @@
 % mass conservation
 % energy conservation
 
-% TODO: note that definition of $E_i$ could include more than thermal energy.
-
 \begin{equation}
     \dv{\dot{m}_{k,i}}{t} = \sum_j \left(y_{k,j} \dot{m}_{j \rightarrow i} - y_{k,i} \dot{m}_{i \rightarrow j}\right)\label{eq:mass conservation}
 \end{equation}
@@ -23,21 +26,57 @@
     \dv{E_i}{t} = -p_i \, A_i \, \dot{x}_i + \sum_j \left(\dot{m}_{j \rightarrow i} h_j - \dot{m}_{i \rightarrow j} h_i\right)\label{eq:energy conservation}
 \end{equation}
 
+% TODO: note that definition of $E_i$ could include more than thermal energy and might in the future
+\begin{equation}
+    E_i = m_i \, u_i
+\end{equation}
+
 \subsection{Equations of state}\label{equations-of-state}
 % TODO
+
+\begin{equation}
+    p_i = \frac{m_i \, R_i \, T_i}{A_i \, x_i}\label{eq:ideal gas eos}
+\end{equation}
 
 \subsection{Thermodynamic properties}\label{thermo}
 % TODO
 
+\begin{equation}
+    u(T) = u_0 + c_v \, (T - T_0)\label{eq:internal energy}
+\end{equation}
+
+\begin{equation}
+    h(T) = h_0 + c_p \, (T - T_0)\label{eq:enthalpy}
+\end{equation}
+
 \subsection{Connection flow model}\label{connection-flow-model}
 % TODO
 
-\subsection{Projectile and piston equations of motion}\label{equations-of-motion}
-% TODO
-% TODO: ruby_equivalent_2000
+\citet[ch.~5]{beater_pneumatic_2007}
 
-\subsection{Projectile and piston friction model}\label{friction}
+\subsection{Projectile and plunger equations of motion}\label{equations-of-motion}
 % TODO
+
+\begin{align}
+    \dv{x_i}{t}       &= \dot{x}_i \\
+    \dv{\dot{x}_i}{t} &= \frac{A_i}{m_{\text{eff},i}} \left(p_i - p_{\text{mirror},i} - p_{\text{f},i}\right) - \frac{k_i}{m_{\text{eff},i}} \left(x_i + l_{\text{pre},i}\right)
+\end{align}
+
+The effective mass of the projectile/plunger factors in the spring mass.
+The spring is not moving at a uniform velocity as one end is stationary, so it would be incorrect to add all the spring mass to the effective mass.
+The effective mass equation used is
+\begin{equation}
+    m_{\text{eff},i} = m_{\text{p},i} + C_\text{ms} m_{\text{s},i}
+\end{equation}
+where $C_\text{ms} = \tfrac{1}{3}$ as suggested by \citet{ruby_equivalent_2000} for a stiff spring.
+
+\subsection{Projectile and plunger friction model}\label{friction}
+% TODO
+
+\subsection{Plunger impact}\label{plunger-impact}
+
+At the moment, BlasterSim does not handle plunger impact with the end of the plunger tube, and will crash if that occurs.
+Plunger impact will be handled in a future version of BlasterSim.
 
 \subsection{Time integration}\label{time-integration}
 % TODO

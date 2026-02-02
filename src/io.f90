@@ -126,7 +126,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc)
     
     ! `sys%cv(1)`: atmosphere for plunger tube
     csa_plunger = (PI/4.0_WP)*square(d_plunger_u)
-    call sys%cv(I_PLUNGER_ATM)%set_const("atmosphere for chamber", csa_plunger, p_atm_u, temp_atm_u, [DRY_AIR], y, I_PLUNGER)
+    call sys%cv(I_PLUNGER_ATM)%set_const("atmosphere for plunger", csa_plunger, p_atm_u, temp_atm_u, [DRY_AIR], y, I_PLUNGER)
     
     ! `sys%cv(2)`: atmosphere for barrel
     csa_barrel = (PI/4.0_WP)*square(d_barrel_u)

@@ -1418,9 +1418,9 @@ subroutine test_conservation_1(tests)
     call tests%character_eq(sys_end%cv(1)%label, "atmosphere for chamber", "test_conservation, chamber atmosphere label")
     call tests%real_lt(e_chamber_atm%v%v, 0.0_WP, "test_conservation, chamber atmosphere energy is non-zero")
     call tests%real_gt(abs(sys_end%cv(1)%x_dot%v%v), 0.0_WP, &
-                        "test_conservation, chamber atmosphere piston velocity is non-zero")
+                        "test_conservation, chamber atmosphere plunger velocity is non-zero")
     call tests%real_eq(sys_end%cv(1)%x_dot%v%v, -sys_end%cv(3)%x_dot%v%v, &
-                        "test_conservation, chamber atmosphere velocity matches piston velocity")
+                        "test_conservation, chamber atmosphere velocity matches plunger velocity")
     call tests%real_eq(e_chamber_atm%v%v, sys_end%cv(1)%e%v%v, &
                             "test_conservation, chamber atmosphere energy is internal energy")
     
@@ -1428,7 +1428,7 @@ subroutine test_conservation_1(tests)
     call tests%character_eq(sys_end%cv(2)%label, "atmosphere for barrel", "test_conservation, barrel atmosphere label")
     call tests%real_gt(e_barrel_atm%v%v, 0.0_WP, "test_conservation, barrel atmosphere energy is non-zero")
     call tests%real_gt(abs(sys_end%cv(2)%x_dot%v%v), 0.0_WP, &
-                        "test_conservation, barrel atmosphere piston/projectile velocity is non-zero")
+                        "test_conservation, barrel atmosphere projectile/plunger velocity is non-zero")
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, -sys_end%cv(4)%x_dot%v%v, &
                         "test_conservation, barrel atmosphere velocity matches projectile velocity")
     call tests%real_eq(e_barrel_atm%v%v, sys_end%cv(2)%e%v%v, &
@@ -1578,7 +1578,7 @@ subroutine test_mirror_1(tests)
     
     call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_mirror_1, status%rc")
     
-    ! The pressures don't need to equilibrate for the piston motion test.
+    ! The pressures don't need to equilibrate for the plunger motion test.
     ! But checking that they do is a decent test, so I will.
     p_1end = sys_end%cv(1)%p()
     p_2end = sys_end%cv(2)%p()
@@ -1588,7 +1588,7 @@ subroutine test_mirror_1(tests)
     x_2end = sys_end%cv(2)%x
     x_start_sum = x_1    + x_2
     x_end_sum   = x_1end + x_2end
-    call tests%real_eq(x_start_sum%v%v, x_end_sum%v%v, "test_mirror_1, piston motion is as expected")
+    call tests%real_eq(x_start_sum%v%v, x_end_sum%v%v, "test_mirror_1, plunger motion is as expected")
     
     call tests%real_eq(sys_end%cv(1)%x_dot%v%v, 0.0_WP, "test_mirror_1, CV 1 x_dot", abs_tol=1.0e-4_WP)
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, 0.0_WP, "test_mirror_1, CV 2 x_dot", abs_tol=1.0e-4_WP)
@@ -1659,7 +1659,7 @@ subroutine test_mirror_2(tests)
     x_2end = sys_end%cv(2)%x
     x_start_sum = x_1    + x_2
     x_end_sum   = x_1end + x_2end
-    call tests%real_eq(x_start_sum%v%v, x_end_sum%v%v, "test_mirror_2, piston motion is as expected")
+    call tests%real_eq(x_start_sum%v%v, x_end_sum%v%v, "test_mirror_2, plunger motion is as expected")
     call tests%real_eq(sys_end%cv(1)%x_dot%v%v, -sys_end%cv(2)%x_dot%v%v, &
                             "test_mirror_2, CV 1 x_dot = - CV 2 x_dot")
 end subroutine test_mirror_2

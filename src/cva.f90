@@ -67,20 +67,20 @@ integer, public, parameter :: NUMBER_ROW_TYPE = 2
 
 type, public :: cv_type ! control volume
     ! time varying
-    type(si_length)            :: x     ! location of piston/projectile
-    type(si_velocity)          :: x_dot ! velocity of piston/projectile
+    type(si_length)            :: x     ! location of projectile/plunger
+    type(si_velocity)          :: x_dot ! velocity of projectile/plunger
     type(si_mass), allocatable :: m(:)  ! mass(es) of gas(es) in control volume
     type(si_energy)            :: e     ! energy of gas in control volume
-    type(si_energy)            :: e_f   ! energy lost to piston/projectile friction in control volume
+    type(si_energy)            :: e_f   ! energy lost to projectile/plunger friction in control volume
     
     ! constants
     character(len=32)           :: label       ! human-readable label for control volume
     integer                     :: eos         ! equation of state to use for control volume
     integer                     :: type        ! type of control volume
     type(si_area)               :: csa         ! cross-sectional area
-    type(si_inverse_mass)       :: rm_p        ! reciprocal mass of piston/projectile
+    type(si_inverse_mass)       :: rm_p        ! reciprocal mass of projectile/plunger
     type(si_pressure)           :: p_fs, p_fd  ! static and dynamic friction pressure
-    type(si_stiffness)          :: k           ! stiffness of spring attached to piston
+    type(si_stiffness)          :: k           ! stiffness of spring attached to plunger
     type(si_length)             :: l_pre       ! spring precompression length
     type(gas_type), allocatable :: gas(:)      ! gas data
     integer                     :: i_cv_mirror ! index of control volume to use in pressure difference calculation
@@ -116,11 +116,11 @@ contains
 end type cv_type
 
 type :: cv_delta_type
-    type(si_length)            :: x     ! delta of location of piston/projectile
-    type(si_velocity)          :: x_dot ! delta of velocity of piston/projectile
+    type(si_length)            :: x     ! delta of location of projectile/plunger
+    type(si_velocity)          :: x_dot ! delta of velocity of projectile/plunger
     type(si_mass), allocatable :: m(:)  ! delta of mass(es) of gas(es) in control volume
     type(si_energy)            :: e     ! delta of energy of gas in control volume
-    type(si_energy)            :: e_f   ! delta of energy lost to piston/projectile friction in control volume
+    type(si_energy)            :: e_f   ! delta of energy lost to projectile/plunger friction in control volume
 end type cv_delta_type
 
 type, public :: con_type ! connection between control volumes
@@ -192,12 +192,12 @@ pure function m_p_ke(cv)
     class(cv_type), intent(in) :: cv
     
     type(si_energy)       :: m_p_ke
-    type(si_inverse_mass) :: r_mp_eff ! effective mass of projectile/piston
+    type(si_inverse_mass) :: r_mp_eff ! effective mass of projectile/plunger
     
     if (is_close(cv%rm_p%v%v, 0.0_WP) .or. (cv%type == MIRROR_CV_TYPE)) then
         if (is_close(cv%rm_p%v%v, 0.0_WP)) then
             ! `MIRROR_CV_TYPE` might simply copy what the other CV has, so it might not have no inverse mass.
-            call assert(is_close(cv%k%v%v, 0.0_WP), "cva (m_p_ke): if the piston is immobile, k should be zero", &
+            call assert(is_close(cv%k%v%v, 0.0_WP), "cva (m_p_ke): if the plunger is immobile, k should be zero", &
                             print_real=[cv%k%v%v])
         end if
         
@@ -612,8 +612,8 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     class(cv_type), intent(in out) :: cv
     
     ! time varying
-    type(si_length), intent(in)      :: x        ! location of piston/projectile
-    type(si_velocity), intent(in)    :: x_dot    ! velocity of piston/projectile
+    type(si_length), intent(in)      :: x        ! location of projectile/plunger
+    type(si_velocity), intent(in)    :: x_dot    ! velocity of projectile/plunger
     type(unitless), intent(in)       :: y(:)     ! mass fractions of each gas
     type(si_pressure), intent(in)    :: p        ! pressure
     
@@ -621,9 +621,9 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     type(si_temperature), intent(in)  :: temp_atm    ! atmospheric temperature
     character(len=*), intent(in)      :: label       ! human-readable label for control volume
     type(si_area), intent(in)         :: csa         ! cross-sectional area
-    type(si_inverse_mass), intent(in) :: rm_p        ! reciprocal mass of piston/projectile
+    type(si_inverse_mass), intent(in) :: rm_p        ! reciprocal mass of projectile/plunger
     type(si_pressure), intent(in)     :: p_fs, p_fd  ! static and dynamic friction pressure
-    type(si_stiffness), intent(in)    :: k           ! stiffness of spring attached to piston
+    type(si_stiffness), intent(in)    :: k           ! stiffness of spring attached to plunger
     type(si_length), intent(in)       :: l_pre       ! spring precompression length
     type(gas_type), intent(in)        :: gas(:)      ! gas data
     integer, intent(in)               :: i_cv_mirror ! index of control volume to use in pressure difference calculation
@@ -789,7 +789,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     integer, intent(in)              :: i_cv_mirror ! index of control volume to use in pressure difference calculation
     
     integer, intent(in), optional           :: type  ! type of CV to use
-    type(si_velocity), intent(in), optional :: x_dot ! initial velocity of piston/projectile
+    type(si_velocity), intent(in), optional :: x_dot ! initial velocity of projectile/plunger
     
     integer :: n_d, n_gas, k_gas
     
@@ -1002,8 +1002,8 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
     type(si_acceleration) :: d_x_dot_d_t_normal
     
     type(si_pressure)     :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
-    type(si_pressure)     :: p_other
-    type(si_inverse_mass) :: r_mp_eff ! effective mass of projectile/piston
+    type(si_pressure)     :: p_mirror
+    type(si_inverse_mass) :: r_mp_eff ! effective mass of projectile/plunger
     
     call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_x_dot_d_t_normal): cv%csa > 0 violated", &
                     print_real=[sys%cv(i_cv)%csa%v%v], print_integer=[i_cv])
@@ -1011,23 +1011,23 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
                         print_integer=[sys%cv(i_cv)%type, NORMAL_CV_TYPE, i_cv])
     
     if (sys%cv(i_cv)%i_cv_mirror >= 1) then
-        p_other = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
+        p_mirror = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
         
         call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
                         "cva (d_x_dot_d_t_normal): mirror CV not MIRROR_CV_TYPE", &
                         print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, MIRROR_CV_TYPE, i_cv])
     else
         ! If `i_cv_mirror == 0` then there is no mirror CV.
-        call p_other%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
+        call p_mirror%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
     end if
     
-    p_fe = sys%cv(i_cv)%p() - p_other - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x + sys%cv(i_cv)%l_pre)
+    p_fe = sys%cv(i_cv)%p() - p_mirror - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x + sys%cv(i_cv)%l_pre)
     
-    ! This calculates the effective (inverse) mass of the projectile/piston factoring in the spring mass.
+    ! This calculates the effective (inverse) mass of the projectile/plunger factoring in the spring mass.
     ! ruby_equivalent_2000
     r_mp_eff = sys%cv(i_cv)%rm_p / (1.0_WP + C_MS * sys%cv(i_cv)%m_spring * sys%cv(i_cv)%rm_p)
     
-    d_x_dot_d_t_normal = sys%cv(i_cv)%csa*r_mp_eff*(sys%cv(i_cv)%p() - p_other - sys%cv(i_cv)%p_f(p_fe)) &
+    d_x_dot_d_t_normal = sys%cv(i_cv)%csa*r_mp_eff*(sys%cv(i_cv)%p() - p_mirror - sys%cv(i_cv)%p_f(p_fe)) &
                             - sys%cv(i_cv)%k*r_mp_eff*(sys%cv(i_cv)%x + sys%cv(i_cv)%l_pre)
 end function d_x_dot_d_t_normal
 
@@ -1111,7 +1111,7 @@ pure function d_e_f_d_t(sys, i_cv)
     type(si_energy_flow_rate) :: d_e_f_d_t
     
     type(si_pressure) :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
-    type(si_pressure) :: p_other
+    type(si_pressure) :: p_mirror
     
     call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_e_f_d_t): i_cv_mirror must be a positive integer or zero", &
                     print_integer=[sys%cv(i_cv)%i_cv_mirror, i_cv])
@@ -1126,17 +1126,17 @@ pure function d_e_f_d_t(sys, i_cv)
     select case (sys%cv(i_cv)%type)
         case (NORMAL_CV_TYPE)
             if (sys%cv(i_cv)%i_cv_mirror >= 1) then
-                p_other = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
+                p_mirror = sys%cv(sys%cv(i_cv)%i_cv_mirror)%p()
                 
                 call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
                                 "cva (d_x_dot_d_t_normal): mirror CV not MIRROR_CV_TYPE", &
                                 print_integer=[sys%cv(sys%cv(i_cv)%i_cv_mirror)%type, MIRROR_CV_TYPE])
             else
                 ! If `i_cv_mirror == 0` then there is no mirror CV.
-                call p_other%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
+                call p_mirror%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
             end if
             
-            p_fe = sys%cv(i_cv)%p() - p_other - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x + sys%cv(i_cv)%l_pre)
+            p_fe = sys%cv(i_cv)%p() - p_mirror - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x + sys%cv(i_cv)%l_pre)
             
             d_e_f_d_t = sys%cv(i_cv)%p_f(p_fe) * sys%cv(i_cv)%csa * sys%cv(i_cv)%x_dot
         case (MIRROR_CV_TYPE)
@@ -1694,7 +1694,7 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         end if
         
         ! Check that the mirror CV position invariant is satisfied.
-        ! If one CV's piston moves by a certain amount, the mirror CV's piston must move the same amount in the opposite direction.
+        ! If one CV's plunger moves by a certain amount, the mirror CV's plunger must move the same amount in the opposite direction.
         ! I could also add a tolerance for `x_dot`, but given that it's set to exactly the same, an assertion would make more sense.
         if ((sys%cv(i_cv)%type == NORMAL_CV_TYPE) .and. (sys%cv(i_cv)%i_cv_mirror >= 1)) then
             call assert(sys%cv(sys%cv(i_cv)%i_cv_mirror)%type == MIRROR_CV_TYPE, &
@@ -1912,7 +1912,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     ! per CV
     do i_cv = 1, n_cv
         if (sys%cv(i_cv)%type == NORMAL_CV_TYPE) then
-            ! `x`, location of piston/projectile
+            ! `x`, location of projectile/plunger
             select case (row_type)
                 case (HEADER_ROW_TYPE)
                     write(unit=csv_unit, fmt="(3a)", advance="no") '"x (m, ', trim(sys%cv(i_cv)%label), ')",'
@@ -1922,7 +1922,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                     error stop "cva (write_csv_row, x): invalid row_type"
             end select
             
-            ! `x_dot`, velocity of piston/projectile
+            ! `x_dot`, velocity of projectile/plunger
             select case (row_type)
                 case (HEADER_ROW_TYPE)
                     write(unit=csv_unit, fmt="(3a)", advance="no") '"x_dot (m/s, ', trim(sys%cv(i_cv)%label), ')",'
@@ -1957,7 +1957,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 error stop "cva (write_csv_row, e): invalid row_type"
         end select
         
-        ! `e_f`, energy lost to piston/projectile friction in control volume
+        ! `e_f`, energy lost to projectile/plunger friction in control volume
         select case (row_type)
             case (HEADER_ROW_TYPE)
                 write(unit=csv_unit, fmt="(3a)", advance="no") '"e_f (J, ', trim(sys%cv(i_cv)%label), ')",'

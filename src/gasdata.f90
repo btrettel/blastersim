@@ -34,8 +34,8 @@ type, public :: gas_type
     real(WP)          :: mm    ! molar mass, kg/mol
     real(WP)          :: p_c   ! critical pressure, Pa
 contains
-    procedure :: u => u_gas
-    procedure :: h => h_gas
+    procedure :: u   => u_gas
+    procedure :: h   => h_gas
     procedure :: r   => r_gas
     procedure :: c_v => c_v_gas
     procedure :: c_p => c_p_gas
