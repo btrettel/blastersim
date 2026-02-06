@@ -1,11 +1,11 @@
 ### v0.1.0
 
-- Terminology: switch to using *plunger* instead of *piston* in code and documentation
 - Add BlasterSim URL to cli.f90.
 - `make dist`
-- Try exact solution for springers
-- Try multiple CV exact solution. One constant pressure chamber, one barrel?
+- Add `dt` to the `springer` namelist group.
 - docs:
+    - Make BlasterSim manual look more like the M4 manual (smaller font, frontmatter, etc.)
+    - Add chktex check for the word "piston" to replace with "plunger" for consistency.
     - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.
     - Also refer to code in docs and link to GitHub.
     - Look at Zotero "BibTeX quality report" lines
@@ -135,6 +135,7 @@
 - Time step estimate?
     - <https://www.spudfiles.com/viewtopic.php?p=391877#p391877>: > So I try to pick a time step intelligently. I first make a very crude guesstimate of muzzle energy. That gives me a (crude estimate of) muzzle velocity. I then assume constant acceleration and determine how long it would take a projectile to clear the muzzle.
     - Minimum of multiple time scales?
+- Try multiple CV exact solution. One constant pressure chamber, one barrel?
 
 ***
 

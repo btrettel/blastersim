@@ -5,7 +5,8 @@
 \subsection{Control volume variables}
 % TODO
 
-% list all member variables
+% TODO: list all member variables
+% TODO: based around control volume mass and energy as presumably this helps with conservation
 
 \subsection{Notation}
 
@@ -41,12 +42,17 @@
 \subsection{Thermodynamic properties}\label{thermo}
 % TODO
 
+% TODO: R from \gamma
+% TODO: c_v from R
+% TODO: c_p from R
+% TODO: mixture u and h
+
 \begin{equation}
-    u(T) = u_0 + c_v \, (T - T_0)\label{eq:internal energy}
+    u_{k,i}(T) = u_{0,k} + c_{\text{v},k} \, (T_i - T_{0,k})\label{eq:internal energy}
 \end{equation}
 
 \begin{equation}
-    h(T) = h_0 + c_p \, (T - T_0)\label{eq:enthalpy}
+    h_{k,i}(T) = h_{0,k} + c_{\text{p},k} \, (T_i - T_{0,k})\label{eq:enthalpy}
 \end{equation}
 
 \subsection{Connection flow model}\label{connection-flow-model}
