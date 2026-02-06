@@ -1,11 +1,9 @@
 ### v0.1.0
 
-- Add BlasterSim URL to cli.f90.
 - `make dist`
 - Add `dt` to the `springer` namelist group.
 - docs:
     - Make BlasterSim manual look more like the M4 manual (smaller font, frontmatter, etc.)
-    - Add chktex check for the word "piston" to replace with "plunger" for consistency.
     - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.
     - Also refer to code in docs and link to GitHub.
     - Look at Zotero "BibTeX quality report" lines
@@ -14,6 +12,7 @@
         - Example: /etc/chktexrc
         - `UserWarn`
         - `UserWarnRegex`
+        - Replace "piston" with "plunger" for consistency.
     - BlasterSim output for a working case
     - Put springer and pneumatic governing equations in usage chapter
     - Test building docs on Windows.

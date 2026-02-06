@@ -14,7 +14,7 @@ public :: get_input_file_name_from_cli
 
 contains
 
-subroutine get_input_file_name_from_cli(prog, input_file_name)
+subroutine get_input_file_name_from_cli(prog, input_file_name, extra)
     use, intrinsic :: iso_fortran_env, only: compiler_options, compiler_version, error_unit
     use prec, only: CL
     use build, only: DEBUG
@@ -24,6 +24,8 @@ subroutine get_input_file_name_from_cli(prog, input_file_name)
 
     character(len=*), intent(in)   :: prog
     character(len=CL), intent(out) :: input_file_name
+    
+    character(len=CL), intent(in), optional :: extra
     
     character(len=CL) :: modified_string
     logical :: input_file_exists
@@ -55,6 +57,10 @@ subroutine get_input_file_name_from_cli(prog, input_file_name)
         
         write(unit=*, fmt="(a, a)") "Compiler: ", compiler_version()
         write(unit=*, fmt="(a, a)") "Compiler flags: ", compiler_options()
+        
+        if (present(extra)) then
+            write(unit=*, fmt="(a)") trim(extra)
+        end if
         
         stop EX_OK, quiet=.true.
     end if

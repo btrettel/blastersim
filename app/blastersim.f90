@@ -15,13 +15,15 @@ use cva, only: run_config_type, cv_system_type, run_status_type, SUCCESS_RUN_RC,
 use stopcodes, only: EX_OK, EX_USAGE
 implicit none
 
-character(len=CL)                 :: input_file
+character(len=CL)                 :: input_file, extra
 type(run_config_type)             :: config
 type(cv_system_type), allocatable :: sys_start, sys_end
 integer                           :: rc
 type(run_status_type)             :: status
 
-call get_input_file_name_from_cli("blastersim", input_file)
+extra = "<http://github.com/btrettel/blastersim/>" // new_line("a") // "Written by Ben Trettel."
+
+call get_input_file_name_from_cli("blastersim", input_file, extra=extra)
 
 call read_springer_namelist(trim(input_file), sys_start, config, rc)
 if (rc /= 0) error stop
