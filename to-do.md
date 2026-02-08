@@ -1,6 +1,5 @@
 ### v0.1.0
 
-- In geninput, check for consistency of `tex_unit`/`txt_unit` and genunits `type`s.
 - `make dist`
 - Print `p_atm`, `temp_atm`, `dt` default values in LaTeX. Write out TeX file with macros and manually mention the defaults in the `tex_description_2`.
 - docs:
@@ -207,6 +206,9 @@
     - Have a way to put muzzle velocity measurements in the input file as an array so there's only one file with everything.
 - Isometric icon and logo for BlasterSim? Check Super Soaker icons you have.
     - Sell BlasterSim stickers to put on blasters that were designed using it? Getting a good logo for this is key.
+        - <https://ezhik.jp/laptop-stickers/>
+            - He sort of reviews stickers in general. Having a strong adhesive would be nice.
+        - Could also sell printed copies of the BlasterSim manual. Spiral-bound manuals are great as they can lay flat: <https://youtu.be/UtLR4nXAm4w?t=487>
 - Sensitivity analysis for muzzle velocity and optimal barrel length. For barrel length in particular it can be useful to show (if true) that the length doesn't depend much on the plunger mass, spring stiffness.
 - Determine when dart heads will be blown off and include that in BlasterSim. Add as a constraint too.
 - spring fatigue life, add as a constraint too

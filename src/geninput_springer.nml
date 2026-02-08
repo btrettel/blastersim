@@ -5,6 +5,10 @@ kind_parameter     = "WP"
 write_tex          = .true.
 /
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! variables which are present for springers and pneumatics !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 &input_variable
 variable_name     = "id"
 type_definition   = "character(len=128)"
@@ -12,6 +16,173 @@ tex_description   = "Unique identifier for the current simulation."
 tex_description_2 = 'String of a maximum of 128 characters. Used in the CSV file name, for example, for \texttt{id = "abc"}, the file abc.csv is written. % chktex 18'
 default_value     = "output"
 /
+
+&input_variable
+variable_name         = "dt"
+type_definition       = "type(si_time)"
+tex_unit              = "s"
+tex_description       = "Time step."
+tex_variable_name     = "$\Delta t$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+upper_bound_active    = .true.
+upper_bound           = 1.0e-2
+upper_bound_not_equal = .false.
+default_value         = "DT_DEFAULT"
+no_kind_default_value = .true.
+bound_fmt             = "f4.2"
+/
+
+&input_variable
+variable_name         = "d_barrel"
+type_definition       = "type(si_length)"
+required              = .true.
+tex_unit              = "m"
+tex_description       = "Barrel diameter."
+tex_variable_name     = "$d_\text{barrel}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "l_travel"
+type_definition       = "type(si_length)"
+required              = .true.
+tex_unit              = "m"
+tex_description       = "Distance base of projectile moves before exiting the barrel."
+tex_description_2     = "Sometimes called the barrel length, which could be misleading as the material the barrel is constructed from is often longer."
+tex_variable_name     = "$l_\text{travel}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "vol_dead"
+type_definition       = "type(si_volume)"
+required              = .true.
+tex_unit              = "m$^3$"
+txt_unit              = "m3"
+tex_description       = "Dead volume. Volume in the barrel at the dart's initial position."
+tex_variable_name     = "$V_\text{dead}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "p_atm"
+type_definition       = "type(si_pressure)"
+tex_unit              = "Pa"
+tex_description       = "Atmospheric pressure."
+tex_variable_name     = "$p_\text{atm}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "P_ATM_"
+no_kind_default_value = .true.
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "temp_atm"
+type_definition       = "type(si_temperature)"
+tex_unit              = "K"
+tex_description       = "Atmospheric temperature."
+tex_variable_name     = "$T_\text{atm}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "TEMP_ATM_"
+no_kind_default_value = .true.
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "d_e"
+type_definition       = "type(si_length)"
+required              = .true.
+tex_unit              = "m"
+tex_description       = "Effective diameter of the flow restriction."
+tex_description_2     = "This includes the vena contracta, so likely the effective area is smaller than the actual area available."
+tex_variable_name     = "$d_\text{e}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "b"
+type_definition       = "type(unitless)"
+required              = .false.
+tex_unit              = "1"
+tex_description       = "Critical pressure ratio of the flow restriction."
+tex_variable_name     = "$b$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+upper_bound_active    = .true.
+upper_bound           = 1.0
+upper_bound_not_equal = .false.
+default_value         = "0.5"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "p_fs_proj"
+type_definition       = "type(si_pressure)"
+required              = .true.
+tex_unit              = "Pa"
+tex_description       = "Pressure required to overcome static friction on the projectile."
+tex_variable_name     = "$p_\text{fs,proj}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "p_fd_proj"
+type_definition       = "type(si_pressure)"
+required              = .true.
+tex_unit              = "Pa"
+tex_description       = "Equivalent pressure of dynamic friction on the projectile."
+tex_variable_name     = "$p_\text{fd,proj}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "m_proj"
+type_definition       = "type(si_mass)"
+required              = .true.
+tex_unit              = "kg"
+tex_description       = "Mass of the projectile."
+tex_variable_name     = "$m_\text{proj}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! variables which are present for springers only !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 &input_variable
 variable_name         = "d_plunger"
@@ -70,50 +241,6 @@ bound_fmt             = "f3.1"
 /
 
 &input_variable
-variable_name         = "d_barrel"
-type_definition       = "type(si_length)"
-required              = .true.
-tex_unit              = "m"
-tex_description       = "Barrel diameter."
-tex_variable_name     = "$d_\text{barrel}$"
-lower_bound_active    = .true.
-lower_bound           = 0.0
-lower_bound_not_equal = .true.
-default_value         = "-1.0"
-bound_fmt             = "f3.1"
-/
-
-&input_variable
-variable_name         = "l_travel"
-type_definition       = "type(si_length)"
-required              = .true.
-tex_unit              = "m"
-tex_description       = "Distance base of projectile moves before exiting the barrel."
-tex_description_2     = "Sometimes called the barrel length, which could be misleading as the material the barrel is constructed from is often longer."
-tex_variable_name     = "$l_\text{travel}$"
-lower_bound_active    = .true.
-lower_bound           = 0.0
-lower_bound_not_equal = .true.
-default_value         = "-1.0"
-bound_fmt             = "f3.1"
-/
-
-&input_variable
-variable_name         = "vol_dead"
-type_definition       = "type(si_volume)"
-required              = .true.
-tex_unit              = "m$^3$"
-txt_unit              = "m3"
-tex_description       = "Dead volume. Volume in the barrel at the dart's initial position."
-tex_variable_name     = "$V_\text{dead}$"
-lower_bound_active    = .true.
-lower_bound           = 0.0
-lower_bound_not_equal = .true.
-default_value         = "-1.0"
-bound_fmt             = "f3.1"
-/
-
-&input_variable
 variable_name         = "k"
 type_definition       = "type(si_stiffness)"
 required              = .true.
@@ -142,80 +269,6 @@ bound_fmt             = "f3.1"
 /
 
 &input_variable
-variable_name         = "p_atm"
-type_definition       = "type(si_pressure)"
-tex_unit              = "Pa"
-tex_description       = "Atmospheric pressure."
-tex_variable_name     = "$p_\text{atm}$"
-lower_bound_active    = .true.
-lower_bound           = 0.0
-lower_bound_not_equal = .true.
-default_value         = "P_ATM_"
-no_kind_default_value = .true.
-bound_fmt             = "f3.1"
-/
-
-&input_variable
-variable_name         = "temp_atm"
-type_definition       = "type(si_temperature)"
-tex_unit              = "K"
-tex_description       = "Atmospheric temperature."
-tex_variable_name     = "$T_\text{atm}$"
-lower_bound_active    = .true.
-lower_bound           = 0.0
-lower_bound_not_equal = .true.
-default_value         = "TEMP_ATM_"
-no_kind_default_value = .true.
-bound_fmt             = "f3.1"
-/
-
-&input_variable
-variable_name         = "dt"
-type_definition       = "type(si_time)"
-tex_unit              = "s"
-tex_description       = "Time step."
-tex_variable_name     = "$\Delta t$"
-lower_bound_active    = .true.
-lower_bound           = 0.0
-lower_bound_not_equal = .true.
-default_value         = "DT_DEFAULT"
-no_kind_default_value = .true.
-bound_fmt             = "f3.1"
-/
-
-&input_variable
-variable_name         = "d_e"
-type_definition       = "type(si_length)"
-required              = .true.
-tex_unit              = "m"
-tex_description       = "Effective diameter of the flow restriction."
-tex_description_2     = "This includes the vena contracta, so likely the effective area is smaller than the actual area available."
-tex_variable_name     = "$d_\text{e}$"
-lower_bound_active    = .true.
-lower_bound           = 0.0
-lower_bound_not_equal = .true.
-default_value         = "-1.0"
-bound_fmt             = "f3.1"
-/
-
-&input_variable
-variable_name         = "b"
-type_definition       = "type(unitless)"
-required              = .false.
-tex_unit              = "1"
-tex_description       = "Critical pressure ratio of the flow restriction."
-tex_variable_name     = "$b$"
-lower_bound_active    = .true.
-lower_bound           = 0.0
-lower_bound_not_equal = .false.
-upper_bound_active    = .true.
-upper_bound           = 1.0
-upper_bound_not_equal = .false.
-default_value         = "0.5"
-bound_fmt             = "f3.1"
-/
-
-&input_variable
 variable_name         = "p_fs_plunger"
 type_definition       = "type(si_pressure)"
 required              = .true.
@@ -239,48 +292,6 @@ tex_variable_name     = "$p_\text{fd,plunger}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .false.
-default_value         = "-1.0"
-bound_fmt             = "f3.1"
-/
-
-&input_variable
-variable_name         = "p_fs_proj"
-type_definition       = "type(si_pressure)"
-required              = .true.
-tex_unit              = "Pa"
-tex_description       = "Pressure required to overcome static friction on the projectile."
-tex_variable_name     = "$p_\text{fs,proj}$"
-lower_bound_active    = .true.
-lower_bound           = 0.0
-lower_bound_not_equal = .false.
-default_value         = "-1.0"
-bound_fmt             = "f3.1"
-/
-
-&input_variable
-variable_name         = "p_fd_proj"
-type_definition       = "type(si_pressure)"
-required              = .true.
-tex_unit              = "Pa"
-tex_description       = "Equivalent pressure of dynamic friction on the projectile."
-tex_variable_name     = "$p_\text{fd,proj}$"
-lower_bound_active    = .true.
-lower_bound           = 0.0
-lower_bound_not_equal = .false.
-default_value         = "-1.0"
-bound_fmt             = "f3.1"
-/
-
-&input_variable
-variable_name         = "m_proj"
-type_definition       = "type(si_mass)"
-required              = .true.
-tex_unit              = "kg"
-tex_description       = "Mass of the projectile."
-tex_variable_name     = "$m_\text{proj}$"
-lower_bound_active    = .true.
-lower_bound           = 0.0
-lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
 /
