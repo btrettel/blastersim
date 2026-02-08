@@ -1,7 +1,6 @@
 ### v0.1.0
 
 - `make dist`
-- Print `p_atm`, `temp_atm`, `dt` default values in LaTeX. Write out TeX file with macros and manually mention the defaults in the `tex_description_2`.
 - docs:
     - Make BlasterSim manual look more like the M4 manual (smaller font, frontmatter, etc.)
     - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.

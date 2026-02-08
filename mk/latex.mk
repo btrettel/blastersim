@@ -13,7 +13,8 @@ docs$(DIR_SEP)rev.tex \
 docs$(DIR_SEP)test_exact.tex \
 docs$(DIR_SEP)geninput_springer.tex \
 docs$(DIR_SEP)springer-example.nml \
-docs$(DIR_SEP)blastersim-out.txt
+docs$(DIR_SEP)blastersim-out.txt \
+docs$(DIR_SEP)defaults.tex
 
 CLEAN_TEX = docs$(DIR_SEP)*.aux \
 docs$(DIR_SEP)*.bbl \
@@ -74,6 +75,9 @@ docs$(DIR_SEP)geninput_springer.tex: src$(DIR_SEP)geninput_springer.tex
 
 docs$(DIR_SEP)springer-example.nml: test$(DIR_SEP)test_read_springer_namelist.nml
 	$(CP) test$(DIR_SEP)test_read_springer_namelist.nml docs$(DIR_SEP)springer-example.nml
+
+docs$(DIR_SEP)defaults.tex: defaults.tex
+	$(CP) defaults.tex docs$(DIR_SEP)defaults.tex
 
 # <https://math.nist.gov/~BMiller/LaTeXML/manual/commands/latexml.html>
 # Spell checking all HTML files is commented out as it's hard to get aspell to skip code blocks.

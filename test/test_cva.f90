@@ -18,6 +18,8 @@ real(WP), parameter :: TEST_EXACT_T_STOP = 0.0273_WP
 
 call tests%start_tests("cva.nml")
 
+call write_defaults()
+
 call test_m_total(tests)
 call test_p_eos_ideal(tests)
 call test_constant_eos(tests)
@@ -57,6 +59,23 @@ call test_check_sys(tests)
 call tests%end_tests()
 
 contains
+
+subroutine write_defaults()
+    use cva, only: DT_DEFAULT
+    use gasdata, only: P_ATM, TEMP_ATM
+    use convert, only: CONVERT_C_TO_K
+    use io, only: write_latex_engineering
+    
+    integer :: tex_unit
+    
+    open(newunit=tex_unit, action="write", status="replace", position="rewind", file="defaults.tex", delim="quote")
+    write(unit=tex_unit, fmt="(a)") "% auto-generated"
+    call write_latex_engineering(tex_unit, DT_DEFAULT, "dtdefault", "f4.1")
+    write(unit=tex_unit, fmt="(a, f8.1, a)") "\newcommand*{\patmdefault}{", P_ATM, "}"
+    write(unit=tex_unit, fmt="(a, f6.2, a)") "\newcommand*{\tempatmdefaultk}{", TEMP_ATM, "}"
+    write(unit=tex_unit, fmt="(a, f5.2, a)") "\newcommand*{\tempatmdefaultc}{", TEMP_ATM - CONVERT_C_TO_K, "}"
+    close(tex_unit)
+end subroutine write_defaults
 
 subroutine test_m_total(tests)
     use gasdata, only: DRY_AIR
@@ -2387,8 +2406,8 @@ subroutine test_exact(tests)
     call assert(size(p) == 1, "test_cva (test_exact): size(p) == 1 violated", print_integer=[size(p)])
     open(newunit=tex_unit, action="write", status="replace", position="rewind", file="test_exact.tex", delim="quote")
     write(unit=tex_unit, fmt="(a)") "% auto-generated"
-    call write_latex_engineering(tex_unit, dt, "testexactdt")
-    call write_latex_engineering(tex_unit, ne(1), "xdoterror")
+    call write_latex_engineering(tex_unit, dt, "testexactdt", "f4.1")
+    call write_latex_engineering(tex_unit, ne(1), "xdoterror", "f5.3")
     write(unit=tex_unit, fmt="(a, f5.3, a)") "\newcommand*{\xdotorder}{", p(1), "}"
     close(tex_unit)
 end subroutine test_exact

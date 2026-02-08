@@ -18,10 +18,10 @@ public :: read_springer_namelist
 
 contains
 
-subroutine write_latex_engineering(tex_unit, x, macro_name)
+subroutine write_latex_engineering(tex_unit, x, macro_name, m_fmt)
     integer, intent(in)          :: tex_unit
     real(WP), intent(in)         :: x
-    character(len=*), intent(in) :: macro_name
+    character(len=*), intent(in) :: macro_name, m_fmt
     
     logical  :: tex_unit_is_open
     integer  :: n
@@ -33,7 +33,8 @@ subroutine write_latex_engineering(tex_unit, x, macro_name)
     n = 3*nint(log(x) / (3.0_WP*log(10.0_WP)))
     m = x / (10.0_WP**n)
     
-    write(unit=tex_unit, fmt="(3a, f8.3, a, i0, a)") "\newcommand*{\", macro_name, "}{", m, " \cdot 10^{", n, "}}"
+    write(unit=tex_unit, fmt="(3a, " // trim(m_fmt) // ", a, i0, a)") "\newcommand*{\", macro_name, "}{", &
+                                                                        m, " \cdot 10^{", n, "}}"
 end subroutine write_latex_engineering
 
 subroutine create_barrel(vol_dead, csa_barrel, p_atm, temp_atm, m_p, p_fs, p_fd, l_travel, gas, i_cv_mirror, cv)

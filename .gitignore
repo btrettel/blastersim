@@ -62,6 +62,8 @@ docs/pneumatic-example.nml
 docs/blastersim-out.txt
 docs/blastersim.txt
 docs/blastersim_bibertool.bib
+defaults.tex
+docs/defaults.tex
 missed.txt
 *.opt.yaml
 *.optrpt

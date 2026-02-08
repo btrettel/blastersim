@@ -23,6 +23,9 @@ test_conservation.csv: test_cva$(BINEXT)
 test_exact.tex: test_cva$(BINEXT)
 	$(RUN)test_cva$(BINEXT)
 
+defaults.tex: test_cva$(BINEXT)
+	$(RUN)test_cva$(BINEXT)
+
 io.nml: test$(DIR_SEP)test_read_springer_namelist.nml
 
 #############################
