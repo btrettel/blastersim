@@ -27,16 +27,27 @@ The \texttt{blastersim} executable on Linux and macOS and the \texttt{blastersim
 
 See \secref{compiling} for instruction on how to compile BlasterSim from the source tarball or clone of the Git repository.
 
-\section{Running BlasterSim}\label{running}
+\section{Running BlasterSim and BlasterSim outputs}\label{running}
 
-With BlasterSim placed in the current directory or your \texttt{PATH}, you can run BlasterSim by typing \texttt{blastersim} in your terminal.
+With BlasterSim placed on your \texttt{PATH}, you can run BlasterSim by typing \texttt{blastersim} in your terminal.
+With BlasterSim placed in your current directory, you can run BlasterSim by typing \texttt{./blastersim} on Linux or \texttt{blastersim} on Windows.
 
 The first command line argument is the input file.
 For example, to run BlasterSim on input.nml, type \texttt{blastersim input.nml}.
 
 If BlasterSim is run without an input file (running the command \texttt{blastersim} by itself), BlasterSim will print a message containing information about how to run BlasterSim, the BlasterSim version, and debugging information:
-\lstinputlisting[breaklines=true]{blastersim-out.txt}
-% TODO: Note `STOP 0` at end too? Using `2>&1` in the output redirection doesn't preserve the order, so `STOP 0` appears at the top of blastersim-out.txt.
+\lstinputlisting[breaklines=true]{blastersim-out-1.txt}
+
+If BlasterSim is on your \texttt{PATH}, you can run BlasterSim with an input file like \texttt{blastersim springer-example.nml} to simulate the blaster described in the input file.
+If BlasterSim is placed in your current directory, you can run BlasterSim with an input file like \texttt{./blastersim springer-example.nml} on Linux or \texttt{blastersim springer-example.nml} on Windows.
+Using the example input file in \secref{springer-example} returns the following:
+\lstinputlisting[breaklines=true]{blastersim-out-2.txt}
+
+After BlasterSim completes, a CSV spreadsheet with detailed data the simulation is written.
+This spreadsheet can be opened in a spreadsheet program like Excel or any other program that supports CSV spreadsheets.
+The name of the spreadsheet is determined by the optional \texttt{id} input variable.
+If \texttt{id} is not provided, it takes the default value of \texttt{output}, so the spreadsheet is written to output.csv.
+In the example in \secref{springer-example}, \texttt{id} was set to ``springer-example'', so the spreadsheet is written to springer-example.csv.
 
 \section{BlasterSim inputs in general}\label{inputs-general}
 

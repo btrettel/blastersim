@@ -1,5 +1,5 @@
 &springer
-id = "example" ! (optional)
+id = "springer-example" ! (optional)
 
 ! atmosphere
 p_atm    = 100000.0 ! Pa (optional)

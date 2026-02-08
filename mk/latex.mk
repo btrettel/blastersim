@@ -7,13 +7,14 @@ docs$(DIR_SEP)dev.tex \
 docs$(DIR_SEP)springer-figures.tex \
 docs$(DIR_SEP)exact-solution-figure.tex
 
-TEX_DEPS = mk$(DIR_SEP)/latex.mk \
+TEX_DEPS = mk$(DIR_SEP)latex.mk \
 $(SPELL_DEPS) \
 docs$(DIR_SEP)rev.tex \
 docs$(DIR_SEP)test_exact.tex \
 docs$(DIR_SEP)geninput_springer.tex \
 docs$(DIR_SEP)springer-example.nml \
-docs$(DIR_SEP)blastersim-out.txt \
+docs$(DIR_SEP)blastersim-out-1.txt \
+docs$(DIR_SEP)blastersim-out-2.txt \
 docs$(DIR_SEP)defaults.tex
 
 CLEAN_TEX = docs$(DIR_SEP)*.aux \
@@ -26,7 +27,8 @@ docs$(DIR_SEP)*.out \
 docs$(DIR_SEP)*.toc \
 docs$(DIR_SEP)$(TEX_KEY)_bibertool.bib \
 docs$(DIR_SEP)springer-example.nml \
-docs$(DIR_SEP)blastersim-out.txt
+docs$(DIR_SEP)blastersim-out-1.txt \
+docs$(DIR_SEP)blastersim-out-2.txt
 
 BIB        = bibtex
 SPELL_TEX  = aspell --mode=tex --check
@@ -60,8 +62,11 @@ docs$(DIR_SEP)$(TEX_KEY).bbl: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_K
 docs$(DIR_SEP)$(TEX_KEY).txt: docs$(DIR_SEP)$(TEX_KEY).pdf
 	$(PDFTOTEXT) docs$(DIR_SEP)$(TEX_KEY).pdf docs$(DIR_SEP)$(TEX_KEY).txt
 
-docs$(DIR_SEP)blastersim-out.txt: blastersim$(BINEXT)
-	$(RUN)blastersim$(BINEXT) > docs$(DIR_SEP)blastersim-out.txt
+docs$(DIR_SEP)blastersim-out-1.txt: blastersim$(BINEXT)
+	$(RUN)blastersim$(BINEXT) > docs$(DIR_SEP)blastersim-out-1.txt
+
+docs$(DIR_SEP)blastersim-out-2.txt: blastersim$(BINEXT) docs$(DIR_SEP)springer-example.nml
+	$(RUN)blastersim$(BINEXT) docs$(DIR_SEP)springer-example.nml > docs$(DIR_SEP)blastersim-out-2.txt
 
 # Why move these files here? I don't know how to go up a directory in a cross-platform way in LaTeX. So putting everything in this directory is the easiest approach.
 docs$(DIR_SEP)rev.tex: rev.tex

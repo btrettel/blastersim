@@ -76,7 +76,7 @@ subroutine test_read_springer_namelist(tests)
     call tests%real_eq(vol_dead%v%v, 20.0e-6_WP, "test_read_springer_namelist, vol_dead")
     
     call tests%real_eq(sys%con(I_PLUNGER, I_BARREL)%b%v%v, 0.528_WP, "test_read_springer_namelist, b")
-    call tests%character_eq(config%id, "example", "test_read_springer_namelist, id")
+    call tests%character_eq(config%id, "springer-example", "test_read_springer_namelist, id")
     call tests%real_eq(sys%cv(I_PLUNGER_ATM)%p_const%v%v, 100000.0_WP, "test_read_springer_namelist, p_atm (1)")
     call tests%real_eq(sys%cv(I_BARREL_ATM)%p_const%v%v, 100000.0_WP, "test_read_springer_namelist, p_atm (2)")
     call tests%real_eq(sys%cv(I_PLUNGER_ATM)%temp_const%v%v, 310.0_WP, "test_read_springer_namelist, temp_atm (1)")

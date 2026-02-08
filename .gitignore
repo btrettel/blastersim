@@ -58,8 +58,9 @@ src/geninput_*.tex
 docs/geninput_*.tex
 !test/test_read_springer_namelist.nml
 docs/springer-example.nml
+springer-example.csv
 docs/pneumatic-example.nml
-docs/blastersim-out.txt
+docs/blastersim-out-*.txt
 docs/blastersim.txt
 docs/blastersim_bibertool.bib
 defaults.tex

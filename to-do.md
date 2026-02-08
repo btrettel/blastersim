@@ -3,6 +3,7 @@
 - `make dist`
 - docs:
     - Make BlasterSim manual look more like the M4 manual (smaller font, frontmatter, etc.)
+    - Document CSV file headings.
     - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.
     - Also refer to code in docs and link to GitHub.
     - Look at Zotero "BibTeX quality report" lines
@@ -18,19 +19,34 @@
     - Thanks appendix
         - Andrew Trettel for macOS binary
     - Development appendix/chapter
-    - Add BlasterSim usage in documentation
     - In V&V chapter, discuss running all the tests with `make check` (or jom or NMAKE)
     - Add index to docs.
         - <https://www.overleaf.com/learn/latex/Indices>
         - <https://en.wikibooks.org/wiki/LaTeX/Indexing>
-    - Use [Intel Fortran's namelist terminology](https://www.intel.com/content/www/us/en/docs/fortran-compiler/developer-guide-reference/2024-2/namelist.html): namelist group and variable.
-    - Example springer input file in documentation (use listings package?)
     - Document friction model to understand what's there are present
     - Quick-start guide for Windows
-    - Code documentation
+    - Automatic code documentation with LaTeX output
+        - What do I want to accomplish with this? Forcing me to document the code more?
+            - Which automatic documentation tools return errors for undocumented procedures?
+            - ROBODoc seems to have the most comprehensive outline.
+        - <https://cyber.dabamos.de/programming/modernfortran/source-code-documentation.html>
         - <https://fortranwiki.org/fortran/show/Automatic+documentation>
-            - Not listed: Sphinx-Fortran
-        - LaTeX output: ROBODoc (no Ubuntu package), Doxygen (Ubuntu package)
+        - Doxygen (Ubuntu package)
+            - Needed to set `EXTRACT_ALL = YES` to get Doxygen to print anything.
+            - This requires their style files and is basically the "tail wagging the dog". I want the user-facing documentation to take priority here so this isn't viable.
+        - ROBODoc (no Ubuntu package)
+            - ROBODoc doesn't know anything about Fortran code. It basically just formats some comments inserted into code. I'd have to make sure that the procedure names, arguments, etc., are consistent.
+            - <https://en.wikipedia.org/wiki/ROBODoc>
+            - <https://fortranwiki.org/fortran/show/ROBODoc>
+            - <https://rfsber.home.xs4all.nl/Robo/>
+            - <https://github.com/gumpu/ROBODoc>
+            - <https://github.com/jacobwilliams/Fortran-ROBODoc-RC-File>
+            - <https://flash.rochester.edu/site/flashcode/user_support/robodoc_standards_F3/>
+        - Sphinx-Fortran
+            - <https://sphinx-fortran.readthedocs.io/en/latest/>
+            - <https://www.topbug.net/blog/2015/12/11/a-collection-of-issues-about-the-latex-output-in-sphinx-and-the-solutions/>
+    - LaTeXML issues:
+        - `\lstinputlisting[breaklines=true]` doesn't wrap.
 - BlasterSim output
     - Check acceleration to know if under-barreled or over-barreled.
     - Explain the meaning of the return code if there is an error.
@@ -125,7 +141,8 @@
     - "core" for pressure chamber?
     - GGDT confuses people, so have clearer documentation and names:
         - <https://www.spudfiles.com/viewtopic.php?f=26&t=27224>
-- Upload Windows BlasterSim to malware scanner to check. 
+- Upload Windows BlasterSim to malware scanner to check.
+    - <https://www.virustotal.com/gui/home> (run by Google)
 - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
 - Valve opening time, valve poppet model using pressures from CVs
     - Find what you saved on valve opening profiles/valve characteristic curves.
