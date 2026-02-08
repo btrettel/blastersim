@@ -30,7 +30,7 @@
     - Code documentation
         - <https://fortranwiki.org/fortran/show/Automatic+documentation>
             - Not listed: Sphinx-Fortran
-        - LaTeX output: ROBODoc, Doxygen
+        - LaTeX output: ROBODoc (no Ubuntu package), Doxygen (Ubuntu package)
 - BlasterSim output
     - Check acceleration to know if under-barreled or over-barreled.
     - Explain the meaning of the return code if there is an error.
