@@ -1,6 +1,6 @@
 ### v0.1.0
 
-- Put units in bounds error messages for geninput.
+- In geninput, check for consistency of `tex_unit`/`txt_unit` and genunits `type`s.
 - `make dist`
 - Print `p_atm`, `temp_atm`, `dt` default values in LaTeX. Write out TeX file with macros and manually mention the defaults in the `tex_description_2`.
 - docs:

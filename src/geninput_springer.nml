@@ -103,6 +103,7 @@ variable_name         = "vol_dead"
 type_definition       = "type(si_volume)"
 required              = .true.
 tex_unit              = "m$^3$"
+txt_unit              = "m3"
 tex_description       = "Dead volume. Volume in the barrel at the dart's initial position."
 tex_variable_name     = "$V_\text{dead}$"
 lower_bound_active    = .true.
