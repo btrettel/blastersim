@@ -169,6 +169,20 @@ bound_fmt             = "f3.1"
 /
 
 &input_variable
+variable_name         = "dt"
+type_definition       = "type(si_time)"
+tex_unit              = "s"
+tex_description       = "Time step."
+tex_variable_name     = "$\Delta t$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "DT_DEFAULT"
+no_kind_default_value = .true.
+bound_fmt             = "f3.1"
+/
+
+&input_variable
 variable_name         = "d_e"
 type_definition       = "type(si_length)"
 required              = .true.

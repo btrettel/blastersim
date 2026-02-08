@@ -72,7 +72,7 @@ end subroutine create_barrel
 
 subroutine read_springer_namelist(input_file, sys, config, rc)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
-    use cva, only: cv_system_type, run_config_type
+    use cva, only: cv_system_type, run_config_type, DT_DEFAULT
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
     use checks, only: is_close, check
     use prec, only: CL, PI
@@ -141,7 +141,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc)
     call create_barrel(vol_dead_u, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
                         [DRY_AIR], I_BARREL_ATM, sys%cv(I_BARREL))
     
-    call config%set(id, csv_output=.true., n_d=0)
+    call config%set(id, csv_output=.true., dt=dt_u, n_d=0)
 end subroutine read_springer_namelist
 
 end module io
