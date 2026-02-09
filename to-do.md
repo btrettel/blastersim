@@ -2,8 +2,10 @@
 
 - `make dist`
 - docs:
-    - Make BlasterSim manual look more like the M4 manual (smaller font, frontmatter, etc.)
-    - Document CSV file headings.
+    - Process test output and put the results in the documentation.
+        - Put percentage passing and total number of tests in LaTeX documentation.
+        - Output a separate HTML file for details. Include green and red coloring scheme.
+    - Document CSV file headings in a new section.
     - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.
     - Also refer to code in docs and link to GitHub.
     - Look at Zotero "BibTeX quality report" lines
@@ -13,6 +15,7 @@
         - `UserWarn`
         - `UserWarnRegex`
         - Replace "piston" with "plunger" for consistency.
+        - `\href`
     - BlasterSim output for a working case
     - Put springer and pneumatic governing equations in usage chapter
     - Test building docs on Windows.
@@ -25,26 +28,6 @@
         - <https://en.wikibooks.org/wiki/LaTeX/Indexing>
     - Document friction model to understand what's there are present
     - Quick-start guide for Windows
-    - Automatic code documentation with LaTeX output
-        - What do I want to accomplish with this? Forcing me to document the code more?
-            - Which automatic documentation tools return errors for undocumented procedures?
-            - ROBODoc seems to have the most comprehensive outline.
-        - <https://cyber.dabamos.de/programming/modernfortran/source-code-documentation.html>
-        - <https://fortranwiki.org/fortran/show/Automatic+documentation>
-        - Doxygen (Ubuntu package)
-            - Needed to set `EXTRACT_ALL = YES` to get Doxygen to print anything.
-            - This requires their style files and is basically the "tail wagging the dog". I want the user-facing documentation to take priority here so this isn't viable.
-        - ROBODoc (no Ubuntu package)
-            - ROBODoc doesn't know anything about Fortran code. It basically just formats some comments inserted into code. I'd have to make sure that the procedure names, arguments, etc., are consistent.
-            - <https://en.wikipedia.org/wiki/ROBODoc>
-            - <https://fortranwiki.org/fortran/show/ROBODoc>
-            - <https://rfsber.home.xs4all.nl/Robo/>
-            - <https://github.com/gumpu/ROBODoc>
-            - <https://github.com/jacobwilliams/Fortran-ROBODoc-RC-File>
-            - <https://flash.rochester.edu/site/flashcode/user_support/robodoc_standards_F3/>
-        - Sphinx-Fortran
-            - <https://sphinx-fortran.readthedocs.io/en/latest/>
-            - <https://www.topbug.net/blog/2015/12/11/a-collection-of-issues-about-the-latex-output-in-sphinx-and-the-solutions/>
     - LaTeXML issues:
         - `\lstinputlisting[breaklines=true]` doesn't wrap.
 - BlasterSim output

@@ -50,6 +50,7 @@ docs$(DIR_SEP)$(TEX_KEY).pdf docs$(DIR_SEP)$(TEX_KEY).log: docs$(DIR_SEP)$(TEX_K
 	-$(GREP) "$(BL)Warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).log
 	-$(GREP) "$(BL)pdfTeX warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).log
 	-$(GREP) "$(BL)Overfull \\\hbox$(BR)" docs$(DIR_SEP)$(TEX_KEY).log
+	-$(GREP) "$(BL)Rerun$(BR)" docs$(DIR_SEP)$(TEX_KEY).blg
 	-$(GREP) "$(BL)Warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).blg
 
 docs$(DIR_SEP)$(TEX_KEY).bbl: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS)

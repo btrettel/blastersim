@@ -26,6 +26,11 @@
 % Needs to be loaded before hyperref.
 \usepackage{setspace}
 
+% Break lines inside of URLs.
+% Call before hyperref package.
+% <https://tex.stackexchange.com/a/479390/9945>
+\usepackage{xurl}
+
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{physics}
@@ -82,7 +87,15 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
+
+% This convoluted garbage is needed to avoid the following message:
+% > pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has been already used, duplicate ignored
+% See: <https://tex.stackexchange.com/questions/18924/pdftex-warning-ext4-destination-with-the-same-identifier-nam-epage-1-has>
+\hypersetup{pageanchor=false}
+\begin{titlepage}
 \maketitle
+\end{titlepage}
+\hypersetup{pageanchor=true}
 
 \tableofcontents
 

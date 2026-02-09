@@ -26,12 +26,19 @@ Obtain the latest BlasterSim source code from \url{http://trettel.us/blastersim/
 Compiling BlasterSim requires only a modern Fortran compiler and a Make program like GNU Make on Linux and macOS or \href{https://wiki.qt.io/Jom}{jom} or \href{https://learn.microsoft.com/en-us/cpp/build/reference/nmake-reference?view=msvc-170}{NMAKE} on Windows.
 Unfortunately, BlasterSim will not compile with every Fortran compiler due to the units module being too large.
 gfortran is recommended, but BlasterSim is also regularly tested with LLVM flang.
-\href{https://community.intel.com/t5/Intel-Fortran-Compiler/Increasing-the-size-of-the-interface-contains-stack/td-p/1594824}{The Intel Fortran Compiler unfortunately will not compile BlasterSim due to a bug in their front end}.
+The Intel Fortran Compiler unfortunately will not compile BlasterSim due to a bug in their front end~\cite{green_re_2024}.
 
 After extracting the provided source archive, \texttt{cd} into the directory and build BlasterSim.
 
-On Linux and macOS you can type \texttt{make BUILD=release blastersim}.
-On Windows you can type (if using jom) \texttt{jom BUILD=release blastersim.exe}
+On Linux and macOS you can type:
+\begin{lstlisting}
+make BUILD=release blastersim
+\end{lstlisting}
+
+On Windows you can type (if using jom):
+\begin{lstlisting}
+jom BUILD=release blastersim.exe
+\end{lstlisting}
 
 Note that compilation of BlasterSim can be slow.
 
@@ -60,7 +67,14 @@ cd blastersim
 make BUILD=release blastersim
 \end{lstlisting}
 
-On Windows with jom, you should replace \texttt{make BUILD=release blastersim} with \texttt{jom BUILD=release blastersim.exe}.
+On Windows with jom, you should replace
+\begin{lstlisting}
+make BUILD=release blastersim
+\end{lstlisting}
+with
+\begin{lstlisting}
+jom BUILD=release blastersim.exe
+\end{lstlisting}
 
 And again, a BlasterSim executable should be moved to a directory on your \texttt{PATH} as discussed in \secref{installation}.
 
