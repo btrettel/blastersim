@@ -1,0 +1,11 @@
+UserWarn
+{
+    #\href # I wanted to replace all `\href`s with citations, but that's not necessarily the best approach.
+}
+[
+    piston # write plunger instead
+]
+
+UserWarnRegex
+{
+}

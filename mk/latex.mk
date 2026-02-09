@@ -55,7 +55,7 @@ docs$(DIR_SEP)$(TEX_KEY).pdf docs$(DIR_SEP)$(TEX_KEY).log: docs$(DIR_SEP)$(TEX_K
 
 docs$(DIR_SEP)$(TEX_KEY).bbl: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS)
 	$(LOOP_START) docs$(DIR_SEP)$(TEX_KEY).tex $(SPELL_DEPS) $(LOOP_MIDDLE) $(SPELL_TEX) $(LOOP_END)
-	chktex docs$(DIR_SEP)$(TEX_KEY).tex
+	chktex --localrc docs$(DIR_SEP)chktexrc docs$(DIR_SEP)$(TEX_KEY).tex
 	biber --tool --validate-datamodel --dieondatamodel --quiet docs$(DIR_SEP)$(TEX_KEY).bib
 	cd docs && $(TEX) $(TEX_FLAGS) -draftmode $(TEX_KEY)
 	cd docs && $(BIB) $(TEX_KEY)

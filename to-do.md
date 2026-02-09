@@ -3,20 +3,19 @@
 - `make dist`
 - docs:
     - Process test output and put the results in the documentation.
-        - Put percentage passing and total number of tests in LaTeX documentation.
-        - Output a separate HTML file for details. Include green and red coloring scheme.
+        - LaTeX documentation
+            - code coverage
+            - percentage passing
+            - total number of passing tests
+            - total number of tests
+        - Output a separate HTML file including all the previous information and details for all tests.
+            - Include green and red coloring scheme.
+            - Link to this file in the docs and README.md.
     - Document CSV file headings in a new section.
     - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.
     - Also refer to code in docs and link to GitHub.
     - Look at Zotero "BibTeX quality report" lines
         - Export to BibLaTeX for even more checks?
-    - chktex custom regex option
-        - Example: /etc/chktexrc
-        - `UserWarn`
-        - `UserWarnRegex`
-        - Replace "piston" with "plunger" for consistency.
-        - `\href`
-    - BlasterSim output for a working case
     - Put springer and pneumatic governing equations in usage chapter
     - Test building docs on Windows.
     - Thanks appendix
