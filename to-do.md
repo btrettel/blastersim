@@ -11,7 +11,8 @@
         - Output a separate HTML file including all the previous information and details for all tests.
             - Include green and red coloring scheme.
             - Link to this file in the docs and README.md.
-    - Document CSV file headings in a new section.
+    - Make the `rc = 4` and `rc = 5` cases in section `run-time-checks` get the numbers from the BlasterSim source code via `write_defaults` in `test_cva`.
+    - Rename `spring_pe` and `m_p_ke` to be more consistent with `e_f`. Perhaps `e_spring` and `e_p_kinetic`?
     - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.
     - Also refer to code in docs and link to GitHub.
     - Look at Zotero "BibTeX quality report" lines

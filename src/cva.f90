@@ -1873,7 +1873,8 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     inquire(unit=csv_unit, opened=csv_unit_opened)
     call assert(csv_unit_opened, "cva (write_csv_row): csv_unit needs to be open", print_logical=[csv_unit_opened])
     
-    n_cv = size(sys%cv)
+    n_cv  = size(sys%cv)
+    n_gas = size(sys%cv(1)%m)
     
     ! for all CVs
     
@@ -1957,16 +1958,6 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 error stop "cva (write_csv_row, e): invalid row_type"
         end select
         
-        ! `e_f`, energy lost to projectile/plunger friction in control volume
-        select case (row_type)
-            case (HEADER_ROW_TYPE)
-                write(unit=csv_unit, fmt="(3a)", advance="no") '"e_f (J, ', trim(sys%cv(i_cv)%label), ')",'
-            case (NUMBER_ROW_TYPE)
-                write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%e_f%v%v, ","
-            case default
-                error stop "cva (write_csv_row, e_f): invalid row_type"
-        end select
-        
         ! `p`
         select case (row_type)
             case (HEADER_ROW_TYPE)
@@ -2001,6 +1992,16 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
         end select
         
         if (sys%cv(i_cv)%type == NORMAL_CV_TYPE) then
+            ! `e_f`, energy lost to projectile/plunger friction in control volume
+            select case (row_type)
+                case (HEADER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(3a)", advance="no") '"e_f (J, ', trim(sys%cv(i_cv)%label), ')",'
+                case (NUMBER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%e_f%v%v, ","
+                case default
+                    error stop "cva (write_csv_row, e_f): invalid row_type"
+            end select
+            
             ! `spring_pe`
             select case (row_type)
                 case (HEADER_ROW_TYPE)

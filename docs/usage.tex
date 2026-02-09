@@ -27,7 +27,7 @@ The \texttt{blastersim} executable on Linux/macOS and the \texttt{blastersim.exe
 
 See \secref{compiling} for instruction on how to compile BlasterSim from the source tarball or clone of the Git repository.
 
-\section{Running BlasterSim and BlasterSim outputs}\label{running}
+\section{Running BlasterSim}\label{running}
 
 With BlasterSim placed on your \texttt{PATH}, you can run BlasterSim by typing \texttt{blastersim} in your terminal.
 With BlasterSim placed in your current directory, you can run BlasterSim by typing \texttt{./blastersim} on Linux or \texttt{blastersim} on Windows.
@@ -43,11 +43,75 @@ If BlasterSim is placed in your current directory, you can run BlasterSim with a
 Using the example input file in \secref{springer-example} returns the following:
 \lstinputlisting[breaklines=true]{blastersim-out-2.txt}
 
+\section{Time trace output to CSV file}\label{csv}
+
 After BlasterSim completes, a CSV spreadsheet with detailed data the simulation is written.
 This spreadsheet can be opened in a spreadsheet program like Excel or any other program that supports CSV spreadsheets.
 The name of the spreadsheet is determined by the optional \texttt{id} input variable.
 If \texttt{id} is not provided, it takes the default value of \texttt{output}, so the spreadsheet is written to output.csv.
 In the example in \secref{springer-example}, \texttt{id} was set to ``springer-example'', so the spreadsheet is written to springer-example.csv.
+
+The CSV file contains the following columns:
+\begin{itemize}
+\item \texttt{t} ($t$): Simulation time.
+Floating-point number.
+Units of s.
+\item \texttt{m\_total} ($m_\text{total}$): Total mass in the simulation.
+Floating-point number.
+Units of kg.
+This should remain approximately constant and is present for debugging purposes.
+\item \texttt{e\_total} ($e_\text{total}$): Total energy in the simulation.
+Floating-point number.
+Units of J.
+This should remain approximately constant and is present for debugging purposes.
+\item For each control volume $i$ (for a springer this would be the plunger tube, barrel, atmosphere for the plunger tube, and atmosphere for the barrel):
+\begin{itemize}
+    \item \texttt{x} ($x_i$): Position of the projectile/plunger.
+    Floating-point number.
+    Units of m.
+    Not present for constant pressure control volumes like atmospheres.
+    \item \texttt{x\_dot} ($\dot{x}_i$): Velocity of the projectile/plunger.
+    Floating-point number.
+    Units of m/s.
+    Not present for constant pressure control volumes like atmospheres.
+    \item \texttt{m} ($m_{i,k}$): Mass of gas $k$.
+    Floating-point number.
+    Units of kg.
+    For constant pressure control volumes (atmospheres), this starts out at zero.
+    This can be used to track leaks to the atmosphere.
+    \item \texttt{e} ($e_i$): Energy of gas.
+    Floating-point number.
+    Units of J.
+    For constant pressure control volumes (atmospheres), this starts out at zero.
+    BlasterSim does not distinguish between work done on a control volume and leaks at the moment, so this being non-zero does not necessarily indicate anything about leaks.
+    \item \texttt{p} ($p_i$): Pressure of gas.
+    Floating-point number.
+    Units of Pa.
+    \item \texttt{temp} ($T_i$): Temperature of gas.
+    Floating-point number.
+    Units of K.
+    \item \texttt{rho} ($\rho_i$): Mass density of gas.
+    Floating-point number.
+    Units of kg/m$^3$.
+    \item \texttt{e\_f} ($e_{\text{f},i}$): Energy lost due to friction on the projectile/plunger.
+    Floating-point number.
+    Units of J.
+    Not present for constant pressure control volumes like atmospheres.
+    \item \texttt{spring\_pe} ($e_{\text{spring},i}$): Spring potential energy.
+    Floating-point number.
+    Units of J.
+    Not present for constant pressure control volumes like atmospheres.
+    \item \texttt{m\_p\_ke} ($e_{\text{p,ke},i}$): Projectile/plunger kinetic energy.
+    Floating-point number.
+    Units of J.
+    Not present for constant pressure control volumes like atmospheres.
+\end{itemize}
+\item \texttt{rc}: Return code of \texttt{run} subroutine.
+Integer.
+A value of -1 means that BlasterSim will continue to the next time step.
+A value of 0 means that BlasterSim completed the simulation successfully.
+Values above 0 indicate an error occurred and are discussed in \secref{run-time-checks}.
+\end{itemize}
 
 \section{BlasterSim inputs in general}\label{inputs-general}
 
