@@ -7,9 +7,7 @@ docs$(DIR_SEP)dev.tex \
 docs$(DIR_SEP)springer-figures.tex \
 docs$(DIR_SEP)exact-solution-figure.tex
 
-TEX_DEPS = mk$(DIR_SEP)latex.mk \
-$(SPELL_DEPS) \
-docs$(DIR_SEP)rev.tex \
+TEX_GEN = docs$(DIR_SEP)rev.tex \
 docs$(DIR_SEP)test_exact.tex \
 docs$(DIR_SEP)geninput_springer.tex \
 docs$(DIR_SEP)springer-example.nml \
@@ -17,7 +15,12 @@ docs$(DIR_SEP)blastersim-out-1.txt \
 docs$(DIR_SEP)blastersim-out-2.txt \
 docs$(DIR_SEP)defaults.tex
 
-CLEAN_TEX = docs$(DIR_SEP)*.aux \
+TEX_DEPS = mk$(DIR_SEP)latex.mk \
+$(SPELL_DEPS) \
+$(TEX_GEN) \
+
+CLEAN_TEX = $(TEX_GEN) \
+docs$(DIR_SEP)*.aux \
 docs$(DIR_SEP)*.bbl \
 docs$(DIR_SEP)*.blg \
 docs$(DIR_SEP)*.css \
@@ -25,10 +28,7 @@ docs$(DIR_SEP)*.html \
 docs$(DIR_SEP)*.log \
 docs$(DIR_SEP)*.out \
 docs$(DIR_SEP)*.toc \
-docs$(DIR_SEP)$(TEX_KEY)_bibertool.bib \
-docs$(DIR_SEP)springer-example.nml \
-docs$(DIR_SEP)blastersim-out-1.txt \
-docs$(DIR_SEP)blastersim-out-2.txt
+docs$(DIR_SEP)$(TEX_KEY)_bibertool.bib
 
 BIB        = bibtex
 SPELL_TEX  = aspell --mode=tex --check
@@ -53,9 +53,10 @@ docs$(DIR_SEP)$(TEX_KEY).pdf docs$(DIR_SEP)$(TEX_KEY).log: docs$(DIR_SEP)$(TEX_K
 	-$(GREP) "$(BL)Rerun$(BR)" docs$(DIR_SEP)$(TEX_KEY).blg
 	-$(GREP) "$(BL)Warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).blg
 
+# ChkTeX doesn't handle `\input` macros correctly unless it's in the same directory as the TeX files.
 docs$(DIR_SEP)$(TEX_KEY).bbl: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS)
 	$(LOOP_START) docs$(DIR_SEP)$(TEX_KEY).tex $(SPELL_DEPS) $(LOOP_MIDDLE) $(SPELL_TEX) $(LOOP_END)
-	chktex --localrc docs$(DIR_SEP)chktexrc docs$(DIR_SEP)$(TEX_KEY).tex
+	cd docs && chktex --localrc chktexrc $(TEX_KEY).tex
 	biber --tool --validate-datamodel --dieondatamodel --quiet docs$(DIR_SEP)$(TEX_KEY).bib
 	cd docs && $(TEX) $(TEX_FLAGS) -draftmode $(TEX_KEY)
 	cd docs && $(BIB) $(TEX_KEY)

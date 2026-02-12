@@ -4,6 +4,7 @@ UserWarn
     spring\_pe # deprecated variable name, replace with e\_s
     e\_spring # deprecated variable name, replace with e\_s
     m\_p\_ke # deprecated variable name, replace with e\_p
+    ** # indicates a Fortran format problem
 }
 [
     piston # write plunger instead

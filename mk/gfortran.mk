@@ -1,6 +1,6 @@
 # `-Werror=uninitialized` seems to require `-fcheck=all` (not used in the release build), or else there's a false-positive compile-time error, at least for gfortran 13. Check if this is true for later versions. `-Wno-uninitialized` eliminates this false-positive and should be removed in the future if gfortran eliminates this problem.
 # `-fsanitize=leak` seems to continue to have false positives as of gfortran 13.
-# `-Wdo-subscript` seems to have false positives.
+# `-Wdo-subscript` is misleadingly named and warns for things that are not problems. <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90237>
 # I think I had some false positives before that made me add `-Wno-maybe-uninitialized`, but it seems unnecessary now.
 
 FFLAGS   = -Wall -Wextra -Werror -pedantic-errors -Wno-do-subscript -std=f2018 -Wconversion -Wconversion-extra -fimplicit-none -fno-unsafe-math-optimizations -finit-real=snan -finit-integer=2147483647 -finit-logical=true -finit-derived -Wimplicit-interface -Wunused -ffree-line-length-132
