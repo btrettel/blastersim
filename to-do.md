@@ -1,6 +1,22 @@
 ### v0.1.0
 
-- `make dist`
+- Change `compared_*` in unittest.f90 to `expected_*`.
+- Document how variable names are converted from LaTeX and code, as a general rule.
+- Have a conversion table for LaTeX and code variable names.
+- Document `logical`s in `\secref{inputs-general}`: `.true.` and `.false.`
+- Try more compilers:
+    - Silverfrost FTN95
+    - NAG
+    - Oracle
+    - nvfortran
+    - lfortran
+    - IBM xlf
+- Add `logical` types to geninput.
+- Use linters including fortitude.
+- Test CSV output with Python.
+- Run Valgrind to find if there are any more uninitialized variables.
+    - Add assertions on `n_cv` and `n_gas` before some loops? At that point you might as well manually check if they are uninitialized...
+- Make characterization tests for stdout and CSV output for springer-example.csv.
 - docs:
     - Process test output and put the results in the documentation.
         - LaTeX documentation
@@ -8,11 +24,12 @@
             - percentage passing
             - total number of passing tests
             - total number of tests
+            - other metrics like assertion density
         - Output a separate HTML file including all the previous information and details for all tests.
             - Include green and red coloring scheme.
             - Link to this file in the docs and README.md.
-    - Make the `rc = 4` and `rc = 5` cases in section `run-time-checks` get the numbers from the BlasterSim source code via `write_defaults` in `test_cva`.
-    - Rename `spring_pe` and `m_p_ke` to be more consistent with `e_f`. Perhaps `e_spring` and `e_p_kinetic`?
+        - Check that all test descriptions are unique.
+    - Make the thresholds in section `run-time-checks` get the numbers from the BlasterSim source code via `write_defaults` in `test_cva`.
     - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.
     - Also refer to code in docs and link to GitHub.
     - Look at Zotero "BibTeX quality report" lines
@@ -21,13 +38,13 @@
     - Test building docs on Windows.
     - Thanks appendix
         - Andrew Trettel for macOS binary
-    - Development appendix/chapter
     - In V&V chapter, discuss running all the tests with `make check` (or jom or NMAKE)
     - Add index to docs.
         - <https://www.overleaf.com/learn/latex/Indices>
         - <https://en.wikibooks.org/wiki/LaTeX/Indexing>
     - Document friction model to understand what's there are present
     - Quick-start guide for Windows
+    - Start using some sort of automatic documentation generator simply to see if it helps or not.
     - LaTeXML issues:
         - `\lstinputlisting[breaklines=true]` doesn't wrap.
 - BlasterSim output
@@ -59,6 +76,13 @@
 - Get documentation done before sensitivity analysis.
     - Get sensitivity analysis done before UQ.
     - Get UQ done before optimization so that all optimization is robust for simplicity (no need to have both non-robust and robust optimization set up).
+- `make dist`
+- `make web`
+- `make deploy`
+    - `make web`
+    - `make blastersim-*-source.zip`
+    - `make blastersim-*-linux-x86-64.zip`
+    - upload online
 
 ***
 
@@ -134,10 +158,10 @@
     - <https://www.spudfiles.com/viewtopic.php?p=391877#p391877>: > So I try to pick a time step intelligently. I first make a very crude guesstimate of muzzle energy. That gives me a (crude estimate of) muzzle velocity. I then assume constant acceleration and determine how long it would take a projectile to clear the muzzle.
     - Minimum of multiple time scales?
 - Try multiple CV exact solution. One constant pressure chamber, one barrel?
+- nmlfuzz using geninput data
 
 ***
 
-- Use linters including fortitude
 - Check that derivatives are correct in special cases where something is set to zero with no derivatives. Check for "TODO: Not sure the derivatives of this should be zero."
 - tests for `test_const`, `p_eos`, `temp_cv`, and others for `MIRROR_CV_TYPE`
 - Tests for io.f90

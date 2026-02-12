@@ -1,9 +1,13 @@
 UserWarn
 {
     #\href # I wanted to replace all `\href`s with citations, but that's not necessarily the best approach.
+    spring\_pe # deprecated variable name, replace with e\_s
+    e\_spring # deprecated variable name, replace with e\_s
+    m\_p\_ke # deprecated variable name, replace with e\_p
 }
 [
     piston # write plunger instead
+    plunger/projectile # write projectile/plunger
 ]
 
 UserWarnRegex

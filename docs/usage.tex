@@ -97,14 +97,19 @@ This should remain approximately constant and is present for debugging purposes.
     Floating-point number.
     Units of J.
     Not present for constant pressure control volumes like atmospheres.
-    \item \texttt{spring\_pe} ($e_{\text{spring},i}$): Spring potential energy.
+    % TODO: Add definition of this term.
+    \item \texttt{e\_s} ($e_{\text{s},i}$): Spring potential energy.
     Floating-point number.
     Units of J.
     Not present for constant pressure control volumes like atmospheres.
-    \item \texttt{m\_p\_ke} ($e_{\text{p,ke},i}$): Projectile/plunger kinetic energy.
+    % TODO: Add definition of this term.
+    \item \texttt{e\_p} ($e_{\text{p},i}$): Projectile/plunger kinetic energy.
     Floating-point number.
     Units of J.
     Not present for constant pressure control volumes like atmospheres.
+    For control volumes with springs ($m_\text{spring} \ne 0$~kg), the added mass from the spring is factored in as well.
+    See~\eqref{effective mass} for how the spring mass factors in.
+    % TODO: Add definition of this term
 \end{itemize}
 \item \texttt{rc}: Return code of \texttt{run} subroutine.
 Integer.
