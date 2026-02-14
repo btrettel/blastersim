@@ -40,8 +40,8 @@ subroutine test_read_springer_namelist(tests)
     type(si_length) :: d_barrel, d_e, d_plunger, l_travel
     type(si_volume) :: vol_dead
     
-    path_array(1) = "test"
-    path_array(2) = "test_read_springer_namelist.nml"
+    path_array(1) = "examples"
+    path_array(2) = "springer-example.nml"
     input_file = path_join(path_array)
     
     call read_springer_namelist(input_file, sys, config, rc)

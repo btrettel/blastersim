@@ -56,7 +56,7 @@ src/units.f90
 src/geninput_*.f90
 src/geninput_*.tex
 docs/geninput_*.tex
-!test/test_read_springer_namelist.nml
+!examples/*.nml
 docs/springer-example.nml
 springer-example.csv
 docs/pneumatic-example.nml

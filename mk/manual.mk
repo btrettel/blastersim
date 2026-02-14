@@ -26,7 +26,7 @@ test_exact.tex: test_cva$(BINEXT)
 defaults.tex: test_cva$(BINEXT)
 	$(RUN)test_cva$(BINEXT)
 
-io.nml: test$(DIR_SEP)test_read_springer_namelist.nml
+io.nml: examples$(DIR_SEP)springer-example.nml
 
 #############################
 # Additional files to clean #

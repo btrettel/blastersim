@@ -1,6 +1,23 @@
 ### v0.1.0
 
-- Change `compared_*` in unittest.f90 to `expected_*`.
+- Valve opening time, valve poppet model using pressures from CVs
+    - Find what you saved on valve opening profiles/valve characteristic curves.
+    - Have ability to model valve internals by getting pressures from other control volumes? Then you could model the movement of poppets and whatnot. You'll need some way to handle the "valve profile" or whatever it's called: relationship between poppet location and flow cross-sectional area.
+    - Could just start out with hyperbolic tangent multiplier for differentiability.
+- Pneumatic mode
+    - geninput_pneumatic.nml
+    - pneumatic-example.nml
+    - Post BlasterSim to SpudFiles after adding pneumatic mode
+- 2010 validation cases
+    - People are probably going to be more convinced of the accuracy of BlasterSim by the validation tests than anything else.
+    - Convert manually created test cases into inputs in the examples folder.
+    - Add photo of blaster
+    - Shooting Chrony F-1 Chronograph (green)
+        - serial number 387616
+        - ordered 2009-07-01 from Pyramyd Air, order #1787578
+    - Add table listing all raw data
+    - shooting_chrony_inc_users_2016
+    - plot of pressure vs. muzzle velocity, experimental vs. prediction
 - Document how variable names are converted from LaTeX and code, as a general rule.
 - Have a conversion table for LaTeX and code variable names.
 - Document `logical`s in `\secref{inputs-general}`: `.true.` and `.false.`
@@ -15,8 +32,7 @@
 - Use linters including fortitude.
 - Test CSV output with Python.
 - Run Valgrind to find if there are any more uninitialized variables.
-    - Add assertions on `n_cv` and `n_gas` before some loops? At that point you might as well manually check if they are uninitialized...
-- Make characterization tests for stdout and CSV output for springer-example.csv.
+- Make characterization tests for stdout and CSV output for springer-example.csv and pneumatic-example.csv.
 - docs:
     - Process test output and put the results in the documentation.
         - LaTeX documentation
@@ -72,7 +88,6 @@
     - It would be important to stop the backwards motion before adding this, otherwise BlasterSim will stop at the wrong time.
 - Make going on level deeper (`%v`) optional in geninput when using genunits.
 - Add option for `*_stdev` variables to geninput.
-- Pneumatic mode.
 - Get documentation done before sensitivity analysis.
     - Get sensitivity analysis done before UQ.
     - Get UQ done before optimization so that all optimization is robust for simplicity (no need to have both non-robust and robust optimization set up).
@@ -151,9 +166,6 @@
 - Upload Windows BlasterSim to malware scanner to check.
     - <https://www.virustotal.com/gui/home> (run by Google)
 - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
-- Valve opening time, valve poppet model using pressures from CVs
-    - Find what you saved on valve opening profiles/valve characteristic curves.
-    - Have ability to model valve internals by getting pressures from other control volumes? Then you could model the movement of poppets and whatnot. You'll need some way to handle the "valve profile" or whatever it's called: relationship between poppet location and flow cross-sectional area.
 - Time step estimate?
     - <https://www.spudfiles.com/viewtopic.php?p=391877#p391877>: > So I try to pick a time step intelligently. I first make a very crude guesstimate of muzzle energy. That gives me a (crude estimate of) muzzle velocity. I then assume constant acceleration and determine how long it would take a projectile to clear the muzzle.
     - Minimum of multiple time scales?

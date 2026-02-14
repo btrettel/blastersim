@@ -62,16 +62,16 @@ subroutine logical_true(tests, condition, message_in)
     
     character(len=TIMESTAMP_LEN)  :: timestamp
     character(len=7)              :: variable_type
-    logical                       :: test_passes, returned_logical, compared_logical
+    logical                       :: test_passes, returned_logical, expected_logical
     character(len=:), allocatable :: message
     
-    namelist /test_result/ timestamp, variable_type, test_passes, message, returned_logical, compared_logical
+    namelist /test_result/ timestamp, variable_type, test_passes, message, returned_logical, expected_logical
     
     timestamp        = now()
     variable_type    = "logical"
     message          = message_in
     returned_logical = condition
-    compared_logical = .true.
+    expected_logical = .true.
     
     test_passes = condition
     write(unit=tests%unit, nml=test_result)
@@ -103,16 +103,16 @@ subroutine logical_false(tests, condition, message_in)
     
     character(len=TIMESTAMP_LEN)  :: timestamp
     character(len=7)              :: variable_type
-    logical                       :: test_passes, returned_logical, compared_logical
+    logical                       :: test_passes, returned_logical, expected_logical
     character(len=:), allocatable :: message
     
-    namelist /test_result/ timestamp, variable_type, test_passes, message, returned_logical, compared_logical
+    namelist /test_result/ timestamp, variable_type, test_passes, message, returned_logical, expected_logical
     
     timestamp        = now()
     variable_type    = "logical"
     message          = message_in
     returned_logical = condition
-    compared_logical = .false.
+    expected_logical = .false.
     
     test_passes = .not. condition
     write(unit=tests%unit, nml=test_result)
@@ -132,7 +132,7 @@ subroutine logical_false(tests, condition, message_in)
     call assert(tests%n_failures <= tests%n_tests, "unittest (logical_false): number of failures exceeds number of tests")
 end subroutine logical_false
 
-subroutine real_eq(tests, returned_real, compared_real, message_in, abs_tol)
+subroutine real_eq(tests, returned_real, expected_real, message_in, abs_tol)
     ! Check whether two reals are close, increase `number_of_failures` if `.false.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
@@ -140,7 +140,7 @@ subroutine real_eq(tests, returned_real, compared_real, message_in, abs_tol)
     
     class(test_results_type), intent(in out) :: tests
     
-    real(WP), intent(in)         :: returned_real, compared_real
+    real(WP), intent(in)         :: returned_real, expected_real
     character(len=*), intent(in) :: message_in
     
     real(WP), intent(in), optional :: abs_tol
@@ -153,9 +153,9 @@ subroutine real_eq(tests, returned_real, compared_real, message_in, abs_tol)
     real(WP)                      :: tolerance, difference
     
     namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, &
-                            returned_real, compared_real, tolerance, difference
+                            returned_real, expected_real, tolerance, difference
     
-    difference = abs(returned_real - compared_real)
+    difference = abs(returned_real - expected_real)
     call assert(difference >= 0.0_WP, "unittest (real_eq): difference is negative")
     
     test_operator = "=="
@@ -164,11 +164,11 @@ subroutine real_eq(tests, returned_real, compared_real, message_in, abs_tol)
     message       = message_in
     
     if (present(abs_tol)) then
-        test_passes = is_close(returned_real, compared_real, abs_tol=abs_tol)
+        test_passes = is_close(returned_real, expected_real, abs_tol=abs_tol)
         tolerance = abs_tol
     else
-        test_passes = is_close(returned_real, compared_real)
-        tolerance = abs_tolerance(returned_real, compared_real)
+        test_passes = is_close(returned_real, expected_real)
+        tolerance = abs_tolerance(returned_real, expected_real)
     end if
     
     write(unit=tests%unit, nml=test_result)
@@ -178,13 +178,13 @@ subroutine real_eq(tests, returned_real, compared_real, message_in, abs_tol)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, g0.8)") "real returned = ", returned_real
-            write(unit=ERROR_UNIT, fmt="(a, g0.8)") "real expected = ", compared_real
+            write(unit=ERROR_UNIT, fmt="(a, g0.8)") "real expected = ", expected_real
             write(unit=ERROR_UNIT, fmt="(a, g0.8)") "    tolerance = ", tolerance
-            if (is_close(abs(compared_real), 0.0_WP)) then
+            if (is_close(abs(expected_real), 0.0_WP)) then
                 write(unit=ERROR_UNIT, fmt="(a, g0.8)") "   difference = ", difference
             else
                 write(unit=ERROR_UNIT, fmt="(a, g0.8, a, f0.3, a)") "   difference = ", difference, &
-                                                            " (", 100.0_WP * difference / abs(compared_real), "%)"
+                                                            " (", 100.0_WP * difference / abs(expected_real), "%)"
             end if
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
@@ -197,7 +197,7 @@ subroutine real_eq(tests, returned_real, compared_real, message_in, abs_tol)
     call assert(tests%n_failures <= tests%n_tests, "unittest (real_eq): number of failures exceeds number of tests")
 end subroutine real_eq
 
-subroutine real_ne(tests, returned_real, compared_real, message_in, abs_tol)
+subroutine real_ne(tests, returned_real, expected_real, message_in, abs_tol)
     ! Check whether two reals are not close, increase `number_of_failures` if `.true.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
@@ -205,7 +205,7 @@ subroutine real_ne(tests, returned_real, compared_real, message_in, abs_tol)
     
     class(test_results_type), intent(in out) :: tests
     
-    real(WP), intent(in)         :: returned_real, compared_real
+    real(WP), intent(in)         :: returned_real, expected_real
     character(len=*), intent(in) :: message_in
     
     real(WP), intent(in), optional :: abs_tol
@@ -218,9 +218,9 @@ subroutine real_ne(tests, returned_real, compared_real, message_in, abs_tol)
     real(WP)                      :: tolerance, difference
     
     namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, &
-                            returned_real, compared_real, tolerance, difference
+                            returned_real, expected_real, tolerance, difference
     
-    difference = abs(returned_real - compared_real)
+    difference = abs(returned_real - expected_real)
     call assert(difference >= 0.0_WP, "unittest (real_ne): difference is negative")
     
     test_operator = "/="
@@ -229,11 +229,11 @@ subroutine real_ne(tests, returned_real, compared_real, message_in, abs_tol)
     message       = message_in
     
     if (present(abs_tol)) then
-        test_passes = .not. is_close(returned_real, compared_real, abs_tol=abs_tol)
+        test_passes = .not. is_close(returned_real, expected_real, abs_tol=abs_tol)
         tolerance = abs_tol
     else
-        test_passes = .not. is_close(returned_real, compared_real)
-        tolerance = abs_tolerance(returned_real, compared_real)
+        test_passes = .not. is_close(returned_real, expected_real)
+        tolerance = abs_tolerance(returned_real, expected_real)
     end if
     
     write(unit=tests%unit, nml=test_result)
@@ -243,13 +243,13 @@ subroutine real_ne(tests, returned_real, compared_real, message_in, abs_tol)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, g0.8)") "real returned = ", returned_real
-            write(unit=ERROR_UNIT, fmt="(a, g0.8)") "      /= real = ", compared_real
+            write(unit=ERROR_UNIT, fmt="(a, g0.8)") "      /= real = ", expected_real
             write(unit=ERROR_UNIT, fmt="(a, g0.8)") "    tolerance = ", tolerance
-            if (is_close(abs(compared_real), 0.0_WP)) then
+            if (is_close(abs(expected_real), 0.0_WP)) then
                 write(unit=ERROR_UNIT, fmt="(a, g0.8)") "   difference = ", difference
             else
                 write(unit=ERROR_UNIT, fmt="(a, g0.8, a, f0.3, a)") "   difference = ", difference, &
-                                                            " (", 100.0_WP * difference / abs(compared_real), "%)"
+                                                            " (", 100.0_WP * difference / abs(expected_real), "%)"
             end if
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
@@ -262,14 +262,14 @@ subroutine real_ne(tests, returned_real, compared_real, message_in, abs_tol)
     call assert(tests%n_failures <= tests%n_tests, "unittest (real_ne): number of failures exceeds number of tests")
 end subroutine real_ne
 
-subroutine real_gt(tests, returned_real, compared_real, message_in)
-    ! Check whether `returned_real > compared_real`, increase `number_of_failures` if `.true.`.
+subroutine real_gt(tests, returned_real, expected_real, message_in)
+    ! Check whether `returned_real > expected_real`, increase `number_of_failures` if `.true.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     
     class(test_results_type), intent(in out) :: tests
     
-    real(WP), intent(in)         :: returned_real, compared_real
+    real(WP), intent(in)         :: returned_real, expected_real
     character(len=*), intent(in) :: message_in
     
     character(len=TIMESTAMP_LEN)  :: timestamp
@@ -279,14 +279,14 @@ subroutine real_gt(tests, returned_real, compared_real, message_in)
     character(len=:), allocatable :: message
     
     namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, &
-                            returned_real, compared_real
+                            returned_real, expected_real
     
     test_operator = ">"
     timestamp     = now()
     variable_type = "real"
     message       = message_in
     
-    test_passes = returned_real > compared_real
+    test_passes = returned_real > expected_real
     
     write(unit=tests%unit, nml=test_result)
     
@@ -295,7 +295,7 @@ subroutine real_gt(tests, returned_real, compared_real, message_in)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, g0.8)") "real returned = ", returned_real
-            write(unit=ERROR_UNIT, fmt="(a, g0.8)") "       > real = ", compared_real
+            write(unit=ERROR_UNIT, fmt="(a, g0.8)") "       > real = ", expected_real
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
     end if
@@ -307,14 +307,14 @@ subroutine real_gt(tests, returned_real, compared_real, message_in)
     call assert(tests%n_failures <= tests%n_tests, "unittest (real_gt): number of failures exceeds number of tests")
 end subroutine real_gt
 
-subroutine real_lt(tests, returned_real, compared_real, message_in)
-    ! Check whether `returned_real < compared_real`, increase `number_of_failures` if `.true.`.
+subroutine real_lt(tests, returned_real, expected_real, message_in)
+    ! Check whether `returned_real < expected_real`, increase `number_of_failures` if `.true.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     
     class(test_results_type), intent(in out) :: tests
     
-    real(WP), intent(in)         :: returned_real, compared_real
+    real(WP), intent(in)         :: returned_real, expected_real
     character(len=*), intent(in) :: message_in
     
     character(len=TIMESTAMP_LEN)  :: timestamp
@@ -324,14 +324,14 @@ subroutine real_lt(tests, returned_real, compared_real, message_in)
     character(len=:), allocatable :: message
     
     namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, &
-                            returned_real, compared_real
+                            returned_real, expected_real
     
     test_operator = "<"
     timestamp     = now()
     variable_type = "real"
     message       = message_in
     
-    test_passes = returned_real < compared_real
+    test_passes = returned_real < expected_real
     
     write(unit=tests%unit, nml=test_result)
     
@@ -340,7 +340,7 @@ subroutine real_lt(tests, returned_real, compared_real, message_in)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, g0.8)") "real returned = ", returned_real
-            write(unit=ERROR_UNIT, fmt="(a, g0.8)") "       < real = ", compared_real
+            write(unit=ERROR_UNIT, fmt="(a, g0.8)") "       < real = ", expected_real
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
     end if
@@ -352,14 +352,14 @@ subroutine real_lt(tests, returned_real, compared_real, message_in)
     call assert(tests%n_failures <= tests%n_tests, "unittest (real_lt): number of failures exceeds number of tests")
 end subroutine real_lt
 
-subroutine real_ge(tests, returned_real, compared_real, message_in)
-    ! Check whether `returned_real >= compared_real`, increase `number_of_failures` if `.true.`.
+subroutine real_ge(tests, returned_real, expected_real, message_in)
+    ! Check whether `returned_real >= expected_real`, increase `number_of_failures` if `.true.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     
     class(test_results_type), intent(in out) :: tests
     
-    real(WP), intent(in)         :: returned_real, compared_real
+    real(WP), intent(in)         :: returned_real, expected_real
     character(len=*), intent(in) :: message_in
     
     character(len=TIMESTAMP_LEN)  :: timestamp
@@ -369,14 +369,14 @@ subroutine real_ge(tests, returned_real, compared_real, message_in)
     character(len=:), allocatable :: message
     
     namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, &
-                            returned_real, compared_real
+                            returned_real, expected_real
     
     test_operator = ">="
     timestamp     = now()
     variable_type = "real"
     message       = message_in
     
-    test_passes = returned_real >= compared_real
+    test_passes = returned_real >= expected_real
     
     write(unit=tests%unit, nml=test_result)
     
@@ -385,7 +385,7 @@ subroutine real_ge(tests, returned_real, compared_real, message_in)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, g0.8)") "real returned = ", returned_real
-            write(unit=ERROR_UNIT, fmt="(a, g0.8)") "      >= real = ", compared_real
+            write(unit=ERROR_UNIT, fmt="(a, g0.8)") "      >= real = ", expected_real
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
     end if
@@ -397,14 +397,14 @@ subroutine real_ge(tests, returned_real, compared_real, message_in)
     call assert(tests%n_failures <= tests%n_tests, "unittest (real_ge): number of failures exceeds number of tests")
 end subroutine real_ge
 
-subroutine real_le(tests, returned_real, compared_real, message_in)
-    ! Check whether `returned_real <= compared_real`, increase `number_of_failures` if `.true.`.
+subroutine real_le(tests, returned_real, expected_real, message_in)
+    ! Check whether `returned_real <= expected_real`, increase `number_of_failures` if `.true.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     
     class(test_results_type), intent(in out) :: tests
     
-    real(WP), intent(in)         :: returned_real, compared_real
+    real(WP), intent(in)         :: returned_real, expected_real
     character(len=*), intent(in) :: message_in
     
     character(len=TIMESTAMP_LEN)  :: timestamp
@@ -414,14 +414,14 @@ subroutine real_le(tests, returned_real, compared_real, message_in)
     character(len=:), allocatable :: message
     
     namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, &
-                            returned_real, compared_real
+                            returned_real, expected_real
     
     test_operator = "<="
     timestamp     = now()
     variable_type = "real"
     message       = message_in
     
-    test_passes = returned_real <= compared_real
+    test_passes = returned_real <= expected_real
     
     write(unit=tests%unit, nml=test_result)
     
@@ -430,7 +430,7 @@ subroutine real_le(tests, returned_real, compared_real, message_in)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, g0.8)") "real returned = ", returned_real
-            write(unit=ERROR_UNIT, fmt="(a, g0.8)") "      >= real = ", compared_real
+            write(unit=ERROR_UNIT, fmt="(a, g0.8)") "      >= real = ", expected_real
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
     end if
@@ -442,14 +442,14 @@ subroutine real_le(tests, returned_real, compared_real, message_in)
     call assert(tests%n_failures <= tests%n_tests, "unittest (real_le): number of failures exceeds number of tests")
 end subroutine real_le
 
-subroutine integer5_eq(tests, returned_integer, compared_integer, message_in)
+subroutine integer5_eq(tests, returned_integer, expected_integer, message_in)
     ! Check whether two integers are identical, increase `number_of_failures` if `.false.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     
     class(test_results_type), intent(in out) :: tests
     
-    integer, intent(in)          :: returned_integer, compared_integer
+    integer, intent(in)          :: returned_integer, expected_integer
     character(len=*), intent(in) :: message_in
     
     character(len=TIMESTAMP_LEN)  :: timestamp
@@ -458,14 +458,14 @@ subroutine integer5_eq(tests, returned_integer, compared_integer, message_in)
     logical                       :: test_passes
     character(len=:), allocatable :: message
     
-    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, compared_integer
+    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, expected_integer
     
     timestamp     = now()
     variable_type = "integer"
     message       = message_in
     test_operator = "=="
     
-    test_passes = (returned_integer == compared_integer)
+    test_passes = (returned_integer == expected_integer)
     write(unit=tests%unit, nml=test_result)
     
     if (.not. test_passes) then
@@ -473,8 +473,8 @@ subroutine integer5_eq(tests, returned_integer, compared_integer, message_in)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, i7)") "integer returned = ", returned_integer
-            write(unit=ERROR_UNIT, fmt="(a, i7)") "integer expected = ", compared_integer
-            write(unit=ERROR_UNIT, fmt="(a, i7)") "      difference = ", abs(returned_integer - compared_integer)
+            write(unit=ERROR_UNIT, fmt="(a, i7)") "integer expected = ", expected_integer
+            write(unit=ERROR_UNIT, fmt="(a, i7)") "      difference = ", abs(returned_integer - expected_integer)
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
     end if
@@ -486,7 +486,7 @@ subroutine integer5_eq(tests, returned_integer, compared_integer, message_in)
     call assert(tests%n_failures <= tests%n_tests, "unittest (integer5_eq): number of failures exceeds number of tests")
 end subroutine integer5_eq
 
-subroutine integer10_eq(tests, returned_integer, compared_integer, message_in)
+subroutine integer10_eq(tests, returned_integer, expected_integer, message_in)
     ! Check whether two integers are identical, increase `number_of_failures` if `.false.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
@@ -494,7 +494,7 @@ subroutine integer10_eq(tests, returned_integer, compared_integer, message_in)
     
     class(test_results_type), intent(in out) :: tests
     
-    integer(I10), intent(in)     :: returned_integer, compared_integer
+    integer(I10), intent(in)     :: returned_integer, expected_integer
     character(len=*), intent(in) :: message_in
     
     character(len=TIMESTAMP_LEN)  :: timestamp
@@ -503,14 +503,14 @@ subroutine integer10_eq(tests, returned_integer, compared_integer, message_in)
     logical                       :: test_passes
     character(len=:), allocatable :: message
     
-    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, compared_integer
+    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, expected_integer
     
     timestamp     = now()
     variable_type = "integer"
     message       = message_in
     test_operator = "=="
     
-    test_passes = (returned_integer == compared_integer)
+    test_passes = (returned_integer == expected_integer)
     write(unit=tests%unit, nml=test_result)
     
     if (.not. test_passes) then
@@ -518,8 +518,8 @@ subroutine integer10_eq(tests, returned_integer, compared_integer, message_in)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, i11)") "integer returned = ", returned_integer
-            write(unit=ERROR_UNIT, fmt="(a, i11)") "integer expected = ", compared_integer
-            write(unit=ERROR_UNIT, fmt="(a, i11)") "      difference = ", abs(returned_integer - compared_integer)
+            write(unit=ERROR_UNIT, fmt="(a, i11)") "integer expected = ", expected_integer
+            write(unit=ERROR_UNIT, fmt="(a, i11)") "      difference = ", abs(returned_integer - expected_integer)
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
     end if
@@ -531,14 +531,14 @@ subroutine integer10_eq(tests, returned_integer, compared_integer, message_in)
     call assert(tests%n_failures <= tests%n_tests, "unittest (integer10_eq): number of failures exceeds number of tests")
 end subroutine integer10_eq
 
-subroutine integer_ne(tests, returned_integer, compared_integer, message_in)
-    ! Check whether `returned_integer` equal than `compared_integer`, increase `number_of_failures` if `.true.`.
+subroutine integer_ne(tests, returned_integer, expected_integer, message_in)
+    ! Check whether `returned_integer` equal than `expected_integer`, increase `number_of_failures` if `.true.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     
     class(test_results_type), intent(in out) :: tests
     
-    integer, intent(in)          :: returned_integer, compared_integer
+    integer, intent(in)          :: returned_integer, expected_integer
     character(len=*), intent(in) :: message_in
     
     logical :: test_passes
@@ -548,14 +548,14 @@ subroutine integer_ne(tests, returned_integer, compared_integer, message_in)
     character(len=2)              :: test_operator
     character(len=:), allocatable :: message
     
-    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, compared_integer
+    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, expected_integer
     
     timestamp     = now()
     variable_type = "integer"
     test_operator = "/="
     message       = message_in
     
-    test_passes = (returned_integer /= compared_integer)
+    test_passes = (returned_integer /= expected_integer)
     write(unit=tests%unit, nml=test_result)
     
     if (.not. test_passes) then
@@ -563,7 +563,7 @@ subroutine integer_ne(tests, returned_integer, compared_integer, message_in)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, i7)") "integer returned = ", returned_integer
-            write(unit=ERROR_UNIT, fmt="(a, i7)") "      /= integer = ", compared_integer
+            write(unit=ERROR_UNIT, fmt="(a, i7)") "      /= integer = ", expected_integer
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
     end if
@@ -575,14 +575,14 @@ subroutine integer_ne(tests, returned_integer, compared_integer, message_in)
     call assert(tests%n_failures <= tests%n_tests, "unittest (integer_ne): number of failures exceeds number of tests")
 end subroutine integer_ne
 
-subroutine integer5_ge(tests, returned_integer, compared_integer, message_in)
-    ! Check whether `returned_integer >= compared_integer`, increase `number_of_failures` if `.false.`.
+subroutine integer5_ge(tests, returned_integer, expected_integer, message_in)
+    ! Check whether `returned_integer >= expected_integer`, increase `number_of_failures` if `.false.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     
     class(test_results_type), intent(in out) :: tests
     
-    integer, intent(in)          :: returned_integer, compared_integer
+    integer, intent(in)          :: returned_integer, expected_integer
     character(len=*), intent(in) :: message_in
     
     logical :: test_passes
@@ -592,14 +592,14 @@ subroutine integer5_ge(tests, returned_integer, compared_integer, message_in)
     character(len=2)              :: test_operator
     character(len=:), allocatable :: message
     
-    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, compared_integer
+    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, expected_integer
     
     timestamp     = now()
     variable_type = "integer"
     test_operator = ">="
     message       = message_in
     
-    test_passes = (returned_integer >= compared_integer)
+    test_passes = (returned_integer >= expected_integer)
     write(unit=tests%unit, nml=test_result)
     
     if (.not. test_passes) then
@@ -607,7 +607,7 @@ subroutine integer5_ge(tests, returned_integer, compared_integer, message_in)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, i7)") "integer returned = ", returned_integer
-            write(unit=ERROR_UNIT, fmt="(a, i7)") "      >= integer = ", compared_integer
+            write(unit=ERROR_UNIT, fmt="(a, i7)") "      >= integer = ", expected_integer
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
     end if
@@ -619,15 +619,15 @@ subroutine integer5_ge(tests, returned_integer, compared_integer, message_in)
     call assert(tests%n_failures <= tests%n_tests, "unittest (integer5_ge): number of failures exceeds number of tests")
 end subroutine integer5_ge
 
-subroutine integer10_ge(tests, returned_integer, compared_integer, message_in)
-    ! Check whether `returned_integer >= compared_integer`, increase `number_of_failures` if `.false.`.
+subroutine integer10_ge(tests, returned_integer, expected_integer, message_in)
+    ! Check whether `returned_integer >= expected_integer`, increase `number_of_failures` if `.false.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     use prec, only: I10
     
     class(test_results_type), intent(in out) :: tests
     
-    integer(I10), intent(in)     :: returned_integer, compared_integer
+    integer(I10), intent(in)     :: returned_integer, expected_integer
     character(len=*), intent(in) :: message_in
     
     logical :: test_passes
@@ -637,14 +637,14 @@ subroutine integer10_ge(tests, returned_integer, compared_integer, message_in)
     character(len=2)              :: test_operator
     character(len=:), allocatable :: message
     
-    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, compared_integer
+    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, expected_integer
     
     timestamp     = now()
     variable_type = "integer"
     test_operator = ">="
     message       = message_in
     
-    test_passes = (returned_integer >= compared_integer)
+    test_passes = (returned_integer >= expected_integer)
     write(unit=tests%unit, nml=test_result)
     
     if (.not. test_passes) then
@@ -652,7 +652,7 @@ subroutine integer10_ge(tests, returned_integer, compared_integer, message_in)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, i11)") "integer returned = ", returned_integer
-            write(unit=ERROR_UNIT, fmt="(a, i11)") "      >= integer = ", compared_integer
+            write(unit=ERROR_UNIT, fmt="(a, i11)") "      >= integer = ", expected_integer
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
     end if
@@ -664,14 +664,14 @@ subroutine integer10_ge(tests, returned_integer, compared_integer, message_in)
     call assert(tests%n_failures <= tests%n_tests, "unittest (integer10_ge): number of failures exceeds number of tests")
 end subroutine integer10_ge
 
-subroutine integer5_le(tests, returned_integer, compared_integer, message_in)
-    ! Check whether `returned_integer <= compared_integer`, increase `number_of_failures` if `.false.`.
+subroutine integer5_le(tests, returned_integer, expected_integer, message_in)
+    ! Check whether `returned_integer <= expected_integer`, increase `number_of_failures` if `.false.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     
     class(test_results_type), intent(in out) :: tests
     
-    integer, intent(in)          :: returned_integer, compared_integer
+    integer, intent(in)          :: returned_integer, expected_integer
     character(len=*), intent(in) :: message_in
     
     logical :: test_passes
@@ -681,14 +681,14 @@ subroutine integer5_le(tests, returned_integer, compared_integer, message_in)
     character(len=2)              :: test_operator
     character(len=:), allocatable :: message
     
-    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, compared_integer
+    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, expected_integer
     
     timestamp     = now()
     variable_type = "integer"
     test_operator = "<="
     message       = message_in
     
-    test_passes = (returned_integer <= compared_integer)
+    test_passes = (returned_integer <= expected_integer)
     write(unit=tests%unit, nml=test_result)
     
     if (.not. test_passes) then
@@ -696,7 +696,7 @@ subroutine integer5_le(tests, returned_integer, compared_integer, message_in)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, i7)") "integer returned = ", returned_integer
-            write(unit=ERROR_UNIT, fmt="(a, i7)") "      <= integer = ", compared_integer
+            write(unit=ERROR_UNIT, fmt="(a, i7)") "      <= integer = ", expected_integer
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
     end if
@@ -708,15 +708,15 @@ subroutine integer5_le(tests, returned_integer, compared_integer, message_in)
     call assert(tests%n_failures <= tests%n_tests, "unittest (integer5_le): number of failures exceeds number of tests")
 end subroutine integer5_le
 
-subroutine integer10_le(tests, returned_integer, compared_integer, message_in)
-    ! Check whether `returned_integer <= compared_integer`, increase `number_of_failures` if `.false.`.
+subroutine integer10_le(tests, returned_integer, expected_integer, message_in)
+    ! Check whether `returned_integer <= expected_integer`, increase `number_of_failures` if `.false.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     use prec, only: I10
     
     class(test_results_type), intent(in out) :: tests
     
-    integer(I10), intent(in)     :: returned_integer, compared_integer
+    integer(I10), intent(in)     :: returned_integer, expected_integer
     character(len=*), intent(in) :: message_in
     
     logical :: test_passes
@@ -726,14 +726,14 @@ subroutine integer10_le(tests, returned_integer, compared_integer, message_in)
     character(len=2)              :: test_operator
     character(len=:), allocatable :: message
     
-    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, compared_integer
+    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_integer, expected_integer
     
     timestamp     = now()
     variable_type = "integer"
     test_operator = "<="
     message       = message_in
     
-    test_passes = (returned_integer <= compared_integer)
+    test_passes = (returned_integer <= expected_integer)
     write(unit=tests%unit, nml=test_result)
     
     if (.not. test_passes) then
@@ -741,7 +741,7 @@ subroutine integer10_le(tests, returned_integer, compared_integer, message_in)
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a, i7)") "integer returned = ", returned_integer
-            write(unit=ERROR_UNIT, fmt="(a, i7)") "      <= integer = ", compared_integer
+            write(unit=ERROR_UNIT, fmt="(a, i7)") "      <= integer = ", expected_integer
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
     end if
@@ -753,14 +753,14 @@ subroutine integer10_le(tests, returned_integer, compared_integer, message_in)
     call assert(tests%n_failures <= tests%n_tests, "unittest (integer10_le): number of failures exceeds number of tests")
 end subroutine integer10_le
 
-subroutine character_eq(tests, returned_character_in, compared_character_in, message_in)
+subroutine character_eq(tests, returned_character_in, expected_character_in, message_in)
     ! Check whether two character variables are identical, increase `number_of_failures` if `.false.`.
     
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     
     class(test_results_type), intent(in out) :: tests
     
-    character(len=*), intent(in) :: returned_character_in, compared_character_in
+    character(len=*), intent(in) :: returned_character_in, expected_character_in
     character(len=*), intent(in) :: message_in
     
     logical :: test_passes
@@ -768,21 +768,21 @@ subroutine character_eq(tests, returned_character_in, compared_character_in, mes
     character(len=TIMESTAMP_LEN)  :: timestamp
     character(len=9)              :: variable_type
     character(len=2)              :: test_operator
-    character(len=:), allocatable :: message, returned_character, compared_character
+    character(len=:), allocatable :: message, returned_character, expected_character
     
-    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_character, compared_character
+    namelist /test_result/ timestamp, variable_type, test_operator, test_passes, message, returned_character, expected_character
     
     timestamp          = now()
     variable_type      = "character"
     test_operator      = "=="
     message            = message_in
     returned_character = trim(returned_character_in)
-    compared_character = trim(compared_character_in)
+    expected_character = trim(expected_character_in)
     
     ! It's not clear to me why `returned_character` needs to be trimmed.
     ! The namelist file will have a lot of spaces otherwise.
     
-    test_passes = (trim(returned_character) == trim(compared_character))
+    test_passes = (trim(returned_character) == trim(expected_character))
     write(unit=tests%unit, nml=test_result)
     
     if (.not. test_passes) then
@@ -790,7 +790,7 @@ subroutine character_eq(tests, returned_character_in, compared_character_in, mes
         
         if (tests%stdout) then
             write(unit=ERROR_UNIT, fmt="(a)") "character returned = " // returned_character
-            write(unit=ERROR_UNIT, fmt="(a)") "character expected = " // compared_character
+            write(unit=ERROR_UNIT, fmt="(a)") "character expected = " // expected_character
             write(unit=ERROR_UNIT, fmt="(a, a, a)") "fail: ", message, new_line("a")
         end if
     end if
@@ -963,9 +963,9 @@ subroutine validate_timestamp(tests, timestamp, message)
     call assert(tests%n_failures <= tests%n_tests, "unittest (validate_timestamp): number of failures exceeds number of tests")
 end subroutine validate_timestamp
 
-subroutine exit_code_eq(tests, command, compared_exit_code, message, output_file, keep_file)
+subroutine exit_code_eq(tests, command, expected_exit_code, message, output_file, keep_file)
     class(test_results_type), intent(in out) :: tests
-    integer, intent(in)                      :: compared_exit_code
+    integer, intent(in)                      :: expected_exit_code
     character(len=*), intent(in)             :: command, message, output_file
     logical, intent(in), optional            :: keep_file
     
@@ -981,11 +981,11 @@ subroutine exit_code_eq(tests, command, compared_exit_code, message, output_file
     ! TODO: this would need to be updated for Windows as I'd add .exe to the executable filename there.
     ! TODO: tests also assumes Bash.
     call execute_command_line(command // " 2> " // output_file, exitstat=rc_fail)
-    call tests%integer_eq(rc_fail, compared_exit_code, message)
+    call tests%integer_eq(rc_fail, expected_exit_code, message)
 
     if (.not. keep_file_) then
         ! Delete output file if test succeeded, otherwise keep it for examination.
-        if (rc_fail == compared_exit_code) then
+        if (rc_fail == expected_exit_code) then
             open(newunit=failure_unit, file=output_file, status="old", action="read")
             close(unit=failure_unit, status="delete")
         end if
@@ -996,9 +996,9 @@ subroutine exit_code_eq(tests, command, compared_exit_code, message, output_file
     call assert(tests%n_failures <= tests%n_tests, "unittest (exit_code_eq): number of failures exceeds number of tests")
 end subroutine exit_code_eq
 
-subroutine exit_code_ne(tests, command, compared_exit_code, message, output_file, keep_file)
+subroutine exit_code_ne(tests, command, expected_exit_code, message, output_file, keep_file)
     class(test_results_type), intent(in out) :: tests
-    integer, intent(in)                      :: compared_exit_code
+    integer, intent(in)                      :: expected_exit_code
     character(len=*), intent(in)             :: command, message, output_file
     logical, intent(in), optional            :: keep_file
     
@@ -1014,11 +1014,11 @@ subroutine exit_code_ne(tests, command, compared_exit_code, message, output_file
     ! TODO: this would need to be updated for Windows as I'd add .exe to the executable filename there.
     ! TODO: tests also assumes Bash.
     call execute_command_line(command // " 2> " // output_file, exitstat=rc_fail)
-    call tests%integer_ne(rc_fail, compared_exit_code, message)
+    call tests%integer_ne(rc_fail, expected_exit_code, message)
 
     if (.not. keep_file_) then
         ! Delete output file if test succeeded, otherwise keep it for examination.
-        if (rc_fail /= compared_exit_code) then
+        if (rc_fail /= expected_exit_code) then
             open(newunit=failure_unit, file=output_file, status="old", action="read")
             close(unit=failure_unit, status="delete")
         end if

@@ -53,7 +53,7 @@ docs$(DIR_SEP)$(TEX_KEY).pdf docs$(DIR_SEP)$(TEX_KEY).log: docs$(DIR_SEP)$(TEX_K
 	-$(GREP) "$(BL)Rerun$(BR)" docs$(DIR_SEP)$(TEX_KEY).blg
 	-$(GREP) "$(BL)Warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).blg
 
-# ChkTeX doesn't handle `\input` macros correctly unless it's in the same directory as the TeX files.
+# ChkTeX doesn't handle `\input` macros correctly unless it's in the same directory as the TeX files. The `TeXInputs` options of ChkTeX seems to use only absolute directory, so that's not a workaround.
 docs$(DIR_SEP)$(TEX_KEY).bbl: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS)
 	$(LOOP_START) docs$(DIR_SEP)$(TEX_KEY).tex $(SPELL_DEPS) $(LOOP_MIDDLE) $(SPELL_TEX) $(LOOP_END)
 	cd docs && chktex --localrc chktexrc $(TEX_KEY).tex
@@ -80,8 +80,8 @@ docs$(DIR_SEP)test_exact.tex: test_exact.tex
 docs$(DIR_SEP)geninput_springer.tex: src$(DIR_SEP)geninput_springer.tex
 	$(CP) src$(DIR_SEP)geninput_springer.tex docs$(DIR_SEP)geninput_springer.tex
 
-docs$(DIR_SEP)springer-example.nml: test$(DIR_SEP)test_read_springer_namelist.nml
-	$(CP) test$(DIR_SEP)test_read_springer_namelist.nml docs$(DIR_SEP)springer-example.nml
+docs$(DIR_SEP)springer-example.nml: examples$(DIR_SEP)springer-example.nml
+	$(CP) examples$(DIR_SEP)springer-example.nml docs$(DIR_SEP)springer-example.nml
 
 docs$(DIR_SEP)defaults.tex: defaults.tex
 	$(CP) defaults.tex docs$(DIR_SEP)defaults.tex
