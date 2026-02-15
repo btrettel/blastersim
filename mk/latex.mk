@@ -9,6 +9,7 @@ docs$(DIR_SEP)exact-solution-figure.tex
 
 TEX_GEN = docs$(DIR_SEP)rev.tex \
 docs$(DIR_SEP)test_exact.tex \
+docs$(DIR_SEP)geninput_pneumatic.tex \
 docs$(DIR_SEP)geninput_springer.tex \
 docs$(DIR_SEP)springer-example.nml \
 docs$(DIR_SEP)blastersim-out-1.txt \
@@ -77,6 +78,9 @@ docs$(DIR_SEP)rev.tex: rev.tex
 
 docs$(DIR_SEP)test_exact.tex: test_exact.tex
 	$(CP) test_exact.tex docs$(DIR_SEP)test_exact.tex
+
+docs$(DIR_SEP)geninput_pneumatic.tex: src$(DIR_SEP)geninput_pneumatic.tex
+	$(CP) src$(DIR_SEP)geninput_pneumatic.tex docs$(DIR_SEP)geninput_pneumatic.tex
 
 docs$(DIR_SEP)geninput_springer.tex: src$(DIR_SEP)geninput_springer.tex
 	$(CP) src$(DIR_SEP)geninput_springer.tex docs$(DIR_SEP)geninput_springer.tex

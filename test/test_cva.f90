@@ -2226,6 +2226,7 @@ subroutine test_check_sys(tests)
     ! TODO: `E_F_BLOW_UP_RUN_RC`
 end subroutine test_check_sys
 
+!tripwire$ begin B25459DB Update `\secref{exact-solution}` of verval.tex when changing the exact solution test if necessary.
 pure function exact_x_dot(sys_0, x)
     use checks, only: assert, is_close
     use cva, only: IDEAL_EOS, CONST_EOS, NORMAL_CV_TYPE, MIRROR_CV_TYPE, cv_system_type
@@ -2411,5 +2412,6 @@ subroutine test_exact(tests)
     write(unit=tex_unit, fmt="(a, f5.3, a)") "\newcommand*{\xdotorder}{", p(1), "}"
     close(tex_unit)
 end subroutine test_exact
+!tripwire$ end
 
 end program test_cva

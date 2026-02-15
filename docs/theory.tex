@@ -65,6 +65,13 @@
 \subsection{Valve opening model}\label{valve-opening-model}
 % TODO
 
+\begin{align}
+    \alpha_{i \rightarrow j} &= \alpha_{0,i \rightarrow j}
+    + \dot{\alpha}_{0,i \rightarrow j} \, \left(\frac{t}{t_{\text{opening},i \rightarrow j}}\right) \nonumber \\
+    &\qquad+ (3 - 3 \alpha_{0,i \rightarrow j} - 2 \dot{\alpha}_{0,i \rightarrow j}) \, {\left(\frac{t}{t_{\text{opening},i \rightarrow j}}\right)}^2 \nonumber \\
+    &\qquad - (2 - 2 \alpha_{0,i \rightarrow j} - \dot{\alpha}_{0,i \rightarrow j}) \, {\left(\frac{t}{t_{\text{opening},i \rightarrow j}}\right)}^3
+\end{align}
+
 \subsection{Projectile and plunger equations of motion}\label{equations-of-motion}
 % TODO
 

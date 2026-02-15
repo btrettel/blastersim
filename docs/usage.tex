@@ -153,6 +153,21 @@ Support for other unit systems is not planned due to the complexity of supportin
 Scientific notation can be used to appropriately scale inputs.
 For example, instead of 13 mm being written as \texttt{0.013}, the user can write \texttt{13.0e-3}.
 
+\section{Pneumatic mode}\label{pneumatic}
+% TODO
+
+\subsection{\texttt{pneumatic} namelist group variables}\label{pneumatic-namelist}
+
+The following variables are in the pneumatic namelist group.
+If there is a corresponding typeset variable, the notation for that variable is also listed.
+
+\input{defaults.tex}
+\input{geninput_pneumatic.tex}
+
+\subsection{Example pneumatic input file}\label{pneumatic-example}
+% TODO: Add example
+% TODO: Go through file and explain what it means.
+
 \section{Springer mode}\label{springer}
 % TODO
 
@@ -168,23 +183,12 @@ The connection between the plunger tube and barrel can take any form.
 The following variables are in the springer namelist group.
 If there is a corresponding typeset variable, the notation for that variable is also listed.
 
-\input{defaults.tex}
 \input{geninput_springer.tex}
 
 \subsection{Example springer input file}\label{springer-example}
 % TODO: Go through file and explain what it means.
 
 \lstinputlisting{springer-example.nml}
-
-\section{Pneumatic mode}\label{pneumatic}
-% TODO
-
-\subsection{\texttt{pneumatic} namelist group variables}\label{pneumatic-namelist}
-%TODO
-
-\subsection{Example pneumatic input file}\label{pneumatic-example}
-% TODO: Add example
-% TODO: Go through file and explain what it means.
 
 \section{BlasterSim internal model}\label{internal-model}
 % TODO

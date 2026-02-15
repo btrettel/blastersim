@@ -14,6 +14,9 @@ depends: src$(DIR_SEP)units.f90
 src$(DIR_SEP)units.f90: src$(DIR_SEP)genunits.nml
 	genunits$(BINEXT) src$(DIR_SEP)genunits.nml
 
+src$(DIR_SEP)geninput_pneumatic.f90 src$(DIR_SEP)geninput_pneumatic.tex: src$(DIR_SEP)geninput_pneumatic.nml
+	geninput$(BINEXT) src$(DIR_SEP)geninput_pneumatic.nml
+
 src$(DIR_SEP)geninput_springer.f90 src$(DIR_SEP)geninput_springer.tex: src$(DIR_SEP)geninput_springer.nml
 	geninput$(BINEXT) src$(DIR_SEP)geninput_springer.nml
 

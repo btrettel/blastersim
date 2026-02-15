@@ -128,8 +128,11 @@ end type cv_delta_type
 ! theory.tex `\secref{valve-opening-model}`
 type, public :: con_type ! connection between control volumes
     logical        :: active
-    type(si_area)  :: a_e ! effective area
-    type(unitless) :: b   ! critical pressure ratio
+    type(si_area)  :: a_e         ! effective area
+    type(unitless) :: b           ! critical pressure ratio
+    type(si_time)  :: t_opening   ! valve opening time
+    type(unitless) :: alpha_0     ! valve opening fraction at time zero
+    type(unitless) :: alpha_0_dot ! valve opening rate at time zero
 contains
     procedure :: m_dot
 end type con_type
