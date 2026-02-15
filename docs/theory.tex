@@ -65,12 +65,56 @@
 \subsection{Valve opening model}\label{valve-opening-model}
 % TODO
 
+Valves do not open instantaneously, and sometimes slow opening has a significant impact on performance.
+BlasterSim models how far a valve is open with a prescribed valve opening model.
+$\alpha_{i \rightarrow j}$ is the valve opening fraction, which is how open the valve is.
+$\alpha_{i \rightarrow j} = 0$ is fully closed $\dot{m}_{i \rightarrow j} = 0$ and $\alpha_{i \rightarrow j} = 1$ is fully open.
+The specific equation BlasterSim uses is
 \begin{align}
-    \alpha_{i \rightarrow j} &= \alpha_{0,i \rightarrow j}
-    + \dot{\alpha}_{0,i \rightarrow j} \, \left(\frac{t}{t_{\text{opening},i \rightarrow j}}\right) \nonumber \\
-    &\qquad+ (3 - 3 \alpha_{0,i \rightarrow j} - 2 \dot{\alpha}_{0,i \rightarrow j}) \, {\left(\frac{t}{t_{\text{opening},i \rightarrow j}}\right)}^2 \nonumber \\
-    &\qquad - (2 - 2 \alpha_{0,i \rightarrow j} - \dot{\alpha}_{0,i \rightarrow j}) \, {\left(\frac{t}{t_{\text{opening},i \rightarrow j}}\right)}^3
+    \alpha_{i \rightarrow j} = \alpha_{0,i \rightarrow j}
+    &+ \dot{\alpha}_{0,i \rightarrow j} \, \left(\frac{t}{t_{\text{opening},i \rightarrow j}}\right) \nonumber \\
+    &+ (3 - 3 \alpha_{0,i \rightarrow j} - 2 \dot{\alpha}_{0,i \rightarrow j}) \, {\left(\frac{t}{t_{\text{opening},i \rightarrow j}}\right)}^2 \nonumber \\
+    &- (2 - 2 \alpha_{0,i \rightarrow j} - \dot{\alpha}_{0,i \rightarrow j}) \, {\left(\frac{t}{t_{\text{opening},i \rightarrow j}}\right)}^3,
 \end{align}
+for $t < t_{\text{opening},i \rightarrow j}$. For $t \geq t_{\text{opening},i \rightarrow j}$, $\alpha_{i \rightarrow j} = 1$.
+$\alpha_{0,i \rightarrow j}$ is the initial (time zero) valve opening fraction (useful when a valve isn't used like in a springer).
+$\dot{\alpha}_{0,i \rightarrow j}$ is the initial valve opening rate.
+$t_{\text{opening},i \rightarrow j}$ is the valve opening time, the time it takes for the valve to fully open (reach $\alpha_{i \rightarrow j} = 1$).
+
+This equation may seem overly complicated, but is the simplest polynomial equation that satisfies a few constraints:
+\begin{align}
+    \alpha_{i \rightarrow j}(0)                                            &= \alpha_{0,i \rightarrow j} \qquad \text{(set initial valve opening fraction)} \\
+    {\dv{\alpha_{i \rightarrow j}}{t}}(0)                                  &= \dot{\alpha}_{0,i \rightarrow j} \qquad \text{(set initial valve opening rate)} \\
+    \alpha_{i \rightarrow j}(t_{\text{opening},i \rightarrow j})           &= 1 \qquad \text{(valve is fully open at}~t_{\text{opening},i \rightarrow j}~\text{)} \\ % chktex 1 chktex 9
+    {\dv{\alpha_{i \rightarrow j}}{t}}(t_{\text{opening},i \rightarrow j}) &= 0 \qquad \text{(needed for automatic differentiation)}
+\end{align}
+
+When the valve is fully open, $\alpha_{i \rightarrow j}$ no longer changes with time, so its derivative is zero.
+Consequently, the last constraint listed is needed to match the derivative at $t = t_{\text{opening},i \rightarrow j}$, which is necessary for automatic differentiation.
+See \secref{autodiff} for more about automatic differentiation in BlasterSim.
+The last constraint prevents a simple linear model ($\alpha_{i \rightarrow j} = \alpha_{0,i \rightarrow j} + (1 - \alpha_{0,i \rightarrow j})\,t/t_{\text{opening},i \rightarrow j}$) from being used.
+
+Note that to ensure monotonicity of $\alpha_{i \rightarrow j}$ (in other words, avoid oscillations of the valve opening fraction), $\dot{\alpha}_{0,i \rightarrow j}$ must satisfy the inequality $0 \leq \dot{\alpha}_{0,i \rightarrow j} \leq 3 (1 - \alpha_{0,i \rightarrow j})$. % TODO: Double check this
+
+The pneumatic and springer cases will now be discussed, with the $i \rightarrow j$ subscript dropped for simplicity as there is only one flow restriction in both cases.
+
+For pneumatics, $\alpha_0 = 0$ and $\dot{\alpha}_0 = 1$.
+The second condition approximates a simple linear model.
+In the future $\dot{\alpha}_0$ may become an input parameter if deemed necessary to improve accuracy.
+The SpudFiles~Wiki~\cite{noauthor_opening_2008} gives some estimated opening times:
+\begin{itemize}
+\item Burst disks: likely under 1~ms
+\item Pilot-operated valves (like QEVs, ``back-pressure tanks'', ``cores''): 3--5~ms
+\item Ball valves: about 100~ms if hand activated
+\end{itemize}
+These values are recommended as starting points only.
+For modeling any particular blaster, it is better to try to independently determine the valve opening time through something like high speed video.
+
+For springers, $\alpha_0 = 1$ and $\dot{\alpha}_0 = 0$.
+As there is no valve in a springer, this simply sets the flow restriction to always be open.
+
+This simple valve opening model is most accurate for manually operated valves.
+More detailed modeling of pilot-operated valves could make determining the valve opening time unnecessary, but this alternative valve opening model has not yet been added to BlasterSim.
 
 \subsection{Projectile and plunger equations of motion}\label{equations-of-motion}
 % TODO

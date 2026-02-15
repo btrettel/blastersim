@@ -123,7 +123,7 @@ type :: cv_delta_type
     type(si_energy)            :: e_f   ! delta of energy lost to projectile/plunger friction in control volume
 end type cv_delta_type
 
-!tripwire$ begin 6F08D20F Update sections of docs listed in source when adding valve opening model using poppet motion.
+!tripwire$ begin 75CD9D0A Update sections of docs listed in source when adding valve opening model using poppet motion.
 ! usage.tex `\secref{pneumatic}`
 ! theory.tex `\secref{valve-opening-model}`
 type, public :: con_type ! connection between control volumes

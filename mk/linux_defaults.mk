@@ -11,7 +11,7 @@ CLEAN    = *.nml *.mod src$(DIR_SEP)*.$(OBJEXT) $(MISSED) src$(DIR_SEP)rev.f90 r
 CMP      = cmp
 PYTHON   = python3
 ARCH     = 
-GREP     = grep -n
+GREP     = grep -n -H
 CP       = cp
 
 LOOP_START  = for i in 
