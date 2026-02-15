@@ -64,9 +64,13 @@
     - LaTeXML issues:
         - `\lstinputlisting[breaklines=true]` doesn't wrap.
 - BlasterSim output
-    - Check acceleration to know if under-barreled or over-barreled.
+    - muzzle velocity
+    - muzzle energy
+    - kinetic energy density
+    - Check acceleration to know if under-barreled or over-barreled and print acceleration.
     - Explain the meaning of the return code if there is an error.
-    - efficiency
+    - efficiency (depends on mode)
+    - dwell time
 - Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion
     - New requirement: $p_\text{f0} \leq p_\text{fe}$ to avoid backwards motion.
 - Plunger head motion bounds (lower and upper) (plunger impact)
@@ -138,6 +142,7 @@
     - FAQ:
         - TODO: Collect comments making these points.
         - Accuracy of the simulation
+            - <https://discord.com/channels/825852031239061545/825852033898774543/1219837925534072852>: > It seems some people are quite keen on doing a proper CFD simulation of this but I must admit I'm skeptical of whether it would be useful.  Mostly because I'm not sure if it would have a significant gain in accuracy given the large statistical errors and other systematics that plague us. So it would be good to do a quantitative analysis on that
         - Answer complaints about units: Writing `2.0e-2` is nearly as easy as writing 2.0 cm
             - <https://www.reddit.com/r/nerfhomemades/comments/1p16zi8/interest_in_springer_physics_simulator/npoj6xa/>
             - <https://discord.com/channels/727038380054937610/1172390267890958366/1431436991752572968>
@@ -315,6 +320,25 @@
     - Distribution:
         - trettel.us
         - <https://blasterdownloads.com/are-you-foam-dart-blaster-designer/>
+- Maybe: Table comparing with Spudder's Design Tool
+    - Types of guns
+        - Spudder's Design Tool
+            - gas combustion
+            - pneumatic
+        - BlasterSim
+            - springers
+            - pneumatics
+    - Friction model
+        -Spudder's Design Tool
+            - static friction
+            - no dynamic friction
+        - BlasterSim
+            - static and dynamic friction
+    - Transonic correction
+    - Flow model
+    - Exterior ballistics
+    - Output
+    - Software engineering
 
 ***
 

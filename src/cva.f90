@@ -123,6 +123,9 @@ type :: cv_delta_type
     type(si_energy)            :: e_f   ! delta of energy lost to projectile/plunger friction in control volume
 end type cv_delta_type
 
+!tripwire$ begin 6F08D20F Update sections of docs listed in source when adding valve opening model using poppet motion.
+! usage.tex `\secref{pneumatic}`
+! theory.tex `\secref{valve-opening-model}`
 type, public :: con_type ! connection between control volumes
     logical        :: active
     type(si_area)  :: a_e ! effective area
@@ -130,6 +133,7 @@ type, public :: con_type ! connection between control volumes
 contains
     procedure :: m_dot
 end type con_type
+!tripwire$ end
 
 type, public :: cv_system_type
     type(cv_type), allocatable  :: cv(:)
@@ -857,6 +861,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     end select
 end subroutine set_const
 
+!tripwire$ begin 28F1DB4A Update `\secref{friction}` of theory.tex when changing `d_x_dot_d_t_normal` if necessary.
 pure function p_f(cv, p_fe)
     ! Returns pressure of friction.
     
@@ -926,6 +931,7 @@ pure function p_f0(cv, p_fe)
         end if
     end function p_f0_high
 end function p_f0
+!tripwire$ end
 
 pure function d_x_d_t(sys, i_cv)
     type(cv_system_type), intent(in) :: sys
@@ -999,6 +1005,7 @@ pure function d_x_dot_d_t(sys, i_cv)
     end select
 end function d_x_dot_d_t
 
+!tripwire$ begin 0D2F5ED8 Update `\secref{plunger-impact}` of theory.tex when changing `d_x_dot_d_t_normal` if necessary.
 pure function d_x_dot_d_t_normal(sys, i_cv)
     type(cv_system_type), intent(in) :: sys
     integer, intent(in)              :: i_cv
@@ -1034,6 +1041,7 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
     d_x_dot_d_t_normal = sys%cv(i_cv)%csa*r_mp_eff*(sys%cv(i_cv)%p() - p_mirror - sys%cv(i_cv)%p_f(p_fe)) &
                             - sys%cv(i_cv)%k*r_mp_eff*(sys%cv(i_cv)%x + sys%cv(i_cv)%l_pre)
 end function d_x_dot_d_t_normal
+!tripwire$ end
 
 pure function d_m_k_d_t(sys, m_dot, k_gas, i_cv)
     type(cv_system_type), intent(in)    :: sys
@@ -1859,6 +1867,7 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     t = t_old + dt_i
 end subroutine sys_interp
 
+!tripwire$ begin C4615087 Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
 subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     integer, intent(in)                           :: csv_unit
     type(cv_system_type), allocatable, intent(in) :: sys
@@ -2044,5 +2053,6 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
             error stop "cva (write_csv_row, rc): invalid row_type"
     end select
 end subroutine write_csv_row
+!tripwire$ end
 
 end module cva
