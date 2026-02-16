@@ -1248,41 +1248,82 @@ subroutine test_m_dot_4(tests)
 end subroutine test_m_dot_4
 
 subroutine test_alpha_m_dot(tests)
-    use cva, only: con_type
+    use cva, only: cv_type, con_type
     use checks, only: assert
+    use gasdata, only: DRY_AIR
     
     type(test_results_type), intent(in out) :: tests
     
     type(con_type) :: con
     type(si_time)  :: t
     type(unitless) :: alpha, alpha_expected
+    type(cv_type)  :: cv_from, cv_to
     
-    con%active = .false.
+    type(si_length)       :: x
+    type(si_velocity)     :: x_dot
+    type(unitless)        :: y(1)
+    type(si_pressure)     :: p_in, p_out
+    type(si_temperature)  :: temp
+    type(si_area)         :: csa
+    type(si_inverse_mass) :: rm_p
+    type(si_pressure)     :: p_fs, p_fd, p_atm
+    type(si_stiffness)    :: k
+    type(si_length)       :: l_pre
+    
+    type(si_mass_flow_rate) :: m_dot_con
+    
+    con%active = .true.
     call con%a_e%v%init_const(0.0_WP, 1)
     call con%b%v%init_const(0.0_WP, 1)
     call con%t_opening%v%init_const(5.0_WP, 1)
     call con%alpha_0%v%init_const(0.2_WP, 1)
     con%alpha_dot_0 = 2.0_WP*(1.0_WP - con%alpha_0) ! to set the cubic term to zero
-    call con%m_dot_0%v%init_const(0.0_WP, 1)
+    call con%m_dot_0%v%init_const(2.0_WP, 1)
+    
+    call x%v%init_const(1.0_WP, 1)
+    call x_dot%v%init_const(0.0_WP, 1)
+    call y(1)%v%init_const(1.0_WP, 1)
+    call p_in%v%init_const(20.0e5_WP, 1)
+    call p_out%v%init_const(2.0e5_WP, 1)
+    call temp%v%init_const(400.0_WP, 1)
+    call csa%v%init_const(1.0_WP, 1)
+    call rm_p%v%init_const(0.0_WP, 1)
+    call p_fs%v%init_const(0.0_WP, 1)
+    call p_fd%v%init_const(0.0_WP, 1)
+    call p_atm%v%init_const(1.0e5_WP, 1)
+    call k%v%init_const(0.0_WP, 1)
+    call l_pre%v%init_const(0.0_WP, 1)
+    
+    call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
+    call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     
     call assert(con%alpha_dot_0%v%v > 0.0_WP, "test_cva (test_alpha_m_dot): alpha_dot_0 > 0 violated")
     
     call t%v%init(0.0_WP, 1, 1)
-    alpha = con%alpha(t)
-    call tests%real_eq(alpha%v%v,    con%alpha_0%v%v,                       "alpha_m_dot, t = 0.0, value")
-    call tests%real_eq(alpha%v%d(1), con%alpha_dot_0%v%v/con%t_opening%v%v, "alpha_m_dot, t = 0.0, derivative")
+    alpha     = con%alpha(t)
+    m_dot_con = con%m_dot(t, cv_from, cv_to)
+    call tests%real_eq(alpha%v%v,     con%alpha_0%v%v,                       "alpha_m_dot, t = 0.0, value")
+    call tests%real_eq(alpha%v%d(1),  con%alpha_dot_0%v%v/con%t_opening%v%v, "alpha_m_dot, t = 0.0, derivative")
+    call tests%real_eq(m_dot_con%v%v, con%alpha_0%v%v*con%m_dot_0%v%v,       "alpha_m_dot, m_dot, t = 0.0")
     
     t = con%t_opening/2.0_WP
-    alpha = con%alpha(t)
+    alpha          = con%alpha(t)
     alpha_expected = con%alpha_0 + con%alpha_dot_0*(t/con%t_opening) &
                         + (3.0_WP - 3.0_WP*con%alpha_0 - 2.0_WP*con%alpha_dot_0)*square(t/con%t_opening)
+    m_dot_con      = con%m_dot(t, cv_from, cv_to)
     call tests%real_eq(alpha%v%v,    alpha_expected%v%v,    "alpha_m_dot, t = t_opening/2, value")
     call tests%real_eq(alpha%v%d(1), alpha_expected%v%d(1), "alpha_m_dot, t = t_opening/2, derivative")
+    call tests%real_gt(alpha%v%v,    0.0_WP, "alpha_m_dot, t = t_opening/2, value, lower bound")
+    call tests%real_lt(alpha%v%v,    1.0_WP, "alpha_m_dot, t = t_opening/2, value, upper bound")
+    call tests%real_eq(alpha%v%d(1), 0.0_WP, "alpha_m_dot, t = t_opening/2, derivative, lower bound")
+    call tests%real_eq(m_dot_con%v%v, alpha_expected%v%v*con%m_dot_0%v%v, "alpha_m_dot, m_dot, t = t_opening/2")
     
-    t = con%t_opening
-    alpha = con%alpha(t)
+    t         = con%t_opening
+    alpha     = con%alpha(t)
+    m_dot_con = con%m_dot(t, cv_from, cv_to)
     call tests%real_eq(alpha%v%v,    1.0_WP, "alpha_m_dot, t = t_opening, value")
     call tests%real_eq(alpha%v%d(1), 0.0_WP, "alpha_m_dot, t = t_opening, derivative")
+    call tests%real_eq(m_dot_con%v%v, con%m_dot_0%v%v, "alpha_m_dot, m_dot, t = t_opening")
 end subroutine test_alpha_m_dot
 
 subroutine test_calculate_flows(tests)
