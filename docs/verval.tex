@@ -20,12 +20,12 @@ The specific checks performed include:
     \item Whether the simulation ran for too long without the projectile leaving the barrel. (\texttt{run} subroutine return code 1) % chktex 12
     \item Whether a control volume has negative mass. (\texttt{run} subroutine return code 2) % chktex 12
     \item Whether a control volume has negative temperature. (\texttt{run} subroutine return code 3) % chktex 12
-    \item Whether the total system mass deviates from the starting mass by more than 0.001\%. (\texttt{run} subroutine return code 4) % chktex 12
-    \item Whether the total system energy deviates from the starting energy by more than 0.01\%. (\texttt{run} subroutine return code 5) % chktex 12
-    \item If automatic differentiation is used, whether any component of the gradient of the total system mass deviates by more than a set amount. (\texttt{run} subroutine return code 6) % chktex 12
-    \item If automatic differentiation is used, whether any component of the gradient of the total system energy deviates by more than a set amount. (\texttt{run} subroutine return code 7) % chktex 12
+    \item Whether the total system mass deviates from the starting mass by more than $\masstolerance$. (\texttt{run} subroutine return code 4) % chktex 12
+    \item Whether the total system energy deviates from the starting energy by more than $\energytolerance$. (\texttt{run} subroutine return code 5) % chktex 12
+    \item If automatic differentiation is used, whether any component of the gradient of the total system mass deviates by more than $\massderivtolerance$ (regardless of the units). (\texttt{run} subroutine return code 6) % chktex 12
+    \item If automatic differentiation is used, whether any component of the gradient of the total system energy deviates by more than $\energyderivtolerance$ (regardless of the units). (\texttt{run} subroutine return code 7) % chktex 12
     \item Whether the ideal gas equation of state has become inaccurate due to the pressure increasing above the critical pressure. (\texttt{run} subroutine return code 8) % chktex 12
-    \item Whether the coordinates of any plunger become desynchronized between control volumes on either side of the mentioned plunger. (\texttt{run} subroutine return code 9) % chktex 12
+    \item Whether the coordinates of any plunger become desynchronized between control volumes on either side of the mentioned plunger by more than $\mirrorxtolerance$~m. (\texttt{run} subroutine return code 9) % chktex 12
 \end{itemize}
 
 The thresholds used for these checks are arbitrary.

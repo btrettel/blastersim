@@ -1,7 +1,6 @@
 ### v0.2.0
 
 - Valve opening time
-    - Test `con%m_dot` with reduced `alpha`
     - Order-of-accuracy test for valve opening model as that includes time as a factor. This kills two birds with one stone by making this test order-of-accuracy of `m_dot` as well. Use `m_dot_0` with `a_e = 0`.
 - Pneumatic mode
     - geninput_pneumatic.nml
@@ -44,7 +43,6 @@
             - Include green and red coloring scheme.
             - Link to this file in the docs and README.md.
         - Check that all test descriptions are unique.
-    - Make the thresholds in section `run-time-checks` get the numbers from the BlasterSim source code via `write_defaults` in `test_cva`.
     - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.
     - Also refer to code in docs and link to GitHub.
     - Look at Zotero "BibTeX quality report" lines
@@ -304,6 +302,8 @@
     - [TeX4ht](https://www.tug.org/tex4ht/)
 - Test `d_m_k_d_t` with multiple gases.
 - Add valve poppet model using pressures from CVs. Have ability to model valve internals by getting pressures from a third control volume connected to the pilot valve. Then you could model the movement of poppets and whatnot. You'll need some way to handle the "valve profile" or whatever it's called: relationship between poppet location and flow cross-sectional area.
+    - `con%type = TIME_PROFILE`: use for human-actuated valves, burst disks, paths that are always open
+    - `con%type = POPPET_MOTION`: use for piloted valves, needs a third connection?
 - promotion
     - Post on:
         - r/nerf
