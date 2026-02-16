@@ -118,6 +118,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc)
     call sys%con(I_PLUNGER, I_BARREL)%t_opening%v%init_const(0.0_WP, 0)
     call sys%con(I_PLUNGER, I_BARREL)%alpha_0%v%init_const(1.0_WP, 0)
     call sys%con(I_PLUNGER, I_BARREL)%alpha_dot_0%v%init_const(0.0_WP, 0)
+    call sys%con(I_PLUNGER, I_BARREL)%m_dot_0%v%init_const(0.0_WP, 0)
     
     sys%con(I_BARREL, I_PLUNGER_ATM)%active = .false.
     sys%con(I_BARREL, I_BARREL_ATM)%active  = .false.

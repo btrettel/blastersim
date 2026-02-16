@@ -123,16 +123,17 @@ type :: cv_delta_type
     type(si_energy)            :: e_f   ! delta of energy lost to projectile/plunger friction in control volume
 end type cv_delta_type
 
-!tripwire$ begin 75CD9D0A Update sections of docs listed in source when adding valve opening model using poppet motion.
+!tripwire$ begin DF6234AB Update sections of docs listed in source when adding valve opening model using poppet motion.
 ! usage.tex `\secref{pneumatic}`
 ! theory.tex `\secref{valve-opening-model}`
 type, public :: con_type ! connection between control volumes
-    logical        :: active
-    type(si_area)  :: a_e         ! effective area
-    type(unitless) :: b           ! critical pressure ratio
-    type(si_time)  :: t_opening   ! valve opening time
-    type(unitless) :: alpha_0     ! valve opening fraction at time zero
-    type(unitless) :: alpha_dot_0 ! valve opening rate at time zero
+    logical                 :: active
+    type(si_area)           :: a_e         ! effective area
+    type(unitless)          :: b           ! critical pressure ratio
+    type(si_time)           :: t_opening   ! valve opening time
+    type(unitless)          :: alpha_0     ! valve opening fraction at time zero
+    type(unitless)          :: alpha_dot_0 ! valve opening rate at time zero
+    type(si_mass_flow_rate) :: m_dot_0     ! mass flow rate at zero pressure differential (for testing only)
 contains
     procedure :: m_dot
     procedure :: alpha => alpha_m_dot
@@ -1319,9 +1320,9 @@ pure function m_dot(con, t, cv_from, cv_to)
         call assert(p_r%v%v >= 0.0_WP, "cva (m_dot): p_r >= 0 violated", print_real=[p_r%v%v])
         call assert(p_r%v%v <= 1.0_WP, "cva (m_dot): p_r <= 1 violated", print_real=[p_r%v%v])
         
-        m_dot = con%alpha(t) * con%a_e * (cv_from%p() - g_m_dot(p_r) * cv_to%p()) &
+        m_dot = con%alpha(t) * (con%m_dot_0 + con%a_e * (cv_from%p() - g_m_dot(p_r) * cv_to%p()) &
                     * sqrt((1.0_WP - con%b) / (cv_from%r() * cv_from%temp())) &
-                    * sqrt(1.0_WP - f_m_dot(p_r, con%b))
+                    * sqrt(1.0_WP - f_m_dot(p_r, con%b)))
     else
         n_d = size(cv_from%x%v%d)
         call m_dot%v%init_const(0.0_WP, n_d)

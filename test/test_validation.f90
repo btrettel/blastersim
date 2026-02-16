@@ -90,6 +90,7 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_2_)
     call sys_start%con(2, 3)%t_opening%v%init_const(0.0_WP, 0)
     call sys_start%con(2, 3)%alpha_0%v%init_const(1.0_WP, 0)
     call sys_start%con(2, 3)%alpha_dot_0%v%init_const(0.0_WP, 0)
+    call sys_start%con(2, 3)%m_dot_0%v%init_const(0.0_WP, 0)
     
     sys_start%con(3, 1)%active = .false.
     sys_start%con(3, 2) = sys_start%con(2, 3)
@@ -340,6 +341,7 @@ subroutine test_tinkershot_1(tests)
     call sys_start%con(3, 4)%t_opening%v%init_const(0.0_WP, 0)
     call sys_start%con(3, 4)%alpha_0%v%init_const(1.0_WP, 0)
     call sys_start%con(3, 4)%alpha_dot_0%v%init_const(0.0_WP, 0)
+    call sys_start%con(3, 4)%m_dot_0%v%init_const(0.0_WP, 0)
     
     sys_start%con(4, 1)%active = .false.
     sys_start%con(4, 2)%active = .false.

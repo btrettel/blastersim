@@ -1018,6 +1018,7 @@ subroutine test_m_dot_1(tests)
     call con%t_opening%v%init_const(0.0_WP, 1)
     call con%alpha_0%v%init_const(1.0_WP, 1)
     call con%alpha_dot_0%v%init_const(0.0_WP, 1)
+    call con%m_dot_0%v%init_const(0.0_WP, 1)
     
     call x%v%init_const(0.5_WP, 1)
     call x_dot%v%init_const(0.5_WP, 1)
@@ -1082,6 +1083,7 @@ subroutine test_m_dot_2(tests)
     call con%t_opening%v%init_const(0.0_WP, 1)
     call con%alpha_0%v%init_const(1.0_WP, 1)
     call con%alpha_dot_0%v%init_const(0.0_WP, 1)
+    call con%m_dot_0%v%init_const(0.0_WP, 1)
     
     call p_r%v%init(0.5_WP*(P_RL + con%b%v%v), 1, 1)
     call assert(p_r%v%v < P_RL,      "test_cva (test_m_dot_2): p_r < P_RL violated")
@@ -1154,6 +1156,7 @@ subroutine test_m_dot_3(tests)
     call con%t_opening%v%init_const(0.0_WP, 1)
     call con%alpha_0%v%init_const(1.0_WP, 1)
     call con%alpha_dot_0%v%init_const(0.0_WP, 1)
+    call con%m_dot_0%v%init_const(0.0_WP, 1)
     
     call p_r%v%init(1.0e-6_WP, 1, 1)
     call assert(p_r%v%v < con%b%v%v, "test_cva (test_m_dot_3): p_r < b violated")
@@ -1218,6 +1221,7 @@ subroutine test_m_dot_4(tests)
     call con%t_opening%v%init_const(0.0_WP, 1)
     call con%alpha_0%v%init_const(1.0_WP, 1)
     call con%alpha_dot_0%v%init_const(0.0_WP, 1)
+    call con%m_dot_0%v%init_const(0.0_WP, 1)
     
     call x%v%init_const(0.5_WP, 1)
     call x_dot%v%init_const(0.5_WP, 1)
@@ -1282,6 +1286,7 @@ subroutine test_calculate_flows(tests)
     call sys%con(1, 2)%t_opening%v%init_const(0.0_WP, 0)
     call sys%con(1, 2)%alpha_0%v%init_const(1.0_WP, 0)
     call sys%con(1, 2)%alpha_dot_0%v%init_const(0.0_WP, 0)
+    call sys%con(1, 2)%m_dot_0%v%init_const(0.0_WP, 0)
     
     call p_r%v%init_const(1.0e-6_WP, 0)
     
@@ -1376,6 +1381,7 @@ subroutine test_conservation_1(tests)
     call sys_start%con(3, 4)%t_opening%v%init_const(0.0_WP, n_d)
     call sys_start%con(3, 4)%alpha_0%v%init_const(1.0_WP, n_d)
     call sys_start%con(3, 4)%alpha_dot_0%v%init_const(0.0_WP, n_d)
+    call sys_start%con(3, 4)%m_dot_0%v%init_const(0.0_WP, n_d)
     
     sys_start%con(4, 1)%active = .false.
     sys_start%con(4, 2)%active = .false.
@@ -1547,6 +1553,7 @@ subroutine test_conservation_2(tests)
     call sys_start%con(1, 2)%t_opening%v%init_const(0.0_WP, n_d)
     call sys_start%con(1, 2)%alpha_0%v%init_const(1.0_WP, n_d)
     call sys_start%con(1, 2)%alpha_dot_0%v%init_const(0.0_WP, n_d)
+    call sys_start%con(1, 2)%m_dot_0%v%init_const(0.0_WP, n_d)
     sys_start%con(2, 1)%active = .false.
     sys_start%con(2, 2)%active = .false.
     
