@@ -26,7 +26,7 @@ subroutine test_read_springer_namelist(tests)
     use prec, only: CL, PI
     use cva, only: cv_system_type, run_config_type
     use port, only: path_join
-    use io, only: read_springer_namelist
+    use io, only: I_BARREL, read_springer_namelist
     
     type(test_results_type), intent(in out) :: tests
     
@@ -35,7 +35,7 @@ subroutine test_read_springer_namelist(tests)
     type(run_config_type)             :: config
     integer                           :: rc
     
-    integer, parameter :: I_PLUNGER_ATM = 1, I_BARREL_ATM  = 2, I_PLUNGER = 3, I_BARREL = 4
+    integer, parameter :: I_PLUNGER = 2, I_BARREL_ATM  = 3, I_PLUNGER_ATM = 4
     
     type(si_length) :: d_barrel, d_e, d_plunger, l_travel
     type(si_volume) :: vol_dead

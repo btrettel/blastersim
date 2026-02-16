@@ -92,7 +92,7 @@ docs$(DIR_SEP)defaults.tex: defaults.tex
 # Spell checking all HTML files is commented out as it's hard to get aspell to skip code blocks.
 # It appears that I can skip by HTML tag: <http://aspell.net/man-html/The-Options.html>
 # I am checking the bibliography, however, as aspell won't check that in the TeX files as it's not in a TeX file.
-docs$(DIR_SEP)index.html: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS)
+docs$(DIR_SEP)index.html: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS) tripwire spell chktex
 	cd docs && latexmlc --strict --split --splitnaming=label --dest=index.html $(TEX_KEY).tex
 	#$(LOOP_START) docs$(DIR_SEP)*.html $(LOOP_MIDDLE) $(SPELL_HTML) $(LOOP_END)
 	$(SPELL_HTML) docs$(DIR_SEP)bib.html

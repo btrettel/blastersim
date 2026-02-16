@@ -7,10 +7,10 @@
 
 program blastersim
 
-use, intrinsic :: iso_fortran_env, only: ERROR_UNIT, OUTPUT_UNIT
+use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT, OUTPUT_UNIT
 use prec, only: CL
 use cli, only: get_input_file_name_from_cli
-use io, only: read_springer_namelist
+use io, only: I_BARREL, read_pneumatic_namelist, read_springer_namelist
 use cva, only: run_config_type, cv_system_type, run_status_type, SUCCESS_RUN_RC, run
 use stopcodes, only: EX_OK, EX_USAGE
 implicit none
@@ -25,14 +25,22 @@ extra = "<http://github.com/btrettel/blastersim/>" // new_line("a") // "Written 
 
 call get_input_file_name_from_cli("blastersim", input_file, extra=extra)
 
+call read_pneumatic_namelist(trim(input_file), sys_start, config, rc)
+if ((rc /= 0) .and. (rc /= IOSTAT_END)) stop EX_USAGE, quiet=.true.
+
 call read_springer_namelist(trim(input_file), sys_start, config, rc)
-if (rc /= 0) error stop
+if ((rc /= 0) .and. (rc /= IOSTAT_END)) stop EX_USAGE, quiet=.true.
+
+if (rc == IOSTAT_END) then
+    write(unit=ERROR_UNIT, fmt="(a)") "ERROR: Empty input file? No pneumatic or springer namelists detected."
+    stop EX_USAGE, quiet=.true.
+end if
 
 call run(config, sys_start, sys_end, status)
 
 if (status%rc == SUCCESS_RUN_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
-    write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(4)%x_dot%v%v, " m/s"
+    write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
     stop EX_OK, quiet=.true.
 else
     write(unit=ERROR_UNIT, fmt="(a, i0)") "ERROR: return code ", status%rc
