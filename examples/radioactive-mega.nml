@@ -1,0 +1,48 @@
+! <https://www.reddit.com/r/Nerf/comments/1bhgyin/modelling_nerf_blaster_physics/kvfxiaw/>
+! > 314 feet per second [95.7 m/s]
+
+! Same as this? <https://discord.com/channels/825852031239061545/949069013001068544/1470923475882475602>
+! > 294, 298, 307, 312, 309, 298, 307, 288, 294, 298, 314
+! > High: 314fps [95.7 m/s)
+! > Low: 288fps [87.8 m/s]
+! > Avg: 301.73fps [92.0 m/s]
+! > SD: 8.4509 [2.58 m/s]
+! > Count: 11
+
+&springer
+id = "radioactive-mega"
+
+! barrel
+d_barrel  = 19.7358e-3 ! m
+l_travel  = 596.1e-3   ! m (factoring in dead volume)
+m_proj    = 2.65e-3    ! kg
+p_fs_proj = 0.0        ! Pa
+p_fd_proj = 0.0        ! Pa
+
+! Dead space: 13.5763mm inner diameter, 203.2mm long, fits 13.5mm into the barrel (so take away a little barrel length).
+! Not exactly clear what this means. I assumed vol_dead in mm3 is (pi/4.0)*(13.5763**2)*203.2.
+vol_dead  = 2.9415514e-05 ! m3
+
+! plunger tube
+d_plunger    = 43.6e-3   ! m
+k            = 1110.3041 ! N/m (6.34 lbf/in)
+l_draw       = 140.0e-3  ! m
+m_plunger    = 19.03e-3  ! kg
+m_spring     = 89.76e-3  ! kg
+p_fs_plunger = 0.0       ! Pa
+p_fd_plunger = 0.0       ! Pa
+
+! spring natural length: 260.35mm
+! spring length when primed: 50.6mm
+! l_pre = l_spring - l_primed - l_head - l_draw
+! l_head is assumed to be 1 cm
+l_pre = 68.75e-3 ! m
+
+! flow restriction
+d_e = 7.2e-3 ! m (calibrated, 95.9 m/s)
+!d_e = 6.9e-3 ! m (calibrated, 92.3 m/s)
+b   = 0.5    ! unitless (guessed)
+
+! TODO: atmosphere
+! > I am also 79 above sea level, tests were conducted inside at about 70°F. Not sure on humidity, but 50% is probably a decent guess.
+/

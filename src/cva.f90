@@ -330,14 +330,18 @@ pure function p_c(cv)
     type(si_pressure) :: p_ci
     type(unitless)    :: chi_sum
     
+    call assert(cv%eos /= CONST_EOS, "cva (p_c): CONST_EOS may not have positive mass and should not be checked here")
+    
     call p_c%v%init_const(0.0_WP, size(cv%m(1)%v%d))
     call chi_sum%v%init_const(0.0_WP, size(cv%m(1)%v%d))
     do i = 1, size(cv%m)
         call denominator%v%init_const(0.0_WP, size(cv%m(1)%v%d))
         do j = 1, size(cv%m)
+            call assert(cv%m(j)%v%v > 0.0_WP, "cva (p_c): m(j) > 0 violated", &
+                            print_integer=[i, j, size(cv%m)], print_real=[cv%m(j)%v%v])
             denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm) ! MAYBE: change so that the molar masses have units?
         end do
-        call assert(denominator%v%v > 0.0_WP, "cva (p_c): denominator is zero", print_real=[denominator%v%v])
+        call assert(denominator%v%v > 0.0_WP, "cva (p_c): denominator > 0 violated", print_real=[denominator%v%v])
         chi = cv%m(i) / denominator
         call p_ci%v%init_const(cv%gas(i)%p_c, size(cv%m(1)%v%d))
         p_c = p_c + chi*p_ci
@@ -1723,9 +1727,11 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
                 allocate(status%data(n_cv))
                 n_bad_cv = 0
                 do j_cv = 1, n_cv
-                    p_j = sys%cv(j_cv)%p()
-                    if (p_j >= sys%cv(j_cv)%p_c()) n_bad_cv = n_bad_cv + 1
-                    status%data(j_cv) = p_j%v%v
+                    if (sys%cv(j_cv)%eos == IDEAL_EOS) then
+                        p_j = sys%cv(j_cv)%p()
+                        if (p_j >= sys%cv(j_cv)%p_c()) n_bad_cv = n_bad_cv + 1
+                        status%data(j_cv) = p_j%v%v
+                    end if
                 end do
                 call assert(n_bad_cv >= 1, "cva (check_sys): number of control volumes with p >= p_c should be >= 1", &
                             print_integer=[n_bad_cv])
@@ -1733,10 +1739,12 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
                 allocate(status%i_cv(n_bad_cv))
                 n_bad_cv = 0
                 do j_cv = 1, n_cv
-                    p_j = sys%cv(j_cv)%p()
-                    if (p_j >= sys%cv(j_cv)%p_c()) then
-                        n_bad_cv = n_bad_cv + 1
-                        status%i_cv(n_bad_cv) = j_cv
+                    if (sys%cv(j_cv)%eos == IDEAL_EOS) then
+                        p_j = sys%cv(j_cv)%p()
+                        if (p_j >= sys%cv(j_cv)%p_c()) then
+                            n_bad_cv = n_bad_cv + 1
+                            status%i_cv(n_bad_cv) = j_cv
+                        end if
                     end if
                 end do
                 
