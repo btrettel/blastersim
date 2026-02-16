@@ -1,8 +1,6 @@
-### v0.1.0
+### v0.2.0
 
-- Add  for testing
 - Valve opening time
-    - Test `alpha_m_dot`
     - Test `con%m_dot` with reduced `alpha`
     - Order-of-accuracy test for valve opening model as that includes time as a factor. This kills two birds with one stone by making this test order-of-accuracy of `m_dot` as well. Use `m_dot_0` with `a_e = 0`.
 - Pneumatic mode

@@ -55,10 +55,7 @@ docs$(DIR_SEP)$(TEX_KEY).pdf docs$(DIR_SEP)$(TEX_KEY).log: docs$(DIR_SEP)$(TEX_K
 	-$(GREP) "$(BL)Warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).blg
 
 # ChkTeX doesn't handle `\input` macros correctly unless it's in the same directory as the TeX files. The `TeXInputs` options of ChkTeX seems to use only absolute directory, so that's not a workaround.
-docs$(DIR_SEP)$(TEX_KEY).bbl: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS)
-	$(PYTHON) py$(DIR_SEP)tripwire.py $(ALLSRC)
-	$(LOOP_START) docs$(DIR_SEP)$(TEX_KEY).tex $(SPELL_DEPS) $(LOOP_MIDDLE) $(SPELL_TEX) $(LOOP_END)
-	cd docs && chktex --localrc chktexrc $(TEX_KEY).tex
+docs$(DIR_SEP)$(TEX_KEY).bbl: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS) tripwire spell chktex
 	biber --tool --validate-datamodel --dieondatamodel --quiet docs$(DIR_SEP)$(TEX_KEY).bib
 	cd docs && $(TEX) $(TEX_FLAGS) -draftmode $(TEX_KEY)
 	cd docs && $(BIB) $(TEX_KEY)
@@ -100,6 +97,18 @@ docs$(DIR_SEP)index.html: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).
 	#$(LOOP_START) docs$(DIR_SEP)*.html $(LOOP_MIDDLE) $(SPELL_HTML) $(LOOP_END)
 	$(SPELL_HTML) docs$(DIR_SEP)bib.html
 	-$(GREP) "$(BL)Warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).latexml.log
+
+.PHONY: tripwire
+tripwire:
+	$(PYTHON) py$(DIR_SEP)tripwire.py $(ALLSRC)
+
+.PHONY: chktex
+chktex:
+	cd docs && chktex --localrc chktexrc $(TEX_KEY).tex
+
+.PHONY: spell
+spell:
+	$(LOOP_START) docs$(DIR_SEP)$(TEX_KEY).tex $(SPELL_DEPS) $(LOOP_MIDDLE) $(SPELL_TEX) $(LOOP_END)
 
 .PHONY: clean_tex
 clean_tex:
