@@ -1003,15 +1003,21 @@ subroutine test_m_dot_1(tests)
     type(si_pressure)     :: p_fs, p_fd, p_atm
     type(si_stiffness)    :: k
     type(si_length)       :: l_pre
+    type(si_time)         :: t
     
     type(si_mass_flow_rate) :: m_dot_con
     real(WP) :: d_m_dot_d_delta_p
+    
+    call t%v%init_const(0.0_WP, 1)
     
     call delta_p%v%init(0.0_WP, 1, 1)
     
     con%active = .true.
     call con%a_e%v%init_const(0.25_WP, 1)
     call con%b%v%init_const(0.5_WP, 1)
+    call con%t_opening%v%init_const(0.0_WP, 1)
+    call con%alpha_0%v%init_const(1.0_WP, 1)
+    call con%alpha_dot_0%v%init_const(0.0_WP, 1)
     
     call x%v%init_const(0.5_WP, 1)
     call x_dot%v%init_const(0.5_WP, 1)
@@ -1029,7 +1035,7 @@ subroutine test_m_dot_1(tests)
     call cv_from%set(x, x_dot, y, p, temp, "from", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     call cv_to%set(x, x_dot, y, p - delta_p, temp, "to", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     
-    m_dot_con = con%m_dot(cv_from, cv_to)
+    m_dot_con = con%m_dot(t, cv_from, cv_to)
     
     ! It is important that `m_dot` goes to zero at zero pressure difference, so this is exact.
     call tests%real_eq(m_dot_con%v%v, 0.0_WP, "m_dot, small delta_p, v")
@@ -1053,23 +1059,29 @@ subroutine test_m_dot_2(tests)
     type(cv_type)  :: cv_from, cv_to
     type(con_type) :: con
     
-    type(si_length)          :: x
-    type(si_velocity)        :: x_dot
-    type(unitless)           :: y(1), p_r
-    type(si_pressure)        :: p_in, p_out
-    type(si_temperature)     :: temp
-    type(si_area)            :: csa
-    type(si_inverse_mass)    :: rm_p
-    type(si_pressure)        :: p_fs, p_fd, p_atm
-    type(si_stiffness)       :: k
-    type(si_length)          :: l_pre
+    type(si_length)       :: x
+    type(si_velocity)     :: x_dot
+    type(unitless)        :: y(1), p_r
+    type(si_pressure)     :: p_in, p_out
+    type(si_temperature)  :: temp
+    type(si_area)         :: csa
+    type(si_inverse_mass) :: rm_p
+    type(si_pressure)     :: p_fs, p_fd, p_atm
+    type(si_stiffness)    :: k
+    type(si_length)       :: l_pre
+    type(si_time)         :: t
     
     type(si_mass_flow_rate) :: m_dot_con
     real(WP) :: m_dot_con_, d_m_dot_d_p_r
     
+    call t%v%init_const(0.0_WP, 1)
+    
     con%active = .true.
     call con%a_e%v%init_const(0.25_WP, 1)
     call con%b%v%init_const(0.5_WP, 1)
+    call con%t_opening%v%init_const(0.0_WP, 1)
+    call con%alpha_0%v%init_const(1.0_WP, 1)
+    call con%alpha_dot_0%v%init_const(0.0_WP, 1)
     
     call p_r%v%init(0.5_WP*(P_RL + con%b%v%v), 1, 1)
     call assert(p_r%v%v < P_RL,      "test_cva (test_m_dot_2): p_r < P_RL violated")
@@ -1093,7 +1105,7 @@ subroutine test_m_dot_2(tests)
     call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     
-    m_dot_con = con%m_dot(cv_from, cv_to)
+    m_dot_con = con%m_dot(t, cv_from, cv_to)
     
     ! These should not be exact due to the smoothing applied, but they are still very close!
     
@@ -1119,23 +1131,29 @@ subroutine test_m_dot_3(tests)
     type(cv_type)  :: cv_from, cv_to
     type(con_type) :: con
     
-    type(si_length)          :: x
-    type(si_velocity)        :: x_dot
-    type(unitless)           :: y(1), p_r
-    type(si_pressure)        :: p_in, p_out
-    type(si_temperature)     :: temp
-    type(si_area)            :: csa
-    type(si_inverse_mass)    :: rm_p
-    type(si_pressure)        :: p_fs, p_fd, p_atm
-    type(si_stiffness)       :: k
-    type(si_length)          :: l_pre
+    type(si_length)       :: x
+    type(si_velocity)     :: x_dot
+    type(unitless)        :: y(1), p_r
+    type(si_pressure)     :: p_in, p_out
+    type(si_temperature)  :: temp
+    type(si_area)         :: csa
+    type(si_inverse_mass) :: rm_p
+    type(si_pressure)     :: p_fs, p_fd, p_atm
+    type(si_stiffness)    :: k
+    type(si_length)       :: l_pre
+    type(si_time)         :: t
     
     type(si_mass_flow_rate) :: m_dot_con
     real(WP) :: m_dot_con_
     
+    call t%v%init_const(0.0_WP, 1)
+    
     con%active = .true.
     call con%a_e%v%init_const(0.25_WP, 1)
     call con%b%v%init_const(0.5_WP, 1)
+    call con%t_opening%v%init_const(0.0_WP, 1)
+    call con%alpha_0%v%init_const(1.0_WP, 1)
+    call con%alpha_dot_0%v%init_const(0.0_WP, 1)
     
     call p_r%v%init(1.0e-6_WP, 1, 1)
     call assert(p_r%v%v < con%b%v%v, "test_cva (test_m_dot_3): p_r < b violated")
@@ -1158,7 +1176,7 @@ subroutine test_m_dot_3(tests)
     call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     
-    m_dot_con = con%m_dot(cv_from, cv_to)
+    m_dot_con = con%m_dot(t, cv_from, cv_to)
     
     m_dot_con_ = con%a_e%v%v * p_in%v%v * sqrt((1.0_WP - con%b%v%v)/((R_BAR/DRY_AIR%mm) * temp%v%v))
     call tests%real_eq(m_dot_con%v%v, m_dot_con_, "m_dot, choked, v") !, abs_tol=1.0e-10_WP)
@@ -1178,22 +1196,28 @@ subroutine test_m_dot_4(tests)
     type(cv_type)  :: cv_from, cv_to
     type(con_type) :: con
     
-    type(si_length)          :: x
-    type(si_velocity)        :: x_dot
-    type(unitless)           :: y(1)
-    type(si_pressure)        :: p_in, p_out
-    type(si_temperature)     :: temp
-    type(si_area)            :: csa
-    type(si_inverse_mass)    :: rm_p
-    type(si_pressure)        :: p_fs, p_fd, p_atm
-    type(si_stiffness)       :: k
-    type(si_length)          :: l_pre
+    type(si_length)       :: x
+    type(si_velocity)     :: x_dot
+    type(unitless)        :: y(1)
+    type(si_pressure)     :: p_in, p_out
+    type(si_temperature)  :: temp
+    type(si_area)         :: csa
+    type(si_inverse_mass) :: rm_p
+    type(si_pressure)     :: p_fs, p_fd, p_atm
+    type(si_stiffness)    :: k
+    type(si_length)       :: l_pre
+    type(si_time)         :: t
     
     type(si_mass_flow_rate) :: m_dot_con
+    
+    call t%v%init_const(0.0_WP, 1)
     
     con%active = .false.
     call con%a_e%v%init_const(0.25_WP, 1)
     call con%b%v%init_const(0.5_WP, 1)
+    call con%t_opening%v%init_const(0.0_WP, 1)
+    call con%alpha_0%v%init_const(1.0_WP, 1)
+    call con%alpha_dot_0%v%init_const(0.0_WP, 1)
     
     call x%v%init_const(0.5_WP, 1)
     call x_dot%v%init_const(0.5_WP, 1)
@@ -1212,7 +1236,7 @@ subroutine test_m_dot_4(tests)
     call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, k, l_pre, [DRY_AIR], 2)
     
-    m_dot_con = con%m_dot(cv_from, cv_to)
+    m_dot_con = con%m_dot(t, cv_from, cv_to)
     
     call tests%real_eq(m_dot_con%v%v, 0.0_WP, "m_dot, inactive, value")
     call tests%real_eq(m_dot_con%v%d(1), 0.0_WP, "m_dot, inactive, derivative")
@@ -1238,9 +1262,12 @@ subroutine test_calculate_flows(tests)
     type(si_length)          :: l_pre
     real(WP)                 :: m_dot_12
     type(si_specific_energy) :: h_1
+    type(si_time)            :: t
     
     type(si_mass_flow_rate), allocatable   :: m_dot(:, :)
     type(si_energy_flow_rate), allocatable :: h_dot(:, :)
+    
+    call t%v%init_const(0.0_WP, 0)
     
     allocate(sys%cv(2))
     allocate(sys%con(2, 2))
@@ -1252,6 +1279,9 @@ subroutine test_calculate_flows(tests)
     sys%con(1, 2)%active = .true.
     call sys%con(1, 2)%a_e%v%init_const(0.25_WP, 0)
     call sys%con(1, 2)%b%v%init_const(0.5_WP, 0)
+    call sys%con(1, 2)%t_opening%v%init_const(0.0_WP, 0)
+    call sys%con(1, 2)%alpha_0%v%init_const(1.0_WP, 0)
+    call sys%con(1, 2)%alpha_dot_0%v%init_const(0.0_WP, 0)
     
     call p_r%v%init_const(1.0e-6_WP, 0)
     
@@ -1275,7 +1305,7 @@ subroutine test_calculate_flows(tests)
     
     m_dot_12 = sys%con(1, 2)%a_e%v%v * p_in%v%v * sqrt((1.0_WP - sys%con(1, 2)%b%v%v)/((R_BAR/DRY_AIR%mm) * temp%v%v))
     
-    call sys%calculate_flows(m_dot, h_dot)
+    call sys%calculate_flows(t, m_dot, h_dot)
     
     call tests%integer_eq(size(m_dot, 1), 2, "size(m_dot, 1)")
     call tests%integer_eq(size(m_dot, 2), 2, "size(m_dot, 2)")
@@ -1343,6 +1373,9 @@ subroutine test_conservation_1(tests)
     d_e = inch_const(0.1_WP, n_d)
     sys_start%con(3, 4)%a_e = (PI/4.0_WP)*square(d_e)
     call sys_start%con(3, 4)%b%v%init_const(0.5_WP, n_d)
+    call sys_start%con(3, 4)%t_opening%v%init_const(0.0_WP, n_d)
+    call sys_start%con(3, 4)%alpha_0%v%init_const(1.0_WP, n_d)
+    call sys_start%con(3, 4)%alpha_dot_0%v%init_const(0.0_WP, n_d)
     
     sys_start%con(4, 1)%active = .false.
     sys_start%con(4, 2)%active = .false.
@@ -1511,6 +1544,9 @@ subroutine test_conservation_2(tests)
     sys_start%con(1, 2)%active = .true.
     sys_start%con(1, 2)%a_e = 0.25_WP*csa
     call sys_start%con(1, 2)%b%v%init_const(0.5_WP, n_d)
+    call sys_start%con(1, 2)%t_opening%v%init_const(0.0_WP, n_d)
+    call sys_start%con(1, 2)%alpha_0%v%init_const(1.0_WP, n_d)
+    call sys_start%con(1, 2)%alpha_dot_0%v%init_const(0.0_WP, n_d)
     sys_start%con(2, 1)%active = .false.
     sys_start%con(2, 2)%active = .false.
     

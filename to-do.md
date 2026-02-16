@@ -1,9 +1,8 @@
 ### v0.1.0
 
-- Valve opening time, valve poppet model using pressures from CVs
-    - Find what you saved on valve opening profiles/valve characteristic curves.
-    - Have ability to model valve internals by getting pressures from other control volumes? Then you could model the movement of poppets and whatnot. You'll need some way to handle the "valve profile" or whatever it's called: relationship between poppet location and flow cross-sectional area.
-    - Could just start out with hyperbolic tangent multiplier for differentiability.
+- Valve opening time
+    - Test `alpha_m_dot`
+    - Order-of-accuracy test for valve opening model as that includes time as a factor.
 - Pneumatic mode
     - geninput_pneumatic.nml
     - pneumatic-example.nml
@@ -304,6 +303,7 @@
         - <https://tex.stackexchange.com/questions/431719/how-to-use-pandoc-to-derive-output-from-latex-and-tikz-to-a-docx-file>
     - [TeX4ht](https://www.tug.org/tex4ht/)
 - Test `d_m_k_d_t` with multiple gases.
+- Add valve poppet model using pressures from CVs. Have ability to model valve internals by getting pressures from a third control volume connected to the pilot valve. Then you could model the movement of poppets and whatnot. You'll need some way to handle the "valve profile" or whatever it's called: relationship between poppet location and flow cross-sectional area.
 - promotion
     - Post on:
         - r/nerf

@@ -8,6 +8,11 @@
 % TODO: list all member variables
 % TODO: based around control volume mass and energy as presumably this helps with conservation
 
+Internally, BlasterSim simulate blasters using control volumes with arbitrary flow connections between control volumes.
+This allows BlasterSim to simulates spring and pneumatic blasters with the same core simulation code. This also allows simulating more atypical blasters without major code changes.
+
+This section describes the internal model in an abstract way.
+
 \subsection{Notation}
 
 % i, j = control volume numbers

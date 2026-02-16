@@ -132,9 +132,10 @@ type, public :: con_type ! connection between control volumes
     type(unitless) :: b           ! critical pressure ratio
     type(si_time)  :: t_opening   ! valve opening time
     type(unitless) :: alpha_0     ! valve opening fraction at time zero
-    type(unitless) :: alpha_0_dot ! valve opening rate at time zero
+    type(unitless) :: alpha_dot_0 ! valve opening rate at time zero
 contains
     procedure :: m_dot
+    procedure :: alpha => alpha_m_dot
 end type con_type
 !tripwire$ end
 
@@ -1264,11 +1265,43 @@ pure function g_m_dot(p_r)
     call assert(g_m_dot%v%v <= 1.0_WP, "cva (g_m_dot): g_m_dot <= 1 violated", print_real=[g_m_dot%v%v])
 end function g_m_dot
 
-pure function m_dot(con, cv_from, cv_to)
+pure function alpha_m_dot(con, t)
+    ! Valve opening model
+    ! See theory.tex, `\secref{valve-opening-model}`.
+    
+    class(con_type), intent(in) :: con
+    type(si_time), intent(in)   :: t
+    
+    type(unitless) :: alpha_m_dot
+    
+    call assert(t%v%v >= 0.0_WP, "cva (alpha_m_dot): t >= 0 violated", print_real=[t%v%v])
+    call assert(con%alpha_0%v%v >= 0.0_WP, "cva (alpha_m_dot): alpha_0 >= 0 violated", &
+                                        print_real=[con%alpha_0%v%v, con%alpha_dot_0%v%v])
+    call assert(con%alpha_0%v%v <= 1.0_WP, "cva (alpha_m_dot): alpha_0 <= 1 violated", &
+                                        print_real=[con%alpha_0%v%v, con%alpha_dot_0%v%v])
+    call assert(con%alpha_dot_0%v%v >= 0.0_WP, "cva (alpha_m_dot): alpha_dot_0 >= 0 violated", &
+                                        print_real=[con%alpha_0%v%v, con%alpha_dot_0%v%v])
+    
+    if (t < con%t_opening) then
+        alpha_m_dot = con%alpha_0 + con%alpha_dot_0*(t/con%t_opening) &
+                                    + (3.0_WP - 3.0_WP*con%alpha_0 - 2.0_WP*con%alpha_dot_0)*square(t/con%t_opening) &
+                                    + (2.0_WP - 2.0_WP*con%alpha_0 - con%alpha_dot_0)*((t/con%t_opening)*square(t/con%t_opening))
+    else
+        call alpha_m_dot%v%init_const(1.0_WP, size(con%t_opening%v%d))
+    end if
+    
+    call assert(alpha_m_dot%v%v >= 0.0_WP, "cva (g_m_dot): alpha_m_dot >= 0 violated", &
+                                            print_real=[alpha_m_dot%v%v, con%alpha_0%v%v, con%alpha_dot_0%v%v])
+    call assert(alpha_m_dot%v%v <= 1.0_WP, "cva (g_m_dot): alpha_m_dot <= 1 violated", &
+                                            print_real=[alpha_m_dot%v%v, con%alpha_0%v%v, con%alpha_dot_0%v%v])
+end function alpha_m_dot
+
+pure function m_dot(con, t, cv_from, cv_to)
     ! Modified con flow rate model from beater_pneumatic_2007 ch. 5.
     ! Modified to be differentiable.
     
     class(con_type), intent(in) :: con
+    type(si_time), intent(in)   :: t
     type(cv_type), intent(in)   :: cv_from, cv_to
     
     type(si_mass_flow_rate) :: m_dot
@@ -1286,7 +1319,7 @@ pure function m_dot(con, cv_from, cv_to)
         call assert(p_r%v%v >= 0.0_WP, "cva (m_dot): p_r >= 0 violated", print_real=[p_r%v%v])
         call assert(p_r%v%v <= 1.0_WP, "cva (m_dot): p_r <= 1 violated", print_real=[p_r%v%v])
         
-        m_dot = con%a_e * (cv_from%p() - g_m_dot(p_r) * cv_to%p()) &
+        m_dot = con%alpha(t) * con%a_e * (cv_from%p() - g_m_dot(p_r) * cv_to%p()) &
                     * sqrt((1.0_WP - con%b) / (cv_from%r() * cv_from%temp())) &
                     * sqrt(1.0_WP - f_m_dot(p_r, con%b))
     else
@@ -1299,8 +1332,9 @@ end function m_dot
 ! methods for control volume systems !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-pure subroutine calculate_flows(sys, m_dot, h_dot)
+pure subroutine calculate_flows(sys, t, m_dot, h_dot)
     class(cv_system_type), intent(in)                   :: sys
+    type(si_time), intent(in)                           :: t
     type(si_mass_flow_rate), allocatable, intent(out)   :: m_dot(:, :)
     type(si_energy_flow_rate), allocatable, intent(out) :: h_dot(:, :)
     
@@ -1321,7 +1355,7 @@ pure subroutine calculate_flows(sys, m_dot, h_dot)
                                                     "cva (calculate_flows): can't flow from self to self", &
                                                     print_integer=[i_from_cv, i_to_cv])
             
-            m_dot(i_from_cv, i_to_cv) = sys%con(i_from_cv, i_to_cv)%m_dot(sys%cv(i_from_cv), sys%cv(i_to_cv))
+            m_dot(i_from_cv, i_to_cv) = sys%con(i_from_cv, i_to_cv)%m_dot(t, sys%cv(i_from_cv), sys%cv(i_to_cv))
             h_dot(i_from_cv, i_to_cv) = sys%cv(i_from_cv)%h() * m_dot(i_from_cv, i_to_cv)
         end do
     end do
@@ -1353,11 +1387,11 @@ pure function e_total_sys(sys)
     end do
 end function e_total_sys
 
-pure subroutine time_step(sys_old, dt, sys_new)
+pure subroutine time_step(sys_old, t, dt, sys_new)
     ! Advances by one time step.
     
     type(cv_system_type), allocatable, intent(in)  :: sys_old
-    type(si_time), intent(in)                      :: dt
+    type(si_time), intent(in)                      :: t, dt
     type(cv_system_type), allocatable, intent(out) :: sys_new
     
     type(cv_delta_type), allocatable :: cv_delta_0(:), cv_delta_1(:), cv_delta_2(:), cv_delta_3(:), cv_delta_4(:)
@@ -1382,16 +1416,16 @@ pure subroutine time_step(sys_old, dt, sys_new)
             call cv_delta_0(i_cv)%m(k_gas)%v%init_const(0.0_WP, n_d)
         end do
     end do
-    call rk_stage(dt, 1.0_WP, sys_old, cv_delta_0, cv_delta_1)
+    call rk_stage(t, dt, 1.0_WP, sys_old, cv_delta_0, cv_delta_1)
     
     ! stage 2
-    call rk_stage(dt, 0.5_WP, sys_old, cv_delta_1, cv_delta_2)
+    call rk_stage(t, dt, 0.5_WP, sys_old, cv_delta_1, cv_delta_2)
     
     ! stage 3
-    call rk_stage(dt, 0.5_WP, sys_old, cv_delta_2, cv_delta_3)
+    call rk_stage(t, dt, 0.5_WP, sys_old, cv_delta_2, cv_delta_3)
     
     ! stage 4
-    call rk_stage(dt, 1.0_WP, sys_old, cv_delta_3, cv_delta_4)
+    call rk_stage(t, dt, 1.0_WP, sys_old, cv_delta_3, cv_delta_4)
     
     ! Put it all together.
     sys_new = sys_old
@@ -1428,8 +1462,9 @@ pure subroutine time_step(sys_old, dt, sys_new)
     end do
 end subroutine time_step
 
-pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
-    type(si_time), intent(in)                      :: dt
+pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out)
+    type(si_time), intent(in)                      :: t_old ! time of previous time step
+    type(si_time), intent(in)                      :: dt    ! time step
     real(WP), intent(in)                           :: a
     type(cv_system_type), allocatable, intent(in)  :: sys_old
     type(cv_delta_type), allocatable, intent(in)   :: cv_delta_in(:)
@@ -1458,7 +1493,7 @@ pure subroutine rk_stage(dt, a, sys_old, cv_delta_in, cv_delta_out)
             sys%cv(i_cv)%m(k_gas) = sys_old%cv(i_cv)%m(k_gas) + a*cv_delta_in(i_cv)%m(k_gas)
         end do
     end do
-    call sys%calculate_flows(m_dot, h_dot)
+    call sys%calculate_flows(t_old + a*dt, m_dot, h_dot)
     do i_cv = 1, n_cv
         cv_delta_out(i_cv)%x     = dt*d_x_d_t(sys, i_cv)
         cv_delta_out(i_cv)%x_dot = dt*d_x_dot_d_t(sys, i_cv)
@@ -1552,7 +1587,7 @@ subroutine run(config, sys_start, sys_end, status)
     end if
     
     time_loop: do
-        call time_step(sys_old, config%dt, sys_new)
+        call time_step(sys_old, t, config%dt, sys_new)
         t_old = t
         t     = t + config%dt
         i     = i + 1
@@ -1841,7 +1876,7 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
         call assert(dt_i <= dt, "cva (sys_interp): dt_i can not be greater than dt", &
                         print_real=[dt_i%v%v], print_integer=[i])
         
-        call time_step(sys_old, dt_i, sys_i)
+        call time_step(sys_old, t_old + dt_i, dt_i, sys_i)
         
         call assert(sys_i%cv(i_cv_interp)%x >= sys_old%cv(i_cv_interp)%x, &
                         "cva (sys_interp): x_i >= x_old violated", &

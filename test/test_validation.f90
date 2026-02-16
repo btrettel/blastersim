@@ -87,6 +87,9 @@ subroutine create_2010_08_07_sys(p_psi, d_e_in, sys_start, x_2_)
     d_e = inch_const(d_e_in, 0)
     sys_start%con(2, 3)%a_e = (PI/4.0_WP)*square(d_e)
     call sys_start%con(2, 3)%b%v%init_const(0.5_WP, 0)
+    call sys_start%con(2, 3)%t_opening%v%init_const(0.0_WP, 0)
+    call sys_start%con(2, 3)%alpha_0%v%init_const(1.0_WP, 0)
+    call sys_start%con(2, 3)%alpha_dot_0%v%init_const(0.0_WP, 0)
     
     sys_start%con(3, 1)%active = .false.
     sys_start%con(3, 2) = sys_start%con(2, 3)
@@ -334,6 +337,9 @@ subroutine test_tinkershot_1(tests)
     d_e = inch_const(0.165_WP, 0)
     sys_start%con(3, 4)%a_e = (PI/4.0_WP)*square(d_e)
     call sys_start%con(3, 4)%b%v%init_const(0.5_WP, 0)
+    call sys_start%con(3, 4)%t_opening%v%init_const(0.0_WP, 0)
+    call sys_start%con(3, 4)%alpha_0%v%init_const(1.0_WP, 0)
+    call sys_start%con(3, 4)%alpha_dot_0%v%init_const(0.0_WP, 0)
     
     sys_start%con(4, 1)%active = .false.
     sys_start%con(4, 2)%active = .false.
