@@ -26,14 +26,16 @@ extra = "<http://github.com/btrettel/blastersim/>" // new_line("a") // "Written 
 call get_input_file_name_from_cli("blastersim", input_file, extra=extra)
 
 call read_pneumatic_namelist(trim(input_file), sys_start, config, rc)
-if ((rc /= 0) .and. (rc /= IOSTAT_END)) stop EX_USAGE, quiet=.true.
+if (rc /= 0) then
+    if (rc /= IOSTAT_END) stop EX_USAGE, quiet=.true.
 
-call read_springer_namelist(trim(input_file), sys_start, config, rc)
-if ((rc /= 0) .and. (rc /= IOSTAT_END)) stop EX_USAGE, quiet=.true.
-
-if (rc == IOSTAT_END) then
-    write(unit=ERROR_UNIT, fmt="(a)") "ERROR: Empty input file? No pneumatic or springer namelists detected."
-    stop EX_USAGE, quiet=.true.
+    call read_springer_namelist(trim(input_file), sys_start, config, rc)
+    if (rc /= 0) then
+        if (rc == IOSTAT_END) then
+            write(unit=ERROR_UNIT, fmt="(a)") "ERROR: Empty input file? No pneumatic or springer namelists detected."
+        end if
+        stop EX_USAGE, quiet=.true.
+    end if
 end if
 
 call run(config, sys_start, sys_end, status)

@@ -209,18 +209,18 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc)
     call p_f_chamber%v%init_const(0.0_WP, 0)
     
     ! `sys%cv(I_BARREL)`: barrel
+    csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
     call create_barrel(vol_dead_u, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
                         [DRY_AIR], I_BARREL_ATM, sys%cv(I_BARREL))
     
     ! `sys%cv(I_CHAMBER)`: chamber
     csa_chamber = (PI/4.0_WP)*square(d_chamber_u)
     x_chamber   = vol_chamber_u/csa_chamber
-    call sys%cv(I_CHAMBER)%set(x_chamber, x_dot, y, p_chamber_u, temp_atm_u, "chamber", csa_chamber, &
+    call sys%cv(I_CHAMBER)%set(x_chamber, x_dot, y, p_atm_u + p_chamber_u, temp_atm_u, "chamber", csa_chamber, &
                         rm_p, p_f_chamber, p_f_chamber, k, l_pre, [DRY_AIR], 0, &
                         isentropic_filling=.true., p_atm=p_atm_u)
     
     ! `sys%cv(I_BARREL_ATM)`: atmosphere
-    csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
     call sys%cv(I_BARREL_ATM)%set_const("atmosphere", csa_barrel, p_atm_u, temp_atm_u, [DRY_AIR], y, I_BARREL)
     
     call config%set(id, csv_output=.true., dt=dt_u, n_d=0)

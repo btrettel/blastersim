@@ -1,9 +1,13 @@
 &springer
 id = "springer-example" ! (optional)
 
-! atmosphere
-p_atm    = 100000.0 ! Pa (optional)
-temp_atm = 310.0    ! K (optional)
+! barrel
+d_barrel  = 13.0e-3 ! m
+l_travel  = 50.0e-2 ! m
+m_proj    = 1.1e-3  ! kg
+p_fs_proj = 0.0     ! Pa
+p_fd_proj = 0.0     ! Pa
+vol_dead  = 20.0e-6 ! m3
 
 ! plunger tube
 d_plunger    = 30.0e-3 ! m
@@ -15,15 +19,11 @@ m_spring     = 10.0e-3 ! kg
 p_fs_plunger = 0.0     ! Pa
 p_fd_plunger = 0.0     ! Pa
 
+! atmosphere
+p_atm    = 100000.0 ! Pa (optional)
+temp_atm = 310.0    ! K (optional)
+
 ! flow restriction
 d_e = 5.0e-3 ! m
 b   = 0.528  ! unitless (optional)
-
-! barrel
-d_barrel  = 13.0e-3 ! m
-l_travel  = 50.0e-2 ! m
-m_proj    = 1.1e-3  ! kg
-p_fs_proj = 0.0     ! Pa
-p_fd_proj = 0.0     ! Pa
-vol_dead  = 20.0e-6 ! m3
 /
