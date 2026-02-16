@@ -201,3 +201,47 @@ lower_bound_not_equal = .false.
 default_value         = "0.0"
 bound_fmt             = "f3.1"
 /
+
+&input_variable
+variable_name         = "d_chamber"
+type_definition       = "type(si_length)"
+required              = .true.
+tex_unit              = "m"
+tex_description       = "Diameter of the chamber."
+tex_description_2     = "The hydraulic diameter ($d_\text{h} = 4\,A/P$ where $A$ is area and $P$ is perimeter) can be used if the chamber is non-cylindrical but still elongated."
+tex_variable_name     = "$d_\text{chamber}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "vol_chamber"
+type_definition       = "type(si_volume)"
+required              = .true.
+tex_unit              = "m$^3$"
+txt_unit              = "m3"
+tex_description       = "Volume of the chamber."
+tex_variable_name     = "$V_\text{chamber}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "p_chamber"
+type_definition       = "type(si_pressure)"
+required              = .true.
+tex_unit              = "Pa"
+tex_description       = "Initial pressure of the chamber."
+tex_variable_name     = "$p_\text{chamber}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
