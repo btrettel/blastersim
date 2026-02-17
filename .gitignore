@@ -58,7 +58,7 @@ src/geninput_*.tex
 docs/geninput_*.tex
 !examples/*.nml
 docs/springer-example.nml
-springer-example.csv
+*.csv
 docs/pneumatic-example.nml
 docs/blastersim-out-*.txt
 docs/blastersim.txt
@@ -71,4 +71,3 @@ missed.txt
 *.pdb
 blastersim
 blastersim.exe
-example.csv
