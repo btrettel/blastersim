@@ -337,7 +337,7 @@ pure function p_c(cv)
     do i = 1, size(cv%m)
         call denominator%v%init_const(0.0_WP, size(cv%m(1)%v%d))
         do j = 1, size(cv%m)
-            call assert(cv%m(j)%v%v > 0.0_WP, "cva (p_c): m(j) > 0 violated", &
+            call assert(cv%m(j)%v%v >= 0.0_WP, "cva (p_c): m(j) >= 0 violated", &
                             print_integer=[i, j, size(cv%m)], print_real=[cv%m(j)%v%v])
             denominator = denominator + cv%m(j)*(cv%gas(i)%mm/cv%gas(j)%mm) ! MAYBE: change so that the molar masses have units?
         end do
