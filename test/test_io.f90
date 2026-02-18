@@ -59,7 +59,7 @@ subroutine test_read_springer_namelist(tests)
     
     call tests%real_eq(sys%cv(I_PLUNGER)%k%v%v, 500.0_WP, "test_read_springer_namelist, k")
     call tests%real_eq(sys%cv(I_PLUNGER)%x%v%v, 20.0e-2_WP, "test_read_springer_namelist, l_draw")
-    call tests%real_eq(sys%cv(I_PLUNGER)%l_pre%v%v, 5.0e-2_WP, "test_read_springer_namelist, l_pre")
+    call tests%real_eq(sys%cv(I_PLUNGER)%delta_pre%v%v, 5.0e-2_WP, "test_read_springer_namelist, delta_pre")
     
     l_travel = sys%cv(I_BARREL)%x_stop - sys%cv(I_BARREL)%x
     call tests%real_eq(l_travel%v%v, 50.0e-2_WP, "test_read_springer_namelist, d_plunger")

@@ -1,11 +1,15 @@
 ### v0.2.0
 
+- For consistency, make macros for LaTeX variable names?
+- Add leaks around the projectile.
+- Add control volume for back side of plunger for springers.
+- `sys%mode` member variable
+    - `CUSTOM_MODE = 0`, `PNEUMATIC_MODE = 1`, `SPRINGER_MODE = 2`
+    - Use to determine which energy efficiency formula to use.
 - Make more validation cases from Radioactive's data.
     - How much does friction need to increase to use full flow area?
 - Remove `id` namelist variable and use the filename instead for simplicity?
-- Change `l_pre` to `delta_pre` in docs and code
 - docs: refer to figure for every variable in springer figure like delta_pre
-- docs: Note that "precompression length" may be defined differently
 - docs: delta_pre = l_spring - l_tube, l_tube = l_compressed + l_head + l_draw, l_pre = ?
 - Make `check_sys` check that `x > 0` and note in the documentation that the plunger hitting the end of the plunger tube would make this be violated
 - CSV: Don't print `e_s` if `k == 0.0`

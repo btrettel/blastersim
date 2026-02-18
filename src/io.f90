@@ -141,7 +141,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc)
     
     ! `sys%cv(I_PLUNGER)`: plunger tube
     call sys%cv(I_PLUNGER)%set(l_draw_u, x_dot, y, p_atm_u, temp_atm_u, "plunger tube", csa_plunger, &
-                        1.0_WP/m_plunger_u, p_fs_plunger_u, p_fd_plunger_u, k_u, l_pre_u, [DRY_AIR], I_PLUNGER_ATM, &
+                        1.0_WP/m_plunger_u, p_fs_plunger_u, p_fd_plunger_u, k_u, delta_pre_u, [DRY_AIR], I_PLUNGER_ATM, &
                         m_spring=m_spring_u)
     
     ! `sys%cv(I_BARREL)`: barrel
@@ -168,7 +168,7 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc)
     type(si_area)         :: csa_chamber, csa_barrel
     type(si_inverse_mass) :: rm_p
     type(si_stiffness)    :: k
-    type(si_length)       :: l_pre, x_chamber
+    type(si_length)       :: delta_pre, x_chamber
     type(si_pressure)     :: p_f_chamber
     
     integer, parameter :: I_CHAMBER = 2, I_BARREL_ATM  = 3
@@ -205,7 +205,7 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc)
     call y(1)%v%init_const(1.0_WP, 0)
     call rm_p%v%init_const(0.0_WP, 0) ! immobile
     call k%v%init_const(0.0_WP, 0)
-    call l_pre%v%init_const(0.0_WP, 0)
+    call delta_pre%v%init_const(0.0_WP, 0)
     call p_f_chamber%v%init_const(0.0_WP, 0)
     
     ! `sys%cv(I_BARREL)`: barrel
@@ -217,7 +217,7 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc)
     csa_chamber = (PI/4.0_WP)*square(d_chamber_u)
     x_chamber   = vol_chamber_u/csa_chamber
     call sys%cv(I_CHAMBER)%set(x_chamber, x_dot, y, p_atm_u + p_chamber_u, temp_atm_u, "chamber", csa_chamber, &
-                        rm_p, p_f_chamber, p_f_chamber, k, l_pre, [DRY_AIR], 0, &
+                        rm_p, p_f_chamber, p_f_chamber, k, delta_pre, [DRY_AIR], 0, &
                         isentropic_filling=.true., p_atm=p_atm_u)
     
     ! `sys%cv(I_BARREL_ATM)`: atmosphere

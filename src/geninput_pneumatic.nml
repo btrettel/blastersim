@@ -183,6 +183,38 @@ default_value         = "-1.0"
 bound_fmt             = "f3.1"
 /
 
+&input_variable
+variable_name         = "d_e_leak"
+type_definition       = "type(si_length)"
+required              = .false.
+tex_unit              = "m"
+tex_description       = "Effective diameter of the leaks in the barrel."
+tex_description_2     = "Setting this to zero disables leaks in the barrel."
+tex_variable_name     = "$d_\text{e,leak}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .true.
+default_value         = "0.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "b_leak"
+type_definition       = "type(unitless)"
+required              = .false.
+tex_unit              = "1"
+tex_description       = "Critical pressure ratio of the leaks in the barrel."
+tex_variable_name     = "$b_\text{leak}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+upper_bound_active    = .true.
+upper_bound           = 1.0
+upper_bound_not_equal = .false.
+default_value         = "0.5"
+bound_fmt             = "f3.1"
+/
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! variables which are present for pneumatics only !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

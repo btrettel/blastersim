@@ -36,9 +36,9 @@ p_fs_plunger = 0.0       ! Pa (guessed as it seems to be low friction)
 p_fd_plunger = 0.0       ! Pa (guessed as it seems to be low friction)
 
 ! l_spring = 260.35mm [1]
-! l_pre_2 = 190.8 mm [2]
-! l_pre = l_spring - l_pre_2
-l_pre = 69.55e-3 ! m
+! l_pre    = 190.8 mm [2]
+! delta_pre = l_spring - l_pre
+delta_pre = 69.55e-3 ! m
 
 ! flow restriction
 !d_e = 7.1e-3 ! m (calibrated, 95.4 m/s to match maximum)

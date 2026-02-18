@@ -81,7 +81,7 @@ type, public :: cv_type ! control volume
     type(si_inverse_mass)       :: rm_p        ! reciprocal mass of projectile/plunger
     type(si_pressure)           :: p_fs, p_fd  ! static and dynamic friction pressure
     type(si_stiffness)          :: k           ! stiffness of spring attached to plunger
-    type(si_length)             :: l_pre       ! spring precompression length
+    type(si_length)             :: delta_pre   ! spring precompression
     type(gas_type), allocatable :: gas(:)      ! gas data
     integer                     :: i_cv_mirror ! index of control volume to use in pressure difference calculation
     ! `i_cv_mirror = 0` disables mirror CVs. Use that for constant volume chambers.
@@ -195,7 +195,7 @@ pure function e_s(cv)
     if (cv%type == MIRROR_CV_TYPE) then
         call e_s%v%init_const(0.0_WP, size(cv%x_dot%v%d))
     else
-        e_s = 0.5_WP*cv%k*square(cv%x + cv%l_pre)
+        e_s = 0.5_WP*cv%k*square(cv%x + cv%delta_pre)
     end if
 end function e_s
 
@@ -624,7 +624,7 @@ pure function gamma_cv(cv, y)
     call assert(gamma_cv%v%v > 1.0_WP, "cva (gamma_cv): gamma_cv > 1 violated", print_real=[gamma_cv%v%v])
 end function gamma_cv
 
-pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, l_pre, gas, &
+pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, delta_pre, gas, &
                             i_cv_mirror, x_stop, isentropic_filling, p_atm, eos, type, m_spring, constant_friction)
     class(cv_type), intent(in out) :: cv
     
@@ -641,7 +641,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     type(si_inverse_mass), intent(in) :: rm_p        ! reciprocal mass of projectile/plunger
     type(si_pressure), intent(in)     :: p_fs, p_fd  ! static and dynamic friction pressure
     type(si_stiffness), intent(in)    :: k           ! stiffness of spring attached to plunger
-    type(si_length), intent(in)       :: l_pre       ! spring precompression length
+    type(si_length), intent(in)       :: delta_pre   ! spring precompression
     type(gas_type), intent(in)        :: gas(:)      ! gas data
     integer, intent(in)               :: i_cv_mirror ! index of control volume to use in pressure difference calculation
     
@@ -672,7 +672,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     cv%p_fs        = p_fs
     cv%p_fd        = p_fd
     cv%k           = k
-    cv%l_pre       = l_pre
+    cv%delta_pre   = delta_pre
     cv%gas         = gas
     cv%i_cv_mirror = i_cv_mirror
     
@@ -829,7 +829,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     call cv%p_fs%v%init_const(0.0_WP, n_d)
     call cv%p_fd%v%init_const(0.0_WP, n_d)
     call cv%k%v%init_const(0.0_WP, n_d)
-    call cv%l_pre%v%init_const(0.0_WP, n_d)
+    call cv%delta_pre%v%init_const(0.0_WP, n_d)
     call cv%x_stop%v%init_const(X_STOP_DEFAULT, n_d)
     
     call assert(cv%x%v%v < cv%x_stop%v%v, "cva (set_const): x >= x_stop will cause immediate termination of run", &
@@ -1014,7 +1014,7 @@ pure function d_x_dot_d_t(sys, i_cv)
     end select
 end function d_x_dot_d_t
 
-!tripwire$ begin 0D2F5ED8 Update `\secref{plunger-impact}` of theory.tex when changing `d_x_dot_d_t_normal` if necessary.
+!tripwire$ begin D1D4EC65 Update `\secref{plunger-impact}` of theory.tex when changing `d_x_dot_d_t_normal` if necessary.
 pure function d_x_dot_d_t_normal(sys, i_cv)
     type(cv_system_type), intent(in) :: sys
     integer, intent(in)              :: i_cv
@@ -1041,14 +1041,14 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
         call p_mirror%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
     end if
     
-    p_fe = sys%cv(i_cv)%p() - p_mirror - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x + sys%cv(i_cv)%l_pre)
+    p_fe = sys%cv(i_cv)%p() - p_mirror - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x + sys%cv(i_cv)%delta_pre)
     
     ! This calculates the effective (inverse) mass of the projectile/plunger factoring in the spring mass.
     ! ruby_equivalent_2000
     r_mp_eff = sys%cv(i_cv)%rm_p / (1.0_WP + C_MS * sys%cv(i_cv)%m_spring * sys%cv(i_cv)%rm_p)
     
     d_x_dot_d_t_normal = sys%cv(i_cv)%csa*r_mp_eff*(sys%cv(i_cv)%p() - p_mirror - sys%cv(i_cv)%p_f(p_fe)) &
-                            - sys%cv(i_cv)%k*r_mp_eff*(sys%cv(i_cv)%x + sys%cv(i_cv)%l_pre)
+                            - sys%cv(i_cv)%k*r_mp_eff*(sys%cv(i_cv)%x + sys%cv(i_cv)%delta_pre)
 end function d_x_dot_d_t_normal
 !tripwire$ end
 
@@ -1157,7 +1157,7 @@ pure function d_e_f_d_t(sys, i_cv)
                 call p_mirror%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
             end if
             
-            p_fe = sys%cv(i_cv)%p() - p_mirror - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x + sys%cv(i_cv)%l_pre)
+            p_fe = sys%cv(i_cv)%p() - p_mirror - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x + sys%cv(i_cv)%delta_pre)
             
             d_e_f_d_t = sys%cv(i_cv)%p_f(p_fe) * sys%cv(i_cv)%csa * sys%cv(i_cv)%x_dot
         case (MIRROR_CV_TYPE)
