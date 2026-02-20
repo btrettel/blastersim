@@ -1,5 +1,6 @@
 ### v0.2.0
 
+- Check all file headers for FLT and update to be for BlasterSim as needed.
 - For consistency, make macros for LaTeX variable names?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
@@ -9,6 +10,7 @@
     - Use to determine which energy efficiency formula to use.
 - Make more validation cases from Radioactive's data.
     - How much does friction need to increase to use full flow area?
+    - How much does `delta_leak` need to increase to use full flow area?
 - Remove `id` namelist variable and use the filename instead for simplicity?
 - docs: refer to figure for every variable in springer figure like delta_pre
 - docs: l_spring = l_pre + delta_pre, l_tube = l_compressed + l_head + l_draw
@@ -23,16 +25,18 @@
     - geninput_pneumatic.nml
     - pneumatic-example.nml
     - Post BlasterSim to SpudFiles after adding pneumatic mode
-- 2010 validation cases
+- Convert validation cases to use input files
     - People are probably going to be more convinced of the accuracy of BlasterSim by the validation tests than anything else.
     - Convert manually created test cases into inputs in the examples folder.
-    - Add photo of blaster
-    - Shooting Chrony F-1 Chronograph (green)
-        - serial number 387616
-        - ordered 2009-07-01 from Pyramyd Air, order #1787578
-    - Add table listing all raw data
-    - shooting_chrony_inc_users_2016
-    - plot of pressure vs. muzzle velocity, experimental vs. prediction
+    - 2010 validation cases
+        - Add photo of blaster
+        - Shooting Chrony F-1 Chronograph (green)
+            - serial number 387616
+            - ordered 2009-07-01 from Pyramyd Air, order #1787578
+        - Add table listing all raw data
+        - shooting_chrony_inc_users_2016
+        - plot of pressure vs. muzzle velocity, experimental vs. prediction
+    - Eliminate convert.f90 and test_convert.f90.
 - Document how variable names are converted from LaTeX and code, as a general rule.
 - Have a conversion table for LaTeX and code variable names.
 - Document `logical`s in `\secref{inputs-general}`: `.true.` and `.false.`
@@ -57,8 +61,6 @@
             - total number of tests
             - other metrics like assertion density
         - Output a separate HTML file including all the previous information and details for all tests.
-            - Include green and red coloring scheme.
-            - Link to this file in the docs and README.md.
         - Check that all test descriptions are unique.
     - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.
     - Also refer to code in docs and link to GitHub.

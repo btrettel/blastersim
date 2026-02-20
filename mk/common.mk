@@ -12,7 +12,7 @@
 .SUFFIXES: .f90 .$(OBJEXT)
 
 .PHONY: check
-check: $(TESTNML)
+check: $(TESTNML) tests.html
 	@echo =====================
 	@echo = All tests passed. =
 	@echo =====================

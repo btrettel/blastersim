@@ -8,4 +8,6 @@ BlasterSim is under development and not feature-complete.
 
 [BlasterSim releases](http://trettel.us/blastersim/releases/)
 
+[Latest test results](http://trettel.us/blastersim/tests.html)
+
 Join the [Kelly Industries Discord](https://discord.gg/W4S5wdB) to discuss BlasterSim and Nerf blaster simulation in general.

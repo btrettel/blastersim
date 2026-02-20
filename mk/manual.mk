@@ -31,6 +31,9 @@ defaults.tex: test_cva$(BINEXT)
 
 io.nml: examples$(DIR_SEP)springer-example.nml
 
+tests.html:
+	gentesthtml$(BINEXT) tests.html $(TESTNML)
+
 #############################
 # Additional files to clean #
 #############################
