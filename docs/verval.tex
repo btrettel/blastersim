@@ -42,9 +42,26 @@ These additional checks are disabled in the released versions of BlasterSim for 
 
 Variables in BlasterSim are assigned units like meters or seconds, allowing the Fortran compiler to check for inconsistencies.
 This is achieved through a system called genunits which generates a custom Fortran module containing the required Fortran types~\cite{trettel_compile-time_2025,trettel_btrettelflt_2026}.
-This system has proved useful to locate bugs as the compiler will know precisely where the unit inconsistency is.
+This system has proved useful to locate bugs as the compiler will often know precisely where the unit inconsistency is.
 A failing test will rarely provide such precision.
-% TODO: have example of code
+
+Some examples will illustrate how this works from the programmer's perspective.
+Consider the following Fortran code:
+
+\lstinputlisting[breaklines=true,language=Fortran]{test_units_pass.f90}
+
+The \texttt{units} module contains Fortran derived types and associated operations which allow for unit checking.
+When \texttt{test\_units\_pass.f90} is compiled and run, the following output is produced:
+\lstinputlisting[breaklines=true]{test_units_pass.txt}
+
+However, consider what happens the velocity \texttt{v} is given the wrong unit:
+\lstinputlisting[breaklines=true,language=Fortran]{test_units_fail.f90}
+
+\texttt{test\_units\_fail.f90} will not compile, returning the following when compiled with \input{compiler.tex}:
+\lstinputlisting[breaklines=true]{test_units_fail.txt}
+
+The compiler error message quickly tells the programmer that this code has a bug.
+In this case, the bug is in the variable definition and not in the highlighted line, however, often the compiler will identify precisely which term in the line has the bug.
 
 \subsection{Comparison with exact solution}\label{exact-solution}
 

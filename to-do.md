@@ -2,6 +2,7 @@
 
 - For consistency, make macros for LaTeX variable names?
 - Add leaks around the projectile.
+    - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
 - Add control volume for back side of plunger for springers.
 - `sys%mode` member variable
     - `CUSTOM_MODE = 0`, `PNEUMATIC_MODE = 1`, `SPRINGER_MODE = 2`
@@ -10,7 +11,7 @@
     - How much does friction need to increase to use full flow area?
 - Remove `id` namelist variable and use the filename instead for simplicity?
 - docs: refer to figure for every variable in springer figure like delta_pre
-- docs: delta_pre = l_spring - l_tube, l_tube = l_compressed + l_head + l_draw, l_pre = ?
+- docs: l_spring = l_pre + delta_pre, l_tube = l_compressed + l_head + l_draw
 - Make `check_sys` check that `x > 0` and note in the documentation that the plunger hitting the end of the plunger tube would make this be violated
 - CSV: Don't print `e_s` if `k == 0.0`
 - CSV: Change `e_p` to `e_k` where k stands for kinetic. This is a lot more clear to me, though maybe it could be confusing with k as the spring constant.

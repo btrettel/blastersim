@@ -14,7 +14,11 @@ docs$(DIR_SEP)geninput_springer.tex \
 docs$(DIR_SEP)springer-example.nml \
 docs$(DIR_SEP)blastersim-out-1.txt \
 docs$(DIR_SEP)blastersim-out-2.txt \
-docs$(DIR_SEP)defaults.tex
+docs$(DIR_SEP)defaults.tex \
+docs$(DIR_SEP)units.f90 \
+docs$(DIR_SEP)test_units_pass.txt \
+docs$(DIR_SEP)test_units_fail.txt \
+docs$(DIR_SEP)compiler.tex
 
 TEX_DEPS = mk$(DIR_SEP)latex.mk \
 $(SPELL_DEPS) \
@@ -87,6 +91,19 @@ docs$(DIR_SEP)springer-example.nml: examples$(DIR_SEP)springer-example.nml
 
 docs$(DIR_SEP)defaults.tex: defaults.tex
 	$(CP) defaults.tex docs$(DIR_SEP)defaults.tex
+
+docs$(DIR_SEP)units.f90: docs$(DIR_SEP)genunits_example.nml
+	cd docs && genunits$(BINEXT) genunits_example.nml
+
+docs$(DIR_SEP)test_units_pass.txt: docs$(DIR_SEP)test_units_pass.f90 docs$(DIR_SEP)units.f90
+	cd docs && $(FC) units.f90 test_units_pass.f90 $(OFLAG) test_units_pass$(BINEXT)
+	cd docs && $(RUN)test_units_pass$(BINEXT) > test_units_pass.txt
+
+docs$(DIR_SEP)test_units_fail.txt: docs$(DIR_SEP)test_units_fail.f90 docs$(DIR_SEP)units.f90
+	-cd docs && $(FC) units.f90 test_units_fail.f90 $(OFLAG) test_units_fail$(BINEXT) 2> test_units_fail.txt
+
+docs$(DIR_SEP)compiler.tex:
+	echo $(FC) > docs$(DIR_SEP)compiler.tex
 
 # <https://math.nist.gov/~BMiller/LaTeXML/manual/commands/latexml.html>
 # Spell checking all HTML files is commented out as it's hard to get aspell to skip code blocks.

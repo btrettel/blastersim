@@ -52,7 +52,7 @@ test_*
 !test_*.f90
 src/rev.f90
 rev.tex
-src/units.f90
+units.f90
 src/geninput_*.f90
 src/geninput_*.tex
 docs/geninput_*.tex
@@ -63,6 +63,7 @@ docs/pneumatic-example.nml
 docs/blastersim-out-*.txt
 docs/blastersim.txt
 docs/blastersim_bibertool.bib
+docs/compiler.tex
 defaults.tex
 docs/defaults.tex
 missed.txt

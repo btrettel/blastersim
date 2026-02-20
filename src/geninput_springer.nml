@@ -184,13 +184,13 @@ bound_fmt             = "f3.1"
 /
 
 ! &input_variable
-! variable_name         = "d_e_leak"
+! variable_name         = "delta_leak"
 ! type_definition       = "type(si_length)"
 ! required              = .false.
 ! tex_unit              = "m"
-! tex_description       = "Effective diameter of the leaks in the barrel."
+! tex_description       = "Effective gap around the projectile of the leaks in the barrel."
 ! tex_description_2     = "Setting this to zero disables leaks in the barrel."
-! tex_variable_name     = "$d_\text{e,barrel,leak}$"
+! tex_variable_name     = "$\Delta_\text{leak}$"
 ! lower_bound_active    = .true.
 ! lower_bound           = 0.0
 ! lower_bound_not_equal = .true.
