@@ -89,14 +89,20 @@
 
 \begin{document}
 
-% This convoluted garbage is needed to avoid the following message:
+\iflatexml%
+\maketitle
+\else%
+% This convoluted garbage is needed to avoid the following message from pdflatex:
 % > pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has been already used, duplicate ignored
 % See: <https://tex.stackexchange.com/questions/18924/pdftex-warning-ext4-destination-with-the-same-identifier-nam-epage-1-has>
+% And if I do this with LaTeXML, I get a different message: > Info:unexpected:titlepage When using titlepage, Frontmatter will not be well-structured at blastersim.tex; line 96 col 0
+% So I don't do this with LaTeXML.
 \hypersetup{pageanchor=false}
 \begin{titlepage}
 \maketitle
 \end{titlepage}
 \hypersetup{pageanchor=true}
+\fi%
 
 \tableofcontents
 

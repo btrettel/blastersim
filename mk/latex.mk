@@ -114,6 +114,7 @@ docs$(DIR_SEP)index.html: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).
 	#$(LOOP_START) docs$(DIR_SEP)*.html $(LOOP_MIDDLE) $(SPELL_HTML) $(LOOP_END)
 	$(SPELL_HTML) docs$(DIR_SEP)bib.html
 	-$(GREP) "$(BL)Warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).latexml.log
+	-$(GREP) "$(BL)Info$(BR)" docs$(DIR_SEP)$(TEX_KEY).latexml.log
 
 .PHONY: tripwire
 tripwire:

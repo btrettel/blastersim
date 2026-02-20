@@ -11,6 +11,6 @@ t%v = 1.0
 
 v = x / t
 
-print *, v
+print "(f3.1)", v
 
 end program test_units_fail
