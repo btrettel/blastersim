@@ -20,7 +20,7 @@ p_fs_plunger = 0.0     ! Pa
 p_fd_plunger = 0.0     ! Pa
 
 ! atmosphere
-p_atm    = 100000.0 ! Pa (optional)
+p_atm    = 100000.0 ! Pa (optional, absolute)
 temp_atm = 310.0    ! K (optional)
 
 ! flow restriction

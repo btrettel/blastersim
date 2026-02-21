@@ -27,8 +27,7 @@
     - Post BlasterSim to SpudFiles after adding pneumatic mode
 - Convert validation cases to use input files
     - People are probably going to be more convinced of the accuracy of BlasterSim by the validation tests than anything else.
-    - Convert manually created test cases into inputs in the examples folder.
-    - 2010 validation cases
+    - 2010 validation cases documentation
         - Add photo of blaster
         - Shooting Chrony F-1 Chronograph (green)
             - serial number 387616
@@ -36,7 +35,6 @@
         - Add table listing all raw data
         - shooting_chrony_inc_users_2016
         - plot of pressure vs. muzzle velocity, experimental vs. prediction
-    - Eliminate convert.f90 and test_convert.f90.
 - Document how variable names are converted from LaTeX and code, as a general rule.
 - Have a conversion table for LaTeX and code variable names.
 - Document `logical`s in `\secref{inputs-general}`: `.true.` and `.false.`

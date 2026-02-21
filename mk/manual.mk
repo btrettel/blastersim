@@ -31,6 +31,8 @@ defaults.tex: test_cva$(BINEXT)
 
 io.nml: examples$(DIR_SEP)springer-example.nml
 
+validation.nml: examples$(DIR_SEP)pneumatic-2010-08-07-25-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-30-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-40-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-50-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-60-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-70-psi.nml
+
 tests.html:
 	gentesthtml$(BINEXT) tests.html $(TESTNML)
 

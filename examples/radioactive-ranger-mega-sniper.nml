@@ -48,6 +48,6 @@ b   = 0.5    ! unitless (guessed)
 ! atmosphere
 ! [1]: > I am also 79 [ft?] above sea level, tests were conducted inside at about 70°F. Not sure on humidity, but 50% is probably a decent guess.
 ! Using this calculator: <https://www.mide.com/air-pressure-at-altitude-calculator>
-p_atm    = 101109.95 ! Pa
+p_atm    = 101109.95 ! Pa (absolute)
 temp_atm = 294.26    ! K
 /

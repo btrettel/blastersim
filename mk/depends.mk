@@ -71,8 +71,8 @@ test_io$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) 
 io.nml: test_io$(BINEXT)
 	$(RUN)test_io$(BINEXT)
 
-test_validation$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)io.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) src$(DIR_SEP)geninput_pneumatic.f90 src$(DIR_SEP)geninput_springer.f90 test$(DIR_SEP)test_validation.f90
-	$(FC) $(OFLAG) $@ $(FFLAGS) src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)io.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_validation.f90
+test_validation$(BINEXT): src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)io.$(OBJEXT) src$(DIR_SEP)port.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) src$(DIR_SEP)geninput_pneumatic.f90 src$(DIR_SEP)geninput_springer.f90 test$(DIR_SEP)test_validation.f90
+	$(FC) $(OFLAG) $@ $(FFLAGS) src$(DIR_SEP)$(BUILD).$(OBJEXT) src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)io.$(OBJEXT) src$(DIR_SEP)port.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)timer.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) test$(DIR_SEP)test_validation.f90
 
 validation.nml: test_validation$(BINEXT)
 	$(RUN)test_validation$(BINEXT)

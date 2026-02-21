@@ -1,5 +1,5 @@
 &pneumatic
-id = "pneumatic-2010-08-07-30-psi"
+id = "pneumatic-2010-08-07-40-psi"
 
 ! atmosphere
 p_atm    = 101350.0 ! Pa (absolute)
@@ -9,12 +9,12 @@ temp_atm = 302.6    ! K
 ! Appears to be constructed about 6 inches of 3/8" NPT threaded steel nipple from the photo I have.
 ! I guess I bought the pipe from Home Depot or Lowes as it doesn't appear on my old McMaster-Carr orders.
 ! Seems to be similar to <https://www.mcmaster.com/4830K158>.
-p_chamber   = 206842.72    ! Pa (gauge, 30 psig)
+p_chamber   = 275790.29    ! Pa (gauge, 40 psig)
 vol_chamber = 1.802577e-05 ! m3 (1.1 in3, measured)
 d_chamber   = 12.5222e-3   ! m (0.493 in, guessed)
 
 ! flow restriction
-d_e = 3.3e-3 ! m (calibrated)
+d_e = 2.9e-3 ! m (calibrated)
 b   = 0.5    ! unitless (guessed)
 
 ! barrel
