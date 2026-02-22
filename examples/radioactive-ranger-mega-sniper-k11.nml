@@ -1,9 +1,14 @@
 ! [1] <https://www.reddit.com/r/Nerf/comments/1bhgyin/modelling_nerf_blaster_physics/kvfxiaw/>
 ! > 314 feet per second [95.7 m/s]
 
-! [2] <https://discord.com/channels/825852031239061545/1177799131268382902/1177800657453994074>
+! [2] <https://discord.com/channels/825852031239061545/1462571693628461157/1473142706871206090> (BlasterSim thread)
+! > 20.10g. Not 19.03g.
+! > And 89.40g spring weight.
 
-! [3] <https://discord.com/channels/825852031239061545/949069013001068544/1470923475882475602>
+! [3] <https://discord.com/channels/825852031239061545/1177799131268382902/1177800657453994074> (efficiency board)
+! > Name/part number of spring used: K11, 9637K11
+
+! [4] <https://discord.com/channels/825852031239061545/949069013001068544/1470923475882475602>
 ! > 294, 298, 307, 312, 309, 298, 307, 288, 294, 298, 314
 ! > High: 314fps [95.7 m/s)
 ! > Low: 288fps [87.8 m/s]
@@ -11,10 +16,8 @@
 ! > SD: 8.4509 [2.58 m/s]
 ! > Count: 11
 
-! [4] <https://discord.com/channels/825852031239061545/1462571693628461157/1473142706871206090>
-
 &springer
-id = "radioactive-ranger-mega-sniper"
+id = "radioactive-ranger-mega-sniper-k11"
 
 ! barrel
 d_barrel  = 19.7358e-3 ! m [1]
@@ -27,16 +30,18 @@ p_fd_proj = 0.0        ! Pa (guessed as it seems to be low friction)
 vol_dead = 2.9415514e-5 ! m3 [1]
 
 ! plunger tube
-d_plunger    = 43.6e-3   ! m [1]
-k            = 1110.3041 ! N/m (6.34 lbf/in) [1]
-l_draw       = 140.2e-3  ! m [2]
-m_plunger    = 20.10e-3  ! kg [4]
-m_spring     = 89.40e-3  ! kg [4]
-p_fs_plunger = 0.0       ! Pa (guessed as it seems to be low friction)
-p_fd_plunger = 0.0       ! Pa (guessed as it seems to be low friction)
+d_plunger    = 43.6e-3  ! m [1]
+m_plunger    = 20.10e-3 ! kg [2] (corrected from [1])
+p_fs_plunger = 0.0      ! Pa (guessed as it seems to be low friction)
+p_fd_plunger = 0.0      ! Pa (guessed as it seems to be low friction)
 
-! l_spring = 260.35mm [1]
-! l_pre    = 190.8 mm [2]
+! spring (K11)
+k        = 1110.3041 ! N/m (6.34 lbf/in) [1]
+l_draw   = 140.2e-3  ! m [3] (corrected from [1])
+m_spring = 89.40e-3  ! kg [2]
+
+! l_spring = 260.35 mm [1]
+! l_pre    = 190.8 mm [3]
 ! delta_pre = l_spring - l_pre
 delta_pre = 69.55e-3 ! m
 

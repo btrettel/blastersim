@@ -1,0 +1,61 @@
+! [1] <https://www.reddit.com/r/Nerf/comments/1bhgyin/modelling_nerf_blaster_physics/kvfxiaw/>
+! Same blaster, different spring and barrel.
+
+! [2] <https://discord.com/channels/825852031239061545/1462571693628461157/1473142706871206090> (BlasterSim thread)
+! > 20.10g. Not 19.03g.
+
+! [3] <https://discord.com/channels/825852031239061545/1177799131268382902/1177799131268382902> (efficiency board)
+! > Name/part number of spring used: K17 (Defective)
+! > Length of spring, and if it is New or Worn: 10.5 inches, worn
+! > Available spring space when unprimed (total precompression): 190.8mm
+
+! [4] <https://discord.com/channels/825852031239061545/1462571693628461157/1473147620359934022> (BlasterSim thread)
+! > K17 spring rate: 1.71 [lbf/in]
+! > K17 spring weight: 66.13g
+
+! [5] <https://discord.com/channels/825852031239061545/1462571693628461157/1473149824315560138> (BlasterSim thread)
+! > The k17 and 16kg spring setups were using a 20 inch barrel.
+! > 508mm-13.5mm pusher depth
+
+! [6] <https://discord.com/channels/825852031239061545/1462571693628461157/1473143188209533160> (BlasterSim thread)
+! > Average (24 shots): 159.79fps [48.7 m/s]
+
+&springer
+id = "radioactive-ranger-mega-sniper-k17"
+
+! barrel
+d_barrel  = 19.7358e-3 ! m (assumed same diameter as [1])
+l_travel  = 494.5e-3   ! m [5]
+m_proj    = 2.65e-3    ! kg [1]
+p_fs_proj = 0.0        ! Pa (guessed as it seems to be low friction)
+p_fd_proj = 0.0        ! Pa (guessed as it seems to be low friction)
+
+! Dead space: > 13.5763mm inner diameter, 203.2mm long
+vol_dead = 2.9415514e-5 ! m3 [1]
+
+! plunger tube
+d_plunger    = 43.6e-3  ! m [1]
+m_plunger    = 20.10e-3 ! kg [2]
+p_fs_plunger = 0.0      ! Pa (guessed as it seems to be low friction)
+p_fd_plunger = 0.0      ! Pa (guessed as it seems to be low friction)
+
+! spring (K17)
+k        = 299.46689 ! N/m (1.71 lbf/in) [4]
+l_draw   = 140.2e-3  ! m [3] (corrected from [1])
+m_spring = 66.13e-3  ! kg [4]
+
+! l_spring = 266.7 mm (10.5 in) [3]
+! l_pre    = 190.8 mm [3]
+! delta_pre = l_spring - l_pre
+delta_pre = 75.9e-3 ! m
+
+! flow restriction
+d_e = 6.8e-3 ! m (calibrated for K11 average)
+b   = 0.5    ! unitless (guessed)
+
+! atmosphere
+! [1]: > I am also 79 [ft?] above sea level, tests were conducted inside at about 70°F. Not sure on humidity, but 50% is probably a decent guess.
+! Using this calculator: <https://www.mide.com/air-pressure-at-altitude-calculator>
+p_atm    = 101109.95 ! Pa (absolute)
+temp_atm = 294.26    ! K
+/
