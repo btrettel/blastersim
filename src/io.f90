@@ -73,7 +73,7 @@ subroutine create_barrel(vol_dead, csa_barrel, p_atm, temp_atm, m_p, p_fs, p_fd,
                     i_cv_mirror, x_stop=x_stop)
 end subroutine create_barrel
 
-subroutine read_springer_namelist(input_file, sys, config, rc)
+subroutine read_springer_namelist(input_file, sys, config, rc_read)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
@@ -83,7 +83,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc)
     character(len=*), intent(in)                   :: input_file
     type(cv_system_type), allocatable, intent(out) :: sys
     type(run_config_type), intent(out)             :: config
-    integer, intent(out)                           :: rc
+    integer, intent(out)                           :: rc_read
     
     type(si_velocity) :: x_dot
     type(unitless)    :: y(1)
@@ -151,7 +151,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc)
     call config%set(id, csv_output=.true., dt=dt_u, n_d=0)
 end subroutine read_springer_namelist
 
-subroutine read_pneumatic_namelist(input_file, sys, config, rc)
+subroutine read_pneumatic_namelist(input_file, sys, config, rc_read)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
@@ -161,7 +161,7 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc)
     character(len=*), intent(in)                   :: input_file
     type(cv_system_type), allocatable, intent(out) :: sys
     type(run_config_type), intent(out)             :: config
-    integer, intent(out)                           :: rc
+    integer, intent(out)                           :: rc_read
     
     type(si_velocity)     :: x_dot
     type(unitless)        :: y(1)

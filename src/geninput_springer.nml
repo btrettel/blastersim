@@ -183,6 +183,30 @@ default_value         = "-1.0"
 bound_fmt             = "f3.1"
 /
 
+&input_variable
+variable_name         = "v_muzzle"
+type_definition       = "type(si_velocity)"
+required              = .false.
+tex_unit              = "m/s"
+tex_description       = "Experimental muzzle velocity for comparison/validation purposes."
+tex_description_2     = "Ignored outside of BlasterSim validation tests."
+tex_variable_name     = "$v_\text{muzzle}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+default_value         = "0.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "rc"
+type_definition       = "integer"
+required              = .false.
+tex_description       = "Expected BlasterSim return code corresponding to experimental muzzle velocity set via \texttt{v\_muzzle}."
+tex_description_2     = "Ignored outside of BlasterSim validation tests. Used when the projectile should not expected to exit the barrel by setting \texttt{rc = 1}; see \secref{run-time-checks} for other \texttt{rc} codes. The default \texttt{rc} value of 0 is for when the projectile does leave the barrel."
+default_value         = "0"
+/
+
 ! &input_variable
 ! variable_name         = "delta_leak"
 ! type_definition       = "type(si_length)"
@@ -213,7 +237,7 @@ bound_fmt             = "f3.1"
 ! upper_bound_not_equal = .false.
 ! default_value         = "0.5"
 ! bound_fmt             = "f3.1"
-/
+! /
 
 ! TODO: d_e_rear, b_rear, l_tube, l_head, other variables needed for behind the plunger pulling a vacuum
 

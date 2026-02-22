@@ -45,6 +45,7 @@ integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
 integer, public, parameter :: MAX_CV_TYPE    = 2
 
+!tripwire$ begin 094359D3 Update \secref{run-time-checks} and `rc` in geninput_*.nml.
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
 integer, public, parameter :: SUCCESS_RUN_RC                = 0
 integer, public, parameter :: TIMEOUT_RUN_RC                = 1
@@ -61,6 +62,7 @@ integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 11
 integer, public, parameter :: M_BLOW_UP_RUN_RC              = 12
 integer, public, parameter :: E_BLOW_UP_RUN_RC              = 13
 integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 14
+!tripwire$ end
 
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
