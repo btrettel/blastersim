@@ -1,5 +1,11 @@
 ### v0.2.0
 
+- Add LLM logs to repo.
+- Add muzzle velocity to input file to ease making comparisons.
+    - Variable name: `mv` is inconsistent. `v_muzzle`?
+- Predicted vs. actual plot generation for validation section of docs.
+- Note in validation section: Blasters are assumed to have constant `d_e` and `b` unless the flow restriction changes. No pressure effects on `d_e`.
+- Use one `d_e` value for 2010 pneumatic cases.
 - For consistency, make macros for LaTeX variable names?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
@@ -316,6 +322,8 @@
 - Add valve poppet model using pressures from CVs. Have ability to model valve internals by getting pressures from a third control volume connected to the pilot valve. Then you could model the movement of poppets and whatnot. You'll need some way to handle the "valve profile" or whatever it's called: relationship between poppet location and flow cross-sectional area.
     - `con%type = TIME_PROFILE`: use for human-actuated valves, burst disks, paths that are always open
     - `con%type = POPPET_MOTION`: use for piloted valves, needs a third connection?
+- Speed seal/hole: "leak" rate is a function of position. This could get the plunger to a higher initial speed.
+    - <https://discord.com/channels/825852031239061545/1462571693628461157/1474960906206183494>
 - promotion
     - Post on:
         - r/nerf

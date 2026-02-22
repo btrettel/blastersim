@@ -4,20 +4,34 @@
 
 Contributions are welcome.
 Contributors can file issues and pull requests on GitHub at \url{https://github.com/btrettel/blastersim}.
-
-BlasterSim uses \href{https://trunkbaseddevelopment.com/}{trunk based development}, in other words, there are no release branches and instead releases are noted with tags. Temporary feature branches are used as necessary. Please do not squash your commits as that can make \texttt{git bisect} work poorly.
-
-Validation data is particularly welcome.
-To contribute validation data, recreate the experimental conditions in BlasterSim and file an issue with the BlasterSim inputs, file a pull request, or contact Ben Trettel directly.
-
-BlasterSim follows a rigorous software development process.
-Tests should be developed to make sure that BlasterSim features work as intended.
-All new and existing tests must pass.
+Pull requests must meet the following requirements:
+\begin{itemize}
+\item The scope of the change must be small enough for me to easily review.
+\item All commit messages must be descriptive.
+Use \href{https://www.conventionalcommits.org/en/v1.0.0/}{Conventional Commits} prefixes.
+\item Do not squash your commits before sending a pull request.
+That can make \texttt{git bisect} work poorly.
+\item Contributed code must pass all existing tests.
+Contributed code with new functionality must add and pass new tests for the new functionality.
 Existing tests can be run with \texttt{make check} on Linux and macOS and \texttt{jom check} on Windows as discussed in \secref{verval}.
 The tests themselves are in the test directory and are Fortran code.
 Contributors should examine existing tests to understand the testing system.
-Additionally, new features should be documented.
+\item New features must be documented.
 See the docs directory for this documentation's source code in LaTeX.
+\end{itemize}
+
+BlasterSim uses \href{https://trunkbaseddevelopment.com/}{trunk based development}.
+In other words, there are no release branches and instead releases are noted with tags.
+Temporary feature branches are used as necessary.
+
+Contributing validation data would be particularly welcome.
+To contribute validation data, recreate the experimental conditions in BlasterSim and file an issue with the BlasterSim inputs, file a pull request, or contact Ben Trettel directly.
+
+A brief note on generative AI\@:
+To date, all BlasterSim code is written by a human.
+AI was used in BlasterSim's development only as a research and learning tool, not to write code.
+I am willing to accept LLM-written code that meets the pull request requirements listed above, and one additional requirement:
+The prompts used to generate the code will need to be provided in the pull request.
 
 \section{Compiling BlasterSim}\label{compiling}
 
@@ -123,7 +137,7 @@ The control volume index for the barrel is \texttt{I\_BARREL}, which is set to 1
 The following features are planned for the future:
 \begin{itemize}
 \item An exterior ballistics calculator.
-\item Uncertainty quantification.
+\item Uncertainty quantification. (For example, could be used to find standard deviation of muzzle velocity.)
 \item Design optimization.
 \item A pressure gradient model to improve accuracy for long barrels.
 \item A transonic correction model to account for potential shock waves in front of the projectile.
@@ -133,9 +147,3 @@ The following features are planned for the future:
     \item A web-based interface for informal use and use on mobile devices.
 \end{itemize}
 \end{itemize}
-
-%\section{Generative AI}
-
-%All BlasterSim code is written by a human.
-%No BlasterSim code was written by generative AI.
-%AI was used in BlasterSim's development only as a research and learning tool, not to write code.
