@@ -66,6 +66,7 @@ docs/blastersim_bibertool.bib
 docs/compiler.tex
 defaults.tex
 docs/defaults.tex
+docs/tests.tex
 missed.txt
 *.opt.yaml
 *.optrpt

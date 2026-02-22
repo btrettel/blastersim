@@ -98,6 +98,8 @@ BlasterSim uses LaTeX for this documentation.
 All of the requirements from \secref{compiling-git} are required to compile the documentation as parts of it are auto-generated from BlasterSim tests.
 A LaTeX distribution like \href{https://www.tug.org/texlive/}{TeX Live} for Linux or \href{https://miktex.org/}{MikTeX} for Windows is required to compile the documentation.
 On Linux, \href{http://aspell.net/}{Aspell} is also required for spell checking.
+Additionally, compiling the documentation requires that gentesthtml be built from the \href{https://github.com/btrettel/flt/}{FLT} repository mentioned previously.
+This can be compiled with \texttt{make gentesthtml} on Linux or with \texttt{jom gentesthtml.exe} on Windows.
 
 BlasterSim's PDF documentation can be compiled by running \texttt{make docs/blastersim.pdf}.
 BlasterSim's HTML documentation can be compiled by running \texttt{make docs/index.html}.
@@ -105,9 +107,6 @@ BlasterSim's HTML documentation can be compiled by running \texttt{make docs/ind
 Note that these Make commands will run some BlasterSim tests to generate some numbers to print in the documentation.
 This will slow down compilation of the documentation
 For speed, once the documentation numbers are generated, these BlasterSim tests will not be run again when compiling the documentation unless BlasterSim's code changes.
-
-To build the test summary HTML file docs/tests.html requires that gentesthtml be built from the \href{https://github.com/btrettel/flt/}{FLT} repository mentioned previously.
-This can be compiled with \texttt{make gentesthtml} on Linux or with \texttt{jom gentesthtml.exe} on Windows.
 
 \section{BlasterSim source code conventions}\label{conventions}
 % TODO

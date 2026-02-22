@@ -15,11 +15,7 @@ type(test_results_type) :: tests
 
 call tests%start_tests("validation.nml")
 
-! pneumatics
-call test_2010_08_07(tests)
-
-! springers
-! TODO
+call pneumatic_2010_08_07(tests)
 
 call tests%end_tests()
 
@@ -62,7 +58,7 @@ end subroutine run_pneumatic_get_mv
 
 ! TODO: Check handwritten notes for more information. I can't find anything in the scans I have.
 
-subroutine test_2010_08_07(tests)
+subroutine pneumatic_2010_08_07(tests)
     use convert, only: fps_const
     use prec, only: CL, WP
     use port, only: path_join
@@ -79,47 +75,52 @@ subroutine test_2010_08_07(tests)
     path_array(2) = "pneumatic-2010-08-07-25-psi.nml"
     input_file    = path_join(path_array)
     call run_pneumatic_get_mv(input_file, mv, rc)
-    call tests%integer_eq(rc, TIMEOUT_RUN_RC, "test_2010_08_07, 25 psi, status%rc (projectile did not exit)")
+    call tests%integer_eq(rc, TIMEOUT_RUN_RC, "pneumatic, 2010-08-07 experiments, 25 psi, status%rc (projectile did not exit)")
     
     path_array(2) = "pneumatic-2010-08-07-30-psi.nml"
     input_file    = path_join(path_array)
     call run_pneumatic_get_mv(input_file, mv, rc)
-    call tests%integer_eq(rc, SUCCESS_RUN_RC, "test_2010_08_07, 30 psi, status%rc")
-    call tests%real_eq(mv%v%v, 23.80285338515869_WP, "test_2010_08_07, 30 psi, muzzle velocity (characterization)")
+    call tests%integer_eq(rc, SUCCESS_RUN_RC, "pneumatic, 2010-08-07 experiments, 30 psi, status%rc (projectile exited)")
+    call tests%real_eq(mv%v%v, 23.80285338515869_WP, &
+                        "pneumatic, 2010-08-07 experiments, 30 psi, muzzle velocity (characterization)")
     v_exp = fps_const(80.465_WP, 0)
-    call tests%real_eq(mv%v%v, v_exp%v%v, "test_2010_08_07, 30 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
+    call tests%real_eq(mv%v%v, v_exp%v%v, "pneumatic, 2010-08-07 experiments, 30 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
     
     path_array(2) = "pneumatic-2010-08-07-40-psi.nml"
     input_file    = path_join(path_array)
     call run_pneumatic_get_mv(input_file, mv, rc)
-    call tests%integer_eq(rc, SUCCESS_RUN_RC, "test_2010_08_07, 40 psi, status%rc")
-    call tests%real_eq(mv%v%v, 35.761901429472438_WP, "test_2010_08_07, 40 psi, muzzle velocity (characterization)")
+    call tests%integer_eq(rc, SUCCESS_RUN_RC, "pneumatic, 2010-08-07 experiments, 40 psi, status%rc (projectile exited)")
+    call tests%real_eq(mv%v%v, 35.761901429472438_WP, &
+                        "pneumatic, 2010-08-07 experiments, 40 psi, muzzle velocity (characterization)")
     v_exp = fps_const(120.353_WP, 0)
-    call tests%real_eq(mv%v%v, v_exp%v%v, "test_2010_08_07, 40 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
+    call tests%real_eq(mv%v%v, v_exp%v%v, "pneumatic, 2010-08-07 experiments, 40 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
     
     path_array(2) = "pneumatic-2010-08-07-50-psi.nml"
     input_file    = path_join(path_array)
     call run_pneumatic_get_mv(input_file, mv, rc)
-    call tests%integer_eq(rc, SUCCESS_RUN_RC, "test_2010_08_07, 50 psi, status%rc")
-    call tests%real_eq(mv%v%v, 45.359461217896239_WP, "test_2010_08_07, 50 psi, muzzle velocity (characterization)")
+    call tests%integer_eq(rc, SUCCESS_RUN_RC, "pneumatic, 2010-08-07 experiments, 50 psi, status%rc (projectile exited)")
+    call tests%real_eq(mv%v%v, 45.359461217896239_WP, &
+                        "pneumatic, 2010-08-07 experiments, 50 psi, muzzle velocity (characterization)")
     v_exp = fps_const(145.664_WP, 0)
-    call tests%real_eq(mv%v%v, v_exp%v%v, "test_2010_08_07, 50 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
+    call tests%real_eq(mv%v%v, v_exp%v%v, "pneumatic, 2010-08-07 experiments, 50 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
     
     path_array(2) = "pneumatic-2010-08-07-60-psi.nml"
     input_file    = path_join(path_array)
     call run_pneumatic_get_mv(input_file, mv, rc)
-    call tests%integer_eq(rc, SUCCESS_RUN_RC, "test_2010_08_07, 60 psi, status%rc")
-    call tests%real_eq(mv%v%v, 49.27168246923017_WP, "test_2010_08_07, 60 psi, muzzle velocity (characterization)")
+    call tests%integer_eq(rc, SUCCESS_RUN_RC, "pneumatic, 2010-08-07 experiments, 60 psi, status%rc (projectile exited)")
+    call tests%real_eq(mv%v%v, 49.27168246923017_WP, &
+                        "pneumatic, 2010-08-07 experiments, 60 psi, muzzle velocity (characterization)")
     v_exp = fps_const(158.567_WP, 0)
-    call tests%real_eq(mv%v%v, v_exp%v%v, "test_2010_08_07, 60 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
+    call tests%real_eq(mv%v%v, v_exp%v%v, "pneumatic, 2010-08-07 experiments, 60 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
     
     path_array(2) = "pneumatic-2010-08-07-70-psi.nml"
     input_file    = path_join(path_array)
     call run_pneumatic_get_mv(input_file, mv, rc)
-    call tests%integer_eq(rc, SUCCESS_RUN_RC, "test_2010_08_07, 70 psi, status%rc")
-    call tests%real_eq(mv%v%v, 59.13020469015979_WP, "test_2010_08_07, 70 psi, muzzle velocity (characterization)")
+    call tests%integer_eq(rc, SUCCESS_RUN_RC, "pneumatic, 2010-08-07 experiments, 70 psi, status%rc (projectile exited)")
+    call tests%real_eq(mv%v%v, 59.13020469015979_WP, &
+                        "pneumatic, 2010-08-07 experiments, 70 psi, muzzle velocity (characterization)")
     v_exp = fps_const(190.987_WP, 0)
-    call tests%real_eq(mv%v%v, v_exp%v%v, "test_2010_08_07, 70 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
-end subroutine test_2010_08_07
+    call tests%real_eq(mv%v%v, v_exp%v%v, "pneumatic, 2010-08-07 experiments, 70 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
+end subroutine pneumatic_2010_08_07
 
 end program test_validation

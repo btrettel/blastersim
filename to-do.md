@@ -1,6 +1,5 @@
 ### v0.2.0
 
-- Check all file headers for FLT and update to be for BlasterSim as needed.
 - For consistency, make macros for LaTeX variable names?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
@@ -54,11 +53,7 @@
     - Process test output and put the results in the documentation.
         - LaTeX documentation
             - code coverage
-            - percentage passing
-            - total number of passing tests
-            - total number of tests
             - other metrics like assertion density
-        - Output a separate HTML file including all the previous information and details for all tests.
         - Check that all test descriptions are unique.
     - In BlasterSim code, refer to docs in procedures as appropriate. Exact solution test, governing equations, run time checks.
     - Also refer to code in docs and link to GitHub.

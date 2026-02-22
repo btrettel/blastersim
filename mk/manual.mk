@@ -33,8 +33,8 @@ io.nml: examples$(DIR_SEP)springer-example.nml
 
 validation.nml: examples$(DIR_SEP)pneumatic-2010-08-07-25-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-30-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-40-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-50-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-60-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-70-psi.nml
 
-tests.html:
-	gentesthtml$(BINEXT) tests.html $(TESTNML)
+tests.html docs$(DIR_SEP)tests.tex: $(TESTNML)
+	gentesthtml$(BINEXT) tests.html docs$(DIR_SEP)tests.tex $(TESTNML)
 
 #############################
 # Additional files to clean #

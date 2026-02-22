@@ -18,7 +18,8 @@ docs$(DIR_SEP)defaults.tex \
 docs$(DIR_SEP)units.f90 \
 docs$(DIR_SEP)test_units_pass.txt \
 docs$(DIR_SEP)test_units_fail.txt \
-docs$(DIR_SEP)compiler.tex
+docs$(DIR_SEP)compiler.tex \
+docs$(DIR_SEP)tests.tex
 
 TEX_DEPS = mk$(DIR_SEP)latex.mk \
 $(SPELL_DEPS) \
