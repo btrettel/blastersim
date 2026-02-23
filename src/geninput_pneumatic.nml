@@ -194,8 +194,8 @@ bound_fmt             = "f3.1"
 variable_name         = "rc_actual"
 type_definition       = "integer"
 required              = .false.
-tex_description       = "Expected BlasterSim return code corresponding to experimental muzzle velocity set via \texttt{v\_muzzle}."
-tex_description_2     = "Ignored outside of BlasterSim validation tests. Used when the projectile should not expected to exit the barrel by setting \texttt{rc_actual = 1}; see \secref{run-time-checks} for other \texttt{rc} codes. The default \texttt{rc_actual} value of 0 is for when the projectile does leave the barrel."
+tex_description       = "Expected BlasterSim return code corresponding to experimental muzzle velocity set via \texttt{v\_muzzle\_actual}."
+tex_description_2     = "Ignored outside of BlasterSim validation tests. Used when the projectile should not expected to exit the barrel by setting \texttt{rc\_actual = 1}; see \secref{run-time-checks} for other \texttt{rc} codes. The default \texttt{rc\_actual} value of 0 is for when the projectile does leave the barrel."
 default_value         = "0"
 /
 
