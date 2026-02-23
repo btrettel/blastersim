@@ -76,6 +76,7 @@ end subroutine create_barrel
 subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, v_muzzle_actual_, rc_actual_)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT
+    use port, only: path_basename
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
     use checks, only: is_close, check
     use prec, only: CL, PI
@@ -87,6 +88,7 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, v_muzzle_ac
     type(si_velocity), intent(out), optional       :: v_muzzle_actual_
     integer, intent(out), optional                 :: rc_actual_
     
+    character(len=128)    :: id
     type(si_velocity)     :: x_dot
     type(unitless)        :: y(1)
     type(si_area)         :: csa_chamber, csa_barrel
@@ -98,6 +100,10 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, v_muzzle_ac
     integer, parameter :: I_CHAMBER = 2, I_BARREL_ATM  = 3
     
     include "geninput_pneumatic.f90"
+    
+    ! create `id`
+    
+    call path_basename(input_file, id)
     
     ! construct `sys`
     
@@ -149,13 +155,14 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, v_muzzle_ac
     
     call config%set(id, csv_output=.true., dt=dt_u, n_d=0)
     
-    v_muzzle_actual_ = v_muzzle_actual_u
-    rc_actual_       = rc_actual
+    if (present(v_muzzle_actual_)) v_muzzle_actual_ = v_muzzle_actual_u
+    if (present(rc_actual_))       rc_actual_       = rc_actual
 end subroutine read_pneumatic_namelist
 
 subroutine read_springer_namelist(input_file, sys, config, rc_read, v_muzzle_actual_, rc_actual_)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT
+    use port, only: path_basename
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
     use checks, only: is_close, check
     use prec, only: CL, PI
@@ -167,13 +174,18 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, v_muzzle_act
     type(si_velocity), intent(out), optional       :: v_muzzle_actual_
     integer, intent(out), optional                 :: rc_actual_
     
-    type(si_velocity) :: x_dot
-    type(unitless)    :: y(1)
-    type(si_area)     :: csa_plunger, csa_barrel
+    character(len=128) :: id
+    type(si_velocity)  :: x_dot
+    type(unitless)     :: y(1)
+    type(si_area)      :: csa_plunger, csa_barrel
     
     integer, parameter :: I_PLUNGER = 2, I_BARREL_ATM  = 3, I_PLUNGER_ATM = 4
     
     include "geninput_springer.f90"
+    
+    ! create `id`
+    
+    call path_basename(input_file, id)
     
     ! construct `sys`
     
@@ -232,8 +244,8 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, v_muzzle_act
     
     call config%set(id, csv_output=.true., dt=dt_u, n_d=0)
     
-    v_muzzle_actual_ = v_muzzle_actual_u
-    rc_actual_       = rc_actual
+    if (present(v_muzzle_actual_)) v_muzzle_actual_ = v_muzzle_actual_u
+    if (present(rc_actual_))       rc_actual_       = rc_actual
 end subroutine read_springer_namelist
 
 end module io

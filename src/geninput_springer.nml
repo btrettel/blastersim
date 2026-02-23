@@ -10,14 +10,6 @@ write_tex          = .true.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 &input_variable
-variable_name     = "id"
-type_definition   = "character(len=128)"
-tex_description   = "Unique identifier for the current simulation."
-tex_description_2 = 'Maximum of 128 characters. Used in the CSV file name, for example, for \texttt{id = "abc"}, the file abc.csv is written. % chktex 18'
-default_value     = "output"
-/
-
-&input_variable
 variable_name         = "dt"
 type_definition       = "type(si_time)"
 tex_unit              = "s"

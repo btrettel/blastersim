@@ -1,6 +1,4 @@
 &springer
-id = "springer-example" ! (optional)
-
 ! barrel
 d_barrel  = 13.0e-3 ! m
 l_travel  = 50.0e-2 ! m

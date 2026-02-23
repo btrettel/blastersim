@@ -21,8 +21,6 @@
 ! > Average (24 shots): 159.79fps [48.7 m/s]
 
 &springer
-id = "radioactive-ranger-mega-sniper-k17"
-
 ! barrel
 d_barrel  = 19.7358e-3 ! m (assumed same diameter as [1])
 l_travel  = 494.5e-3   ! m [5]

@@ -17,7 +17,7 @@ integer, public, parameter :: PLATFORM_WINDOWS  = 2
 character(len=1), public, parameter :: DIR_SEPS(2) = ["/", achar(92)]
 ! For Windows (index 2), nvfortran thinks `\` is trying to escape something, so I need to use `achar`.
 
-public :: platform, path_join, convert_path_unix_to_win
+public :: platform, path_join, convert_path_unix_to_win, path_basename
 
 contains
 
@@ -63,21 +63,21 @@ function path_join(path_array)
     character(len=CL), intent(in) :: path_array(:)
     
     character(len=CL) :: path_join
-    character(len=1)  :: DIR_SEP
+    character(len=1)  :: dir_sep
     
     integer :: i_path
     
     call assert(size(path_array) >= 1, "port (path_join): path_array is too short to join")
     call assert(platform() > 0, "port (path_join): unknown platform")
     
-    DIR_SEP = DIR_SEPS(platform())
+    dir_sep = DIR_SEPS(platform())
     
     path_join = ""
     do i_path = lbound(path_array, dim=1), ubound(path_array, dim=1) ! SERIAL
         path_join = trim(path_join) // trim(path_array(i_path))
         
         if (i_path /= ubound(path_array, dim=1)) then
-            path_join = trim(path_join) // DIR_SEP
+            path_join = trim(path_join) // dir_sep
         end if
     end do
     
@@ -111,5 +111,16 @@ subroutine convert_path_unix_to_win(path, test)
         path(i_next:i_next) = DIR_SEPS(PLATFORM_WINDOWS)
     end do
 end subroutine convert_path_unix_to_win
+
+subroutine path_basename(path, basename)
+    character(len=*), intent(in)  :: path
+    character(len=*), intent(out) :: basename
+    
+    integer :: dot_index, slash_index
+    
+    dot_index   = index(path, ".", back=.true.)
+    slash_index = index(path, DIR_SEPS(platform()), back=.true.)
+    basename    = path(slash_index+1:dot_index-1)
+end subroutine path_basename
 
 end module port

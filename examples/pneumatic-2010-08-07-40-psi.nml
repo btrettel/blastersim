@@ -1,6 +1,4 @@
 &pneumatic
-id = "pneumatic-2010-08-07-40-psi"
-
 ! atmosphere
 p_atm    = 101350.0 ! Pa (absolute)
 temp_atm = 302.6    ! K

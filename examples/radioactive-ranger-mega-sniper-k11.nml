@@ -17,8 +17,6 @@
 ! > Count: 11
 
 &springer
-id = "radioactive-ranger-mega-sniper-k11"
-
 ! barrel
 d_barrel  = 19.7358e-3 ! m [1]
 l_travel  = 596.1e-3   ! m (factoring in dart position: "fits 13.5mm into the barrel") [1]

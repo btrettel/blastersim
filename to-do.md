@@ -1,8 +1,7 @@
 ### v0.2.0
 
-- Remove `id` namelist variable and use the filename instead for simplicity.
-- Add LLM logs to repo?
 - Predicted vs. actual plot generation for validation section of docs.
+- Add LLM logs to repo?
 - Note in validation section: Blasters are assumed to have constant `d_e` and `b` unless the flow restriction changes. No pressure effects on `d_e`.
 - Use one `d_e` value for 2010 pneumatic cases.
 - For consistency, make macros for LaTeX variable names?
