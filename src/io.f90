@@ -73,7 +73,7 @@ subroutine create_barrel(vol_dead, csa_barrel, p_atm, temp_atm, m_p, p_fs, p_fd,
                     i_cv_mirror, x_stop=x_stop)
 end subroutine create_barrel
 
-subroutine read_springer_namelist(input_file, sys, config, rc_read)
+subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, v_muzzle_actual_, rc_actual_)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
@@ -84,6 +84,88 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read)
     type(cv_system_type), allocatable, intent(out) :: sys
     type(run_config_type), intent(out)             :: config
     integer, intent(out)                           :: rc_read
+    type(si_velocity), intent(out), optional       :: v_muzzle_actual_
+    integer, intent(out), optional                 :: rc_actual_
+    
+    type(si_velocity)     :: x_dot
+    type(unitless)        :: y(1)
+    type(si_area)         :: csa_chamber, csa_barrel
+    type(si_inverse_mass) :: rm_p
+    type(si_stiffness)    :: k
+    type(si_length)       :: delta_pre, x_chamber
+    type(si_pressure)     :: p_f_chamber
+    
+    integer, parameter :: I_CHAMBER = 2, I_BARREL_ATM  = 3
+    
+    include "geninput_pneumatic.f90"
+    
+    ! construct `sys`
+    
+    allocate(sys)
+    allocate(sys%cv(3))
+    allocate(sys%con(3, 3))
+    
+    ! `sys%con`
+    
+    sys%con(I_BARREL, I_CHAMBER)%active      = .true.
+    sys%con(I_BARREL, I_CHAMBER)%a_e         = (PI/4.0_WP)*square(d_e_u)
+    sys%con(I_BARREL, I_CHAMBER)%b           = b_u
+    sys%con(I_BARREL, I_CHAMBER)%t_opening   = t_opening_u
+    call sys%con(I_BARREL, I_CHAMBER)%alpha_0%v%init_const(0.0_WP, 0)
+    call sys%con(I_BARREL, I_CHAMBER)%alpha_dot_0%v%init_const(1.0_WP, 0)
+    call sys%con(I_BARREL, I_CHAMBER)%m_dot_0%v%init_const(0.0_WP, 0)
+    sys%con(I_BARREL, I_BARREL)%active      = .false.
+    sys%con(I_BARREL, I_BARREL_ATM)%active  = .false.
+    
+    sys%con(I_CHAMBER, I_BARREL)            = sys%con(I_BARREL, I_CHAMBER)
+    sys%con(I_CHAMBER, I_CHAMBER)%active    = .false.
+    sys%con(I_CHAMBER, I_BARREL_ATM)%active = .false.
+    
+    sys%con(I_BARREL_ATM, I_BARREL)%active      = .false.
+    sys%con(I_BARREL_ATM, I_CHAMBER)%active     = .false.
+    sys%con(I_BARREL_ATM, I_BARREL_ATM)%active  = .false.
+    
+    call x_dot%v%init_const(0.0_WP, 0)
+    call y(1)%v%init_const(1.0_WP, 0)
+    call rm_p%v%init_const(0.0_WP, 0) ! immobile
+    call k%v%init_const(0.0_WP, 0)
+    call delta_pre%v%init_const(0.0_WP, 0)
+    call p_f_chamber%v%init_const(0.0_WP, 0)
+    
+    ! `sys%cv(I_BARREL)`: barrel
+    csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
+    call create_barrel(vol_dead_u, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
+                        [DRY_AIR], I_BARREL_ATM, sys%cv(I_BARREL))
+    
+    ! `sys%cv(I_CHAMBER)`: chamber
+    csa_chamber = (PI/4.0_WP)*square(d_chamber_u)
+    x_chamber   = vol_chamber_u/csa_chamber
+    call sys%cv(I_CHAMBER)%set(x_chamber, x_dot, y, p_atm_u + p_chamber_u, temp_atm_u, "chamber", csa_chamber, &
+                        rm_p, p_f_chamber, p_f_chamber, k, delta_pre, [DRY_AIR], 0, &
+                        isentropic_filling=.true., p_atm=p_atm_u)
+    
+    ! `sys%cv(I_BARREL_ATM)`: atmosphere
+    call sys%cv(I_BARREL_ATM)%set_const("atmosphere", csa_barrel, p_atm_u, temp_atm_u, [DRY_AIR], y, I_BARREL)
+    
+    call config%set(id, csv_output=.true., dt=dt_u, n_d=0)
+    
+    v_muzzle_actual_ = v_muzzle_actual_u
+    rc_actual_       = rc_actual
+end subroutine read_pneumatic_namelist
+
+subroutine read_springer_namelist(input_file, sys, config, rc_read, v_muzzle_actual_, rc_actual_)
+    use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
+    use cva, only: cv_system_type, run_config_type, DT_DEFAULT
+    use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
+    use checks, only: is_close, check
+    use prec, only: CL, PI
+    
+    character(len=*), intent(in)                   :: input_file
+    type(cv_system_type), allocatable, intent(out) :: sys
+    type(run_config_type), intent(out)             :: config
+    integer, intent(out)                           :: rc_read
+    type(si_velocity), intent(out), optional       :: v_muzzle_actual_
+    integer, intent(out), optional                 :: rc_actual_
     
     type(si_velocity) :: x_dot
     type(unitless)    :: y(1)
@@ -149,81 +231,9 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read)
                         [DRY_AIR], I_BARREL_ATM, sys%cv(I_BARREL))
     
     call config%set(id, csv_output=.true., dt=dt_u, n_d=0)
+    
+    v_muzzle_actual_ = v_muzzle_actual_u
+    rc_actual_       = rc_actual
 end subroutine read_springer_namelist
-
-subroutine read_pneumatic_namelist(input_file, sys, config, rc_read)
-    use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
-    use cva, only: cv_system_type, run_config_type, DT_DEFAULT
-    use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
-    use checks, only: is_close, check
-    use prec, only: CL, PI
-    
-    character(len=*), intent(in)                   :: input_file
-    type(cv_system_type), allocatable, intent(out) :: sys
-    type(run_config_type), intent(out)             :: config
-    integer, intent(out)                           :: rc_read
-    
-    type(si_velocity)     :: x_dot
-    type(unitless)        :: y(1)
-    type(si_area)         :: csa_chamber, csa_barrel
-    type(si_inverse_mass) :: rm_p
-    type(si_stiffness)    :: k
-    type(si_length)       :: delta_pre, x_chamber
-    type(si_pressure)     :: p_f_chamber
-    
-    integer, parameter :: I_CHAMBER = 2, I_BARREL_ATM  = 3
-    
-    include "geninput_pneumatic.f90"
-    
-    ! construct `sys`
-    
-    allocate(sys)
-    allocate(sys%cv(3))
-    allocate(sys%con(3, 3))
-    
-    ! `sys%con`
-    
-    sys%con(I_BARREL, I_CHAMBER)%active      = .true.
-    sys%con(I_BARREL, I_CHAMBER)%a_e         = (PI/4.0_WP)*square(d_e_u)
-    sys%con(I_BARREL, I_CHAMBER)%b           = b_u
-    sys%con(I_BARREL, I_CHAMBER)%t_opening   = t_opening_u
-    call sys%con(I_BARREL, I_CHAMBER)%alpha_0%v%init_const(0.0_WP, 0)
-    call sys%con(I_BARREL, I_CHAMBER)%alpha_dot_0%v%init_const(1.0_WP, 0)
-    call sys%con(I_BARREL, I_CHAMBER)%m_dot_0%v%init_const(0.0_WP, 0)
-    sys%con(I_BARREL, I_BARREL)%active      = .false.
-    sys%con(I_BARREL, I_BARREL_ATM)%active  = .false.
-    
-    sys%con(I_CHAMBER, I_BARREL)            = sys%con(I_BARREL, I_CHAMBER)
-    sys%con(I_CHAMBER, I_CHAMBER)%active    = .false.
-    sys%con(I_CHAMBER, I_BARREL_ATM)%active = .false.
-    
-    sys%con(I_BARREL_ATM, I_BARREL)%active      = .false.
-    sys%con(I_BARREL_ATM, I_CHAMBER)%active     = .false.
-    sys%con(I_BARREL_ATM, I_BARREL_ATM)%active  = .false.
-    
-    call x_dot%v%init_const(0.0_WP, 0)
-    call y(1)%v%init_const(1.0_WP, 0)
-    call rm_p%v%init_const(0.0_WP, 0) ! immobile
-    call k%v%init_const(0.0_WP, 0)
-    call delta_pre%v%init_const(0.0_WP, 0)
-    call p_f_chamber%v%init_const(0.0_WP, 0)
-    
-    ! `sys%cv(I_BARREL)`: barrel
-    csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
-    call create_barrel(vol_dead_u, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
-                        [DRY_AIR], I_BARREL_ATM, sys%cv(I_BARREL))
-    
-    ! `sys%cv(I_CHAMBER)`: chamber
-    csa_chamber = (PI/4.0_WP)*square(d_chamber_u)
-    x_chamber   = vol_chamber_u/csa_chamber
-    call sys%cv(I_CHAMBER)%set(x_chamber, x_dot, y, p_atm_u + p_chamber_u, temp_atm_u, "chamber", csa_chamber, &
-                        rm_p, p_f_chamber, p_f_chamber, k, delta_pre, [DRY_AIR], 0, &
-                        isentropic_filling=.true., p_atm=p_atm_u)
-    
-    ! `sys%cv(I_BARREL_ATM)`: atmosphere
-    call sys%cv(I_BARREL_ATM)%set_const("atmosphere", csa_barrel, p_atm_u, temp_atm_u, [DRY_AIR], y, I_BARREL)
-    
-    call config%set(id, csv_output=.true., dt=dt_u, n_d=0)
-end subroutine read_pneumatic_namelist
 
 end module io

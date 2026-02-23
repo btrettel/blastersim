@@ -1,8 +1,7 @@
 ### v0.2.0
 
-- Add LLM logs to repo.
-- Add muzzle velocity to input file to ease making comparisons.
-    - Variable name: `mv` is inconsistent. `v_muzzle`?
+- Remove `id` namelist variable and use the filename instead for simplicity.
+- Add LLM logs to repo?
 - Predicted vs. actual plot generation for validation section of docs.
 - Note in validation section: Blasters are assumed to have constant `d_e` and `b` unless the flow restriction changes. No pressure effects on `d_e`.
 - Use one `d_e` value for 2010 pneumatic cases.
@@ -16,8 +15,7 @@
 - Make more validation cases from Radioactive's data.
     - How much does friction need to increase to use full flow area?
     - How much does `delta_leak` need to increase to use full flow area?
-- Remove `id` namelist variable and use the filename instead for simplicity?
-- docs: refer to figure for every variable in springer figure like delta_pre
+- docs: refer to figure for every variable in springer figure like `delta_pre`
 - docs: l_spring = l_pre + delta_pre, l_tube = l_compressed + l_head + l_draw
 - Make `check_sys` check that `x > 0` and note in the documentation that the plunger hitting the end of the plunger tube would make this be violated
 - CSV: Don't print `e_s` if `k == 0.0`
@@ -27,7 +25,6 @@
 - Valve opening time
     - Order-of-accuracy test for valve opening model as that includes time as a factor. This kills two birds with one stone by making this test order-of-accuracy of `m_dot` as well. Use `m_dot_0` with `a_e = 0`.
 - Pneumatic mode
-    - geninput_pneumatic.nml
     - pneumatic-example.nml
     - Post BlasterSim to SpudFiles after adding pneumatic mode
 - Convert validation cases to use input files
