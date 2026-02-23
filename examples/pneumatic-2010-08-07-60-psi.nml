@@ -27,4 +27,7 @@ vol_dead  = 1.802577e-5 ! m3 (measured)
 ! 9500 Pa is about where the maximum is for men according to <https://pmc.ncbi.nlm.nih.gov/articles/PMC1501025/>
 p_fs_proj = 5000.0 ! Pa (guessed)
 p_fd_proj = 0.0    ! Pa (guessed)
+
+! Experimental result
+v_muzzle_actual = 48.331 ! m/s (158.567 ft/s average)
 /

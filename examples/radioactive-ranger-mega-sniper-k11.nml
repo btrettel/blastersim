@@ -48,6 +48,7 @@ delta_pre = 69.55e-3 ! m
 ! flow restriction
 !d_e = 7.1e-3 ! m (calibrated, 95.4 m/s to match maximum)
 d_e = 6.8e-3 ! m (calibrated, 91.8 m/s to match average)
+!d_e = 13.5763e-3 ! m (full flow area)
 b   = 0.5    ! unitless (guessed)
 
 ! atmosphere
