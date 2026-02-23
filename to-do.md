@@ -1,5 +1,9 @@
 ### v0.2.0
 
+- `check_sys`
+    - Time step criteria based on flow rate to empty CV? This wouldn't work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates become unstable.
+    - Try "Lipschitz constant estimate" suggested by Gemini.
+    - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
 - Predicted vs. actual plot generation for validation section of docs.
 - Add LLM logs to repo?
 - Note in validation section: Blasters are assumed to have constant `d_e` and `b` unless the flow restriction changes. No pressure effects on `d_e`.
@@ -227,10 +231,6 @@
 - Arbitrary displacement vs. force curves, using cubic splines for smoothness
 - elastic tubing and other non-linear springs
 - Post-projectile-exit analysis to wait until plunger impact, but still interpolate to get muzzle velocity.
-- `check_sys`
-    - Time step criteria based on flow rate to empty CV? This wouldn't work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV.
-    - Try "Lipschitz constant estimate" suggested by Gemini.
-    - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
 - optimization
     - common optimization activities: optimal barrel length
     - objective functions: maximize muzzle velocity, minimize input energy, minimize input gas mass (to maximize number of shots per tank in a simpler way as minimum input gas mass assumes all gas in the tank can be extracted)

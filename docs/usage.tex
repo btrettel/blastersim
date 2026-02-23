@@ -47,9 +47,9 @@ Using the example input file in \secref{springer-example} returns the following:
 
 After BlasterSim completes, a CSV spreadsheet with detailed data the simulation is written.
 This spreadsheet can be opened in a spreadsheet program like Excel or any other program that supports CSV spreadsheets.
-The name of the spreadsheet is determined by the optional \texttt{id} input variable.
-If \texttt{id} is not provided, it takes the default value of \texttt{output}, so the spreadsheet is written to output.csv.
-In the example in \secref{springer-example}, \texttt{id} was set to ``springer-example'', so the spreadsheet is written to springer-example.csv.
+The name of the spreadsheet is determined by file name of the input file.
+The file extension of the input file is removed and the file extension \texttt{csv} is used instead in the CSV output.
+For example, in \secref{springer-example} the file name is springer-example.nml, so the spreadsheet is written to springer-example.csv.
 
 The CSV file contains the following columns:
 \begin{itemize}
