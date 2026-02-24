@@ -15,7 +15,11 @@ private
 
 public :: celsius_const, psi_const, inch_const, cubic_inches_const, fps_const, lbf_per_in_const
 
-real(WP), public, parameter :: CONVERT_C_TO_K = 273.15_WP ! K, temperature to add to convert from C to K
+real(WP), public, parameter :: CONVERT_C_TO_K    = 273.15_WP ! K, temperature to add to convert from C to K
+real(WP), public, parameter :: CONVERT_S_TO_MS   = 1000.0_WP ! ms/s
+real(WP), public, parameter :: CONVERT_KG_TO_MG  = 1.0e6_WP  ! mg/kg
+real(WP), public, parameter :: CONVERT_M_TO_CM   = 100.0_WP  ! cm/m
+real(WP), public, parameter :: CONVERT_PA_TO_KPA = 1.0e-3_WP ! kPa/Pa
 
 real(WP), parameter :: CONVERT_PSI_TO_PA = 6894.8_WP    ! Pa/psi
 real(WP), parameter :: CONVERT_IN_TO_M   = 2.54e-2_WP   ! m/in

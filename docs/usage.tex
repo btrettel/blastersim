@@ -55,10 +55,10 @@ The CSV file contains the following columns:
 \begin{itemize}
 \item \texttt{t} ($t$): Simulation time.
 Floating-point number.
-Units of s.
+Units of ms.
 \item \texttt{m\_total} ($m_\text{total}$): Total mass in the simulation.
 Floating-point number.
-Units of kg.
+Units of mg.
 This should remain approximately constant and is present for debugging purposes.
 \item \texttt{e\_total} ($e_\text{total}$): Total energy in the simulation.
 Floating-point number.
@@ -68,7 +68,7 @@ This should remain approximately constant and is present for debugging purposes.
 \begin{itemize}
     \item \texttt{x} ($x_i$): Position of the projectile/plunger.
     Floating-point number.
-    Units of m.
+    Units of cm.
     Not present for constant pressure control volumes like atmospheres.
     \item \texttt{x\_dot} ($\dot{x}_i$): Velocity of the projectile/plunger.
     Floating-point number.
@@ -76,7 +76,7 @@ This should remain approximately constant and is present for debugging purposes.
     Not present for constant pressure control volumes like atmospheres.
     \item \texttt{m} ($m_{i,k}$): Mass of gas $k$.
     Floating-point number.
-    Units of kg.
+    Units of mg.
     For constant pressure control volumes (atmospheres), this starts out at zero.
     This can be used to track leaks to the atmosphere.
     \item \texttt{e} ($e_i$): Energy of gas.
@@ -86,7 +86,7 @@ This should remain approximately constant and is present for debugging purposes.
     BlasterSim does not distinguish between work done on a control volume and leaks at the moment, so this being non-zero does not necessarily indicate anything about leaks.
     \item \texttt{p} ($p_i$): Pressure of gas.
     Floating-point number.
-    Units of Pa.
+    Units of kPa.
     \item \texttt{temp} ($T_i$): Temperature of gas.
     Floating-point number.
     Units of K.

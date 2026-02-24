@@ -1,5 +1,9 @@
 ### v0.2.0
 
+- Set time per CSV row output in input file, which will be converted to `csv_frequency`.
+- Make geninput have a scaling factor so that you can enter kPa instead of Pa, etc.?
+    - Then again, this could get confusing if you want something other than the specified units.
+    - When checking for consistency of `tex_unit`, keep track of scaling factor too. Might want to concatenate `tex_unit` and the scaling factor so that you only need to look up one thing.
 - `check_sys`
     - Time step criteria based on flow rate to empty CV? This wouldn't work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates become unstable.
     - Try "Lipschitz constant estimate" suggested by Gemini.
@@ -21,7 +25,6 @@
 - docs: refer to figure for every variable in springer figure like `delta_pre`
 - docs: l_spring = l_pre + delta_pre, l_tube = l_compressed + l_head + l_draw
 - Make `check_sys` check that `x > 0` and note in the documentation that the plunger hitting the end of the plunger tube would make this be violated
-- CSV: Don't print `e_s` if `k == 0.0`
 - CSV: Change `e_p` to `e_k` where k stands for kinetic. This is a lot more clear to me, though maybe it could be confusing with k as the spring constant.
 - CSV: Change `e` to `e_g` for gas energy?
 - CSV: Don't print `rho` for constant pressure CV in CSV as it's printed as zero there if mass is zero.
@@ -117,6 +120,8 @@
     - `make blastersim-*-source.zip`
     - `make blastersim-*-linux-x86-64.zip`
     - upload online
+- Dry-fire mode
+    - <https://discord.com/channels/727038380054937610/1172390267890958366/1475664138180231210>
 
 ***
 

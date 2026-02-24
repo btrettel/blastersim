@@ -1918,6 +1918,8 @@ end subroutine sys_interp
 
 !tripwire$ begin C4615087 Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
 subroutine write_csv_row(csv_unit, sys, t, status, row_type)
+    use convert, only: CONVERT_S_TO_MS, CONVERT_KG_TO_MG, CONVERT_M_TO_CM, CONVERT_PA_TO_KPA
+    
     integer, intent(in)                           :: csv_unit
     type(cv_system_type), allocatable, intent(in) :: sys
     type(si_time), intent(in)                     :: t
@@ -1943,9 +1945,9 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     ! `t`, time
     select case (row_type)
         case (HEADER_ROW_TYPE)
-            write(unit=csv_unit, fmt="(a)", advance="no") '"t (s)",'
+            write(unit=csv_unit, fmt="(a)", advance="no") '"t (ms)",'
         case (NUMBER_ROW_TYPE)
-            write(unit=csv_unit, fmt="(g0, a)", advance="no") t%v%v, ","
+            write(unit=csv_unit, fmt="(g0, a)", advance="no") CONVERT_S_TO_MS*t%v%v, ","
         case default
             error stop "cva (write_csv_row, t): invalid row_type"
     end select
@@ -1954,9 +1956,9 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     m_total = sys%m_total()
     select case (row_type)
         case (HEADER_ROW_TYPE)
-            write(unit=csv_unit, fmt="(a)", advance="no") '"m_total (kg)",'
+            write(unit=csv_unit, fmt="(a)", advance="no") '"m_total (mg)",'
         case (NUMBER_ROW_TYPE)
-            write(unit=csv_unit, fmt="(g0, a)", advance="no") m_total%v%v, ","
+            write(unit=csv_unit, fmt="(g0, a)", advance="no") CONVERT_KG_TO_MG*m_total%v%v, ","
         case default
             error stop "cva (write_csv_row, m_total): invalid row_type"
     end select
@@ -1978,9 +1980,9 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
             ! `x`, location of projectile/plunger
             select case (row_type)
                 case (HEADER_ROW_TYPE)
-                    write(unit=csv_unit, fmt="(3a)", advance="no") '"x (m, ', trim(sys%cv(i_cv)%label), ')",'
+                    write(unit=csv_unit, fmt="(3a)", advance="no") '"x (cm, ', trim(sys%cv(i_cv)%label), ')",'
                 case (NUMBER_ROW_TYPE)
-                    write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%x%v%v, ","
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") CONVERT_M_TO_CM*sys%cv(i_cv)%x%v%v, ","
                 case default
                     error stop "cva (write_csv_row, x): invalid row_type"
             end select
@@ -2000,11 +2002,11 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
         do k_gas = 1, n_gas
             select case (row_type)
                 case (HEADER_ROW_TYPE)
-                    write(unit=csv_unit, fmt="(4a)", advance="no") '"m (kg, ', &
+                    write(unit=csv_unit, fmt="(4a)", advance="no") '"m (mg, ', &
                             trim(sys%cv(i_cv)%gas(k_gas)%label), ', ', &
                             trim(sys%cv(i_cv)%label), ')",'
                 case (NUMBER_ROW_TYPE)
-                    write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%m%v%v, ","
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") CONVERT_KG_TO_MG*sys%cv(i_cv)%m%v%v, ","
                 case default
                     error stop "cva (write_csv_row, m): invalid row_type"
             end select
@@ -2023,10 +2025,10 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
         ! `p`
         select case (row_type)
             case (HEADER_ROW_TYPE)
-                write(unit=csv_unit, fmt="(3a)", advance="no") '"p (Pa, absolute, ', trim(sys%cv(i_cv)%label), ')",'
+                write(unit=csv_unit, fmt="(3a)", advance="no") '"p (kPa, absolute, ', trim(sys%cv(i_cv)%label), ')",'
             case (NUMBER_ROW_TYPE)
                 p = sys%cv(i_cv)%p()
-                write(unit=csv_unit, fmt="(g0, a)", advance="no") p%v%v, ","
+                write(unit=csv_unit, fmt="(g0, a)", advance="no") CONVERT_PA_TO_KPA*p%v%v, ","
             case default
                 error stop "cva (write_csv_row, p): invalid row_type"
         end select
@@ -2064,18 +2066,20 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                     error stop "cva (write_csv_row, e_f): invalid row_type"
             end select
             
-            ! `e_s`
-            select case (row_type)
-                case (HEADER_ROW_TYPE)
-                    write(unit=csv_unit, fmt="(3a)", advance="no") '"e_s (J, ', trim(sys%cv(i_cv)%label), ')",'
-                case (NUMBER_ROW_TYPE)
-                    e_s = sys%cv(i_cv)%e_s()
-                    write(unit=csv_unit, fmt="(g0, a)", advance="no") e_s%v%v, ","
-                case default
-                    error stop "cva (write_csv_row, e_s): invalid row_type"
-            end select
+            ! `e_s` (spring energy)
+            if (.not. is_close(sys%cv(i_cv)%k%v%v, 0.0_WP)) then
+                select case (row_type)
+                    case (HEADER_ROW_TYPE)
+                        write(unit=csv_unit, fmt="(3a)", advance="no") '"e_s (J, ', trim(sys%cv(i_cv)%label), ')",'
+                    case (NUMBER_ROW_TYPE)
+                        e_s = sys%cv(i_cv)%e_s()
+                        write(unit=csv_unit, fmt="(g0, a)", advance="no") e_s%v%v, ","
+                    case default
+                        error stop "cva (write_csv_row, e_s): invalid row_type"
+                end select
+            end if
             
-            ! `e_p`
+            ! `e_p` (projectile/piston kinetic energy)
             select case (row_type)
                 case (HEADER_ROW_TYPE)
                     write(unit=csv_unit, fmt="(3a)", advance="no") '"e_p (J, ', trim(sys%cv(i_cv)%label), ')",'
