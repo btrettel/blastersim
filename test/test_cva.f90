@@ -1438,7 +1438,7 @@ subroutine test_conservation_1(tests)
     type(si_mass)         :: m_p_3, m_p_4, m_start, m_end
     type(si_stiffness)    :: k
     type(si_length)       :: delta_pre
-    type(si_energy)       :: e_start, e_end, e_s_3_start, e_p_3_start, e_start_3, &
+    type(si_energy)       :: e_start, e_end, e_s_3_start, e_k_3_start, e_start_3, &
                                 e_chamber_atm, e_barrel_atm
     
     n_d = 1
@@ -1539,11 +1539,11 @@ subroutine test_conservation_1(tests)
     e_s_3_start = sys_start%cv(3)%e_s()
     call tests%real_eq(e_s_3_start%v%v, 0.5_WP*(700.0_WP)*(9.0e-2_WP)**2, "test_conservation, e_s_3_start")
     
-    e_p_3_start = sys_start%cv(3)%e_p()
-    call tests%real_eq(e_p_3_start%v%v, 0.5_WP*(30.0e-3_WP)*(2.0_WP)**2, "test_conservation, e_p_3_start")
+    e_k_3_start = sys_start%cv(3)%e_k()
+    call tests%real_eq(e_k_3_start%v%v, 0.5_WP*(30.0e-3_WP)*(2.0_WP)**2, "test_conservation, e_k_3_start")
     
     e_start_3 = sys_start%cv(3)%e_total()
-    call tests%real_eq(e_start_3%v%v, sys_start%cv(3)%e%v%v + e_s_3_start%v%v + e_p_3_start%v%v, &
+    call tests%real_eq(e_start_3%v%v, sys_start%cv(3)%e%v%v + e_s_3_start%v%v + e_k_3_start%v%v, &
                             "test_conservation, sys_start%cv(3)%e_total()")
     
     m_start = sys_start%m_total()

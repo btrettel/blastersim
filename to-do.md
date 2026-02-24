@@ -25,9 +25,7 @@
 - docs: refer to figure for every variable in springer figure like `delta_pre`
 - docs: l_spring = l_pre + delta_pre, l_tube = l_compressed + l_head + l_draw
 - Make `check_sys` check that `x > 0` and note in the documentation that the plunger hitting the end of the plunger tube would make this be violated
-- CSV: Change `e_p` to `e_k` where k stands for kinetic. This is a lot more clear to me, though maybe it could be confusing with k as the spring constant.
 - CSV: Change `e` to `e_g` for gas energy?
-- CSV: Don't print `rho` for constant pressure CV in CSV as it's printed as zero there if mass is zero.
 - Valve opening time
     - Order-of-accuracy test for valve opening model as that includes time as a factor. This kills two birds with one stone by making this test order-of-accuracy of `m_dot` as well. Use `m_dot_0` with `a_e = 0`.
 - Pneumatic mode

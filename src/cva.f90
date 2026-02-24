@@ -96,7 +96,7 @@ type, public :: cv_type ! control volume
 contains
     procedure :: m_total
     procedure :: e_s
-    procedure :: e_p
+    procedure :: e_k
     procedure :: e_total
     procedure :: p_eos
     procedure :: rho_eos
@@ -201,34 +201,34 @@ pure function e_s(cv)
     end if
 end function e_s
 
-pure function e_p(cv)
+pure function e_k(cv)
     ! Projectile/plunger kinetic energy including added mass of spring
     
     class(cv_type), intent(in) :: cv
     
-    type(si_energy)       :: e_p
+    type(si_energy)       :: e_k
     type(si_inverse_mass) :: r_mp_eff ! effective mass of projectile/plunger
     
     if (is_close(cv%rm_p%v%v, 0.0_WP) .or. (cv%type == MIRROR_CV_TYPE)) then
         if (is_close(cv%rm_p%v%v, 0.0_WP)) then
             ! `MIRROR_CV_TYPE` might simply copy what the other CV has, so it might not have no inverse mass.
-            call assert(is_close(cv%k%v%v, 0.0_WP), "cva (e_p): if the plunger is immobile, k should be zero", &
+            call assert(is_close(cv%k%v%v, 0.0_WP), "cva (e_k): if the plunger is immobile, k should be zero", &
                             print_real=[cv%k%v%v])
         end if
         
-        call e_p%v%init_const(0.0_WP, size(cv%x_dot%v%d))
+        call e_k%v%init_const(0.0_WP, size(cv%x_dot%v%d))
     else
         r_mp_eff = cv%rm_p / (1.0_WP + C_MS * cv%m_spring * cv%rm_p)
-        e_p = 0.5_WP*square(cv%x_dot)/r_mp_eff
+        e_k = 0.5_WP*square(cv%x_dot)/r_mp_eff
     end if
-end function e_p
+end function e_k
 
 pure function e_total(cv)
     class(cv_type), intent(in) :: cv
     
     type(si_energy) :: e_total
     
-    e_total = cv%e + cv%e_f + cv%e_s() + cv%e_p()
+    e_total = cv%e + cv%e_f + cv%e_s() + cv%e_k()
 end function e_total
 
 pure function p_eos(cv, rho, temp)
@@ -1932,7 +1932,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     type(si_temperature)  :: temp
     type(si_mass_density) :: rho
     type(si_mass)         :: m_total
-    type(si_energy)       :: e_total, e_s, e_p
+    type(si_energy)       :: e_total, e_s, e_k
     
     inquire(unit=csv_unit, opened=csv_unit_opened)
     call assert(csv_unit_opened, "cva (write_csv_row): csv_unit needs to be open", print_logical=[csv_unit_opened])
@@ -1952,7 +1952,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
             error stop "cva (write_csv_row, t): invalid row_type"
     end select
     
-    ! `m_total`
+    ! `m_total`, total system mass
     m_total = sys%m_total()
     select case (row_type)
         case (HEADER_ROW_TYPE)
@@ -1963,7 +1963,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
             error stop "cva (write_csv_row, m_total): invalid row_type"
     end select
     
-    ! `e_total`
+    ! `e_total`, total system energy
     e_total = sys%e_total()
     select case (row_type)
         case (HEADER_ROW_TYPE)
@@ -2022,7 +2022,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 error stop "cva (write_csv_row, e): invalid row_type"
         end select
         
-        ! `p`
+        ! `p`, gas pressure
         select case (row_type)
             case (HEADER_ROW_TYPE)
                 write(unit=csv_unit, fmt="(3a)", advance="no") '"p (kPa, absolute, ', trim(sys%cv(i_cv)%label), ')",'
@@ -2033,7 +2033,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 error stop "cva (write_csv_row, p): invalid row_type"
         end select
         
-        ! `temp`
+        ! `temp`, gas temperature
         select case (row_type)
             case (HEADER_ROW_TYPE)
                 write(unit=csv_unit, fmt="(3a)", advance="no") '"temp (K, ', trim(sys%cv(i_cv)%label), ')",'
@@ -2044,16 +2044,19 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 error stop "cva (write_csv_row, temp): invalid row_type"
         end select
         
-        ! `rho`
-        select case (row_type)
-            case (HEADER_ROW_TYPE)
-                write(unit=csv_unit, fmt="(3a)", advance="no") '"rho (kg/m3, ', trim(sys%cv(i_cv)%label), ')",'
-            case (NUMBER_ROW_TYPE)
-                rho = sys%cv(i_cv)%rho()
-                write(unit=csv_unit, fmt="(g0, a)", advance="no") rho%v%v, ","
-            case default
-                error stop "cva (write_csv_row, rho): invalid row_type"
-        end select
+        ! Don't print `rho` for constant pressure CV in CSV as it's printed as zero there if mass is zero.
+        if (sys%cv(i_cv)%eos /= CONST_EOS) then
+            ! `rho`, gas mass density
+            select case (row_type)
+                case (HEADER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(3a)", advance="no") '"rho (kg/m3, ', trim(sys%cv(i_cv)%label), ')",'
+                case (NUMBER_ROW_TYPE)
+                    rho = sys%cv(i_cv)%rho()
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") rho%v%v, ","
+                case default
+                    error stop "cva (write_csv_row, rho): invalid row_type"
+            end select
+        end if
         
         if (sys%cv(i_cv)%type == NORMAL_CV_TYPE) then
             ! `e_f`, energy lost to projectile/plunger friction in control volume
@@ -2066,7 +2069,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                     error stop "cva (write_csv_row, e_f): invalid row_type"
             end select
             
-            ! `e_s` (spring energy)
+            ! `e_s`, spring energy
             if (.not. is_close(sys%cv(i_cv)%k%v%v, 0.0_WP)) then
                 select case (row_type)
                     case (HEADER_ROW_TYPE)
@@ -2079,15 +2082,15 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 end select
             end if
             
-            ! `e_p` (projectile/piston kinetic energy)
+            ! `e_k`, projectile/piston kinetic energy
             select case (row_type)
                 case (HEADER_ROW_TYPE)
-                    write(unit=csv_unit, fmt="(3a)", advance="no") '"e_p (J, ', trim(sys%cv(i_cv)%label), ')",'
+                    write(unit=csv_unit, fmt="(3a)", advance="no") '"e_k (J, ', trim(sys%cv(i_cv)%label), ')",'
                 case (NUMBER_ROW_TYPE)
-                    e_p = sys%cv(i_cv)%e_p()
-                    write(unit=csv_unit, fmt="(g0, a)", advance="no") e_p%v%v, ","
+                    e_k = sys%cv(i_cv)%e_k()
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") e_k%v%v, ","
                 case default
-                    error stop "cva (write_csv_row, e_p): invalid row_type"
+                    error stop "cva (write_csv_row, e_k): invalid row_type"
             end select
         end if
     end do
