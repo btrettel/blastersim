@@ -1,9 +1,9 @@
 ### v0.2.0
 
-- Make geninput have a scaling factor so that you can enter kPa instead of Pa, etc.
-    - This would be consistent with the CSV file.
-    - Then again, this could get confusing if you want something other than the specified units.
-    - When checking for consistency of `tex_unit`, keep track of scaling factor too. Concatenate `tex_unit` and the scaling factor so that you only need to look up one thing.
+- Change `scaling_factor` in geninput_*.nml to match CSV output.
+    - ms: `t_opening`
+    - Keep `dt` as seconds as it's much smaller than 1 ms (also would need to change `DT_DEFAULT` to be in ms; but it's used in s in code in places too)
+    - Which units should be used for volume? I guess to be consistent with using m for length everywhere (since the most appropriate units vary) would be to use m3 for volume.
 - `check_sys`
     - Time step criteria based on flow rate to empty CV? This wouldn't work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates become unstable.
     - Make `check_sys` check that `x > 0` and note in the documentation that the plunger hitting the end of the plunger tube would make this be violated

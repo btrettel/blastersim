@@ -25,8 +25,8 @@
 d_barrel  = 19.7358e-3 ! m (assumed same diameter as [1])
 l_travel  = 494.5e-3   ! m [5]
 m_proj    = 2.65e-3    ! kg [1]
-p_fs_proj = 0.0        ! Pa (guessed as it seems to be low friction)
-p_fd_proj = 0.0        ! Pa (guessed as it seems to be low friction)
+p_fs_proj = 0.0        ! kPa (guessed as it seems to be low friction)
+p_fd_proj = 0.0        ! kPa (guessed as it seems to be low friction)
 
 ! Dead space: > 13.5763mm inner diameter, 203.2mm long
 vol_dead = 2.9415514e-5 ! m3 [1]
@@ -34,8 +34,8 @@ vol_dead = 2.9415514e-5 ! m3 [1]
 ! plunger tube
 d_plunger    = 43.6e-3  ! m [1]
 m_plunger    = 20.10e-3 ! kg [2]
-p_fs_plunger = 0.0      ! Pa (guessed as it seems to be low friction)
-p_fd_plunger = 0.0      ! Pa (guessed as it seems to be low friction)
+p_fs_plunger = 0.0      ! kPa (guessed as it seems to be low friction)
+p_fd_plunger = 0.0      ! kPa (guessed as it seems to be low friction)
 
 ! spring (K17)
 k        = 299.46689 ! N/m (1.71 lbf/in) [4]
@@ -55,6 +55,6 @@ b   = 0.5    ! unitless (guessed)
 ! atmosphere
 ! [1]: > I am also 79 [ft?] above sea level, tests were conducted inside at about 70°F. Not sure on humidity, but 50% is probably a decent guess.
 ! Using this calculator: <https://www.mide.com/air-pressure-at-altitude-calculator>
-p_atm    = 101109.95 ! Pa (absolute)
+p_atm    = 101.10995 ! kPa (absolute)
 temp_atm = 294.26    ! K
 /

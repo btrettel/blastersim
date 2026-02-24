@@ -3,8 +3,8 @@
 d_barrel  = 13.0e-3 ! m
 l_travel  = 50.0e-2 ! m
 m_proj    = 1.1e-3  ! kg
-p_fs_proj = 0.0     ! Pa
-p_fd_proj = 0.0     ! Pa
+p_fs_proj = 0.0     ! kPa
+p_fd_proj = 0.0     ! kPa
 vol_dead  = 20.0e-6 ! m3
 
 ! plunger tube
@@ -14,12 +14,12 @@ l_draw       = 20.0e-2 ! m
 delta_pre    = 5.0e-2  ! m
 m_plunger    = 30.0e-3 ! kg
 m_spring     = 10.0e-3 ! kg
-p_fs_plunger = 0.0     ! Pa
-p_fd_plunger = 0.0     ! Pa
+p_fs_plunger = 0.0     ! kPa
+p_fd_plunger = 0.0     ! kPa
 
 ! atmosphere
-p_atm    = 100000.0 ! Pa (optional, absolute)
-temp_atm = 310.0    ! K (optional)
+p_atm    = 100.000 ! kPa (optional, absolute)
+temp_atm = 310.0   ! K (optional)
 
 ! flow restriction
 d_e = 5.0e-3 ! m

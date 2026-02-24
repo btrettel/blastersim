@@ -1,13 +1,13 @@
 &pneumatic
 ! atmosphere
-p_atm    = 101350.0 ! Pa (absolute)
-temp_atm = 302.6    ! K
+p_atm    = 101.350 ! kPa (absolute)
+temp_atm = 302.6   ! K
 
 ! chamber
 ! Appears to be constructed about 6 inches of 3/8" NPT threaded steel nipple from the photo I have.
 ! I guess I bought the pipe from Home Depot or Lowes as it doesn't appear on my old McMaster-Carr orders.
 ! Seems to be similar to <https://www.mcmaster.com/4830K158>.
-p_chamber   = 413685.44    ! Pa (gauge, 60 psig)
+p_chamber   = 413.68544    ! kPa (gauge, 60 psig)
 vol_chamber = 1.802577e-05 ! m3 (1.1 in3, measured)
 d_chamber   = 12.5222e-3   ! m (0.493 in, guessed)
 
@@ -23,8 +23,8 @@ vol_dead  = 1.802577e-5 ! m3 (measured)
 
 ! I recall that I could blow the darts down the barrel. So that places an upper limit on the static friction pressure.
 ! 9500 Pa is about where the maximum is for men according to <https://pmc.ncbi.nlm.nih.gov/articles/PMC1501025/>
-p_fs_proj = 5000.0 ! Pa (guessed)
-p_fd_proj = 0.0    ! Pa (guessed)
+p_fs_proj = 5.0 ! kPa (guessed)
+p_fd_proj = 0.0 ! kPa (guessed)
 
 ! Experimental result
 v_muzzle_actual = 48.331 ! m/s (158.567 ft/s average)

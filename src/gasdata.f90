@@ -8,7 +8,7 @@
 module gasdata
 
 use prec, only: WP
-use convert, only: CONVERT_C_TO_K
+use convert, only: CONVERT_C_TO_K, CONVERT_PA_TO_KPA
 use units
 use checks, only: assert, assert_dimension, is_close
 implicit none
@@ -20,9 +20,10 @@ public :: p_v_h2o
 real(WP), public, parameter :: R_BAR = 8.31446261815324_WP ! J/(mol*K)
 
 ! <https://en.wikipedia.org/wiki/Density_of_air>
-real(WP), public, parameter :: P_ATM    = 101325.0_WP              ! Pa
-real(WP), public, parameter :: TEMP_ATM = CONVERT_C_TO_K + 15.0_WP ! K
-real(WP), public, parameter :: RHO_ATM  = 1.2250_WP                ! kg/m3
+real(WP), public, parameter :: P_ATM     = 101325.0_WP              ! Pa
+real(WP), public, parameter :: P_ATM_KPA = P_ATM*CONVERT_PA_TO_KPA  ! kPa
+real(WP), public, parameter :: TEMP_ATM  = CONVERT_C_TO_K + 15.0_WP ! K
+real(WP), public, parameter :: RHO_ATM   = 1.2250_WP                ! kg/m3
 
 real(WP), public, parameter :: TEMP_0 = 300.0_WP ! K, temperature that `gamma`, `u_0`, and `h_0` are taken at in `gas_type`
 

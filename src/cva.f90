@@ -1916,9 +1916,9 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     t = t_old + dt_i
 end subroutine sys_interp
 
-!tripwire$ begin 21F5D7BF Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
+!tripwire$ begin 889C8C9C Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
 subroutine write_csv_row(csv_unit, sys, t, status, row_type)
-    use convert, only: CONVERT_S_TO_MS, CONVERT_KG_TO_MG, CONVERT_M_TO_CM, CONVERT_PA_TO_KPA
+    use convert, only: CONVERT_S_TO_MS, CONVERT_KG_TO_MG, CONVERT_PA_TO_KPA
     
     integer, intent(in)                           :: csv_unit
     type(cv_system_type), allocatable, intent(in) :: sys
@@ -1980,9 +1980,9 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
             ! `x`, location of projectile/plunger
             select case (row_type)
                 case (HEADER_ROW_TYPE)
-                    write(unit=csv_unit, fmt="(3a)", advance="no") '"x (cm, ', trim(sys%cv(i_cv)%label), ')",'
+                    write(unit=csv_unit, fmt="(3a)", advance="no") '"x (m, ', trim(sys%cv(i_cv)%label), ')",'
                 case (NUMBER_ROW_TYPE)
-                    write(unit=csv_unit, fmt="(g0, a)", advance="no") CONVERT_M_TO_CM*sys%cv(i_cv)%x%v%v, ","
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%x%v%v, ","
                 case default
                     error stop "cva (write_csv_row, x): invalid row_type"
             end select

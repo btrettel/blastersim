@@ -74,14 +74,15 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "p_atm"
 type_definition       = "type(si_pressure)"
-tex_unit              = "Pa"
+scaling_factor        = 1000.0
+tex_unit              = "kPa"
 tex_description       = "Atmospheric pressure."
 tex_description_2     = "Default value is $\patmdefault$~Pa."
 tex_variable_name     = "$p_\text{atm}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
-default_value         = "P_ATM_"
+default_value         = "P_ATM_KPA"
 no_kind_default_value = .true.
 bound_fmt             = "f3.1"
 /
@@ -136,8 +137,9 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "p_fs_proj"
 type_definition       = "type(si_pressure)"
+scaling_factor        = 1000.0
 required              = .true.
-tex_unit              = "Pa"
+tex_unit              = "kPa"
 tex_description       = "Pressure required to overcome static friction on the projectile."
 tex_variable_name     = "$p_\text{fs,proj}$"
 lower_bound_active    = .true.
@@ -150,8 +152,9 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "p_fd_proj"
 type_definition       = "type(si_pressure)"
+scaling_factor        = 1000.0
 required              = .true.
-tex_unit              = "Pa"
+tex_unit              = "kPa"
 tex_description       = "Equivalent pressure of dynamic friction on the projectile."
 tex_variable_name     = "$p_\text{fd,proj}$"
 lower_bound_active    = .true.
@@ -325,8 +328,9 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "p_fs_plunger"
 type_definition       = "type(si_pressure)"
+scaling_factor        = 1000.0
 required              = .true.
-tex_unit              = "Pa"
+tex_unit              = "kPa"
 tex_description       = "Pressure required to overcome static friction on the plunger."
 tex_variable_name     = "$p_\text{fs,plunger}$"
 lower_bound_active    = .true.
@@ -339,8 +343,9 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "p_fd_plunger"
 type_definition       = "type(si_pressure)"
+scaling_factor        = 1000.0
 required              = .true.
-tex_unit              = "Pa"
+tex_unit              = "kPa"
 tex_description       = "Equivalent pressure of dynamic friction on the plunger."
 tex_variable_name     = "$p_\text{fd,plunger}$"
 lower_bound_active    = .true.
