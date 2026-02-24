@@ -93,20 +93,21 @@ This should remain approximately constant and is present for debugging purposes.
     \item \texttt{rho} ($\rho_i$): Mass density of gas.
     Floating-point number.
     Units of kg/m$^3$.
+    Not present for constant pressure control volumes like atmospheres.
     \item \texttt{e\_f} ($e_{\text{f},i}$): Energy lost due to friction on the projectile/plunger.
     Floating-point number.
     Units of J.
-    Not present for constant pressure control volumes like atmospheres.
+    Not present for one side of a projectile/plunger control volume to avoid double counting.
     % TODO: Add definition of this term.
     \item \texttt{e\_s} ($e_{\text{s},i}$): Spring potential energy.
     Floating-point number.
     Units of J.
-    Not present for constant pressure control volumes like atmospheres.
+    Not present for one side of a projectile/plunger control volume to avoid double counting.
     % TODO: Add definition of this term.
     \item \texttt{e\_p} ($e_{\text{p},i}$): Projectile/plunger kinetic energy.
     Floating-point number.
     Units of J.
-    Not present for constant pressure control volumes like atmospheres.
+    Not present for one side of a projectile/plunger control volume to avoid double counting.
     For control volumes with springs ($m_\text{spring} \ne 0$~kg), the added mass from the spring is factored in as well.
     See~\eqref{effective mass} for how the spring mass factors in.
     % TODO: Add definition of this term

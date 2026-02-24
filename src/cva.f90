@@ -1916,7 +1916,7 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     t = t_old + dt_i
 end subroutine sys_interp
 
-!tripwire$ begin C4615087 Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
+!tripwire$ begin 21F5D7BF Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
 subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     use convert, only: CONVERT_S_TO_MS, CONVERT_KG_TO_MG, CONVERT_M_TO_CM, CONVERT_PA_TO_KPA
     
@@ -2082,7 +2082,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 end select
             end if
             
-            ! `e_k`, projectile/piston kinetic energy
+            ! `e_k`, projectile/plunger kinetic energy
             select case (row_type)
                 case (HEADER_ROW_TYPE)
                     write(unit=csv_unit, fmt="(3a)", advance="no") '"e_k (J, ', trim(sys%cv(i_cv)%label), ')",'
