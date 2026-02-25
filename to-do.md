@@ -1,8 +1,9 @@
 ### v0.2.0
 
-- Remove `p_atm` assertions in io.f90, replace with tests for the defaults for both pneumatics and springers. Test matrix: pneumatic vs. springer, default vs. non-default values.
+- Add pneumatic tests for io.f90 for both non-default and default values.
 - Change `scaling_factor` in geninput_*.nml to match CSV output.
-    - ms: `t_opening`
+    - ms: `t_opening` (done)
+    - g: masses
     - Keep `dt` as seconds as it's much smaller than 1 ms (also would need to change `DT_DEFAULT` to be in ms; but it's used in s in code in places too)
     - Which units should be used for volume? I guess to be consistent with using m for length everywhere (since the most appropriate units vary) would be to use m3 for volume.
 - `check_sys`
@@ -11,7 +12,9 @@
     - Try "Lipschitz constant estimate" suggested by Gemini.
     - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
 - Set time per CSV row output in input file, which will be converted to `csv_frequency`.
-- Predicted vs. actual plot generation for validation section of docs.
+- Easier validation tests
+    - Make a system where you can provide filenames only so that you can have even less boilerplate.
+    - Predicted vs. actual plot generation for validation section of docs.
 - Add LLM logs to repo?
 - Note in validation section: Blasters are assumed to have constant `d_e` and `b` unless the flow restriction changes. No pressure effects on `d_e`.
 - Use one `d_e` value for 2010 pneumatic cases.

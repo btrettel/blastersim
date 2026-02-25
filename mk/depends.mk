@@ -12,7 +12,7 @@ src$(DIR_SEP)convergence.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)f
 
 src$(DIR_SEP)convert.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)convert.f90
 
-src$(DIR_SEP)cva.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)cva.f90
+src$(DIR_SEP)cva.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)cva.f90
 
 src$(DIR_SEP)debug.$(OBJEXT): src$(DIR_SEP)debug.f90
 

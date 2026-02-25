@@ -78,7 +78,7 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, v_muzzle_ac
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT
     use port, only: path_basename
     use gasdata, only: P_ATM_KPA, TEMP_ATM_ => TEMP_ATM, DRY_AIR
-    use checks, only: is_close, check, assert
+    use checks, only: is_close, check
     use prec, only: CL, PI
     
     character(len=*), intent(in)                   :: input_file
@@ -100,8 +100,6 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, v_muzzle_ac
     integer, parameter :: I_CHAMBER = 2, I_BARREL_ATM  = 3
     
     include "geninput_pneumatic.f90"
-    
-    call assert(p_atm_u%v%v < 1.0e6_WP, "io (read_pneumatic_namelist): Likely p_atm's default is in Pa, not kPa.")
     
     ! create `id`
     
@@ -166,7 +164,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, v_muzzle_act
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT
     use port, only: path_basename
     use gasdata, only: P_ATM_KPA, TEMP_ATM_ => TEMP_ATM, DRY_AIR
-    use checks, only: is_close, check, assert
+    use checks, only: is_close, check
     use prec, only: CL, PI
     
     character(len=*), intent(in)                   :: input_file
@@ -184,8 +182,6 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, v_muzzle_act
     integer, parameter :: I_PLUNGER = 2, I_BARREL_ATM  = 3, I_PLUNGER_ATM = 4
     
     include "geninput_springer.f90"
-    
-    call assert(p_atm_u%v%v < 1.0e6_WP, "io (read_springer_namelist): Likely p_atm's default is in Pa, not kPa.")
     
     ! create `id`
     

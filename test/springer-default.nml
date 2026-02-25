@@ -1,6 +1,4 @@
 &springer
-dt = 1.0e-7 ! s
-
 ! barrel
 d_barrel  = 13.0e-3 ! m
 l_travel  = 50.0e-2 ! m
@@ -19,15 +17,14 @@ m_spring     = 10.0e-3 ! kg
 p_fs_plunger = 4.0     ! kPa
 p_fd_plunger = 1.0     ! kPa
 
-! atmosphere
-p_atm    = 100.000 ! kPa (optional, absolute)
-temp_atm = 310.0   ! K (optional)
-
 ! flow restriction
 d_e = 5.0e-3 ! m
-b   = 0.528  ! unitless (optional)
 
-! Experimental result
-v_muzzle_actual = 60.0 ! m/s (optional)
-rc_actual       = 1    ! (optional)
+! getting defaults for:
+! b
+! dt
+! p_atm
+! rc_actual
+! temp_atm
+! v_muzzle_actual
 /

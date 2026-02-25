@@ -11,6 +11,7 @@ TEX_GEN = docs$(DIR_SEP)rev.tex \
 docs$(DIR_SEP)test_exact.tex \
 docs$(DIR_SEP)geninput_pneumatic.tex \
 docs$(DIR_SEP)geninput_springer.tex \
+docs$(DIR_SEP)pneumatic-example.nml \
 docs$(DIR_SEP)springer-example.nml \
 docs$(DIR_SEP)blastersim-out-1.txt \
 docs$(DIR_SEP)blastersim-out-2.txt \
@@ -86,6 +87,9 @@ docs$(DIR_SEP)geninput_pneumatic.tex: src$(DIR_SEP)geninput_pneumatic.tex
 
 docs$(DIR_SEP)geninput_springer.tex: src$(DIR_SEP)geninput_springer.tex
 	$(CP) src$(DIR_SEP)geninput_springer.tex docs$(DIR_SEP)geninput_springer.tex
+
+docs$(DIR_SEP)pneumatic-example.nml: examples$(DIR_SEP)pneumatic-example.nml
+	$(CP) examples$(DIR_SEP)pneumatic-example.nml docs$(DIR_SEP)pneumatic-example.nml
 
 docs$(DIR_SEP)springer-example.nml: examples$(DIR_SEP)springer-example.nml
 	$(CP) examples$(DIR_SEP)springer-example.nml docs$(DIR_SEP)springer-example.nml
