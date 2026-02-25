@@ -1,5 +1,6 @@
 ### v0.2.0
 
+- Remove `p_atm` assertions in io.f90, replace with tests for the defaults for both pneumatics and springers. Test matrix: pneumatic vs. springer, default vs. non-default values.
 - Change `scaling_factor` in geninput_*.nml to match CSV output.
     - ms: `t_opening`
     - Keep `dt` as seconds as it's much smaller than 1 ms (also would need to change `DT_DEFAULT` to be in ms; but it's used in s in code in places too)

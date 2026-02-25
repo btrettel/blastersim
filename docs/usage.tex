@@ -149,10 +149,13 @@ z = "string2"
 
 For more details of the namelist format, refer to the Intel Fortran Compiler documentation~\cite{noauthor_namelist_2025}.
 
-BlasterSim uses SI units in its input files and internally.
+BlasterSim uses metric units in its input files and internally.
 Support for other unit systems is not planned due to the complexity of supporting multiple unit systems.
 Scientific notation can be used to appropriately scale inputs.
 For example, instead of 13 mm being written as \texttt{0.013}, the user can write \texttt{13.0e-3}.
+When possible, I try to pick metric units that are convenient for each variable so that scaling is unnecessary.
+This is not possible for lengths as BlasterSim is intended to work for a range of gas gun systems, from small pellet guns all the way through potato cannons.
+Given the wide range of scales, for lengths the unit of m was selected, and the \texttt{e} notation previously mentioned can be used so that the user can select the appropriate scale.
 
 \section{Pneumatic mode}\label{pneumatic}
 % TODO
