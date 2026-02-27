@@ -60,7 +60,9 @@ docs/geninput_*.tex
 docs/springer-example.nml
 docs/pneumatic-example.nml
 !test/springer-default.nml
+!test/springer-non-default.nml
 !test/pneumatic-default.nml
+!test/pneumatic-non-default.nml
 *.csv
 docs/blastersim-out-*.txt
 docs/blastersim.txt

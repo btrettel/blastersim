@@ -1,0 +1,29 @@
+&pneumatic
+dt = 2.0e-7 ! s
+
+! atmosphere
+p_atm    = 102.0 ! kPa (absolute)
+temp_atm = 295.0 ! K
+
+! chamber
+p_chamber   = 500.0   ! kPa
+vol_chamber = 2.0e-5  ! m3
+d_chamber   = 12.5e-3 ! m
+
+! flow restriction
+d_e       = 3.0e-3 ! m
+b         = 0.6    ! unitless
+t_opening = 10.0   ! ms
+
+! barrel
+d_barrel  = 13.0e-3 ! m
+l_travel  = 40.0e-2 ! m
+m_proj    = 1.0e-3  ! kg
+vol_dead  = 1.0e-5  ! m3
+p_fs_proj = 7.0     ! kPa
+p_fd_proj = 3.0     ! kPa
+
+! Experimental result
+v_muzzle_actual = 70.0 ! m/s
+rc_actual       = 2    ! (optional)
+/

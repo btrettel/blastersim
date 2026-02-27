@@ -43,8 +43,8 @@ subroutine test_read_springer_namelist_non_default(tests)
     type(si_velocity) :: v_muzzle_actual
     integer           :: rc_actual
     
-    path_array(1) = "examples"
-    path_array(2) = "springer-example.nml"
+    path_array(1) = "test"
+    path_array(2) = "springer-non-default.nml"
     input_file = path_join(path_array)
     
     call read_springer_namelist(input_file, sys, config, rc, v_muzzle_actual_=v_muzzle_actual, rc_actual_=rc_actual)
@@ -78,7 +78,7 @@ subroutine test_read_springer_namelist_non_default(tests)
     vol_dead = sys%cv(I_BARREL)%x*sys%cv(I_BARREL)%csa
     call tests%real_eq(vol_dead%v%v, 20.0e-6_WP, "read_springer_namelist, non-default values, vol_dead")
     
-    call tests%character_eq(config%id, "springer-example", "read_springer_namelist, non-default values, id")
+    call tests%character_eq(config%id, "springer-non-default", "read_springer_namelist, non-default values, id")
     
     call tests%real_eq(config%dt%v%v, 1.0e-7_WP, "read_springer_namelist, non-default values, dt")
     call tests%real_eq(sys%con(I_PLUNGER, I_BARREL)%b%v%v, 0.528_WP, "read_springer_namelist, non-default values, b")
