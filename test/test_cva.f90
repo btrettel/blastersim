@@ -1278,6 +1278,9 @@ subroutine test_alpha_m_dot(tests)
     
     type(si_mass_flow_rate) :: m_dot_con
     
+    ! TODO: This test won't detect a sign error in the cubic term.
+    ! Add a test with the square term set to zero.
+    
     con%active = .true.
     call con%a_e%v%init_const(0.0_WP, 1)
     call con%b%v%init_const(0.0_WP, 1)

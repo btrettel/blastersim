@@ -1292,15 +1292,15 @@ pure function alpha_m_dot(con, t)
     if (t < con%t_opening) then
         alpha_m_dot = con%alpha_0 + con%alpha_dot_0*(t/con%t_opening) &
                                     + (3.0_WP - 3.0_WP*con%alpha_0 - 2.0_WP*con%alpha_dot_0)*square(t/con%t_opening) &
-                                    + (2.0_WP - 2.0_WP*con%alpha_0 - con%alpha_dot_0)*((t/con%t_opening)*square(t/con%t_opening))
+                                    - (2.0_WP - 2.0_WP*con%alpha_0 - con%alpha_dot_0)*((t/con%t_opening)*square(t/con%t_opening))
     else
         call alpha_m_dot%v%init_const(1.0_WP, size(con%t_opening%v%d))
     end if
     
-    call assert(alpha_m_dot%v%v >= 0.0_WP, "cva (g_m_dot): alpha_m_dot >= 0 violated", &
-                                            print_real=[alpha_m_dot%v%v, con%alpha_0%v%v, con%alpha_dot_0%v%v])
-    call assert(alpha_m_dot%v%v <= 1.0_WP, "cva (g_m_dot): alpha_m_dot <= 1 violated", &
-                                            print_real=[alpha_m_dot%v%v, con%alpha_0%v%v, con%alpha_dot_0%v%v])
+    call assert(alpha_m_dot%v%v >= 0.0_WP, "cva (alpha_m_dot): alpha_m_dot >= 0 violated", &
+            print_real=[alpha_m_dot%v%v, con%alpha_0%v%v, con%alpha_dot_0%v%v, t%v%v, con%t_opening%v%v])
+    call assert(alpha_m_dot%v%v <= 1.0_WP, "cva (alpha_m_dot): alpha_m_dot <= 1 violated", &
+            print_real=[alpha_m_dot%v%v, con%alpha_0%v%v, con%alpha_dot_0%v%v, t%v%v, con%t_opening%v%v])
 end function alpha_m_dot
 
 pure function m_dot(con, t, cv_from, cv_to)

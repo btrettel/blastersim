@@ -1,12 +1,5 @@
 ### v0.2.0
 
-- Why does test/pneumatic-non-default.nml have the following assertion error?
-    - ```
-    ASSERTION FAILED. cva (g_m_dot): alpha_m_dot <= 1 violated
-    real #1: 1.0000326784524560
-    real #2: 0.0000000000000000
-    real #3: 1.0000000000000000
-    ```
 - <https://academia.stackexchange.com/questions/14010/how-do-you-cite-a-github-repository>
 - Change `v_muzzle_actual` to `actual_v_muzzle` and `rc_actual` to `actual_rc` so that later when adding UQ I can have `actual_v_muzzle_stdev` by simply appending to the existing variable name.
 - Add pneumatic tests for io.f90 for both non-default and default values.
