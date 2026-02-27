@@ -2,7 +2,6 @@
 
 - <https://academia.stackexchange.com/questions/14010/how-do-you-cite-a-github-repository>
 - Change `v_muzzle_actual` to `actual_v_muzzle` and `rc_actual` to `actual_rc` so that later when adding UQ I can have `actual_v_muzzle_stdev` by simply appending to the existing variable name.
-- Add pneumatic tests for io.f90 for both non-default and default values.
 - Change `scaling_factor` in geninput_*.nml to match CSV output.
     - ms: `t_opening` (done)
     - g: masses

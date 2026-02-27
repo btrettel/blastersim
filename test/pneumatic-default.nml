@@ -1,0 +1,26 @@
+&pneumatic
+! chamber
+p_chamber   = 500.0   ! kPa
+vol_chamber = 2.0e-5  ! m3
+d_chamber   = 12.5e-3 ! m
+
+! flow restriction
+d_e       = 3.0e-3 ! m
+
+! barrel
+d_barrel  = 13.0e-3 ! m
+l_travel  = 40.0e-2 ! m
+m_proj    = 1.0e-3  ! kg
+vol_dead  = 1.0e-5  ! m3
+p_fs_proj = 7.0     ! kPa
+p_fd_proj = 3.0     ! kPa
+
+! getting defaults for:
+! b
+! dt
+! p_atm
+! rc_actual
+! t_opening
+! temp_atm
+! v_muzzle_actual
+/
