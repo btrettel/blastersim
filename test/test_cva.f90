@@ -1260,6 +1260,7 @@ subroutine test_alpha_m_dot(tests)
     
     type(test_results_type), intent(in out) :: tests
     
+    integer        :: n_d
     type(con_type) :: con
     type(si_time)  :: t
     type(unitless) :: alpha, alpha_expected
@@ -1278,37 +1279,41 @@ subroutine test_alpha_m_dot(tests)
     
     type(si_mass_flow_rate) :: m_dot_con
     
-    ! TODO: This test won't detect a sign error in the cubic term.
+    ! TODO: Check $\dv{\alpha}{\alpha_0}$.
+    ! As-is, this test won't detect a sign error in the cubic term.
     ! Add a test with the square term set to zero.
+    ! Fortunately, an assertion caught this bug.
+    
+    n_d = 1
     
     con%active = .true.
-    call con%a_e%v%init_const(0.0_WP, 1)
-    call con%b%v%init_const(0.0_WP, 1)
-    call con%t_opening%v%init_const(5.0_WP, 1)
-    call con%alpha_0%v%init_const(0.2_WP, 1)
+    call con%a_e%v%init_const(0.0_WP, n_d)
+    call con%b%v%init_const(0.0_WP, n_d)
+    call con%t_opening%v%init_const(5.0_WP, n_d)
+    call con%alpha_0%v%init_const(0.2_WP, n_d)
     con%alpha_dot_0 = 2.0_WP*(1.0_WP - con%alpha_0) ! to set the cubic term to zero
-    call con%m_dot_0%v%init_const(2.0_WP, 1)
+    call con%m_dot_0%v%init_const(2.0_WP, n_d)
     
-    call x%v%init_const(1.0_WP, 1)
-    call x_dot%v%init_const(0.0_WP, 1)
-    call y(1)%v%init_const(1.0_WP, 1)
-    call p_in%v%init_const(20.0e5_WP, 1)
-    call p_out%v%init_const(2.0e5_WP, 1)
-    call temp%v%init_const(400.0_WP, 1)
-    call csa%v%init_const(1.0_WP, 1)
-    call rm_p%v%init_const(0.0_WP, 1)
-    call p_fs%v%init_const(0.0_WP, 1)
-    call p_fd%v%init_const(0.0_WP, 1)
-    call p_atm%v%init_const(1.0e5_WP, 1)
-    call k%v%init_const(0.0_WP, 1)
-    call delta_pre%v%init_const(0.0_WP, 1)
+    call x%v%init_const(1.0_WP, n_d)
+    call x_dot%v%init_const(0.0_WP, n_d)
+    call y(1)%v%init_const(1.0_WP, n_d)
+    call p_in%v%init_const(20.0e5_WP, n_d)
+    call p_out%v%init_const(2.0e5_WP, n_d)
+    call temp%v%init_const(400.0_WP, n_d)
+    call csa%v%init_const(1.0_WP, n_d)
+    call rm_p%v%init_const(0.0_WP, n_d)
+    call p_fs%v%init_const(0.0_WP, n_d)
+    call p_fd%v%init_const(0.0_WP, n_d)
+    call p_atm%v%init_const(1.0e5_WP, n_d)
+    call k%v%init_const(0.0_WP, n_d)
+    call delta_pre%v%init_const(0.0_WP, n_d)
     
     call cv_from%set(x, x_dot, y, p_in, temp, "from", csa, rm_p, p_fs, p_fd, k, delta_pre, [DRY_AIR], 2)
     call cv_to%set(x, x_dot, y, p_out, temp, "to", csa, rm_p, p_fs, p_fd, k, delta_pre, [DRY_AIR], 2)
     
     call assert(con%alpha_dot_0%v%v > 0.0_WP, "test_cva (test_alpha_m_dot): alpha_dot_0 > 0 violated")
     
-    call t%v%init(0.0_WP, 1, 1)
+    call t%v%init(0.0_WP, 1, n_d)
     alpha     = con%alpha(t)
     m_dot_con = con%m_dot(t, cv_from, cv_to)
     call tests%real_eq(alpha%v%v,     con%alpha_0%v%v,                       "alpha_m_dot, t = 0.0, value")
