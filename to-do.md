@@ -1,5 +1,7 @@
 ### v0.2.0
 
+- Add another test for `test_alpha_m_dot` to test the sign.
+- <https://onegoodtutorial.org/>
 - <https://academia.stackexchange.com/questions/14010/how-do-you-cite-a-github-repository>
 - Change `v_muzzle_actual` to `actual_v_muzzle` and `rc_actual` to `actual_rc` so that later when adding UQ I can have `actual_v_muzzle_stdev` by simply appending to the existing variable name.
 - Change `scaling_factor` in geninput_*.nml to match CSV output.

@@ -45,14 +45,22 @@ def get_fenced_lines(file, checksum):
 
 def get_reported_checksums(file):
     reported_checksums = set()
+    duplicate_checksum_line_nos = set()
     
     with open(file, "r") as file_in:
+        line_no = 0
         for line in file_in:
+            line_no += 1
+            
             if TRIPWIRE_BEGIN_DIRECTIVE in line:
                 reported_checksum, _ = parse_begin_directive(get_tripwrite_directive(line))
+                
+                if (reported_checksum in reported_checksums):
+                    duplicate_checksum_line_nos.add(line_no)
+                
                 reported_checksums.add(reported_checksum)
     
-    return reported_checksums
+    return reported_checksums, duplicate_checksum_line_nos
 
 def get_tripwrite_directive(line):
     assert TRIPWIRE_DIRECTIVE_PREFIX in line
@@ -80,7 +88,7 @@ if __name__ == "__main__":
     
     exit_code = 0
     for file in args.files:
-        reported_checksums = get_reported_checksums(file)
+        reported_checksums, duplicate_checksum_line_nos = get_reported_checksums(file)
         
         for reported_checksum in reported_checksums:
             fenced_lines, message, line_no = get_fenced_lines(file, reported_checksum)
@@ -89,9 +97,13 @@ if __name__ == "__main__":
             if actual_checksum != reported_checksum:
                 print("{}:{} (reported {}, actual {}): {}".format(file, line_no, reported_checksum, actual_checksum, message))
                 exit_code = 1
+        
+        for duplicate_checksum_line_no in duplicate_checksum_line_nos:
+            print("{}:{}: duplicate checksum, possibly not checked".format(file, line_no))
+            exit_code = 1
     
     if (exit_code > 0):
-        print("ONE OR MORE TRIPWIRE(S) TRIPPED.")
+        print("ONE OR MORE TRIPWIRE(S) TRIPPED OR ERRORS ENCOUNTERED.")
     sys.exit(exit_code)
 
 class Tests(unittest.TestCase):

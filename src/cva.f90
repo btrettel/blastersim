@@ -231,6 +231,7 @@ pure function e_total(cv)
     e_total = cv%e + cv%e_f + cv%e_s() + cv%e_k()
 end function e_total
 
+!tripwire$ begin 3A25678B Update `\secref{equations-of-state}` of theory.tex if necessary.
 pure function p_eos(cv, rho, temp)
     ! Calculate pressure using the equation of state.
     
@@ -317,6 +318,7 @@ pure function rho_eos(cv, p, temp, y)
     
     call assert(rho_eos%v%v > 0.0_WP, "cva (rho_eos): rho_eos%v > 0 violated", print_real=[rho_eos%v%v])
 end function rho_eos
+!tripwire$ end
 
 pure function p_c(cv)
     ! Estimate critical pressure of a mixture using Kay's rule.
@@ -872,7 +874,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     end select
 end subroutine set_const
 
-!tripwire$ begin 28F1DB4A Update `\secref{friction}` of theory.tex when changing `d_x_dot_d_t_normal` if necessary.
+!tripwire$ begin 28F1DB4A Update `\secref{friction}` of theory.tex if necessary.
 pure function p_f(cv, p_fe)
     ! Returns pressure of friction.
     
@@ -944,6 +946,7 @@ pure function p_f0(cv, p_fe)
 end function p_f0
 !tripwire$ end
 
+!tripwire$ begin 421AC426 Update `\secref{equations-of-motion}` and `\secref{plunger-impact}` of theory.tex if necessary.
 pure function d_x_d_t(sys, i_cv)
     type(cv_system_type), intent(in) :: sys
     integer, intent(in)              :: i_cv
@@ -1016,7 +1019,6 @@ pure function d_x_dot_d_t(sys, i_cv)
     end select
 end function d_x_dot_d_t
 
-!tripwire$ begin D1D4EC65 Update `\secref{plunger-impact}` of theory.tex when changing `d_x_dot_d_t_normal` if necessary.
 pure function d_x_dot_d_t_normal(sys, i_cv)
     type(cv_system_type), intent(in) :: sys
     integer, intent(in)              :: i_cv
@@ -1054,6 +1056,7 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
 end function d_x_dot_d_t_normal
 !tripwire$ end
 
+!tripwire$ begin D7BABCFA Update \secref{conservation-laws} of theory.tex if necessary.
 pure function d_m_k_d_t(sys, m_dot, k_gas, i_cv)
     type(cv_system_type), intent(in)    :: sys
     type(si_mass_flow_rate), intent(in) :: m_dot(:, :)
@@ -1126,6 +1129,7 @@ pure function d_e_d_t(cv, h_dot, i_cv)
         d_e_d_t = d_e_d_t + h_dot(j_cv, i_cv) - h_dot(i_cv, j_cv)
     end do
 end function d_e_d_t
+!tripwire$ end
 
 pure function d_e_f_d_t(sys, i_cv)
     type(cv_system_type), intent(in) :: sys
@@ -1229,6 +1233,40 @@ pure function smooth_min(x, y)
     smooth_min = -k*log(exp(-x/k) + exp(-y/k))
 end function smooth_min
 
+!tripwire$ begin EC859489 Update \secref{valve-opening-model} of theory.tex if necessary.
+pure function alpha_m_dot(con, t)
+    ! Valve opening model
+    ! See theory.tex, `\secref{valve-opening-model}`.
+    
+    class(con_type), intent(in) :: con
+    type(si_time), intent(in)   :: t
+    
+    type(unitless) :: alpha_m_dot
+    
+    call assert(t%v%v >= 0.0_WP, "cva (alpha_m_dot): t >= 0 violated", print_real=[t%v%v])
+    call assert(con%alpha_0%v%v >= 0.0_WP, "cva (alpha_m_dot): alpha_0 >= 0 violated", &
+                                        print_real=[con%alpha_0%v%v, con%alpha_dot_0%v%v])
+    call assert(con%alpha_0%v%v <= 1.0_WP, "cva (alpha_m_dot): alpha_0 <= 1 violated", &
+                                        print_real=[con%alpha_0%v%v, con%alpha_dot_0%v%v])
+    call assert(con%alpha_dot_0%v%v >= 0.0_WP, "cva (alpha_m_dot): alpha_dot_0 >= 0 violated", &
+                                        print_real=[con%alpha_0%v%v, con%alpha_dot_0%v%v])
+    
+    if (t < con%t_opening) then
+        alpha_m_dot = con%alpha_0 + con%alpha_dot_0*(t/con%t_opening) &
+                                    + (3.0_WP - 3.0_WP*con%alpha_0 - 2.0_WP*con%alpha_dot_0)*square(t/con%t_opening) &
+                                    - (2.0_WP - 2.0_WP*con%alpha_0 - con%alpha_dot_0)*((t/con%t_opening)*square(t/con%t_opening))
+    else
+        call alpha_m_dot%v%init_const(1.0_WP, size(con%t_opening%v%d))
+    end if
+    
+    call assert(alpha_m_dot%v%v >= 0.0_WP, "cva (alpha_m_dot): alpha_m_dot >= 0 violated", &
+            print_real=[alpha_m_dot%v%v, con%alpha_0%v%v, con%alpha_dot_0%v%v, t%v%v, con%t_opening%v%v])
+    call assert(alpha_m_dot%v%v <= 1.0_WP, "cva (alpha_m_dot): alpha_m_dot <= 1 violated", &
+            print_real=[alpha_m_dot%v%v, con%alpha_0%v%v, con%alpha_dot_0%v%v, t%v%v, con%t_opening%v%v])
+end function alpha_m_dot
+!tripwire$ end
+
+!tripwire$ begin 23FE997C Update \secref{connection-flow-model} of theory.tex if necessary.
 pure function f_m_dot(p_r, b)
     ! See beater_pneumatic_2007 eq. 5.4
     ! This is a replacement for the ((p_2/p_1 - b)/(1-b))**2 term, smoothly going between the various cases.
@@ -1272,37 +1310,6 @@ pure function g_m_dot(p_r)
     call assert(g_m_dot%v%v <= 1.0_WP, "cva (g_m_dot): g_m_dot <= 1 violated", print_real=[g_m_dot%v%v])
 end function g_m_dot
 
-pure function alpha_m_dot(con, t)
-    ! Valve opening model
-    ! See theory.tex, `\secref{valve-opening-model}`.
-    
-    class(con_type), intent(in) :: con
-    type(si_time), intent(in)   :: t
-    
-    type(unitless) :: alpha_m_dot
-    
-    call assert(t%v%v >= 0.0_WP, "cva (alpha_m_dot): t >= 0 violated", print_real=[t%v%v])
-    call assert(con%alpha_0%v%v >= 0.0_WP, "cva (alpha_m_dot): alpha_0 >= 0 violated", &
-                                        print_real=[con%alpha_0%v%v, con%alpha_dot_0%v%v])
-    call assert(con%alpha_0%v%v <= 1.0_WP, "cva (alpha_m_dot): alpha_0 <= 1 violated", &
-                                        print_real=[con%alpha_0%v%v, con%alpha_dot_0%v%v])
-    call assert(con%alpha_dot_0%v%v >= 0.0_WP, "cva (alpha_m_dot): alpha_dot_0 >= 0 violated", &
-                                        print_real=[con%alpha_0%v%v, con%alpha_dot_0%v%v])
-    
-    if (t < con%t_opening) then
-        alpha_m_dot = con%alpha_0 + con%alpha_dot_0*(t/con%t_opening) &
-                                    + (3.0_WP - 3.0_WP*con%alpha_0 - 2.0_WP*con%alpha_dot_0)*square(t/con%t_opening) &
-                                    - (2.0_WP - 2.0_WP*con%alpha_0 - con%alpha_dot_0)*((t/con%t_opening)*square(t/con%t_opening))
-    else
-        call alpha_m_dot%v%init_const(1.0_WP, size(con%t_opening%v%d))
-    end if
-    
-    call assert(alpha_m_dot%v%v >= 0.0_WP, "cva (alpha_m_dot): alpha_m_dot >= 0 violated", &
-            print_real=[alpha_m_dot%v%v, con%alpha_0%v%v, con%alpha_dot_0%v%v, t%v%v, con%t_opening%v%v])
-    call assert(alpha_m_dot%v%v <= 1.0_WP, "cva (alpha_m_dot): alpha_m_dot <= 1 violated", &
-            print_real=[alpha_m_dot%v%v, con%alpha_0%v%v, con%alpha_dot_0%v%v, t%v%v, con%t_opening%v%v])
-end function alpha_m_dot
-
 pure function m_dot(con, t, cv_from, cv_to)
     ! Modified con flow rate model from beater_pneumatic_2007 ch. 5.
     ! Modified to be differentiable.
@@ -1334,6 +1341,7 @@ pure function m_dot(con, t, cv_from, cv_to)
         call m_dot%v%init_const(0.0_WP, n_d)
     end if
 end function m_dot
+!tripwire$ end
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! methods for control volume systems !
