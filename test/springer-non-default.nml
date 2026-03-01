@@ -28,6 +28,6 @@ d_e = 5.0e-3 ! m
 b   = 0.528  ! unitless (optional)
 
 ! Experimental result
-v_muzzle_actual = 60.0 ! m/s (optional)
-rc_actual       = 1    ! (optional)
+actual_v_muzzle = 60.0 ! m/s (optional)
+actual_rc       = 1    ! (optional)
 /

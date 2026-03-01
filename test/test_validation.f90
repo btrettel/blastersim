@@ -21,22 +21,22 @@ call tests%end_tests()
 
 contains
 
-subroutine run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, v_muzzle_actual, rc_actual)
+subroutine run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, actual_v_muzzle, actual_rc)
     use cva, only: run_config_type, cv_system_type, run_status_type, run
     use io, only: I_BARREL, read_pneumatic_namelist
     
     character(len=*), intent(in)   :: input_file
     type(si_velocity), intent(out) :: v_muzzle_predicted
     integer, intent(out)           :: rc_predicted
-    type(si_velocity), intent(out) :: v_muzzle_actual
-    integer, intent(out)           :: rc_actual
+    type(si_velocity), intent(out) :: actual_v_muzzle
+    integer, intent(out)           :: actual_rc
     
     type(cv_system_type), allocatable :: sys_start, sys_end
     type(run_config_type)             :: config
     integer                           :: rc
     type(run_status_type)             :: status
     
-    call read_pneumatic_namelist(input_file, sys_start, config, rc, v_muzzle_actual_=v_muzzle_actual, rc_actual_=rc_actual)
+    call read_pneumatic_namelist(input_file, sys_start, config, rc, actual_v_muzzle_=actual_v_muzzle, actual_rc_=actual_rc)
     call run(config, sys_start, sys_end, status)
     
     v_muzzle_predicted = sys_end%cv(I_BARREL)%x_dot
@@ -68,65 +68,65 @@ subroutine pneumatic_2010_08_07(tests)
     type(test_results_type), intent(in out) :: tests
     
     character(len=CL) :: path_array(2), input_file
-    type(si_velocity) :: v_muzzle_predicted, v_muzzle_actual
-    integer           :: rc_predicted, rc_actual
+    type(si_velocity) :: v_muzzle_predicted, actual_v_muzzle
+    integer           :: rc_predicted, actual_rc
     
     path_array(1) = "examples"
     
     path_array(2) = "pneumatic-2010-08-07-25-psi.nml"
     input_file    = path_join(path_array)
-    call run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, v_muzzle_actual, rc_actual)
-    call tests%integer_eq(rc_predicted, rc_actual, &
+    call run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, actual_v_muzzle, actual_rc)
+    call tests%integer_eq(rc_predicted, actual_rc, &
                             "pneumatic, 2010-08-07 experiments, 25 psi, status%rc (projectile did not exit)")
     
     path_array(2) = "pneumatic-2010-08-07-30-psi.nml"
     input_file    = path_join(path_array)
-    call run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, v_muzzle_actual, rc_actual)
-    call tests%integer_eq(rc_predicted, rc_actual, &
+    call run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, actual_v_muzzle, actual_rc)
+    call tests%integer_eq(rc_predicted, actual_rc, &
                             "pneumatic, 2010-08-07 experiments, 30 psi, status%rc (projectile exited)")
     call tests%real_eq(v_muzzle_predicted%v%v, 23.80285338515869_WP, &
                         "pneumatic, 2010-08-07 experiments, 30 psi, muzzle velocity (characterization)")
-    call tests%real_eq(v_muzzle_predicted%v%v, v_muzzle_actual%v%v, &
+    call tests%real_eq(v_muzzle_predicted%v%v, actual_v_muzzle%v%v, &
                         "pneumatic, 2010-08-07 experiments, 30 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
     
     path_array(2) = "pneumatic-2010-08-07-40-psi.nml"
     input_file    = path_join(path_array)
-    call run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, v_muzzle_actual, rc_actual)
-    call tests%integer_eq(rc_predicted, rc_actual, &
+    call run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, actual_v_muzzle, actual_rc)
+    call tests%integer_eq(rc_predicted, actual_rc, &
                             "pneumatic, 2010-08-07 experiments, 40 psi, status%rc (projectile exited)")
     call tests%real_eq(v_muzzle_predicted%v%v, 35.761901429472438_WP, &
                         "pneumatic, 2010-08-07 experiments, 40 psi, muzzle velocity (characterization)")
-    call tests%real_eq(v_muzzle_predicted%v%v, v_muzzle_actual%v%v, &
+    call tests%real_eq(v_muzzle_predicted%v%v, actual_v_muzzle%v%v, &
                         "pneumatic, 2010-08-07 experiments, 40 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
     
     path_array(2) = "pneumatic-2010-08-07-50-psi.nml"
     input_file    = path_join(path_array)
-    call run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, v_muzzle_actual, rc_actual)
-    call tests%integer_eq(rc_predicted, rc_actual, &
+    call run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, actual_v_muzzle, actual_rc)
+    call tests%integer_eq(rc_predicted, actual_rc, &
                             "pneumatic, 2010-08-07 experiments, 50 psi, status%rc (projectile exited)")
     call tests%real_eq(v_muzzle_predicted%v%v, 45.359461217896239_WP, &
                         "pneumatic, 2010-08-07 experiments, 50 psi, muzzle velocity (characterization)")
-    call tests%real_eq(v_muzzle_predicted%v%v, v_muzzle_actual%v%v, &
+    call tests%real_eq(v_muzzle_predicted%v%v, actual_v_muzzle%v%v, &
                         "pneumatic, 2010-08-07 experiments, 50 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
     
     path_array(2) = "pneumatic-2010-08-07-60-psi.nml"
     input_file    = path_join(path_array)
-    call run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, v_muzzle_actual, rc_actual)
-    call tests%integer_eq(rc_predicted, rc_actual, &
+    call run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, actual_v_muzzle, actual_rc)
+    call tests%integer_eq(rc_predicted, actual_rc, &
                             "pneumatic, 2010-08-07 experiments, 60 psi, status%rc (projectile exited)")
     call tests%real_eq(v_muzzle_predicted%v%v, 49.27168246923017_WP, &
                         "pneumatic, 2010-08-07 experiments, 60 psi, muzzle velocity (characterization)")
-    call tests%real_eq(v_muzzle_predicted%v%v, v_muzzle_actual%v%v, &
+    call tests%real_eq(v_muzzle_predicted%v%v, actual_v_muzzle%v%v, &
                         "pneumatic, 2010-08-07 experiments, 60 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
     
     path_array(2) = "pneumatic-2010-08-07-70-psi.nml"
     input_file    = path_join(path_array)
-    call run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, v_muzzle_actual, rc_actual)
-    call tests%integer_eq(rc_predicted, rc_actual, &
+    call run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, actual_v_muzzle, actual_rc)
+    call tests%integer_eq(rc_predicted, actual_rc, &
                             "pneumatic, 2010-08-07 experiments, 70 psi, status%rc (projectile exited)")
     call tests%real_eq(v_muzzle_predicted%v%v, 59.13020469015979_WP, &
                         "pneumatic, 2010-08-07 experiments, 70 psi, muzzle velocity (characterization)")
-    call tests%real_eq(v_muzzle_predicted%v%v, v_muzzle_actual%v%v, &
+    call tests%real_eq(v_muzzle_predicted%v%v, actual_v_muzzle%v%v, &
                         "pneumatic, 2010-08-07 experiments, 70 psi, muzzle velocity (validation)", abs_tol=1.0_WP)
 end subroutine pneumatic_2010_08_07
 

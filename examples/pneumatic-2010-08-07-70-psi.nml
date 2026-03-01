@@ -27,5 +27,5 @@ d_e = 2.7e-3 ! m (calibrated)
 b   = 0.5    ! unitless (guessed)
 
 ! Experimental result
-v_muzzle_actual = 58.213 ! m/s (190.987 ft/s average)
+actual_v_muzzle = 58.213 ! m/s (190.987 ft/s average)
 /

@@ -21,10 +21,10 @@ p_fd_plunger = 1.0     ! kPa
 d_e = 5.0e-3 ! m
 
 ! getting defaults for:
+! actual_rc
+! actual_v_muzzle
 ! b
 ! dt
 ! p_atm
-! rc_actual
 ! temp_atm
-! v_muzzle_actual
 /

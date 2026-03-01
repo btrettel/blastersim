@@ -24,6 +24,6 @@ p_fs_proj = 7.0     ! kPa
 p_fd_proj = 3.0     ! kPa
 
 ! Experimental result
-v_muzzle_actual = 70.0 ! m/s
-rc_actual       = 2    ! (optional)
+actual_v_muzzle = 70.0 ! m/s
+actual_rc       = 2    ! (optional)
 /

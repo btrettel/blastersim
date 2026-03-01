@@ -16,11 +16,11 @@ p_fs_proj = 7.0     ! kPa
 p_fd_proj = 3.0     ! kPa
 
 ! getting defaults for:
+! actual_rc
+! actual_v_muzzle
 ! b
 ! dt
 ! p_atm
-! rc_actual
 ! t_opening
 ! temp_atm
-! v_muzzle_actual
 /

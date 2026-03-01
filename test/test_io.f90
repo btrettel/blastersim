@@ -46,14 +46,14 @@ subroutine test_read_pneumatic_namelist_non_default(tests)
     
     type(si_length)   :: d_barrel, d_e, d_chamber, l_travel
     type(si_volume)   :: vol_dead
-    type(si_velocity) :: v_muzzle_actual
-    integer           :: rc_actual
+    type(si_velocity) :: actual_v_muzzle
+    integer           :: actual_rc
     
     path_array(1) = "test"
     path_array(2) = "pneumatic-non-default.nml"
     input_file = path_join(path_array)
     
-    call read_pneumatic_namelist(input_file, sys, config, rc, v_muzzle_actual_=v_muzzle_actual, rc_actual_=rc_actual)
+    call read_pneumatic_namelist(input_file, sys, config, rc, actual_v_muzzle_=actual_v_muzzle, actual_rc_=actual_rc)
     
     call tests%integer_eq(rc, 0, "read_pneumatic_namelist, non-default values, rc")
     
@@ -84,8 +84,8 @@ subroutine test_read_pneumatic_namelist_non_default(tests)
         call tests%real_eq(sys%cv(I_BARREL_ATM)%p_const%v%v, 102000.0_WP, "read_pneumatic_namelist, non-default values, p_atm")
         call tests%real_eq(sys%cv(I_BARREL_ATM)%temp_const%v%v, 295.0_WP, &
                                     "read_pneumatic_namelist, non-default values, temp_atm")
-        call tests%real_eq(v_muzzle_actual%v%v, 70.0_WP, "read_pneumatic_namelist, non-default values, v_muzzle_actual")
-        call tests%integer_eq(rc_actual, 2, "read_pneumatic_namelist, non-default values, rc_actual")
+        call tests%real_eq(actual_v_muzzle%v%v, 70.0_WP, "read_pneumatic_namelist, non-default values, actual_v_muzzle")
+        call tests%integer_eq(actual_rc, 2, "read_pneumatic_namelist, non-default values, actual_rc")
     end if
 end subroutine test_read_pneumatic_namelist_non_default
 
@@ -107,14 +107,14 @@ subroutine test_read_pneumatic_namelist_default(tests)
     
     type(si_length)   :: d_barrel, d_e, d_chamber, l_travel
     type(si_volume)   :: vol_dead
-    type(si_velocity) :: v_muzzle_actual
-    integer           :: rc_actual
+    type(si_velocity) :: actual_v_muzzle
+    integer           :: actual_rc
     
     path_array(1) = "test"
     path_array(2) = "pneumatic-default.nml"
     input_file = path_join(path_array)
     
-    call read_pneumatic_namelist(input_file, sys, config, rc, v_muzzle_actual_=v_muzzle_actual, rc_actual_=rc_actual)
+    call read_pneumatic_namelist(input_file, sys, config, rc, actual_v_muzzle_=actual_v_muzzle, actual_rc_=actual_rc)
     
     call tests%integer_eq(rc, 0, "read_pneumatic_namelist, default values, rc")
     
@@ -144,8 +144,8 @@ subroutine test_read_pneumatic_namelist_default(tests)
         call tests%real_eq(sys%con(I_CHAMBER, I_BARREL)%b%v%v, 0.5_WP, "read_pneumatic_namelist, default values, b")
         call tests%real_eq(sys%cv(I_BARREL_ATM)%p_const%v%v, P_ATM, "read_pneumatic_namelist, default values, p_atm")
         call tests%real_eq(sys%cv(I_BARREL_ATM)%temp_const%v%v, TEMP_ATM, "read_pneumatic_namelist, default values, temp_atm")
-        call tests%real_eq(v_muzzle_actual%v%v, 0.0_WP, "read_pneumatic_namelist, default values, v_muzzle_actual")
-        call tests%integer_eq(rc_actual, 0, "read_pneumatic_namelist, default values, rc_actual")
+        call tests%real_eq(actual_v_muzzle%v%v, 0.0_WP, "read_pneumatic_namelist, default values, actual_v_muzzle")
+        call tests%integer_eq(actual_rc, 0, "read_pneumatic_namelist, default values, actual_rc")
     end if
 end subroutine test_read_pneumatic_namelist_default
 
@@ -166,14 +166,14 @@ subroutine test_read_springer_namelist_non_default(tests)
     
     type(si_length)   :: d_barrel, d_e, d_plunger, l_travel
     type(si_volume)   :: vol_dead
-    type(si_velocity) :: v_muzzle_actual
-    integer           :: rc_actual
+    type(si_velocity) :: actual_v_muzzle
+    integer           :: actual_rc
     
     path_array(1) = "test"
     path_array(2) = "springer-non-default.nml"
     input_file = path_join(path_array)
     
-    call read_springer_namelist(input_file, sys, config, rc, v_muzzle_actual_=v_muzzle_actual, rc_actual_=rc_actual)
+    call read_springer_namelist(input_file, sys, config, rc, actual_v_muzzle_=actual_v_muzzle, actual_rc_=actual_rc)
     
     call tests%integer_eq(rc, 0, "read_springer_namelist, non-default values, rc")
     
@@ -218,8 +218,8 @@ subroutine test_read_springer_namelist_non_default(tests)
                             "read_springer_namelist, non-default values, temp_atm (1)")
         call tests%real_eq(sys%cv(I_BARREL_ATM)%temp_const%v%v, 310.0_WP, &
                             "read_springer_namelist, non-default values, temp_atm (2)")
-        call tests%real_eq(v_muzzle_actual%v%v, 60.0_WP, "read_springer_namelist, non-default values, v_muzzle_actual")
-        call tests%integer_eq(rc_actual, 1, "read_springer_namelist, non-default values, rc_actual")
+        call tests%real_eq(actual_v_muzzle%v%v, 60.0_WP, "read_springer_namelist, non-default values, actual_v_muzzle")
+        call tests%integer_eq(actual_rc, 1, "read_springer_namelist, non-default values, actual_rc")
     end if
 end subroutine test_read_springer_namelist_non_default
 
@@ -241,14 +241,14 @@ subroutine test_read_springer_namelist_default(tests)
     
     type(si_length)   :: d_barrel, d_e, d_plunger, l_travel
     type(si_volume)   :: vol_dead
-    type(si_velocity) :: v_muzzle_actual
-    integer           :: rc_actual
+    type(si_velocity) :: actual_v_muzzle
+    integer           :: actual_rc
     
     path_array(1) = "test"
     path_array(2) = "springer-default.nml"
     input_file = path_join(path_array)
     
-    call read_springer_namelist(input_file, sys, config, rc, v_muzzle_actual_=v_muzzle_actual, rc_actual_=rc_actual)
+    call read_springer_namelist(input_file, sys, config, rc, actual_v_muzzle_=actual_v_muzzle, actual_rc_=actual_rc)
     
     call tests%integer_eq(rc, 0, "read_springer_namelist, default values, rc")
     
@@ -290,8 +290,8 @@ subroutine test_read_springer_namelist_default(tests)
                                     "read_springer_namelist, default values, temp_atm (1)")
         call tests%real_eq(sys%cv(I_BARREL_ATM)%temp_const%v%v, TEMP_ATM, &
                                     "read_springer_namelist, default values, temp_atm (2)")
-        call tests%real_eq(v_muzzle_actual%v%v, 00.0_WP, "read_springer_namelist, default values, v_muzzle_actual")
-        call tests%integer_eq(rc_actual, 0, "read_springer_namelist, default values, rc_actual")
+        call tests%real_eq(actual_v_muzzle%v%v, 00.0_WP, "read_springer_namelist, default values, actual_v_muzzle")
+        call tests%integer_eq(actual_rc, 0, "read_springer_namelist, default values, actual_rc")
     end if
 end subroutine test_read_springer_namelist_default
 

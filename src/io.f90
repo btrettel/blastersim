@@ -73,7 +73,7 @@ subroutine create_barrel(vol_dead, csa_barrel, p_atm, temp_atm, m_p, p_fs, p_fd,
                     i_cv_mirror, x_stop=x_stop)
 end subroutine create_barrel
 
-subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, v_muzzle_actual_, rc_actual_)
+subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_muzzle_, actual_rc_)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT
     use port, only: path_basename
@@ -85,8 +85,8 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, v_muzzle_ac
     type(cv_system_type), allocatable, intent(out) :: sys
     type(run_config_type), intent(out)             :: config
     integer, intent(out)                           :: rc_read
-    type(si_velocity), intent(out), optional       :: v_muzzle_actual_
-    integer, intent(out), optional                 :: rc_actual_
+    type(si_velocity), intent(out), optional       :: actual_v_muzzle_
+    integer, intent(out), optional                 :: actual_rc_
     
     character(len=128)    :: id
     type(si_velocity)     :: x_dot
@@ -155,11 +155,11 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, v_muzzle_ac
     
     call config%set(id, csv_output=.true., dt=dt_u, n_d=0)
     
-    if (present(v_muzzle_actual_)) v_muzzle_actual_ = v_muzzle_actual_u
-    if (present(rc_actual_))       rc_actual_       = rc_actual
+    if (present(actual_v_muzzle_)) actual_v_muzzle_ = actual_v_muzzle_u
+    if (present(actual_rc_))       actual_rc_       = actual_rc
 end subroutine read_pneumatic_namelist
 
-subroutine read_springer_namelist(input_file, sys, config, rc_read, v_muzzle_actual_, rc_actual_)
+subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muzzle_, actual_rc_)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT
     use port, only: path_basename
@@ -171,8 +171,8 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, v_muzzle_act
     type(cv_system_type), allocatable, intent(out) :: sys
     type(run_config_type), intent(out)             :: config
     integer, intent(out)                           :: rc_read
-    type(si_velocity), intent(out), optional       :: v_muzzle_actual_
-    integer, intent(out), optional                 :: rc_actual_
+    type(si_velocity), intent(out), optional       :: actual_v_muzzle_
+    integer, intent(out), optional                 :: actual_rc_
     
     character(len=128) :: id
     type(si_velocity)  :: x_dot
@@ -244,8 +244,8 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, v_muzzle_act
     
     call config%set(id, csv_output=.true., dt=dt_u, n_d=0)
     
-    if (present(v_muzzle_actual_)) v_muzzle_actual_ = v_muzzle_actual_u
-    if (present(rc_actual_))       rc_actual_       = rc_actual
+    if (present(actual_v_muzzle_)) actual_v_muzzle_ = actual_v_muzzle_u
+    if (present(actual_rc_))       actual_rc_       = actual_rc
 end subroutine read_springer_namelist
 
 end module io

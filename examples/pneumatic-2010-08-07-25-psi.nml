@@ -27,5 +27,5 @@ d_e = 3.3e-3 ! m (calibrated)
 b   = 0.5    ! unitless (guessed)
 
 ! Experimental result
-rc_actual = 1 ! projectile does not exit barrel
+actual_rc = 1 ! projectile does not exit barrel
 /
