@@ -107,6 +107,7 @@ contains
 ! methods for `gas_type` !
 !!!!!!!!!!!!!!!!!!!!!!!!!!
 
+!tripwire$ begin 2AB1B959 Update `\secref{thermo}` of theory.tex if necessary.
 pure function u_gas(gas, temp)
     ! Constant specific heats assumed for now. Will improve later.
     
@@ -175,6 +176,7 @@ pure function c_p_gas(gas, n_d)
     ! moran_fundamentals_2008 eq. 3.47a, p. 119
     c_p_gas = gas%gamma * gas%r(n_d) / (gas%gamma - 1.0_WP)
 end function c_p_gas
+!tripwire$ end
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! functions for air humidity !

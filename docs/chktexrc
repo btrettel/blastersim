@@ -7,8 +7,9 @@ UserWarn
     ** # indicates a Fortran format problem
 }
 [
-    piston # write plunger instead
+    piston # write plunger
     plunger/projectile # write projectile/plunger
+    non-linear # write nonlinear
 ]
 
 UserWarnRegex

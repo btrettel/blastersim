@@ -1,5 +1,12 @@
 ### v0.2.0
 
+- Nonlinear spring model.
+    - <https://discord.com/channels/999821037036388422/999821037518725205/1262864305393631234>
+    - Would be simple to add a cubic nonlinearity, but I don't think that information is normally available.
+    - Update `e_s` and `d_x_dot_d_t`.
+    - How does adding a cubic term change the added mass?
+        - <https://en.wikipedia.org/wiki/Effective_mass_(spring%E2%80%93mass_system)>
+        - The kinetic energy derivation won't change.
 - Add another test for `test_alpha_m_dot` to test the sign.
 - <https://onegoodtutorial.org/>
 - <https://academia.stackexchange.com/questions/14010/how-do-you-cite-a-github-repository>
@@ -18,6 +25,8 @@
 - Easier validation tests
     - Make a system where you can provide filenames only so that you can have even less boilerplate.
     - Predicted vs. actual plot generation for validation section of docs.
+- Spring validation data
+    - compton_internal_2007
 - Add LLM logs to repo?
 - Note in validation section: Blasters are assumed to have constant `d_e` and `b` unless the flow restriction changes. No pressure effects on `d_e`.
 - Use one `d_e` value for 2010 pneumatic cases.

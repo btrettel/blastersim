@@ -193,3 +193,14 @@ If there is a corresponding typeset variable, the notation for that variable is 
 % TODO: Go through file and explain what it means.
 
 \lstinputlisting{springer-example.nml}
+
+\section{Known issues}\label{known-issues}
+
+The following issues are known to affect BlasterSim:
+\begin{itemize}
+\item If the flow rate is too high (typically through making \texttt{d\_e} too large), BlasterSim can become unstable and produce inaccurate results.
+This problem can be solved at the moment by making the time step (\texttt{dt}) small enough that the instability disappears, however, this can make running BlasterSim slow.
+\item Plunger impact with the end of the plunger tube is not handled yet as discussed in \secref{plunger-impact}.
+\end{itemize}
+
+Additional issues may be available on GitHub: \url{https://github.com/btrettel/blastersim/issues}
