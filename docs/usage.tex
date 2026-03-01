@@ -157,6 +157,13 @@ When possible, I try to pick metric units that are convenient for each variable 
 This is not possible for lengths as BlasterSim is intended to work for a range of gas gun systems, from small pellet guns all the way through potato cannons.
 Given the wide range of scales, for lengths the unit of m was selected, and the \texttt{e} notation previously mentioned can be used so that the user can select the appropriate scale.
 
+Because the namelist file format is part of the Fortran standard, the reading of the namelist files is a built-in feature of a Fortran compiler and not something that BlasterSim has complete control over.
+Some error messages from bad namelist input files may be unclear, but are unfortunately beyond the control of BlasterSim.
+For example, in the gfortran compiler BlasterSim's releases use, you might see an error message like ``Bad real number in item 5 of list input''.
+Note that this says \textit{item 5}, not line 5 of the input file.
+It is referring to the 5th variable declaration.
+In the example namelist input file in this section, this would correspond to the \texttt{y} variable, and the user is going to have to fix something with the number format in \texttt{y}.
+
 \section{Pneumatic mode}\label{pneumatic}
 % TODO
 

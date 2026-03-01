@@ -2,7 +2,7 @@
 ! barrel
 d_barrel  = 13.0e-3 ! m
 l_travel  = 50.0e-2 ! m
-m_proj    = 1.1e-3  ! kg
+m_proj    = 1.1     ! g
 p_fs_proj = 5.0     ! kPa
 p_fd_proj = 2.0     ! kPa
 vol_dead  = 20.0e-6 ! m3
@@ -12,8 +12,8 @@ d_plunger    = 30.0e-3 ! m
 k            = 500.0   ! N/m
 l_draw       = 20.0e-2 ! m
 delta_pre    = 5.0e-2  ! m
-m_plunger    = 30.0e-3 ! kg
-m_spring     = 10.0e-3 ! kg
+m_plunger    = 30.0    ! g
+m_spring     = 10.0    ! g
 p_fs_plunger = 4.0     ! kPa
 p_fd_plunger = 1.0     ! kPa
 

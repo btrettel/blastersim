@@ -1,7 +1,14 @@
 &pneumatic
-! atmosphere
-p_atm    = 101.3500 ! kPa (absolute)
-temp_atm = 302.6    ! K
+! barrel
+d_barrel  = 13.3858e-3  ! m (0.527 in)
+l_travel  = 0.3048      ! m (12 in)
+m_proj    = 0.98        ! g (measured)
+vol_dead  = 1.802577e-5 ! m3 (measured)
+
+! I recall that I could blow the darts down the barrel. So that places an upper limit on the static friction pressure.
+! 9500 Pa is about where the maximum is for men according to <https://pmc.ncbi.nlm.nih.gov/articles/PMC1501025/>
+p_fs_proj = 5.0 ! kPa (guessed)
+p_fd_proj = 0.0 ! kPa (guessed)
 
 ! chamber
 ! Appears to be constructed about 6 inches of 3/8" NPT threaded steel nipple from the photo I have.
@@ -11,20 +18,13 @@ p_chamber   = 344.73786    ! kPa (gauge, 50 psig)
 vol_chamber = 1.802577e-05 ! m3 (1.1 in3, measured)
 d_chamber   = 12.5222e-3   ! m (0.493 in, guessed)
 
+! atmosphere
+p_atm    = 101.3500 ! kPa (absolute)
+temp_atm = 302.6    ! K
+
 ! flow restriction
 d_e = 2.8e-3 ! m (calibrated)
 b   = 0.5    ! unitless (guessed)
-
-! barrel
-d_barrel  = 13.3858e-3  ! m (0.527 in)
-l_travel  = 0.3048      ! m (12 in)
-m_proj    = 0.98e-3     ! kg (measured)
-vol_dead  = 1.802577e-5 ! m3 (measured)
-
-! I recall that I could blow the darts down the barrel. So that places an upper limit on the static friction pressure.
-! 9500 Pa is about where the maximum is for men according to <https://pmc.ncbi.nlm.nih.gov/articles/PMC1501025/>
-p_fs_proj = 5.0 ! kPa (guessed)
-p_fd_proj = 0.0 ! kPa (guessed)
 
 ! Experimental result
 v_muzzle_actual = 44.398 ! m/s (145.664 ft/s average)

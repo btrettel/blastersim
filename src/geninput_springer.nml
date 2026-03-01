@@ -167,8 +167,9 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "m_proj"
 type_definition       = "type(si_mass)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "kg"
+tex_unit              = "g"
 tex_description       = "Mass of the projectile."
 tex_variable_name     = "$m_\text{proj}$"
 lower_bound_active    = .true.
@@ -257,8 +258,9 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "m_plunger"
 type_definition       = "type(si_mass)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "kg"
+tex_unit              = "g"
 tex_description       = "Mass of the plunger. Does not include the mass of the spring."
 tex_variable_name     = "$m_\text{plunger}$"
 lower_bound_active    = .true.
@@ -314,8 +316,9 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "m_spring"
 type_definition       = "type(si_mass)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "kg"
+tex_unit              = "g"
 tex_description       = "Mass of the spring."
 tex_variable_name     = "$m_\text{spring}$"
 lower_bound_active    = .true.

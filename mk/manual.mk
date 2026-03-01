@@ -29,7 +29,7 @@ test_exact.tex: test_cva$(BINEXT)
 defaults.tex: test_cva$(BINEXT)
 	$(RUN)test_cva$(BINEXT)
 
-io.nml: examples$(DIR_SEP)springer-example.nml
+io.nml: test$(DIR_SEP)pneumatic-default.nml test$(DIR_SEP)pneumatic-non-default.nml test$(DIR_SEP)springer-default.nml test$(DIR_SEP)springer-non-default.nml
 
 validation.nml: examples$(DIR_SEP)pneumatic-2010-08-07-25-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-30-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-40-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-50-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-60-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-70-psi.nml
 

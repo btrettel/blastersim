@@ -24,7 +24,7 @@
 ! barrel
 d_barrel  = 19.7358e-3 ! m (assumed same diameter as [1])
 l_travel  = 494.5e-3   ! m [5]
-m_proj    = 2.65e-3    ! kg [1]
+m_proj    = 2.65       ! g [1]
 p_fs_proj = 0.0        ! kPa (guessed as it seems to be low friction)
 p_fd_proj = 0.0        ! kPa (guessed as it seems to be low friction)
 
@@ -32,15 +32,15 @@ p_fd_proj = 0.0        ! kPa (guessed as it seems to be low friction)
 vol_dead = 2.9415514e-5 ! m3 [1]
 
 ! plunger tube
-d_plunger    = 43.6e-3  ! m [1]
-m_plunger    = 20.10e-3 ! kg [2]
-p_fs_plunger = 0.0      ! kPa (guessed as it seems to be low friction)
-p_fd_plunger = 0.0      ! kPa (guessed as it seems to be low friction)
+d_plunger    = 43.6e-3 ! m [1]
+m_plunger    = 20.10   ! g [2]
+p_fs_plunger = 0.0     ! kPa (guessed as it seems to be low friction)
+p_fd_plunger = 0.0     ! kPa (guessed as it seems to be low friction)
 
 ! spring (K17)
 k        = 528.88304 ! N/m (3.02 lbf/in) [4]
 l_draw   = 140.2e-3  ! m [3] (corrected from [1])
-m_spring = 74.95e-3  ! kg [4]
+m_spring = 74.95     ! g [4]
 
 ! l_spring = 323.4 mm [3]
 ! l_pre    = 190.8 mm [3]

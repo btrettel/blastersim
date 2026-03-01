@@ -1,19 +1,19 @@
 ### v0.2.0
 
+- Add functional dependencies of $p_{\text{f},i}$ to the $\dv{\dot{x}_i}{t}$ equation in the docs.
 - Nonlinear spring model.
+    - Split spring force and energy into spring.f90? Might also want to move EOSes into eos.f90.
     - <https://discord.com/channels/999821037036388422/999821037518725205/1262864305393631234>
-    - Would be simple to add a cubic nonlinearity, but I don't think that information is normally available.
     - Update `e_s` and `d_x_dot_d_t`.
-    - How does adding a cubic term change the added mass?
-        - <https://en.wikipedia.org/wiki/Effective_mass_(spring%E2%80%93mass_system)>
-        - The kinetic energy derivation won't change.
+    - `SPRING_MODEL = POLYNOMIAL_SPRING`: default, full cubic equation, `k`, `k_2`, `k_3`
+    - `SPRING_MODEL = ILIJIC_SPRING`: Look at ilijic_nonlinearity_2025 eqs. 29 and 30
 - Add another test for `test_alpha_m_dot` to test the sign.
 - <https://onegoodtutorial.org/>
 - <https://academia.stackexchange.com/questions/14010/how-do-you-cite-a-github-repository>
 - Change `v_muzzle_actual` to `actual_v_muzzle` and `rc_actual` to `actual_rc` so that later when adding UQ I can have `actual_v_muzzle_stdev` by simply appending to the existing variable name.
 - Change `scaling_factor` in geninput_*.nml to match CSV output.
     - ms: `t_opening` (done)
-    - g: masses
+    - g: masses (done)
     - Keep `dt` as seconds as it's much smaller than 1 ms (also would need to change `DT_DEFAULT` to be in ms; but it's used in s in code in places too)
     - Which units should be used for volume? I guess to be consistent with using m for length everywhere (since the most appropriate units vary) would be to use m3 for volume.
 - `check_sys`
@@ -25,8 +25,9 @@
 - Easier validation tests
     - Make a system where you can provide filenames only so that you can have even less boilerplate.
     - Predicted vs. actual plot generation for validation section of docs.
-- Spring validation data
-    - compton_internal_2007
+- Check your saved papers for springer and pneumatic experimental data
+    - springers
+        - compton_internal_2007 (need rotational KE)
 - Add LLM logs to repo?
 - Note in validation section: Blasters are assumed to have constant `d_e` and `b` unless the flow restriction changes. No pressure effects on `d_e`.
 - Use one `d_e` value for 2010 pneumatic cases.

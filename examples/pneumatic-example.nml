@@ -2,7 +2,7 @@
 ! barrel
 d_barrel  = 13.0e-3 ! m
 l_travel  = 40.0e-2 ! m
-m_proj    = 1.0e-3  ! kg
+m_proj    = 1.0     ! g
 vol_dead  = 1.0e-5  ! m3
 p_fs_proj = 0.0     ! kPa
 p_fd_proj = 0.0     ! kPa

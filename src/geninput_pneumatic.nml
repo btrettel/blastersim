@@ -167,8 +167,9 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "m_proj"
 type_definition       = "type(si_mass)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "kg"
+tex_unit              = "g"
 tex_description       = "Mass of the projectile."
 tex_variable_name     = "$m_\text{proj}$"
 lower_bound_active    = .true.
