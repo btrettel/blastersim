@@ -1,5 +1,18 @@
 ### v0.2.0
 
+- Debug logging
+    - Add extra debug columns in CSV file?
+    - Some sort of time stepstability criteria?
+    - Have nesting of messages like PETSc to better understand call structure
+- Look more at problem of high flow rates causing instability. Plot every time step during the instability.
+- `check_sys`
+    - Time step criteria based on flow rate to empty CV? This wouldn't work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates become unstable.
+    - Make `check_sys` check that `x > 0` and note in the documentation that the plunger hitting the end of the plunger tube would make this be violated
+    - Try "Lipschitz constant estimate" suggested by Gemini.
+    - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
+- Use linters including fortitude.
+- Test CSV output with Python.
+- Make characterization tests for stdout and CSV output for springer-example.csv and pneumatic-example.csv.
 - Add functional dependencies of $p_{\text{f},i}$ to the $\dv{\dot{x}_i}{t}$ equation in the docs.
 - Nonlinear spring model.
     - Split spring force and energy into spring.f90? Might also want to move EOSes into eos.f90.
@@ -15,11 +28,6 @@
     - g: masses (done)
     - Keep `dt` as seconds as it's much smaller than 1 ms (also would need to change `DT_DEFAULT` to be in ms; but it's used in s in code in places too)
     - Which units should be used for volume? I guess to be consistent with using m for length everywhere (since the most appropriate units vary) would be to use m3 for volume.
-- `check_sys`
-    - Time step criteria based on flow rate to empty CV? This wouldn't work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates become unstable.
-    - Make `check_sys` check that `x > 0` and note in the documentation that the plunger hitting the end of the plunger tube would make this be violated
-    - Try "Lipschitz constant estimate" suggested by Gemini.
-    - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
 - Set time per CSV row output in input file, which will be converted to `csv_frequency`.
 - Easier validation tests
     - Make a system where you can provide filenames only so that you can have even less boilerplate.
@@ -70,10 +78,7 @@
     - lfortran
     - IBM xlf
 - Add `logical` types to geninput.
-- Use linters including fortitude.
-- Test CSV output with Python.
 - Run Valgrind to find if there are any more uninitialized variables.
-- Make characterization tests for stdout and CSV output for springer-example.csv and pneumatic-example.csv.
 - docs:
     - Process test output and put the results in the documentation.
         - LaTeX documentation
@@ -129,6 +134,7 @@
 - Get documentation done before sensitivity analysis.
     - Get sensitivity analysis done before UQ.
     - Get UQ done before optimization so that all optimization is robust for simplicity (no need to have both non-robust and robust optimization set up).
+        - UQ: include stdev output in CSV file
 - `make dist`
 - `make web`
 - `make deploy`
@@ -341,6 +347,9 @@
     - `con%type = POPPET_MOTION`: use for piloted valves, needs a third connection?
 - Speed seal/hole: "leak" rate is a function of position. This could get the plunger to a higher initial speed.
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1474960906206183494>
+- rotational motion of the projectile
+- Make effective diameter vary with pressure?
+    - <https://discord.com/channels/825852031239061545/1462571693628461157/1478552128439189534>
 - promotion
     - Post on:
         - r/nerf
