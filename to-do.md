@@ -1,5 +1,6 @@
 ### v0.2.0
 
+- git hook to run tests if code changed
 - Debug logging
     - Add extra debug columns in CSV file?
     - Some sort of time stepstability criteria?
