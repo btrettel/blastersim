@@ -2,22 +2,39 @@
 
 \section{Interior ballistics}\label{interior-ballistics}
 
-\subsection{Control volume variables}
-% TODO
+\subsection{Control volume notation}\label{notation}
 
-% TODO: list all member variables
-% TODO: based around control volume mass and energy as presumably this helps with conservation
+\input{control-volume-figure.tex}
 
 Internally, BlasterSim simulate blasters using control volumes with arbitrary flow connections between control volumes.
 This allows BlasterSim to simulates spring and pneumatic blasters with the same core simulation code. This also allows simulating more atypical blasters without major code changes.
 
-This section describes the internal model in an abstract way.
+An isolated control volume numbered $i$ is shown in \figref{control volume}.
+A single flow connection to the control volume numbered $j$ is shown with
+mass flow rate $\dot{m}_{i \rightarrow j}$,
+a projectile/plunger labeled p with mass $m_{\text{p},i}$,
+a spring with stiffness $k_i$, mass $m_{\text{s},i}$, and spring precompression $\Delta_{\text{pre},i}$ (see \figref{springer unprimed} for a graphical definition),
+control volume cross-sectional area $A_i$,
+projectile/plunger position $x_i$ and velocity $\dot{x}_i$, and
+gas mass $m_i$ and energy $e_i$.
 
-\subsection{Notation}
+The integers $i$ and $j$ will be used as indices for control volumes.
 
-% i, j = control volume numbers
-% k = gas species
-% y = mass fraction
+Gas mass and energy as chosen as these are conserved variables and it is believed that using conserved variables will lead to better conservation properties in the numerical methods.
+
+A control volume represented like this can be used to represent a variety of scenarios, including:
+\begin{itemize}
+\item a barrel, where p represents the projectile, $x_i$ represents the projectile location, and $k_i$ and $m_{\text{s},i}$ are set to zero;
+\item a plunger tube for springers where p represents the plunger head, and $x_i$ represents the plunger head location;
+\item a constant volume chamber for pneumatics where p represents a solid wall, $m_{\text{p},i}$ is set to infinity, and $k_i$ and $m_{\text{s},i}$ are set to zero;
+\item a piston tube used in HPA Nerf blasters similar to a plunger tube; and % chktex 20
+\item a constant pressure atmosphere where $x_i$ is arbitrary, and $k_i$ and $m_{\text{s},i}$ are set to zero.
+\end{itemize}
+
+The gas mass could be composed of multiple species in BlasterSim.
+At the moment, the pneumatic and springer modes of BlasterSim use only dry air, but humidity and alternative gases are intended to be added in the future.
+For completeness, this guide will be written as if multiple gas species are present.
+The mass fraction $y$ and gas species index $k$ which identifies the gas are used.
 
 \subsection{Conservation laws}\label{conservation-laws}
 % TODO
@@ -52,7 +69,7 @@ This section describes the internal model in an abstract way.
 % TODO: R from \gamma
 % TODO: c_v from R
 % TODO: c_p from R
-% TODO: mixture u and h
+% TODO: mixture R, u, and h
 
 \begin{equation}
     u_{k,i}(T) = u_{0,k} + c_{\text{v},k} \, (T_i - T_{0,k})\label{eq:internal energy}

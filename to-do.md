@@ -5,9 +5,10 @@
     - Add extra debug columns in CSV file?
     - Some sort of time stepstability criteria?
     - Have nesting of messages like PETSc to better understand call structure
-- Look more at problem of high flow rates causing instability. Plot every time step during the instability.
+- Look more at problem of high flow rates causing negative temperatures.
+    - It appears that the problem is caused by the volume being small from the plunger nearly impacting the end of the plunger tube. An adaptive time step would help, but the plunger impact model is also needed.
 - `check_sys`
-    - Time step criteria based on flow rate to empty CV? This wouldn't work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates become unstable.
+    - Time step criteria based on flow rate to empty CV? This wouldn't work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates lead to negative temperatures.
     - Make `check_sys` check that `x > 0` and note in the documentation that the plunger hitting the end of the plunger tube would make this be violated
     - Try "Lipschitz constant estimate" suggested by Gemini.
     - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
@@ -515,3 +516,18 @@ GUI ideas:
             - <https://hardforum.com/>
 - BlasterSim tutorial on YouTube, with slides showing each control volume and how they are connected to what's in the input file.
     - This could also be good marketing.
+
+***
+
+Exact solution for high-flow springers like your pneumatic solution:
+
+- Try solving linearized springer equations to see how to make independent equations
+- Check <https://eqworld.ipmnet.ru/en/solutions/sysode/sode-toc3.htm>.
+- Solve piecewise model. x2 stays constant until p reaches p_f.
+- Look for a solution similar in form to what one might naively expect from energy conservation.
+- Calculate efficiency of pneumatic exact solution to get an idea of what the exact efficiency for springers could look like.
+- Did you assume no acceleration or something like that for the plunger in your optimal barrel length derivation before?
+
+For the pneumatic solution:
+
+- Derive optimal barrel length. This could be used to verify the optimizer later.

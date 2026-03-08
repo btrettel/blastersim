@@ -205,8 +205,9 @@ If there is a corresponding typeset variable, the notation for that variable is 
 
 The following issues are known to affect BlasterSim:
 \begin{itemize}
-\item If the flow rate is too high (typically through making \texttt{d\_e} too large), BlasterSim can become unstable and produce inaccurate results.
-This problem can be solved at the moment by making the time step (\texttt{dt}) small enough that the instability disappears, however, this can make running BlasterSim slow.
+\item For springers, a smaller time step (\texttt{dt}) is often required as the plunger approaches the end of the plunger tube.
+Plunger impact is more likely at higher flow rates (larger values of \texttt{d\_e}).
+Adaptive time stepping should fix this problem in the future.
 \item Plunger impact with the end of the plunger tube is not handled yet as discussed in \secref{plunger-impact}.
 \end{itemize}
 

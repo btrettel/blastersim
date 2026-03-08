@@ -77,7 +77,7 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT
     use port, only: path_basename
-    use gasdata, only: P_ATM_KPA, TEMP_ATM_ => TEMP_ATM, DRY_AIR
+    use gasdata, only: P_ATM_KPA, TEMP_ATM_ => TEMP_ATM, DRY_AIR, gas_type
     use checks, only: is_close, check
     use prec, only: CL, PI
     
@@ -98,6 +98,12 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     type(si_pressure)     :: p_f_chamber
     
     integer, parameter :: I_CHAMBER = 2, I_BARREL_ATM  = 3
+    
+    !tripwire$ begin 56C95A8D Update \secref{notation} of theory.tex.
+    type(gas_type), parameter :: BARREL_GAS(*)  = [DRY_AIR], &
+                                 CHAMBER_GAS(*) = [DRY_AIR], &
+                                 ATM_GAS(*)     = [DRY_AIR]
+    !tripwire$ end
     
     include "geninput_pneumatic.f90"
     
@@ -141,17 +147,17 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     ! `sys%cv(I_BARREL)`: barrel
     csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
     call create_barrel(vol_dead_u, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
-                        [DRY_AIR], I_BARREL_ATM, sys%cv(I_BARREL))
+                        BARREL_GAS, I_BARREL_ATM, sys%cv(I_BARREL))
     
     ! `sys%cv(I_CHAMBER)`: chamber
     csa_chamber = (PI/4.0_WP)*square(d_chamber_u)
     x_chamber   = vol_chamber_u/csa_chamber
     call sys%cv(I_CHAMBER)%set(x_chamber, x_dot, y, p_atm_u + p_chamber_u, temp_atm_u, "chamber", csa_chamber, &
-                        rm_p, p_f_chamber, p_f_chamber, k, delta_pre, [DRY_AIR], 0, &
+                        rm_p, p_f_chamber, p_f_chamber, k, delta_pre, CHAMBER_GAS, 0, &
                         isentropic_filling=.true., p_atm=p_atm_u)
     
     ! `sys%cv(I_BARREL_ATM)`: atmosphere
-    call sys%cv(I_BARREL_ATM)%set_const("atmosphere", csa_barrel, p_atm_u, temp_atm_u, [DRY_AIR], y, I_BARREL)
+    call sys%cv(I_BARREL_ATM)%set_const("atmosphere", csa_barrel, p_atm_u, temp_atm_u, ATM_GAS, y, I_BARREL)
     
     call config%set(id, csv_output=.true., dt=dt_u, n_d=0)
     
@@ -163,7 +169,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT
     use port, only: path_basename
-    use gasdata, only: P_ATM_KPA, TEMP_ATM_ => TEMP_ATM, DRY_AIR
+    use gasdata, only: P_ATM_KPA, TEMP_ATM_ => TEMP_ATM, DRY_AIR, gas_type
     use checks, only: is_close, check
     use prec, only: CL, PI
     
@@ -180,6 +186,13 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     type(si_area)      :: csa_plunger, csa_barrel
     
     integer, parameter :: I_PLUNGER = 2, I_BARREL_ATM  = 3, I_PLUNGER_ATM = 4
+    
+    !tripwire$ begin 2807623D Update \secref{notation} of theory.tex.
+    type(gas_type), parameter :: BARREL_GAS(*)   = [DRY_AIR], &
+                                 PLUNGER_GAS(*)     = [DRY_AIR], &
+                                 BARREL_ATM_GAS(*)  = [DRY_AIR], &
+                                 PLUNGER_ATM_GAS(*) = [DRY_AIR]
+    !tripwire$ end
     
     include "geninput_springer.f90"
     
@@ -225,22 +238,24 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     call x_dot%v%init_const(0.0_WP, 0)
     call y(1)%v%init_const(1.0_WP, 0)
     
-    ! `sys%cv(I_PLUNGER_ATM)`: atmosphere for plunger tube
-    csa_plunger = (PI/4.0_WP)*square(d_plunger_u)
-    call sys%cv(I_PLUNGER_ATM)%set_const("atmosphere for plunger", csa_plunger, p_atm_u, temp_atm_u, [DRY_AIR], y, I_PLUNGER)
-    
-    ! `sys%cv(I_BARREL_ATM)`: atmosphere for barrel
+    ! `sys%cv(I_BARREL)`: barrel
     csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
-    call sys%cv(I_BARREL_ATM)%set_const("atmosphere for barrel", csa_barrel, p_atm_u, temp_atm_u, [DRY_AIR], y, I_BARREL)
+    call create_barrel(vol_dead_u, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
+                        BARREL_GAS, I_BARREL_ATM, sys%cv(I_BARREL))
     
     ! `sys%cv(I_PLUNGER)`: plunger tube
+    csa_plunger = (PI/4.0_WP)*square(d_plunger_u)
     call sys%cv(I_PLUNGER)%set(l_draw_u, x_dot, y, p_atm_u, temp_atm_u, "plunger tube", csa_plunger, &
-                        1.0_WP/m_plunger_u, p_fs_plunger_u, p_fd_plunger_u, k_u, delta_pre_u, [DRY_AIR], I_PLUNGER_ATM, &
+                        1.0_WP/m_plunger_u, p_fs_plunger_u, p_fd_plunger_u, k_u, delta_pre_u, PLUNGER_GAS, I_PLUNGER_ATM, &
                         m_spring=m_spring_u)
     
-    ! `sys%cv(I_BARREL)`: barrel
-    call create_barrel(vol_dead_u, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
-                        [DRY_AIR], I_BARREL_ATM, sys%cv(I_BARREL))
+    ! `sys%cv(I_BARREL_ATM)`: atmosphere for barrel
+    call sys%cv(I_BARREL_ATM)%set_const("atmosphere for barrel", csa_barrel, p_atm_u, temp_atm_u, BARREL_ATM_GAS, &
+                                            y, I_BARREL)
+    
+    ! `sys%cv(I_PLUNGER_ATM)`: atmosphere for plunger tube
+    call sys%cv(I_PLUNGER_ATM)%set_const("atmosphere for plunger", csa_plunger, p_atm_u, temp_atm_u, PLUNGER_ATM_GAS, &
+                                            y, I_PLUNGER)
     
     call config%set(id, csv_output=.true., dt=dt_u, n_d=0)
     

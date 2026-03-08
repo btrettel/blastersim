@@ -1,0 +1,41 @@
+% chktex-file 1 chktex-file 8
+
+\tikzmath{
+\larrow      = 1;
+\xarrowstart = \lplungertube;
+\xarrowend   = \lplungertube + \larrow;
+\ylowmid     = (\ylowbarrel + \ycenter)/2;
+\yhighmid    = (\yhighbarrel + \ycenter)/2;
+\xgas        = 7*\lplungertube/8;
+\xs          = \xplungerheadstart/2;
+\ys          = 0.5;
+}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\draw[thick] (\lplungertube, \yhighbarrel) -- (\lplungertube, \dplunger) -- (0, \dplunger) -- (0, 0)         -- (\lplungertube, 0) -- (\lplungertube, \ylowbarrel);
+
+\draw[thick,dashed] (\xarrowstart, \ylowbarrel) -- (\xarrowstart, \yhighbarrel);
+\draw[thick] (\xarrowstart, \yhighbarrel) -- (\xarrowend, \yhighbarrel) -- node[right] {$\dot{m}_{i \rightarrow j}$} (\xarrowend, \ylowbarrel) -- (\xarrowstart, \ylowbarrel);
+\draw[->,thick] (\xarrowstart, \yhighmid) -- (\xarrowend, \yhighmid);
+\draw[->,thick] (\xarrowstart, \ycenter)  -- (\xarrowend, \ycenter);
+\draw[->,thick] (\xarrowstart, \ylowmid)  -- (\xarrowend, \ylowmid);
+
+\fill[fill=gray,draw=black,thick] (\xplungerheadstart, 0) rectangle ++(\lplungerhead, \dplunger) node[pos=0.5] {\small\color{white}p};
+
+\tikzstyle{spring}=[thick,decorate,decoration={coil,amplitude=20,segment length=4pt}] % `zigzag` doesn't work right in LaTeXML, but `coil` does
+\draw[spring] (0, \ycenter) -- (\xplungerheadstart, \ycenter);
+\node at (\xs, \ys) {s};
+
+\draw[<->,thick] (\xplungerheadend, \halfyfullspringabove) -- node[below] {$x_i$} (\lplungertube, \halfyfullspringabove);
+\draw[thick,dashed] (\lplungertube, \yfullspringabove) -- (\lplungertube, 0);
+\draw[thick,dashed] (\xplungerheadend, \yfullspringabove) -- (\xplungerheadend, 0);
+
+\draw[<->,thick] (\xdplunger, \dplunger) -- node[right] {$A_i$} (\xdplunger, 0);
+
+\draw[->,thick] (\xarrowend, \halfyfullspringabove) node[below right] {gas} -- (\xgas, \ycenter);
+\end{tikzpicture}
+\caption{Control volume number $i$ as represented in BlasterSim.\label{fig:control volume}}
+\end{figure}
+

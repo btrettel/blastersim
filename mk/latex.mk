@@ -5,6 +5,7 @@ docs$(DIR_SEP)theory.tex \
 docs$(DIR_SEP)verval.tex \
 docs$(DIR_SEP)dev.tex \
 docs$(DIR_SEP)springer-figures.tex \
+docs$(DIR_SEP)control-volume-figure.tex \
 docs$(DIR_SEP)exact-solution-figure.tex
 
 TEX_GEN = docs$(DIR_SEP)rev.tex \
