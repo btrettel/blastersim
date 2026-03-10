@@ -20,7 +20,7 @@ Every time step, BlasterSim performs internal consistency checks to alert the us
 These checks are made in the \texttt{check\_sys} subroutine of cva.f90.
 The specific checks performed include:
 \begin{itemize}
-    \item Whether the simulation ran for too long without the projectile leaving the barrel. (\texttt{run} subroutine return code 1) % chktex 12
+    \item Whether the simulation ran for $\tstopdefault$~seconds without the projectile leaving the barrel, indicating that the projectile likely won't ever leave the barrel. (\texttt{run} subroutine return code 1) % chktex 12
     \item Whether a control volume has negative mass. (\texttt{run} subroutine return code 2) % chktex 12
     \item Whether a control volume has negative temperature. (\texttt{run} subroutine return code 3) % chktex 12
     \item Whether the total system mass deviates from the starting mass by more than $\masstolerance$. (\texttt{run} subroutine return code 4) % chktex 12

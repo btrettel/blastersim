@@ -14,15 +14,15 @@ A single flow connection to the control volume numbered $j$ is shown with
 mass flow rate $\dot{m}_{i \rightarrow j}$,
 a projectile/plunger labeled p with mass $m_{\text{p},i}$,
 a spring with stiffness $k_i$, mass $m_{\text{s},i}$, and spring precompression $\Delta_{\text{pre},i}$ (see \figref{springer unprimed} for a graphical definition),
-control volume cross-sectional area $A_i$,
+cross-sectional area $A_i$,
 projectile/plunger position $x_i$ and velocity $\dot{x}_i$, and
-gas mass $m_i$ and energy $e_i$.
+gas mass $m_i$ and energy $E_i$.
 
 The integers $i$ and $j$ will be used as indices for control volumes.
 
 Gas mass and energy as chosen as these are conserved variables and it is believed that using conserved variables will lead to better conservation properties in the numerical methods.
 
-A control volume represented like this can be used to represent a variety of scenarios, including:
+A control volume represented like this can be used to represent a variety of scenarios relevant to gas gun interior ballistics, including:
 \begin{itemize}
 \item a barrel, where p represents the projectile, $x_i$ represents the projectile location, and $k_i$ and $m_{\text{s},i}$ are set to zero;
 \item a plunger tube for springers where p represents the plunger head, and $x_i$ represents the plunger head location;

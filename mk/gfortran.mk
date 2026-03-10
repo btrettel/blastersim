@@ -5,7 +5,7 @@
 
 FFLAGS   = -Wall -Wextra -Werror -pedantic-errors -Wno-do-subscript -std=f2018 -Wconversion -Wconversion-extra -fimplicit-none -fno-unsafe-math-optimizations -finit-real=snan -finit-integer=2147483647 -finit-logical=true -finit-derived -Wimplicit-interface -Wunused -Wcharacter-truncation -Winteger-division -ffree-line-length-132
 DFLAGS   = -Og -g -fbacktrace -fcheck=all -ffpe-trap=invalid,zero,overflow,underflow,denormal --coverage
-RFLAGS   = -O2 -Wno-uninitialized -fopt-info-missed=$(MISSED) -flto
+RFLAGS   = -O2 -Wno-uninitialized -fopt-info-missed=$(MISSED) -flto -ffpe-summary=none
 AFLAGS   = 
 NFLAGS   = -march=native
 SFLAGS   = -static
@@ -36,3 +36,7 @@ OMPFLAGS = -fopenmp -Wdeprecated-openmp
 
 # `-Wno-do-subscript`
 # <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=97320>
+
+# `-ffpe-summary=none`
+# Disables printing messages like "Note: The following floating-point exceptions are signalling: IEEE_INVALID_FLAG", which I don't want in releases.
+# <https://gcc.gnu.org/onlinedocs/gfortran/Debugging-Options.html#index-ffpe-summary_003dlist>

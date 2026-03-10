@@ -7,6 +7,7 @@
     - Have nesting of messages like PETSc to better understand call structure
 - Look more at problem of high flow rates causing negative temperatures.
     - It appears that the problem is caused by the volume being small from the plunger nearly impacting the end of the plunger tube. An adaptive time step would help, but the plunger impact model is also needed.
+    - Why was time over 1 s when I reduced the time step?
 - `check_sys`
     - Time step criteria based on flow rate to empty CV? This wouldn't work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates lead to negative temperatures.
     - Make `check_sys` check that `x > 0` and note in the documentation that the plunger hitting the end of the plunger tube would make this be violated
@@ -303,6 +304,9 @@
     - Data:
         - Plunger position: <https://discord.com/channels/727038380054937610/1172390267890958366/1177752285703573504>
         - pressure traces if available
+- Gas combustion (probably won't add, but here are some notes just in case)
+    - Data:
+        - <https://diverdi.colostate.edu/C477/experiments/interior%20ballistics%20of%20a%20cannon/>
 - In `check_sys`, use something with less cancellation error? Pick different points for the derivative calculation to avoid catastrophic cancellation? ash_optimal_1981 eq. 2 won't be the best as it would require 4 function evaluations per iteration.
 - Daniel Beaver validation cases:
     - <http://nerfhaven.com/forums/topic/21832-experimental-methods-for-determining-and-predicting-blaster-power/?p=307341>
@@ -352,10 +356,12 @@
 - rotational motion of the projectile
 - Make effective diameter vary with pressure?
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1478552128439189534>
+- estimate number of pumps required
+    - <https://www.reddit.com/r/nerfhomemades/comments/1rmu62j/blastersim_predict_blaster_performance_before/o9csj3o/>
 - promotion
     - Post on:
         - r/nerf
-        - r/nerfhomemades
+        - DONE: r/nerfhomemades
         - r/hpanerf
         - Discord
             - Atean Armory #the-workbench
