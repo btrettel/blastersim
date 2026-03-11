@@ -1641,6 +1641,7 @@ subroutine run(config, sys_start, sys_end, status)
     status%t = t
 end subroutine run
 
+!tripwire$ begin D852A4B2 Update `\secref{run-time-checks}` of verval.tex when changing `check_sys`.
 pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_start
@@ -1851,6 +1852,7 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         return
     end if
 end subroutine check_sys
+!tripwire$ end
 
 pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     ! Use Hénon's trick to ensure that `x == x_stop`.

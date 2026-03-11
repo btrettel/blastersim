@@ -1,5 +1,13 @@
 ### v0.2.0
 
+- BlasterSim output
+    - muzzle velocity
+    - muzzle energy
+    - kinetic energy density
+    - Check acceleration to know if under-barreled or over-barreled and print acceleration.
+    - Explain the meaning of the return code if there is an error.
+    - efficiency (depends on mode)
+    - dwell time
 - git hook to run tests if code changed
 - Debug logging
     - Add extra debug columns in CSV file?
@@ -105,14 +113,6 @@
     - Start using some sort of automatic documentation generator simply to see if it helps or not.
     - LaTeXML issues:
         - `\lstinputlisting[breaklines=true]` doesn't wrap.
-- BlasterSim output
-    - muzzle velocity
-    - muzzle energy
-    - kinetic energy density
-    - Check acceleration to know if under-barreled or over-barreled and print acceleration.
-    - Explain the meaning of the return code if there is an error.
-    - efficiency (depends on mode)
-    - dwell time
 - Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion
     - New requirement: $p_\text{f0} \leq p_\text{fe}$ to avoid backwards motion.
 - Plunger head motion bounds (lower and upper) (plunger impact)

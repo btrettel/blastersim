@@ -42,9 +42,9 @@ subroutine get_input_file_name_from_cli(prog, input_file_name, extra)
         write(unit=*, fmt="(3a)") "Usage: ", prog, " FILENAME"
         
         if (MODIFIED) then
-           modified_string = ", modified"
+            modified_string = ", modified"
         else
-           modified_string = "" 
+            modified_string = "" 
         end if
         
         write(unit=*, fmt="(a)") "Version: " // TAG // " (" // REVISION_DATE // trim(modified_string) // ")"
