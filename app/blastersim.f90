@@ -22,7 +22,7 @@ type(cv_system_type), allocatable :: sys_start, sys_end
 integer                           :: rc
 type(run_status_type)             :: status
 
-extra = "<http://github.com/btrettel/blastersim/>" // new_line("a") // "Written by Ben Trettel."
+extra = "<http://trettel.us/blastersim/>" // new_line("a") // "Written by Ben Trettel."
 
 call get_input_file_name_from_cli("blastersim", input_file, extra=extra)
 

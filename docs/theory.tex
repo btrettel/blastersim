@@ -143,9 +143,11 @@ More detailed modeling of pilot-operated valves could make determining the valve
 \subsection{Projectile and plunger equations of motion}\label{equations-of-motion}
 % TODO
 
+% TODO: effective pressure of friction, $p_{\text{f},i$
+
 \begin{align}
     \dv{x_i}{t}       &= \dot{x}_i \\
-    \dv{\dot{x}_i}{t} &= \frac{A_i}{m_{\text{eff},i}} \left(p_i - p_{\text{mirror},i} - p_{\text{f},i}\right) - \frac{k_i}{m_{\text{eff},i}} \left(x_i + \Delta_{\text{pre},i}\right)
+    \dv{\dot{x}_i}{t} &= \frac{A_i}{m_{\text{eff},i}} \left(p_i - p_{\text{mirror},i} - p_{\text{f},i}\right) - \frac{k_i}{m_{\text{eff},i}} \left(x_i + \Delta_{\text{pre},i}\right) \label{eq:Newton's second law}
 \end{align}
 
 The effective mass of the projectile/plunger factors in the spring mass.
@@ -157,6 +159,21 @@ The effective mass equation used is
 where $C_\text{ms} = \tfrac{1}{3}$ as suggested by \citet{ruby_equivalent_2000} for a stiff spring.
 
 \subsection{Projectile and plunger friction model}\label{friction}
+
+If a projectile/plunger p has both static and dynamic friction, the friction pressure $p_{\text{f},i}$ could be modeled as a piecewise function:
+\begin{equation}
+    p_{\text{f},i}(\dot{x}_i, p_{\text{fe},i}) =
+    \begin{cases} 
+        \sgn(p_{\text{fe},i}) \cdot \min(p_{\text{fs},i}, |p_{\text{fe},i}|), & \text{if}~\dot{x}_i = 0,     \\
+        \sgn(\dot{x}_i) \cdot p_{\text{fd},i},                                & \text{if}~\dot{x}_i \neq 0,
+    \end{cases}
+\end{equation}
+where $p_{\text{fe},i}$ is the friction pressure needed to equilibrate the forces on the projectile (where $\dv{\dot{x}_i}{t} = 0$; see~\eqref{Newton's second law}).
+% TODO: Include table from 2025-09-14 handwritten notes here.
+\textbf{BlasterSim does not use this model} because it is not smooth, and smooth functions are useful for automatic differentiation (see~\secref{autodiff}) and beneficial for numerical stability.
+Also, the use of strict floating point equality in the first branch can lead to numerical reproducibility issues.
+BlasterSim uses a smoothed version of this model which avoids these problems.
+
 % TODO
 
 \subsection{Plunger impact}\label{plunger-impact}
