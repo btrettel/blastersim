@@ -170,11 +170,13 @@ If a projectile/plunger p has both static and dynamic friction, the friction pre
 \end{equation}
 where $p_{\text{fe},i}$ is the friction pressure needed to equilibrate the forces on the projectile (where $\dv{\dot{x}_i}{t} = 0$; see~\eqref{Newton's second law}).
 % TODO: Include table from 2025-09-14 handwritten notes here.
-\textbf{BlasterSim does not use this model} because it is not smooth, and smooth functions are useful for automatic differentiation (see~\secref{autodiff}) and beneficial for numerical stability.
+\textbf{BlasterSim does not use this model} because it is not smooth.
+Smooth functions are useful for automatic differentiation (see~\secref{autodiff}) and beneficial for numerical stability.
 Also, the use of strict floating point equality in the first branch can lead to numerical reproducibility issues.
 BlasterSim uses a smoothed version of this model which avoids these problems.
 
 % TODO
+% TODO: Note that BlasterSim's model is not entirely smooth as the direction changing will have a discontinuity. However, that's physically unavoidable, and should be of no consequence as even if a time step was perfectly placed at zero velocity (where the direction is undefined), the static friction model would take over and the direction of the equilibrium pressure will be used instead.
 
 \subsection{Plunger impact}\label{plunger-impact}
 
@@ -195,6 +197,8 @@ Plunger impact does not appear to be necessary in the springers simulated so far
 
 \subsection{Automatic differentiation}\label{autodiff}
 % TODO
+
+% justify derivative matching mentioned above, smoothing
 
 ~\cite{trettel_btrettelflt_2026}
 

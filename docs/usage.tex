@@ -4,7 +4,7 @@
 
 BlasterSim simulates pneumatic and spring compressed gas guns with a \href{https://en.wikipedia.org/wiki/Lumped-element_model}{lumped parameter} model.
 
-With BlasterSim, you simulate a foam dart blaster or any other compressed gas gun before building.
+With BlasterSim, you simulate a foam dart blaster or any other compressed gas gun before building. % chktex 20
 BlasterSim can also help answer hypothetical questions about an existing build, like whether performance will benefit from a particular change.
 Optimal barrel length can be accurately calculated, avoiding inaccurate rules-of-thumb and tedious experiments with varying lengths of barrel.
 
@@ -200,6 +200,17 @@ If there is a corresponding typeset variable, the notation for that variable is 
 % TODO: Go through file and explain what it means.
 
 \lstinputlisting{springer-example.nml}
+
+\section{Factors not considered}\label{not-considered}
+
+The following factors are not considered in BlasterSim at the moment:
+\begin{itemize}
+\item The projectile outer diameter is assumed to be the same as the barrel inner diameter.
+Loose projectiles with less cross-sectional area and also leaks are not handled.
+\item Projectile length is not a factor in BlasterSim's model.
+Projectile length would impact projectile friction, however, projectile friction is modeled purely empirically.
+Presumably the friction pressure would increase in roughly linear proportion to the projectile length due to the contact area staying the same if the projectile outer diameter is equal to the barrel inner diameter.
+\end{itemize}
 
 \section{Known issues}\label{known-issues}
 

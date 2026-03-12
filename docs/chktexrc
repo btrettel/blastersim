@@ -10,7 +10,10 @@ UserWarn
     piston # write plunger
     plunger/projectile # write projectile/plunger
     non-linear # write nonlinear
-    "spring constant" # spring stiffness
+    "spring constant" # write spring stiffness
+    dart # write projectile unless specifically referring to foam dart blasters
+    "barrel diameter" # write barrel inner diameter
+    "projectile diameter" # write projectile outer diameter
 ]
 
 UserWarnRegex

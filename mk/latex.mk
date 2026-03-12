@@ -24,6 +24,7 @@ docs$(DIR_SEP)compiler.tex \
 docs$(DIR_SEP)tests.tex
 
 TEX_DEPS = mk$(DIR_SEP)latex.mk \
+docs$(DIR_SEP)chktexrc \
 $(SPELL_DEPS) \
 $(TEX_GEN) \
 
@@ -62,7 +63,10 @@ docs$(DIR_SEP)$(TEX_KEY).pdf docs$(DIR_SEP)$(TEX_KEY).log: docs$(DIR_SEP)$(TEX_K
 	-$(GREP) "$(BL)Warning$(BR)" docs$(DIR_SEP)$(TEX_KEY).blg
 
 # ChkTeX doesn't handle `\input` macros correctly unless it's in the same directory as the TeX files. The `TeXInputs` options of ChkTeX seems to use only absolute directory, so that's not a workaround.
-docs$(DIR_SEP)$(TEX_KEY).bbl: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS) tripwire spell chktex
+docs$(DIR_SEP)$(TEX_KEY).bbl: docs$(DIR_SEP)$(TEX_KEY).tex docs$(DIR_SEP)$(TEX_KEY).bib $(TEX_DEPS)
+	$(PYTHON) py$(DIR_SEP)tripwire.py $(ALLSRC)
+	$(LOOP_START) docs$(DIR_SEP)$(TEX_KEY).tex $(SPELL_DEPS) $(LOOP_MIDDLE) $(SPELL_TEX) $(LOOP_END)
+	cd docs && chktex --localrc chktexrc $(TEX_KEY).tex
 	biber --tool --validate-datamodel --dieondatamodel --quiet docs$(DIR_SEP)$(TEX_KEY).bib
 	cd docs && $(TEX) $(TEX_FLAGS) -draftmode $(TEX_KEY)
 	cd docs && $(BIB) $(TEX_KEY)
