@@ -874,7 +874,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     end select
 end subroutine set_const
 
-!tripwire$ begin 28F1DB4A Update `\secref{friction}` of theory.tex if necessary.
+!tripwire$ begin 612F2FA2 Update `\secref{friction}` of theory.tex if necessary.
 pure function p_f(cv, p_fe)
     ! Returns pressure of friction.
     
@@ -916,7 +916,7 @@ pure function p_f0(cv, p_fe)
     p_s = 0.1_WP*cv%p_fs ! TODO: make a function of `dt`
     call assert(p_s <= cv%p_fs, "cva (p_f0): p_s <= p_fs violated", print_real=[p_s%v%v, cv%p_fs%v%v])
     
-    if (p_fe <= -p_s) then
+    if (p_fe < -p_s) then
         p_f0 = -p_f0_high(p_fe, cv%p_fs, p_s)
         
         call assert(p_f0 <= -p_s, "cva (p_f0), first branch: p_f0 <= -p_s violated", print_real=[p_f0%v%v, p_s%v%v])

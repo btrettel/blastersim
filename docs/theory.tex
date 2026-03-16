@@ -147,7 +147,9 @@ More detailed modeling of pilot-operated valves could make determining the valve
 
 \begin{align}
     \dv{x_i}{t}       &= \dot{x}_i \\
-    \dv{\dot{x}_i}{t} &= \frac{A_i}{m_{\text{eff},i}} \left(p_i - p_{\text{mirror},i} - p_{\text{f},i}\right) - \frac{k_i}{m_{\text{eff},i}} \left(x_i + \Delta_{\text{pre},i}\right) \label{eq:Newton's second law}
+    \dv{\dot{x}_i}{t} &=
+    \frac{A_i}{m_{\text{eff},i}} \left(p_i - p_{\text{mirror},i} - p_{\text{f},i}\right)
+    - \frac{k_i}{m_{\text{eff},i}} \left(x_i + \Delta_{\text{pre},i}\right) \label{eq:Newton's second law}
 \end{align}
 
 The effective mass of the projectile/plunger factors in the spring mass.
@@ -160,23 +162,73 @@ where $C_\text{ms} = \tfrac{1}{3}$ as suggested by \citet{ruby_equivalent_2000} 
 
 \subsection{Projectile and plunger friction model}\label{friction}
 
-If a projectile/plunger p has both static and dynamic friction, the friction pressure $p_{\text{f},i}$ could be modeled as a piecewise function:
+Consider a projectile/plunger p with both static and dynamic friction.
+BlasterSim uses an effective friction pressure $p_{\text{f},i}$ defined to oppose the direction of motion.
+Using a pressure instead of force allows for more familiar units and is conventional in spud guns.
+The maximum static friction pressure is $p_{\text{fs},i}$ and the magnitude of the dynamic friction pressure is $p_{\text{fd},i}$.
+When static friction is active, the actual static friction force is just enough force to equilibrate the forces so that p doesn't move (where $\dv{\dot{x}_i}{t} = 0$; see~\eqref{Newton's second law}), until the force exceeds the maximum static friction force.
+In other words, the actual static friction pressure $p_{\text{f0},i}$ is the minimum of the equilibrium pressure $p_{\text{fe},i}$ or the maximum static friction pressure, and in the direction of the equilibrium pressure.
+Mathematically, this can be stated as
 \begin{equation}
-    p_{\text{f},i}(\dot{x}_i, p_{\text{fe},i}) =
-    \begin{cases} 
-        \sgn(p_{\text{fe},i}) \cdot \min(p_{\text{fs},i}, |p_{\text{fe},i}|), & \text{if}~\dot{x}_i = 0,     \\
-        \sgn(\dot{x}_i) \cdot p_{\text{fd},i},                                & \text{if}~\dot{x}_i \neq 0,
-    \end{cases}
+    p_{\text{f0},i} = \sgn(p_{\text{fe},i}) \cdot \min(p_{\text{fs},i}, |p_{\text{fe},i}|). \label{eq:actual static friction min}
 \end{equation}
-where $p_{\text{fe},i}$ is the friction pressure needed to equilibrate the forces on the projectile (where $\dv{\dot{x}_i}{t} = 0$; see~\eqref{Newton's second law}).
-% TODO: Include table from 2025-09-14 handwritten notes here.
+
+The actual dynamic friction pressure is $\sgn(\dot{x}_i) \cdot p_{\text{fd},i}$, taking into account both the magnitude of the dynamic friction pressure $p_{\text{fd},i}$ and the direction.
+
+The effective friction pressure $p_{\text{f},i}$ then will switch between static and dynamic friction depending on the velocity:
+\begin{equation}
+    p_{\text{f},i} =
+    \begin{cases} 
+        p_{\text{f0},i},                       & \text{if}~\dot{x}_i = 0~\text{(static)},    \\
+        \sgn(\dot{x}_i) \cdot p_{\text{fd},i}, & \text{if}~\dot{x}_i \neq 0~\text{(dynamic)}.
+    \end{cases}\label{eq:effective friction pressure cases}
+\end{equation}
+
 \textbf{BlasterSim does not use this model} because it is not smooth.
 Smooth functions are useful for automatic differentiation (see~\secref{autodiff}) and beneficial for numerical stability.
-Also, the use of strict floating point equality in the first branch can lead to numerical reproducibility issues.
+Also, the use of strict floating point equality in the $\dot{x}_i = 0$ branch can lead to numerical reproducibility issues.
 BlasterSim uses a smoothed version of this model which avoids these problems.
 
-% TODO
-% TODO: Note that BlasterSim's model is not entirely smooth as the direction changing will have a discontinuity. However, that's physically unavoidable, and should be of no consequence as even if a time step was perfectly placed at zero velocity (where the direction is undefined), the static friction model would take over and the direction of the equilibrium pressure will be used instead.
+To create a smoothed version of~\eqref{effective friction pressure cases}, it's helpful to first rewrite~\eqref{effective friction pressure cases} in terms of the $\sgn$ function:
+\begin{equation}
+    p_{\text{f},i} =
+    p_{\text{f0},i}
+    + [p_{\text{fd},i} - \sgn(\dot{x}_i) \cdot p_{\text{f0},i}] \cdot \sgn(\dot{x}_i).
+\end{equation}
+
+% See 2025-09-13 handwritten notes for this.
+The smooth approximation to~\eqref{effective friction pressure cases} will be made by noting that
+\begin{equation}
+    \sgn(\dot{x}_i) \approx \tanh\left(\frac{\dot{x}_i}{v_\text{s}}\right),
+\end{equation}
+where $v_\text{s}$ is a small scale over which the $\tanh$ function changes from -1 to 1.
+
+Consequently, the function implemented in cva.f90 as \texttt{p\_f} is
+\begin{equation}
+    p_{\text{f},i} =
+    p_{\text{f0},i}
+    + \left[p_{\text{fd},i} - \tanh\left(\frac{\dot{x}_i}{v_\text{s}}\right) \cdot p_{\text{f0},i}\right] \cdot \tanh\left(\frac{\dot{x}_i}{v_\text{s}}\right).
+\end{equation}
+
+% See 2025-09-30 handwritten notes for part of this.
+Making a smooth approximation for $p_{\text{f0},i}$ is more difficult.
+Rather than replacing a single part of~\eqref{actual static friction min}, an new function was constructed that does not resemble~\eqref{actual static friction min} algebraically but takes similar values.
+A piecewise function is implemented in cva.f90 as \texttt{p\_f0} so that the actual static friction pressure $p_{\text{f0},i}$ equals the equilibrium pressure $p_{\text{fe},i}$ for small values of $p_{\text{fe},i}$:
+\begin{equation}
+    p_{\text{f0},i} =
+    \begin{cases} 
+        p_{\text{fe},i},                                         & \text{if}~|p_{\text{fe},i}| \leq p_\text{s}, \\
+        \sgn(p_{\text{fe},i}) \cdot p_{\text{f0},i,\text{high}}, & \text{if}~|p_{\text{fe},i}| >    p_\text{s},
+    \end{cases}\label{eq:effective friction pressure smooth}
+\end{equation}
+where $p_\text{s}$ is chosen to be a somewhat arbitrary fraction of $p_{\text{fs},i}$ and
+\begin{equation}
+    p_{\text{f0},i,\text{high}} = p_{\text{fs},i} \tanh\left(\frac{|p_{\text{fe},i}| - p_\text{s}}{p_{\text{fs},i} - p_\text{s}} + \arctanh\left(\frac{p_\text{s}}{p_{\text{fs},i}}\right)\right).
+\end{equation}
+
+Note that despite the appearance of $\sgn(p_{\text{fe},i})$ and $|p_{\text{fe},i}|$,
+\eqref{effective friction pressure smooth} % chktex 2
+is continuous and has continuous derivatives as those terms only become discontinuous at $p_{\text{fe},i} = 0$ and do not appear in the branch where $p_{\text{fe},i} = 0$.
 
 \subsection{Plunger impact}\label{plunger-impact}
 

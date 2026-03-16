@@ -1,5 +1,17 @@
 ### v0.2.0
 
+- Would making a `tanh` which is exactly -1 or 1 for large arguments solve the assertion violation issues in `p_f`?
+- How can I get section numbers from the docs to print in BlasterSim code? Circular dependency?
+- Documentation for making a BlasterSim release
+    - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`
+    - How to build Windows executable
+        - Download source release from <http://trettel.us/blastersim/releases/>
+        - Extract zip file.
+        - Build with `jom blastersim.exe`.
+        - Move executable to the root of drive E, which is disk.img on the host system.
+        - Copy BlasterSim back from disk image: `mcopy -i disk.img ::/blastersim.exe /home/ben/ramdisk/blastersim.exe`
+- Check .bib file for `eoa` as that shouldn't appear in the final .bib files
+- Document flow connection model
 - BlasterSim output
     - muzzle velocity
     - muzzle energy
@@ -8,6 +20,7 @@
     - Explain the meaning of the return code if there is an error.
     - efficiency (depends on mode)
     - dwell time
+- docs: Tutorials section
 - git hook to run tests if code changed
 - Debug logging
     - Add extra debug columns in CSV file?
@@ -147,6 +160,7 @@
     - upload online
 - Dry-fire mode
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1475664138180231210>
+- <https://github.com/sylvainhalle/textidote>
 
 ***
 
