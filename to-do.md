@@ -1,6 +1,6 @@
 ### v0.2.0
 
-- Would making a `tanh` which is exactly -1 or 1 for large arguments solve the assertion violation issues in `p_f`?
+- Make `p_s` larger to prevent the slight backwards motion more?
 - How can I get section numbers from the docs to print in BlasterSim code? Circular dependency?
 - Documentation for making a BlasterSim release
     - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`
@@ -24,7 +24,7 @@
 - git hook to run tests if code changed
 - Debug logging
     - Add extra debug columns in CSV file?
-    - Some sort of time stepstability criteria?
+    - Some sort of time step stability criteria?
     - Have nesting of messages like PETSc to better understand call structure
 - Look more at problem of high flow rates causing negative temperatures.
     - It appears that the problem is caused by the volume being small from the plunger nearly impacting the end of the plunger tube. An adaptive time step would help, but the plunger impact model is also needed.
@@ -121,13 +121,10 @@
     - Add index to docs.
         - <https://www.overleaf.com/learn/latex/Indices>
         - <https://en.wikibooks.org/wiki/LaTeX/Indexing>
-    - Document friction model to understand what's there are present
     - Quick-start guide for Windows
     - Start using some sort of automatic documentation generator simply to see if it helps or not.
     - LaTeXML issues:
         - `\lstinputlisting[breaklines=true]` doesn't wrap.
-- Make static friction force actually cancel out properly and not approximately, or at the very least prevent the backwards motion
-    - New requirement: $p_\text{f0} \leq p_\text{fe}$ to avoid backwards motion.
 - Plunger head motion bounds (lower and upper) (plunger impact)
     - Lower is not necessarily zero.
     - Use forcing to set x_min and x_max? Make how far the force extends out depend on `dt`. You'd have to track energy lost to this forcing for the energy balance and also the estimate of plunger impact energy.
@@ -165,7 +162,6 @@
 ***
 
 - Check that $\dot{x}_0$ derivative is now good with exact solution
-- Make friction plot for debugging. Try typical case and also `p_fs = p_fd` to help debug what's going on with that. Why does `p_f` go so much higher than `p_fs`/`p_fd` in that case?
 - Test `m_spring` in `d_xdot_d_t` and `m_p_ke`.
 - transonic corrections in the barrel (corner_theory_1950 eq. 123)
     - Make this the default but optional if desired for testing.

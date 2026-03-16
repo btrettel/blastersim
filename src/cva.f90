@@ -896,10 +896,12 @@ pure function p_f(cv, p_fe)
         p_f = p_f0(cv, p_fe) + (cv%p_fd - tanh(cv%x_dot/v_scale)*p_f0(cv, p_fe))*tanh(cv%x_dot/v_scale)
     end if
     
-    ! The 1.1 factor was added as I guess the inequality with a factor of 1.0 isn't guaranteed for numerical reasons?
-    ! But even that is sometimes violated?
-    call assert(abs(p_f%v%v) <= 1.1_WP*max(cv%p_fs%v%v, cv%p_fd%v%v), "cva (p_f): abs(p_f) <= 1.1*max(p_fs, p_fd) violated", &
-                    print_real=[p_f%v%v, cv%p_fs%v%v, cv%p_fd%v%v])
+    ! See 2026-03-16 handwritten notes.
+    ! Contrary to what I thought, at lower velocities, `abs(p_f) > max(cv%p_fs, cv%p_fd)` is possible.
+    ! And it can take a while for `abs(p_f)` to decrease down to `p_fd`.
+    ! I need to think of a better way to handle an assertion like this.
+!    call assert(abs(p_f%v%v) <= 1.1_WP*max(cv%p_fs%v%v, cv%p_fd%v%v), "cva (p_f): abs(p_f) <= 1.1*max(p_fs, p_fd) violated", &
+!                    print_real=[p_f%v%v, cv%p_fs%v%v, cv%p_fd%v%v, cv%x_dot%v%v])
 end function p_f
 
 pure function p_f0(cv, p_fe)
