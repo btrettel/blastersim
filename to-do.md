@@ -160,6 +160,7 @@
 - Dry-fire mode
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1475664138180231210>
 - <https://github.com/sylvainhalle/textidote>
+- Make Python script generate an animation of a springer based on BlasterSim output.
 
 ***
 

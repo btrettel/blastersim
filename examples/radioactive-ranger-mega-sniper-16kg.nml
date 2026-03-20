@@ -20,6 +20,8 @@
 ! [6] <https://discord.com/channels/825852031239061545/1462571693628461157/1473143195847233577> (BlasterSim thread)
 ! > Average (18 shots): 248.44fps [75.7 m/s]
 
+! [7] <https://discord.com/channels/825852031239061545/1177799131268382902/1177803537028239410>
+
 &springer
 ! barrel
 d_barrel  = 19.7358e-3 ! m (assumed same diameter as [1])
@@ -56,4 +58,8 @@ b   = 0.5    ! unitless (guessed)
 ! Using this calculator: <https://www.mide.com/air-pressure-at-altitude-calculator>
 p_atm    = 101.10995 ! kPa (absolute)
 temp_atm = 294.26    ! K
+
+! Experimental result
+actual_v_muzzle       = 75.726 ! m/s (248.444 ft/s average) [6]
+actual_v_muzzle_stdev = 1.841  ! m/s (6.041 ft/s standard deviation) [7]
 /

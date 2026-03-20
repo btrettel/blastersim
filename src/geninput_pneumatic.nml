@@ -196,6 +196,21 @@ bound_fmt             = "f3.1"
 /
 
 &input_variable
+variable_name         = "actual_v_muzzle_stdev"
+type_definition       = "type(si_velocity)"
+required              = .false.
+tex_unit              = "m/s"
+tex_description       = "Experimental muzzle velocity standard deviation for comparison/validation purposes."
+tex_description_2     = "Ignored by BlasterSim outside of validation tests, but you can use it to keep track of your own measurements."
+tex_variable_name     = "$\sigma_{v,\text{muzzle}}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+default_value         = "0.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
 variable_name         = "actual_rc"
 type_definition       = "integer"
 required              = .false.
