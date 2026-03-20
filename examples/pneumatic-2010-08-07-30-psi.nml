@@ -24,8 +24,8 @@ p_atm    = 101.350 ! kPa (absolute)
 temp_atm = 302.6   ! K
 
 ! flow restriction
-d_e = 3.3e-3 ! m (calibrated)
-b   = 0.5    ! unitless (guessed)
+d_e = 3.35e-3 ! m (calibrated)
+b   = 0.5     ! unitless (guessed)
 
 ! Experimental result
 ! 66.71 ft/s, 74.02 ft/s, 83.86 ft/s, 78.03 ft/s, 84.16 ft/s, 82.35 ft/s, 84.58 ft/s, 82.86 ft/s, 82.87 ft/s, 81.82 ft/s, 82.43 ft/s, 79.46 ft/s, 83.96 ft/s, 79.4 ft/s

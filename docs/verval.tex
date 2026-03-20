@@ -129,9 +129,23 @@ BlasterSim's validation tests compare BlasterSim against experimental data.
 \subsection{Pneumatic validation tests}\label{pneumatic-validation} % chktex 8
 % TODO
 
+\begin{figure}
+\centering
 \iflatexml%
 % Seems that LaTeXML has trouble with at least some vector gnuplot output, so I'll use a PNG for now.
 \includegraphics{pneumatic-validation.png}
 \else%
 \input{pneumatic-validation.tikz}
 \fi%
+\caption{Comparison of predicted vs.\ actual muzzle velocities for pneumatics.\label{fig:pneumatic validation}}
+\end{figure}
+
+BlasterSim's pneumatic mode is compared against experimental data in \figref{pneumatic validation}.
+The excellent fit here is the result of calibration of the effective diameter $d_\text{e}$ of the valve for each pressure to match the muzzle velocity.
+The effective diameter is expected to vary with the pressure, however, an independent test examining the system flow rate for a set pressure would be better as it sets the effective diameter independent of the muzzle velocity.
+Given the lack of this data, BlasterSim's validation efforts are focused more on whether BlasterSim can in principle match the data and less on making a fully predictive model.
+Note that not all existing pneumatic gun models will be able to match arbitrary data like BlasterSim can, as some do not even consider flow restrictions at all.
+Those models will be inaccurate and have no way to match experimental data because they are missing critical flow physics.
+
+\subsubsection{2010-08-07 tests} % chktex 8
+% TODO

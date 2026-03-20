@@ -30,25 +30,53 @@ subroutine predicted_v_muzzle_vs_observed(output_basename, predicted_v_muzzle, a
     type(si_velocity), intent(in) :: predicted_v_muzzle(:), actual_v_muzzle(:), actual_v_muzzle_stdev(:)
     integer, intent(in)           :: actual_v_muzzle_n(:)
     
-    integer :: gp_unit, i_data, n_data
+    integer           :: gp_unit, i_data, n_data
+    type(si_velocity) :: maximum_muzzle_velocity, muzzle_velocity_error
     
     n_data = size(predicted_v_muzzle)
+    call maximum_muzzle_velocity%v%init_const(0.0_WP, size(predicted_v_muzzle(1)%v%d))
     
     open(newunit=gp_unit, action="write", status="replace", position="rewind", file=output_basename//".gp", delim="quote")
-    write(unit=gp_unit, fmt="(a)") "# auto-generated"
-    write(unit=gp_unit, fmt="(a)") "$data << EOD"
-    write(unit=gp_unit, fmt="(a)") "# predicted_v_muzzle actual_v_muzzle actual_v_muzzle_error"
+    write(unit=gp_unit, fmt="(a)") '# auto-generated'
+    
+    write(unit=gp_unit, fmt="(a)") '$data << EOD'
+    write(unit=gp_unit, fmt="(a)") '# predicted_v_muzzle actual_v_muzzle actual_v_muzzle_error'
     do i_data = 1, n_data
+        muzzle_velocity_error = Z_HALF_ALPHA*actual_v_muzzle_stdev(i_data)/sqrt(real(actual_v_muzzle_n(i_data), WP))
         write(unit=gp_unit, fmt="(g0, a, g0, a, g0)") predicted_v_muzzle(i_data)%v%v, " ", actual_v_muzzle(i_data)%v%v, " ", &
-                        Z_HALF_ALPHA*actual_v_muzzle_stdev(i_data)%v%v/sqrt(real(actual_v_muzzle_n(i_data), WP))
+                                                        muzzle_velocity_error%v%v
+        maximum_muzzle_velocity = max(maximum_muzzle_velocity, predicted_v_muzzle(i_data))
+        maximum_muzzle_velocity = max(maximum_muzzle_velocity, actual_v_muzzle(i_data) + muzzle_velocity_error)
     end do
-    write(unit=gp_unit, fmt="(a)") "EOD"
-    write(unit=gp_unit, fmt="(a)") "set term tikz"
+    write(unit=gp_unit, fmt="(a)") 'EOD'
+    
+    maximum_muzzle_velocity%v%v = real(ceiling(maximum_muzzle_velocity%v%v / 10.0_WP), WP)*10.0_WP
+    
+    write(unit=gp_unit, fmt="(a)") '$perfect << EOD'
+    write(unit=gp_unit, fmt="(a)") '0 0'
+    write(unit=gp_unit, fmt="(g0, a, g0)") maximum_muzzle_velocity%v%v, " ", maximum_muzzle_velocity%v%v
+    
+    write(unit=gp_unit, fmt="(a)") 'EOD'
+    write(unit=gp_unit, fmt="(a)") 'set term tikz'
     write(unit=gp_unit, fmt="(3a)") 'set output "', output_basename, '.tikz"'
-    write(unit=gp_unit, fmt="(a)") "plot $data with yerrorbars"
-    write(unit=gp_unit, fmt="(a)") "set term png"
+    write(unit=gp_unit, fmt="(a, g0, a)") 'set xrange [0:', maximum_muzzle_velocity%v%v, ']'
+    write(unit=gp_unit, fmt="(a, g0, a)") 'set yrange [0:', maximum_muzzle_velocity%v%v, ']'
+    write(unit=gp_unit, fmt="(a)") 'set xlabel "predicted average muzzle velocity (m/s)"'
+    write(unit=gp_unit, fmt="(a)") 'set ylabel "actual average muzzle velocity (m/s)" offset -1,0'
+    write(unit=gp_unit, fmt="(a)") 'set grid'
+    write(unit=gp_unit, fmt="(a)") 'unset key'
+    write(unit=gp_unit, fmt="(2a)") 'plot $perfect with lines linecolor "black" dashtype ".", ', &
+                                        '$data with yerrorbars linecolor "black"'
+    
+    ! Why use `pngcairo` and not `png`? `png` doesn't support dashed lines.
+    write(unit=gp_unit, fmt="(a)") 'set term pngcairo'
     write(unit=gp_unit, fmt="(3a)") 'set output "', output_basename, '.png"'
-    write(unit=gp_unit, fmt="(a)") "plot $data with yerrorbars"
+    write(unit=gp_unit, fmt="(a)") 'set xlabel "predicted average muzzle velocity (m/s)"'
+    write(unit=gp_unit, fmt="(a)") 'set ylabel "actual average muzzle velocity (m/s)"'
+    write(unit=gp_unit, fmt="(a)") 'set grid'
+    write(unit=gp_unit, fmt="(a)") 'unset key'
+    write(unit=gp_unit, fmt="(2a)") 'plot $perfect with lines linecolor "black" dashtype ". ", ', &
+                                        '$data with yerrorbars linecolor "black"'
     close(gp_unit)
 end subroutine predicted_v_muzzle_vs_observed
 

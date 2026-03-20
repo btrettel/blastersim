@@ -24,7 +24,7 @@ p_atm    = 101.350 ! kPa (absolute)
 temp_atm = 302.6   ! K
 
 ! flow restriction
-d_e = 2.55e-3 ! m (calibrated)
+d_e = 2.56e-3 ! m (calibrated)
 b   = 0.5     ! unitless (guessed)
 
 ! Experimental result
