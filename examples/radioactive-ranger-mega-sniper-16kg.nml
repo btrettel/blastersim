@@ -62,4 +62,5 @@ temp_atm = 294.26    ! K
 ! Experimental result
 actual_v_muzzle       = 75.726 ! m/s (248.444 ft/s average) [6]
 actual_v_muzzle_stdev = 1.841  ! m/s (6.041 ft/s standard deviation) [7]
+actual_v_muzzle_n     = 18     ! number of samples
 /

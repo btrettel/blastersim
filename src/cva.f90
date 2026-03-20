@@ -27,9 +27,9 @@ real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 ! ruby_equivalent_2000
 real(WP), public, parameter :: C_MS = 1.0_WP/3.0_WP ! unitless
 
-real(WP), public, parameter :: X_STOP_DEFAULT         = 1.0e3_WP   ! m (If you have a barrel that's a km long, that's probably wrong.)
+real(WP), public, parameter :: X_STOP_DEFAULT         = 1.0e2_WP   ! m
 real(WP), public, parameter :: DT_DEFAULT             = 1.0e-5_WP  ! s
-real(WP), public, parameter :: T_STOP_DEFAULT         = 0.5_WP     ! s
+real(WP), public, parameter :: T_STOP_DEFAULT         = 0.1_WP     ! s
 real(WP), public, parameter :: MASS_TOLERANCE         = 1.0e-5_WP  ! unitless
 real(WP), public, parameter :: ENERGY_TOLERANCE       = 1.0e-4_WP  ! unitless
 real(WP), public, parameter :: MASS_DERIV_TOLERANCE   = 1.0e-8_WP  ! unitless

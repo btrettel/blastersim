@@ -211,6 +211,17 @@ bound_fmt             = "f3.1"
 /
 
 &input_variable
+variable_name         = "actual_v_muzzle_n"
+type_definition       = "integer"
+required              = .false.
+tex_description       = "Sample size for experimental muzzle velocity measurement."
+tex_description_2     = "Ignored outside of BlasterSim validation tests."
+default_value         = "0"
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+/
+
+&input_variable
 variable_name         = "actual_rc"
 type_definition       = "integer"
 required              = .false.
