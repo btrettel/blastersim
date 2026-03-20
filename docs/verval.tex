@@ -142,10 +142,59 @@ BlasterSim's validation tests compare BlasterSim against experimental data.
 
 BlasterSim's pneumatic mode is compared against experimental data in \figref{pneumatic validation}.
 The excellent fit here is the result of calibration of the effective diameter $d_\text{e}$ of the valve for each pressure to match the muzzle velocity.
-The effective diameter is expected to vary with the pressure, however, an independent test examining the system flow rate for a set pressure would be better as it sets the effective diameter independent of the muzzle velocity.
+The effective diameter is expected to vary with the pressure, however, a test examining the system flow rate for a set pressure would be better as it sets the effective diameter independent of the muzzle velocity.
 Given the lack of this data, BlasterSim's validation efforts are focused more on whether BlasterSim can in principle match the data and less on making a fully predictive model.
 Note that not all existing pneumatic gun models will be able to match arbitrary data like BlasterSim can, as some do not even consider flow restrictions at all.
 Those models will be inaccurate and have no way to match experimental data because they are missing critical flow physics.
 
+At the moment, only one pneumatic validation data set is available, which will be described below.
+
 \subsubsection{2010-08-07 tests} % chktex 8
-% TODO
+
+% Data was stored here: /home/ben/svn/old/ballistics/data/2010-08-07 muzzle velocity test.gnumeric
+
+% <https://web.archive.org/web/20220927075508/http://btrettel.nerfers.com/forums/topic20.html>:
+% > In order to validate my simplified model of the internal ballistics of a pneumatic gun, I did some tests in 2010. I first determined what pressure was necessary for the projectile to leave the barrel. I then fired 15 shots at 30 psi, 40 psi, 50 psi, 60 psi, and 70 psi. I measured the muzzle velocity in ft/s with my chronograph.
+% > These tests forced me to conclude that my model was too simple as it did not capture the dynamics of the gun as well as I had hoped. At the moment I'm planning a more complicated model suited better for spud guns, but also applicable for Nerf guns.
+
+% TODO: Check handwritten notes for more information. I can't find anything in the scans I have.
+
+% MAYBE: Add table listing all raw data
+
+\begin{figure}
+\centering
+\includegraphics[width=0.75\textwidth]{2010-08-07-tests.jpg} % chktex 8
+% From: /home/ben/photos/14/DSCN0070.JPG
+\caption{Photo believed to be of the gun used in the 2010-08-07 tests.\label{fig:2010-08-07 tests}} % chktex 8
+\end{figure}
+
+I did some pneumatic gun tests using a small QEV-based homemade foam dart blaster back in 2010. % chktex 20
+These tests were specifically intended to validate an earlier pneumatic gun model of mine.
+My records of these tests are unfortunately somewhat poor, but they are still probably the most detailed pneumatic test data available.
+\Figref{2010-08-07 tests} is a photo of what likely was the test gun. % chktex 8
+My intention is to eventually replace these tests with more comprehensive and more completely documented tests, but until then, these tests will be useful to get BlasterSim off the ground.
+
+In the BlasterSim Git repository in the examples directory are the following BlasterSim input files for each pressure in the test series:
+\begin{itemize}
+\item \href{https://github.com/btrettel/blastersim/blob/main/examples/pneumatic-2010-08-07-25-psi.nml}{pneumatic-2010-08-07-25-psi.nml}
+\item \href{https://github.com/btrettel/blastersim/blob/main/examples/pneumatic-2010-08-07-30-psi.nml}{pneumatic-2010-08-07-30-psi.nml}
+\item \href{https://github.com/btrettel/blastersim/blob/main/examples/pneumatic-2010-08-07-40-psi.nml}{pneumatic-2010-08-07-40-psi.nml}
+\item \href{https://github.com/btrettel/blastersim/blob/main/examples/pneumatic-2010-08-07-50-psi.nml}{pneumatic-2010-08-07-50-psi.nml}
+\item \href{https://github.com/btrettel/blastersim/blob/main/examples/pneumatic-2010-08-07-60-psi.nml}{pneumatic-2010-08-07-60-psi.nml}
+\item \href{https://github.com/btrettel/blastersim/blob/main/examples/pneumatic-2010-08-07-70-psi.nml}{pneumatic-2010-08-07-70-psi.nml}
+\end{itemize}
+
+These input files contain the raw data along with details on each parameter of the experiment.
+Some notes on the experiments, particularly details which are not apparent from the BlasterSim inputs:
+
+\begin{itemize}
+\item Pressures of 25~psi, 30~psi, 40~psi, 50~psi, 60~psi, and 70~psi were used.
+The dart did not leave the barrel at 25~psi. % chktex 20
+For 30~psi and above the dart did leave the barrel and 15 shots were taken for each pressure. % chktex 20
+\item The gun in the photo uses a Clippard JEV-F2M2 QEV piloted by a Clippard MJVO-3.
+\item The barrel is 0.527 inch diameter aluminum.
+\item The darts were made from front-weighted foam backer rod and weighed on average 0.98~g, with all darts between 0.97~g and 0.99~g. % chktex 20
+\item The chronograph used was a green Shooting Chrony F-1 Chronograph~\cite{shooting_chrony_inc_users_2016}, serial number 387616, ordered 2009-07-01 from Pyramyd Air, order number 1787578. % chktex 8
+\item The tests were performed in a garage, probably with the garage door open.
+\item Likely the chamber volume and dead volume were measured to 1~mL precision with water and small measuring cups.
+\end{itemize}

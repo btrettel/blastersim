@@ -27,6 +27,7 @@ docs$(DIR_SEP)pneumatic-validation.png
 
 TEX_DEPS = mk$(DIR_SEP)latex.mk \
 docs$(DIR_SEP)chktexrc \
+docs$(DIR_SEP)2010-08-07-tests.jpg \
 $(SPELL_DEPS) \
 $(TEX_GEN) \
 

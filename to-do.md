@@ -80,19 +80,6 @@
 - CSV: Change `e` to `e_g` for gas energy?
 - Valve opening time
     - Order-of-accuracy test for valve opening model as that includes time as a factor. This kills two birds with one stone by making this test order-of-accuracy of `m_dot` as well. Use `m_dot_0` with `a_e = 0`.
-- Pneumatic mode
-    - pneumatic-example.nml
-    - Post BlasterSim to SpudFiles after adding pneumatic mode
-- Convert validation cases to use input files
-    - People are probably going to be more convinced of the accuracy of BlasterSim by the validation tests than anything else.
-    - 2010 validation cases documentation
-        - Add photo of blaster
-        - Shooting Chrony F-1 Chronograph (green)
-            - serial number 387616
-            - ordered 2009-07-01 from Pyramyd Air, order #1787578
-        - Add table listing all raw data
-        - shooting_chrony_inc_users_2016
-        - plot of pressure vs. muzzle velocity, experimental vs. prediction
 - Document how variable names are converted from LaTeX and code, as a general rule.
 - Have a conversion table for LaTeX and code variable names.
 - Document `logical`s in `\secref{inputs-general}`: `.true.` and `.false.`
@@ -119,14 +106,15 @@
     - Test building docs on Windows.
     - Thanks appendix
         - Andrew Trettel for macOS binary
+        - Radioactive for data
     - In V&V chapter, discuss running all the tests with `make check` (or jom or NMAKE)
     - Add index to docs.
         - <https://www.overleaf.com/learn/latex/Indices>
         - <https://en.wikibooks.org/wiki/LaTeX/Indexing>
     - Quick-start guide for Windows
-    - Start using some sort of automatic documentation generator simply to see if it helps or not.
     - LaTeXML issues:
         - `\lstinputlisting[breaklines=true]` doesn't wrap.
+        - gnuplot's `TikZ` and `pdfcairo` terminals don't work properly with LaTeXML.
 - Plunger head motion bounds (lower and upper) (plunger impact)
     - Lower is not necessarily zero.
     - Use forcing to set x_min and x_max? Make how far the force extends out depend on `dt`. You'd have to track energy lost to this forcing for the energy balance and also the estimate of plunger impact energy.
