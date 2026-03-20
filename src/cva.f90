@@ -874,7 +874,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     end select
 end subroutine set_const
 
-!tripwire$ begin 612F2FA2 Update `\secref{friction}` of theory.tex if necessary.
+!tripwire$ begin 6458FB20 Update `\secref{friction}` of theory.tex if necessary.
 pure function p_f(cv, p_fe)
     ! Returns pressure of friction.
     

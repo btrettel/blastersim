@@ -30,16 +30,16 @@ See \secref{compiling} for instruction on how to compile BlasterSim from the sou
 \section{Running BlasterSim}\label{running}
 
 With BlasterSim placed on your \texttt{PATH}, you can run BlasterSim by typing \texttt{blastersim} in your terminal.
-With BlasterSim placed in your current directory, you can run BlasterSim by typing \texttt{./blastersim} on Linux or \texttt{blastersim} on Windows.
+With BlasterSim placed in your current directory, you can run BlasterSim by typing \texttt{./blastersim} on Linux, \texttt{blastersim} on Windows with CMD, or \texttt{.\textbackslash{}blastersim} on Windows with PowerShell.
 
 The first command line argument is the input file.
-For example, to run BlasterSim on input.nml, type \texttt{blastersim input.nml}.
+For example, to run BlasterSim on input.nml in Linux, type \texttt{blastersim input.nml}.
 
 If BlasterSim is run without an input file by running the \texttt{blastersim} by itself, BlasterSim will print a message containing information about how to run BlasterSim, the BlasterSim version, and debugging information:
 \lstinputlisting[breaklines=true]{blastersim-out-1.txt}
 
 If BlasterSim is on your \texttt{PATH}, you can run BlasterSim with an input file like \texttt{blastersim springer-example.nml} to simulate the blaster described in the input file.
-If BlasterSim is placed in your current directory, you can run BlasterSim with an input file like \texttt{./blastersim springer-example.nml} on Linux or \texttt{blastersim springer-example.nml} on Windows.
+If BlasterSim is placed in your current directory, you can run BlasterSim with an input file like \texttt{./blastersim springer-example.nml} on Linux, \texttt{blastersim springer-example.nml} on Windows with CMD, or \texttt{.\textbackslash{}blastersim springer-example.nml} on Windows with PowerShell.
 Using the example input file in \secref{springer-example} returns the following:
 \lstinputlisting[breaklines=true]{blastersim-out-2.txt}
 
@@ -148,6 +148,13 @@ z = "string2"
 \end{lstlisting}
 
 For more details of the namelist format, refer to the Intel Fortran Compiler documentation~\cite{noauthor_namelist_2025}.
+
+BlasterSim input files are plain text files that can be opened in any text editor including Notepad in Windows.
+
+BlasterSim does not care what the file extension is as long as the contents of the input file are valid.
+You can use~.txt if that's more convenient for you.
+Using~.nml as the file extension will give you code highlighting in some text editors, however, which can make the file more readable.
+\href{https://fortran-lang.discourse.group/t/namelist-syntax-highlighting-in-notepad/2451}{Namelist code highlighting is available in Notepad++}.
 
 BlasterSim uses metric units in its input files and internally.
 Support for other unit systems is not planned due to the complexity of supporting multiple unit systems.

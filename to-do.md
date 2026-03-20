@@ -44,6 +44,8 @@
     - Update `e_s` and `d_x_dot_d_t`.
     - `SPRING_MODEL = POLYNOMIAL_SPRING`: default, full cubic equation, `k`, `k_2`, `k_3`
     - `SPRING_MODEL = ILIJIC_SPRING`: Look at ilijic_nonlinearity_2025 eqs. 29 and 30
+    - Another possibility: Arbitrary displacement vs. force curves, using cubic splines for smoothness
+    - Look into force models for elastic tubing and other non-linear springs
 - Add another test for `test_alpha_m_dot` to test the sign.
 - <https://onegoodtutorial.org/>
 - <https://academia.stackexchange.com/questions/14010/how-do-you-cite-a-github-repository>
@@ -174,6 +176,7 @@
     - $p_\text{l}$, $p_\text{r}$
     - Related:
         - Model pressure drop over long tubes from the friction factor.
+            - Or something like this? AD0817982
         - gas kinetic energy
             - Need integrated gas kinetic energy equation.
     - projectile base pressure is used in force calculation
@@ -268,8 +271,6 @@
 - Couple BlasterSim with some sort of geometric analysis. Optimal transfer port geometry (considering dead space), optimal notch geometry to minimize weight, etc.
 - Have ability to run multiple cycles and terminate when mass gets low in any particular CV.
 - If I use a constant pressure/temperature CV to model a HPA or CO2 tank, then I'll still need a way to estimate the real gas internal energy and enthalpy. Going all the way with a better equation of state and thermodynamic properties might not be much more complex. I could make each control volume use a different EOS if I want to avoid iterations associated with a different EOS.
-- Arbitrary displacement vs. force curves, using cubic splines for smoothness
-- elastic tubing and other non-linear springs
 - Post-projectile-exit analysis to wait until plunger impact, but still interpolate to get muzzle velocity.
 - optimization
     - common optimization activities: optimal barrel length

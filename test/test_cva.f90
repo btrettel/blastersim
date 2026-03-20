@@ -65,7 +65,7 @@ subroutine write_defaults()
     use cva, only: DT_DEFAULT, T_STOP_DEFAULT, MASS_TOLERANCE, ENERGY_TOLERANCE, MASS_DERIV_TOLERANCE, &
                     ENERGY_DERIV_TOLERANCE, MIRROR_X_TOLERANCE
     use gasdata, only: P_ATM, TEMP_ATM
-    use convert, only: CONVERT_C_TO_K
+    use convert, only: CONVERT_C_TO_K, CONVERT_PA_TO_KPA
     use io, only: write_latex_engineering
     
     integer :: tex_unit
@@ -73,10 +73,10 @@ subroutine write_defaults()
     open(newunit=tex_unit, action="write", status="replace", position="rewind", file="defaults.tex", delim="quote")
     write(unit=tex_unit, fmt="(a)") "% auto-generated"
     call write_latex_engineering(tex_unit, DT_DEFAULT, "dtdefault", "f4.1")
-    write(unit=tex_unit, fmt="(a, f8.1, a)") "\newcommand*{\patmdefault}{", P_ATM, "}"
-    write(unit=tex_unit, fmt="(a, f6.2, a)") "\newcommand*{\tempatmdefaultk}{", TEMP_ATM, "}"
-    write(unit=tex_unit, fmt="(a, f5.2, a)") "\newcommand*{\tempatmdefaultc}{", TEMP_ATM - CONVERT_C_TO_K, "}"
-    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\tstopdefault}{", T_STOP_DEFAULT, "}"
+    write(unit=tex_unit, fmt="(a, f8.3, a)") "\newcommand*{\patmdefault}{", P_ATM*CONVERT_PA_TO_KPA, "} % kPa"
+    write(unit=tex_unit, fmt="(a, f6.2, a)") "\newcommand*{\tempatmdefaultk}{", TEMP_ATM, "} % K"
+    write(unit=tex_unit, fmt="(a, f5.2, a)") "\newcommand*{\tempatmdefaultc}{", TEMP_ATM - CONVERT_C_TO_K, "} % C"
+    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\tstopdefault}{", T_STOP_DEFAULT, "} % s"
     write(unit=tex_unit, fmt="(a, f5.3, a)") "\newcommand*{\masstolerance}{", 100.0_WP*MASS_TOLERANCE, "\%}"
     write(unit=tex_unit, fmt="(a, f4.2, a)") "\newcommand*{\energytolerance}{", 100.0_WP*ENERGY_TOLERANCE, "\%}"
     call write_latex_engineering(tex_unit, MASS_DERIV_TOLERANCE, "massderivtolerance", "f4.1")
