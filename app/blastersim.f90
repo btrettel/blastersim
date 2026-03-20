@@ -42,7 +42,9 @@ if (rc /= 0) then
     call read_springer_namelist(trim(input_file), sys_start, config, rc)
     if (rc /= 0) then
         if (rc == IOSTAT_END) then
-            write(unit=ERROR_UNIT, fmt="(a)") "ERROR: Empty input file? No pneumatic or springer namelists detected."
+            write(unit=ERROR_UNIT, fmt="(a)") "ERROR: Empty input file? No pneumatic or springer namelists detected. " // &
+                "If your input file does have a pneumatic or springer namelist, make sure there is an empty line after the " // &
+                "final /. Some Fortran compilers require a return character after the slash for a namelist to be read properly."
         end if
         stop EX_USAGE, quiet=.true.
     end if

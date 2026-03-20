@@ -37,7 +37,7 @@ m_plunger    = 20.10   ! g [2]
 p_fs_plunger = 0.0     ! kPa (guessed as it seems to be low friction)
 p_fd_plunger = 0.0     ! kPa (guessed as it seems to be low friction)
 
-! spring (K17)
+! spring (16kg)
 k        = 528.88304 ! N/m (3.02 lbf/in) [4]
 l_draw   = 140.2e-3  ! m [3] (corrected from [1])
 m_spring = 74.95     ! g [4]

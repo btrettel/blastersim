@@ -13,11 +13,11 @@ vol_chamber = 2.0e-5  ! m3
 d_chamber   = 12.5e-3 ! m
 
 ! atmosphere
-p_atm    = 100.0 ! kPa (optional, absolute)
-temp_atm = 310.0 ! K (optional)
+!p_atm    = 101.0 ! kPa (optional, absolute, commented out)
+!temp_atm = 300.0 ! K (optional, commented out)
 
 ! flow restriction
 d_e       = 3.0e-3 ! m
-b         = 0.528  ! unitless (optional)
+!b         = 0.5   ! unitless (optional, commented out)
 t_opening = 10.0   ! ms (optional)
 /

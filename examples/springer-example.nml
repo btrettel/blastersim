@@ -18,10 +18,10 @@ p_fs_plunger = 0.0     ! kPa
 p_fd_plunger = 0.0     ! kPa
 
 ! atmosphere
-p_atm    = 100.0 ! kPa (optional, absolute)
-temp_atm = 310.0 ! K (optional)
+!p_atm    = 101.0 ! kPa (optional, absolute, commented out)
+!temp_atm = 300.0 ! K (optional, commented out)
 
 ! flow restriction
 d_e = 5.0e-3 ! m
-b   = 0.528  ! unitless (optional)
+!b   = 0.5    ! unitless (optional, commented out)
 /

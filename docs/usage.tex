@@ -166,10 +166,16 @@ Given the wide range of scales, for lengths the unit of m was selected, and the 
 
 Because the namelist file format is part of the Fortran standard, the reading of the namelist files is a built-in feature of a Fortran compiler and not something that BlasterSim has complete control over.
 Some error messages from bad namelist input files may be unclear, but are unfortunately beyond the control of BlasterSim.
-For example, in the gfortran compiler BlasterSim's releases use, you might see an error message like ``Bad real number in item 5 of list input''.
+BlasterSim releases use the gfortran compiler, which has the following confusing error messages:
+\begin{itemize}
+\item BlasterSim will think that your input file is empty and return the error ``ERROR: Empty input file?'' if the input file does not contain a new line character after the final \texttt{/} in a namelist group. % chktex 13 chktex 38
+This is a bug in gfortran in my view.
+When BlasterSim prints this error message, it will include a suggestion to add an empty line after the \texttt{/} to see if that will help, so the user doesn't have to dig through the docs.
+\item Sometimes you might get an error message like ``Bad real number in item 5 of list input''.
 Note that this says \textit{item 5}, not line 5 of the input file.
 It is referring to the 5th variable declaration.
 In the example namelist input file in this section, this would correspond to the \texttt{y} variable, and the user is going to have to fix something with the number format in \texttt{y}.
+\end{itemize}
 
 \section{Pneumatic mode}\label{pneumatic}
 % TODO
