@@ -8,8 +8,11 @@
 program test_validation
 
 use units
+use prec, only: WP
 use unittest, only: test_results_type
 implicit none
+
+real(WP), parameter :: Z_HALF_ALPHA = 1.96_WP
 
 type(test_results_type) :: tests
 
@@ -21,19 +24,41 @@ call tests%end_tests()
 
 contains
 
-!subroutine v_muzzle_predicted_vs_observed(v_muzzle_predicted, actual_v_muzzle, actual_v_muzzle_stdev)
-!    type(si_velocity), intent(in) :: v_muzzle_predicted(:), actual_v_muzzle(:), actual_v_muzzle_stdev(:)
+subroutine predicted_v_muzzle_vs_observed(output_basename, predicted_v_muzzle, actual_v_muzzle, actual_v_muzzle_stdev, &
+                                            actual_v_muzzle_n)
+    character(len=*), intent(in)  :: output_basename
+    type(si_velocity), intent(in) :: predicted_v_muzzle(:), actual_v_muzzle(:), actual_v_muzzle_stdev(:)
+    integer, intent(in)           :: actual_v_muzzle_n(:)
     
+    integer :: gp_unit, i_data, n_data
     
-!end subroutine v_muzzle_predicted_vs_observed
+    n_data = size(predicted_v_muzzle)
+    
+    open(newunit=gp_unit, action="write", status="replace", position="rewind", file=output_basename//".gp", delim="quote")
+    write(unit=gp_unit, fmt="(a)") "# auto-generated"
+    write(unit=gp_unit, fmt="(a)") "$data << EOD"
+    write(unit=gp_unit, fmt="(a)") "# predicted_v_muzzle actual_v_muzzle actual_v_muzzle_error"
+    do i_data = 1, n_data
+        write(unit=gp_unit, fmt="(g0, a, g0, a, g0)") predicted_v_muzzle(i_data)%v%v, " ", actual_v_muzzle(i_data)%v%v, " ", &
+                        Z_HALF_ALPHA*actual_v_muzzle_stdev(i_data)%v%v/sqrt(real(actual_v_muzzle_n(i_data), WP))
+    end do
+    write(unit=gp_unit, fmt="(a)") "EOD"
+    write(unit=gp_unit, fmt="(a)") "set term tikz"
+    write(unit=gp_unit, fmt="(3a)") 'set output "', output_basename, '.tikz"'
+    write(unit=gp_unit, fmt="(a)") "plot $data with yerrorbars"
+    write(unit=gp_unit, fmt="(a)") "set term png"
+    write(unit=gp_unit, fmt="(3a)") 'set output "', output_basename, '.png"'
+    write(unit=gp_unit, fmt="(a)") "plot $data with yerrorbars"
+    close(gp_unit)
+end subroutine predicted_v_muzzle_vs_observed
 
-subroutine run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, actual_v_muzzle, actual_v_muzzle_stdev, &
+subroutine run_pneumatic_get_mv(input_file, predicted_v_muzzle, rc_predicted, actual_v_muzzle, actual_v_muzzle_stdev, &
                                 actual_v_muzzle_n, actual_rc)
     use cva, only: run_config_type, cv_system_type, run_status_type, run
     use io, only: I_BARREL, read_pneumatic_namelist
     
     character(len=*), intent(in)   :: input_file
-    type(si_velocity), intent(out) :: v_muzzle_predicted
+    type(si_velocity), intent(out) :: predicted_v_muzzle
     integer, intent(out)           :: rc_predicted
     type(si_velocity), intent(out) :: actual_v_muzzle, actual_v_muzzle_stdev
     integer, intent(out)           :: actual_v_muzzle_n, actual_rc
@@ -48,8 +73,12 @@ subroutine run_pneumatic_get_mv(input_file, v_muzzle_predicted, rc_predicted, ac
                                     actual_rc_=actual_rc)
     call run(config, sys_start, sys_end, status)
     
-    v_muzzle_predicted = sys_end%cv(I_BARREL)%x_dot
-    rc_predicted       = status%rc
+    if (status%rc == 0) then
+        predicted_v_muzzle = sys_end%cv(I_BARREL)%x_dot
+    else
+        call predicted_v_muzzle%v%init_const(0.0_WP, size(sys_end%cv(I_BARREL)%x_dot%v%d))
+    end if
+    rc_predicted = status%rc
 end subroutine run_pneumatic_get_mv
 
 !!!!!!!!!!!!!!!!!!!!
@@ -79,7 +108,7 @@ subroutine pneumatic_validation(tests)
     ! can in principle reproduce the data.
     ! Later, overall validation will be determined by a global statistic like R^2 (though not R^2 itself as that's not the best).
     
-    use prec, only: CL, WP
+    use prec, only: CL
     use port, only: path_join
     
     type(test_results_type), intent(in out) :: tests
@@ -90,25 +119,27 @@ subroutine pneumatic_validation(tests)
                                            "pneumatic-2010-08-07-50-psi.nml", &
                                            "pneumatic-2010-08-07-60-psi.nml", &
                                            "pneumatic-2010-08-07-70-psi.nml"]
-    real(WP), parameter :: Z_HALF_ALPHA = 1.96_WP
     
     character(len=CL)                               :: path_array(2), input_file
-    type(si_velocity), dimension(size(INPUT_FILES)) :: v_muzzle_predicted, actual_v_muzzle, actual_v_muzzle_stdev
-    integer                                         :: i, rc_predicted, actual_v_muzzle_n, actual_rc
+    type(si_velocity), dimension(size(INPUT_FILES)) :: predicted_v_muzzle, actual_v_muzzle, actual_v_muzzle_stdev
+    integer                                         :: i_data, rc_predicted, actual_v_muzzle_n(size(INPUT_FILES)), actual_rc
     
     path_array(1) = "examples"
     
-    do i = 1, size(INPUT_FILES)
-        path_array(2) = trim(INPUT_FILES(i))
+    do i_data = 1, size(INPUT_FILES)
+        path_array(2) = trim(INPUT_FILES(i_data))
         input_file    = path_join(path_array)
-        call run_pneumatic_get_mv(input_file, v_muzzle_predicted(i), rc_predicted, actual_v_muzzle(i), &
-                                    actual_v_muzzle_stdev(i), actual_v_muzzle_n, actual_rc)
+        call run_pneumatic_get_mv(input_file, predicted_v_muzzle(i_data), rc_predicted, actual_v_muzzle(i_data), &
+                                    actual_v_muzzle_stdev(i_data), actual_v_muzzle_n(i_data), actual_rc)
         
-        call tests%integer_eq(rc_predicted, actual_rc, trim(INPUT_FILES(i)) // ", status%rc")
-        if (actual_rc == 0) call tests%real_eq(v_muzzle_predicted(i)%v%v, actual_v_muzzle(i)%v%v, &
-                                    trim(INPUT_FILES(i)) // ", muzzle velocity (validation)", &
-                                    abs_tol=Z_HALF_ALPHA*actual_v_muzzle_stdev(i)%v%v/sqrt(real(actual_v_muzzle_n, WP)))
+        call tests%integer_eq(rc_predicted, actual_rc, trim(INPUT_FILES(i_data)) // ", status%rc")
+        if (actual_rc == 0) call tests%real_eq(predicted_v_muzzle(i_data)%v%v, actual_v_muzzle(i_data)%v%v, &
+                                trim(INPUT_FILES(i_data)) // ", muzzle velocity (validation)", &
+                                abs_tol=Z_HALF_ALPHA*actual_v_muzzle_stdev(i_data)%v%v/sqrt(real(actual_v_muzzle_n(i_data), WP)))
     end do
+    
+    call predicted_v_muzzle_vs_observed("pneumatic-validation", predicted_v_muzzle, actual_v_muzzle, actual_v_muzzle_stdev, &
+                                            actual_v_muzzle_n)
 end subroutine pneumatic_validation
 
 end program test_validation

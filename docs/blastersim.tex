@@ -34,7 +34,11 @@
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{physics}
-\usepackage{xcolor}
+\usepackage{xcolor} % Needed for gnuplot and some TikZ figures where I use color.
+
+\iflatexml\else%
+\usepackage{gnuplot-lua-tikz} % Needed for gnuplot.
+\fi%
 
 % Make listings look like verbatim.
 % <https://tex.stackexchange.com/a/172705/9945>

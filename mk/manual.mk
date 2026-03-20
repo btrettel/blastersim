@@ -2,6 +2,14 @@
 # Manual dependencies #
 #######################
 
+.SUFFIXES: .gp .tikz .png
+
+.gp.tikz:
+	gnuplot $<
+
+.gp.png:
+	gnuplot $<
+
 src$(DIR_SEP)rev.f90 rev.tex: $(ALLSRC)
 	$(PYTHON) py$(DIR_SEP)gitrev.py
 
@@ -31,7 +39,10 @@ defaults.tex: test_cva$(BINEXT)
 
 io.nml: test$(DIR_SEP)pneumatic-default.nml test$(DIR_SEP)pneumatic-non-default.nml test$(DIR_SEP)springer-default.nml test$(DIR_SEP)springer-non-default.nml
 
-validation.nml: examples$(DIR_SEP)pneumatic-2010-08-07-25-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-30-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-40-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-50-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-60-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-70-psi.nml
+validation.nml pneumatic-validation.gp: examples$(DIR_SEP)pneumatic-2010-08-07-25-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-30-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-40-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-50-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-60-psi.nml examples$(DIR_SEP)pneumatic-2010-08-07-70-psi.nml
+
+pneumatic-validation.gp: test_validation$(BINEXT)
+	$(RUN)test_validation$(BINEXT)
 
 tests.html docs$(DIR_SEP)tests.tex: $(TESTNML)
 	gentesthtml$(BINEXT) tests.html docs$(DIR_SEP)tests.tex $(TESTNML)
@@ -40,4 +51,4 @@ tests.html docs$(DIR_SEP)tests.tex: $(TESTNML)
 # Additional files to clean #
 #############################
 
-CLEAN_MANUAL = src$(DIR_SEP)units.f90 test_conservation.nml test_exact.tex src$(DIR_SEP)geninput_springer.f90 src$(DIR_SEP)geninput_springer.tex *.csv tests.html
+CLEAN_MANUAL = src$(DIR_SEP)units.f90 test_conservation.nml test_exact.tex src$(DIR_SEP)geninput_springer.f90 src$(DIR_SEP)geninput_springer.tex *.csv tests.html *.gp docs$(DIR_SEP)LaTeXML.cache

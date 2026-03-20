@@ -21,7 +21,9 @@ docs$(DIR_SEP)units.f90 \
 docs$(DIR_SEP)test_units_pass.txt \
 docs$(DIR_SEP)test_units_fail.txt \
 docs$(DIR_SEP)compiler.tex \
-docs$(DIR_SEP)tests.tex
+docs$(DIR_SEP)tests.tex \
+docs$(DIR_SEP)pneumatic-validation.tikz \
+docs$(DIR_SEP)pneumatic-validation.png
 
 TEX_DEPS = mk$(DIR_SEP)latex.mk \
 docs$(DIR_SEP)chktexrc \
@@ -101,6 +103,12 @@ docs$(DIR_SEP)springer-example.nml: examples$(DIR_SEP)springer-example.nml
 
 docs$(DIR_SEP)defaults.tex: defaults.tex
 	$(CP) defaults.tex docs$(DIR_SEP)defaults.tex
+
+docs$(DIR_SEP)pneumatic-validation.tikz: pneumatic-validation.tikz
+	$(CP) pneumatic-validation.tikz docs$(DIR_SEP)pneumatic-validation.tikz
+
+docs$(DIR_SEP)pneumatic-validation.png: pneumatic-validation.png
+	$(CP) pneumatic-validation.png docs$(DIR_SEP)pneumatic-validation.png
 
 docs$(DIR_SEP)units.f90: docs$(DIR_SEP)genunits_example.nml
 	cd docs && genunits$(BINEXT) genunits_example.nml

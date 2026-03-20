@@ -40,6 +40,8 @@
 *.toc
 *.html
 *.css
+*.png
+LaTeXML.cache
 
 *.gcda
 *.gcno
@@ -71,9 +73,13 @@ docs/compiler.tex
 defaults.tex
 docs/defaults.tex
 docs/tests.tex
+pneumatic-validation.tex
+docs/pneumatic-validation.tex
 missed.txt
 *.opt.yaml
 *.optrpt
 *.pdb
 blastersim
 blastersim.exe
+*.gp
+*.tikz

@@ -119,12 +119,19 @@ This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact
 
 \section{Validation}\label{validation}
 
-BlasterSim's validation tests compare BlasterSim against experimental data. At present BlasterSim is validated with a series of pneumatic blaster tests that I made back in 2010.
+BlasterSim's validation tests compare BlasterSim against experimental data.
+%At present BlasterSim is validated with a series of pneumatic blaster tests that I made back in 2010.
 
-Unfortunately, to date, no spring blaster experiments have been detailed enough to provide all the inputs needed to run BlasterSim.
-While BlasterSim appears to give reasonable results when simulating spring blasters, a true test where inputs are not guessed or calibrated has not been made yet.
-Anyone willing to perform these tests is encouraged to provide data as discussed in \secref{contributing}.
+%Unfortunately, to date, no spring blaster experiments have been detailed enough to provide all the inputs needed to run BlasterSim.
+%While BlasterSim appears to give reasonable results when simulating spring blasters, a true test where inputs are not guessed or calibrated has not been made yet.
+%Anyone willing to perform these tests is encouraged to provide data as discussed in \secref{contributing}.
 
-\subsection{2010-08-07 pneumatic blaster tests}\label{pneumatic-validation} % chktex 8
+\subsection{Pneumatic validation tests}\label{pneumatic-validation} % chktex 8
 % TODO
-% TODO: Make plot be written by test_validation.f90.
+
+\iflatexml%
+% Seems that LaTeXML has trouble with at least some vector gnuplot output, so I'll use a PNG for now.
+\includegraphics{pneumatic-validation.png}
+\else%
+\input{pneumatic-validation.tikz}
+\fi%
