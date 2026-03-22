@@ -1,5 +1,8 @@
 ### v0.2.0
 
+- Use t-score instead of z-score for confidence intervals
+- Coaxial springers: Just add `d_coaxial_inner`?
+    - <https://discord.com/channels/825852031239061545/1462571693628461157/1484698930083135688>
 - Make `p_s` larger to prevent the slight backwards motion more?
 - How can I get section numbers from the docs to print in BlasterSim code? Circular dependency?
 - Documentation for making a BlasterSim release
@@ -130,6 +133,9 @@
         - Doesn't overshoot when approaching.
         - No effect on piston trajectory when moving away from stopping point.
         - Make sure derivatives are correct after impact. I'm not sure what they should be, though.
+    - <https://discord.com/channels/825852031239061545/825852073382772758/1484298391956488396>
+        - > Plunger bounce has always seemed like a major factor in traditional springers in my testing.
+    - <https://discord.com/channels/727038380054937610/1172390267890958366/1475663102073766055>
 - Optimal barrel length mode where the barrel length is not specified and BlasterSim stops where acceleration is zero.
     - It would be important to stop the backwards motion before adding this, otherwise BlasterSim will stop at the wrong time.
 - Make going on level deeper (`%v`) optional in geninput when using genunits.
@@ -145,8 +151,6 @@
     - `make blastersim-*-source.zip`
     - `make blastersim-*-linux-x86-64.zip`
     - upload online
-- Dry-fire mode
-    - <https://discord.com/channels/727038380054937610/1172390267890958366/1475664138180231210>
 - <https://github.com/sylvainhalle/textidote>
 - Make Python script generate an animation of a springer based on BlasterSim output.
 
@@ -466,11 +470,6 @@ Outline of planned advanced mode input file:
 
 inspiration for UI: SPICE, <https://en.wikipedia.org/wiki/Netlist>
 
-Simplified modes:
-
-- `springer` namelist
-- `pneumatic` namelist
-
 ***
 
 GUI ideas:
@@ -537,3 +536,12 @@ Exact solution for high-flow springers like your pneumatic solution:
 For the pneumatic solution:
 
 - Derive optimal barrel length. This could be used to verify the optimizer later.
+
+***
+
+Experimental methods to get more detailed information
+
+- pressure trace (requires installing a pressure gauge)
+- plugged barrel pressure / dry-fire mode
+    - <https://discord.com/channels/727038380054937610/1172390267890958366/1475664138180231210>
+- Same blaster with different barrel lengths for simplest way to factor in something like pressure trace information.

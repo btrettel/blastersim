@@ -22,12 +22,15 @@
 
 ! [7] <https://discord.com/channels/825852031239061545/1177799131268382902/1177803537028239410>
 
+! [8] <https://discord.com/channels/825852031239061545/1462571693628461157/1485063608391045130>
+! Likely too low, but hard to say how much.
+
 &springer
 ! barrel
 d_barrel  = 19.7358e-3 ! m (assumed same diameter as [1])
 l_travel  = 494.5e-3   ! m [5]
 m_proj    = 2.65       ! g [1]
-p_fs_proj = 0.0        ! kPa (guessed as it seems to be low friction)
+p_fs_proj = 11.8       ! kPa [8]
 p_fd_proj = 0.0        ! kPa (guessed as it seems to be low friction)
 
 ! Dead space: > 13.5763mm inner diameter, 203.2mm long
