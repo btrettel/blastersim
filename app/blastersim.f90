@@ -14,6 +14,7 @@ use io, only: I_BARREL, read_pneumatic_namelist, read_springer_namelist
 use cva, only: run_config_type, cv_system_type, run_status_type, T_STOP_DEFAULT, SUCCESS_RUN_RC, TIMEOUT_RUN_RC, run
 use stopcodes, only: EX_OK, EX_USAGE
 use rev, only: TAG, REVISION_DATE, MODIFIED
+use checks, only: assert
 implicit none
 
 character(len=CL)                 :: input_file, extra, modified_string
@@ -35,20 +36,27 @@ end if
 write(unit=*, fmt="(a)") "BlasterSim " // TAG // " (" // REVISION_DATE // trim(modified_string) // ")"
 write(unit=*, fmt="(a)") "Running simulation..."
 
-call read_pneumatic_namelist(trim(input_file), sys_start, config, rc)
-if (rc /= 0) then
-    if (rc /= IOSTAT_END) stop EX_USAGE, quiet=.true.
-
-    call read_springer_namelist(trim(input_file), sys_start, config, rc)
-    if (rc /= 0) then
-        if (rc == IOSTAT_END) then
-            write(unit=ERROR_UNIT, fmt="(a)") "ERROR: Empty input file? No pneumatic or springer namelists detected. " // &
-                "If your input file does have a pneumatic or springer namelist, make sure there is an empty line after the " // &
-                "final /. Some Fortran compilers require a return character after the slash for a namelist to be read properly."
-        end if
+nml_blk: block
+    call read_pneumatic_namelist(trim(input_file), sys_start, config, rc)
+    if (rc == 0) then
+        exit nml_blk
+    else if (rc /= IOSTAT_END) then
         stop EX_USAGE, quiet=.true.
     end if
-end if
+    
+    call read_springer_namelist(trim(input_file), sys_start, config, rc)
+    if (rc == 0) then
+        exit nml_blk
+    else if (rc /= IOSTAT_END) then
+        stop EX_USAGE, quiet=.true.
+    end if
+    
+    call assert(rc == IOSTAT_END, "blastersim: rc == IOSTAT_END violated")
+    write(unit=ERROR_UNIT, fmt="(a)") "ERROR: Empty input file? No pneumatic or springer namelists detected. " // &
+        "If your input file does have a pneumatic or springer namelist, make sure there is an empty line after the " // &
+        "final /. Some Fortran compilers require a return character after the slash for a namelist to be read properly."
+    stop EX_USAGE, quiet=.true.
+end block nml_blk
 
 call run(config, sys_start, sys_end, status)
 

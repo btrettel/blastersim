@@ -1,12 +1,31 @@
 ### v0.2.0
 
+- docs: Note which diameter to use for projectiles on the outside of the barrel.
+- Update Ranger plunger head weight and friction.
+    - <https://discord.com/channels/825852031239061545/1462571693628461157/1485348392157839592>
 - Use t-score instead of z-score for confidence intervals
+    - <https://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm> (for testing)
+    - <https://en.wikipedia.org/wiki/Student's_t-distribution>
+- docs: Make more clear that the effective diameter is smaller than the pusher diameter.
+    - I recall some similar discussion on SpudFiles now that I think about it.
+- docs: Note bounds violation in friction model and derivation of `p_f0_high`
+- Dart friction model taking into account pressure inside of the dart.
+    - <https://discord.com/channels/825852031239061545/1462571693628461157/1485097150386798753>
+    - See 2026-03-21 and 2026-03-22 handwritten notes (particularly the top of 2026-03-22 p. 1 as that has the equation to use boxed).
 - Coaxial springers: Just add `d_coaxial_inner`?
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1484698930083135688>
 - Make `p_s` larger to prevent the slight backwards motion more?
 - How can I get section numbers from the docs to print in BlasterSim code? Circular dependency?
 - Documentation for making a BlasterSim release
     - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`
+    - ```
+    make clean
+    git tag -a v0.2.1 -m "version 0.2.1"
+    make BUILD=release blastersim
+    make clean
+    make docs/blastersim.pdf docs/index.html
+    [...]
+    ```
     - How to build Windows executable
         - Download source release from <http://trettel.us/blastersim/releases/>
         - Extract zip file.
@@ -66,7 +85,6 @@
         - compton_internal_2007 (need rotational KE)
 - Add LLM logs to repo?
 - Note in validation section: Blasters are assumed to have constant `d_e` and `b` unless the flow restriction changes. No pressure effects on `d_e`.
-- Use one `d_e` value for 2010 pneumatic cases.
 - For consistency, make macros for LaTeX variable names?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
@@ -136,6 +154,7 @@
     - <https://discord.com/channels/825852031239061545/825852073382772758/1484298391956488396>
         - > Plunger bounce has always seemed like a major factor in traditional springers in my testing.
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1475663102073766055>
+    - Print a warning for plunger impact after it is handled properly and have a different exit code.
 - Optimal barrel length mode where the barrel length is not specified and BlasterSim stops where acceleration is zero.
     - It would be important to stop the backwards motion before adding this, otherwise BlasterSim will stop at the wrong time.
 - Make going on level deeper (`%v`) optional in geninput when using genunits.
@@ -397,6 +416,7 @@
     - Exterior ballistics
     - Output
     - Software engineering
+- Make flow restriction model consider both $K_\text{L}$ and area reduction.
 
 ***
 
