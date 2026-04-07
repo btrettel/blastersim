@@ -1,14 +1,12 @@
 ### v0.2.0
 
+- Use t-score instead of z-score for confidence intervals
+    - Get t-score from alpha.
 - docs: Note which diameter to use for projectiles on the outside of the barrel.
 - Update Ranger plunger head weight and friction.
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1485348392157839592>
-- Use t-score instead of z-score for confidence intervals
-    - <https://www.itl.nist.gov/div898/handbook/eda/section3/eda3672.htm> (for testing)
-    - <https://en.wikipedia.org/wiki/Student's_t-distribution>
-- docs: Make more clear that the effective diameter is smaller than the pusher diameter.
-    - I recall some similar discussion on SpudFiles now that I think about it.
 - docs: Note bounds violation in friction model and derivation of `p_f0_high`
+- Look into exponential friction model in awrejcewicz_analysis_2005 or something else in there.
 - Dart friction model taking into account pressure inside of the dart.
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1485097150386798753>
     - See 2026-03-21 and 2026-03-22 handwritten notes (particularly the top of 2026-03-22 p. 1 as that has the equation to use boxed).
@@ -175,7 +173,7 @@
 
 ***
 
-- Check that $\dot{x}_0$ derivative is now good with exact solution
+- Check that $\dot{x}_0$ derivative is now good with exact solution.
 - Test `m_spring` in `d_xdot_d_t` and `m_p_ke`.
 - transonic corrections in the barrel (corner_theory_1950 eq. 123)
     - Make this the default but optional if desired for testing.

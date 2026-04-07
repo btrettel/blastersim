@@ -66,7 +66,13 @@ However, consider what happens the velocity \texttt{v} is given the wrong unit:
 The compiler error message quickly tells the programmer that this code has a bug.
 In this case, the bug is in the variable definition and not in the highlighted line, however, often the compiler will identify precisely which term in the line has the bug.
 
-\subsection{Comparison with exact solution}\label{exact-solution}
+\subsection{Verification test suite}
+
+The test suite mentioned at the start of \secref{verval} has \totaltests\, the vast majority of which are verification tests checking that various functions and subroutines of BlasterSim produce the expected results.
+This section details some of the more important verification tests.
+At the moment, only one test is listed here.
+
+\subsubsection{Comparison with exact solution}\label{exact-solution}
 
 To test that the time integration in BlasterSim is working correctly, an exact solution for a simple case was constructed.
 This case has only two control volumes, one for the barrel, and one for the atmosphere.
