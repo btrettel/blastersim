@@ -194,7 +194,7 @@ pure subroutine assert(condition, message, print_real, print_integer, print_logi
     
     ! Maybe later add `character` arrays. This could be a problem as they can't be jagged.
     
-    character(len=:), allocatable :: full_message, print_variables
+    character(len=:), allocatable :: print_variables
     character(len=CL) :: print_variable
     integer :: i
     
@@ -223,13 +223,9 @@ pure subroutine assert(condition, message, print_real, print_integer, print_logi
                 end do
             end if
             
-            ! Why not concatenate the strings on the `error stop` line?
-            ! That leads to ifx garbling the error message as of version `ifx (IFX) 2024.0.2 20231213`.
-            full_message = "***" // new_line("a") // "ASSERTION FAILED. " // message // print_variables
+            ! Why is the start of the message in all caps? To make it more noticeable.
             
-            ! Why is the message in all caps? To make it more noticeable.
-            
-            error stop full_message
+            error stop "***" // new_line("a") // "ASSERTION FAILED. " // message // print_variables
         end if
     end if
 end subroutine assert

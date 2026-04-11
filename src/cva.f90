@@ -82,6 +82,8 @@ type, public :: cv_type ! control volume
     type(si_area)               :: csa         ! cross-sectional area
     type(si_inverse_mass)       :: rm_p        ! reciprocal mass of projectile/plunger
     type(si_pressure)           :: p_fs, p_fd  ! static and dynamic friction pressure
+    type(si_velocity)           :: v_scale_s   ! velocity scale over which part of static friction pressure becomes active
+    type(si_velocity)           :: v_scale_d   ! velocity scale over which dynamic friction pressure becomes active
     type(si_stiffness)          :: k           ! stiffness of spring attached to plunger
     type(si_length)             :: delta_pre   ! spring precompression
     type(gas_type), allocatable :: gas(:)      ! gas data
@@ -629,14 +631,15 @@ pure function gamma_cv(cv, y)
 end function gamma_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, delta_pre, gas, &
-                            i_cv_mirror, x_stop, isentropic_filling, p_atm, eos, type, m_spring, constant_friction)
+                            i_cv_mirror, x_stop, isentropic_filling, p_atm, eos, type, m_spring, constant_friction, &
+                            v_scale_s, v_scale_d)
     class(cv_type), intent(in out) :: cv
     
     ! time varying
-    type(si_length), intent(in)      :: x        ! location of projectile/plunger
-    type(si_velocity), intent(in)    :: x_dot    ! velocity of projectile/plunger
-    type(unitless), intent(in)       :: y(:)     ! mass fractions of each gas
-    type(si_pressure), intent(in)    :: p        ! pressure
+    type(si_length), intent(in)      :: x     ! location of projectile/plunger
+    type(si_velocity), intent(in)    :: x_dot ! velocity of projectile/plunger
+    type(unitless), intent(in)       :: y(:)  ! mass fractions of each gas
+    type(si_pressure), intent(in)    :: p     ! pressure
     
     ! constant
     type(si_temperature), intent(in)  :: temp_atm    ! atmospheric temperature
@@ -656,6 +659,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     integer, intent(in), optional           :: type     ! type of CV to use
     type(si_mass), intent(in), optional     :: m_spring ! mass of spring
     logical, intent(in), optional           :: constant_friction
+    type(si_velocity), intent(in), optional :: v_scale_s, v_scale_d
     
     integer              :: i, n_d
     type(si_temperature) :: temp
@@ -731,6 +735,19 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
         end if
     else
         call cv%m_spring%v%init_const(0.0_WP, n_d)
+    end if
+    
+    ! See 2026-04-10 handwritten notes for where I got the idea to make `v_scale_s` and `v_scale_d` different.
+    ! Doing so should reduce the bounds violation issue discussed in `function p_f`.
+    if (present(v_scale_s)) then
+        cv%v_scale_s = v_scale_s
+    else
+        call cv%v_scale_s%v%init_const(0.1_WP, size(cv%x%v%d))
+    end if
+    if (present(v_scale_d)) then
+        cv%v_scale_d = v_scale_d
+    else
+        call cv%v_scale_d%v%init_const(1.0_WP, size(cv%x%v%d))
     end if
     
     call assert(cv%x%v%v            >  0.0_WP, "cva (set): x > 0 violated", print_real=[cv%x%v%v])
@@ -874,7 +891,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     end select
 end subroutine set_const
 
-!tripwire$ begin 6458FB20 Update `\secref{friction}` of theory.tex if necessary.
+!tripwire$ begin 7E21FBF5 Update `\secref{friction}` of theory.tex if necessary.
 pure function p_f(cv, p_fe)
     ! Returns pressure of friction.
     
@@ -883,17 +900,13 @@ pure function p_f(cv, p_fe)
     
     type(si_pressure) :: p_f
     
-    type(si_velocity) :: v_scale
-    
-    call v_scale%v%init_const(0.1_WP, size(cv%x%v%d))
-    
     call assert(cv%p_fs%v%v >= 0.0_WP, "cva (p_f): cv%p_fs%v > 0 violated", print_real=[cv%p_fs%v%v])
     call assert(cv%p_fd%v%v >= 0.0_WP, "cva (p_f): cv%p_fd%v > 0 violated", print_real=[cv%p_fd%v%v])
     
     if (cv%constant_friction) then
         p_f = cv%p_fs
     else
-        p_f = p_f0(cv, p_fe) + (cv%p_fd - tanh(cv%x_dot/v_scale)*p_f0(cv, p_fe))*tanh(cv%x_dot/v_scale)
+        p_f = p_f0(cv, p_fe) + (cv%p_fd - tanh(cv%x_dot/cv%v_scale_s)*p_f0(cv, p_fe))*tanh(cv%x_dot/cv%v_scale_d)
     end if
     
     ! See 2026-03-16 handwritten notes.

@@ -201,14 +201,18 @@ The smooth approximation to~\eqref{effective friction pressure cases} will be ma
 \begin{equation}
     \sgn(\dot{x}_i) \approx \tanh\left(\frac{\dot{x}_i}{v_\text{s}}\right),
 \end{equation}
-where $v_\text{s}$ is a small scale over which the $\tanh$ function changes from -1 to 1.
+where $v_\text{s}$ is a small velocity scale over which the $\tanh$ function changes from -1 to 1.
 
 Consequently, the function implemented in cva.f90 as \texttt{p\_f} is
 \begin{equation}
     p_{\text{f},i} =
     p_{\text{f0},i}
-    + \left[p_{\text{fd},i} - \tanh\left(\frac{\dot{x}_i}{v_\text{s}}\right) \cdot p_{\text{f0},i}\right] \cdot \tanh\left(\frac{\dot{x}_i}{v_\text{s}}\right).
+    + \left[p_{\text{fd},i} - \tanh\left(\frac{\dot{x}_i}{v_\text{ss}}\right) \cdot p_{\text{f0},i}\right] \cdot \tanh\left(\frac{\dot{x}_i}{v_\text{sd}}\right). \label{eq:p_f}
 \end{equation}
+In~\eqref{p_f}, instead of a single $v_\text{s}$, two different velocity scales $v_\text{ss}$ and $v_\text{sd}$ are used to allow for finer control.
+Note that contrary to the non-smooth model (\eqref{effective friction pressure cases}), the absolute value of~\eqref{p_f} is not guaranteed to be at most $p_{\text{fs},i}$ or $p_{\text{fd},i}$.
+To avoid the magnitude of the friction pressure from going above what a user likely intended, $v_\text{ss}$ is made much smaller than $v_\text{sd}$.
+The bounds violation comes from both $\tanh$ terms changing at the same time, so it is believed making the two scales very different so that one finishes changing sooner than the other will avoid this problem.
 
 % See 2025-09-30 handwritten notes for part of this.
 Making a smooth approximation for $p_{\text{f0},i}$ is more difficult.

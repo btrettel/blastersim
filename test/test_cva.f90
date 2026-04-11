@@ -354,6 +354,8 @@ subroutine test_p_f_1(tests)
     call cv%x%v%init_const(0.0_WP, 0)
     call cv%p_fs%v%init_const(0.1e5_WP, 0)
     call cv%p_fd%v%init_const(0.05e5_WP, 0)
+    call cv%v_scale_s%v%init_const(0.1_WP, 0)
+    call cv%v_scale_d%v%init_const(0.1_WP, 0)
     cv%constant_friction = .false.
     
     call cv%x_dot%v%init_const(-10.0_WP, 0)
@@ -413,6 +415,8 @@ subroutine test_p_f_2(tests)
     call cv%x%v%init_const(0.0_WP, 0)
     call cv%p_fs%v%init_const(0.0_WP, 0)
     call cv%p_fd%v%init_const(0.0_WP, 0)
+    call cv%v_scale_s%v%init_const(0.1_WP, 0)
+    call cv%v_scale_d%v%init_const(0.1_WP, 0)
     cv%constant_friction = .false.
     
     call cv%x_dot%v%init_const(10.0_WP, 0)
@@ -804,7 +808,7 @@ subroutine test_rates(tests)
     type(cv_system_type) :: sys
     
     type(si_length)           :: x
-    type(si_velocity)         :: x_dot, d_x_d_t_
+    type(si_velocity)         :: x_dot, d_x_d_t_, v_scale
     type(unitless)            :: y(1)
     type(si_pressure)         :: p, p_fs, p_fd, p_atm
     type(si_temperature)      :: temp
@@ -828,11 +832,13 @@ subroutine test_rates(tests)
     call p_atm%v%init_const(1.0e5_WP, 0)
     call k%v%init_const(1.0e6_WP, 0)
     call delta_pre%v%init_const(-0.5_WP, 0)
+    call v_scale%v%init_const(0.1_WP, 0)
     
     allocate(sys%cv(2))
     
     call sys%cv(1)%set_const("test_rates CV 1 (constant pressure)", csa, p_atm, temp, [DRY_AIR], y, 2)
-    call sys%cv(2)%set(x, x_dot, y, p, temp, "test_rates CV 2", csa, rm_p, p_fs, p_fd, k, delta_pre, [DRY_AIR], 1)
+    call sys%cv(2)%set(x, x_dot, y, p, temp, "test_rates CV 2", csa, rm_p, p_fs, p_fd, k, delta_pre, [DRY_AIR], 1, &
+                        v_scale_s=v_scale, v_scale_d=v_scale)
     
     d_x_d_t_ = d_x_d_t(sys, 2)
     call tests%real_eq(d_x_d_t_%v%v, x_dot%v%v, "d_x_d_t")
@@ -1691,7 +1697,7 @@ subroutine test_mirror_1(tests)
     type(run_status_type)             :: status
     
     type(si_length)      :: x_1, x_2, x_1end, x_2end, x_start_sum, x_end_sum
-    type(si_velocity)    :: x_dot
+    type(si_velocity)    :: x_dot, v_scale
     type(unitless)       :: y(1)
     type(si_pressure)    :: p_1, p_2, p_fs, p_fd, p_1end, p_2end
     type(si_temperature) :: temp
@@ -1724,11 +1730,12 @@ subroutine test_mirror_1(tests)
     call k%v%init_const(0.0_WP, 0)
     call delta_pre%v%init_const(0.0_WP, 0)
     call t_stop%v%init_const(0.1_WP, 0)
+    call v_scale%v%init_const(0.1_WP, 0)
     
     call sys_start%cv(1)%set(x_1, x_dot, y, p_1, temp, "chamber 1", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
-                                    delta_pre, [DRY_AIR], 2)
+                                    delta_pre, [DRY_AIR], 2, v_scale_s=v_scale, v_scale_d=v_scale)
     call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp, "chamber 2", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
-                                    delta_pre, [DRY_AIR], 1, type=MIRROR_CV_TYPE)
+                                    delta_pre, [DRY_AIR], 1, type=MIRROR_CV_TYPE, v_scale_s=v_scale, v_scale_d=v_scale)
     
     call config%set("test_mirror_1", 0, t_stop=t_stop)
     call run(config, sys_start, sys_end, status)

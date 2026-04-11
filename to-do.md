@@ -5,8 +5,7 @@
 - docs: Note which diameter to use for projectiles on the outside of the barrel.
 - Update Ranger plunger head weight and friction.
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1485348392157839592>
-- docs: Note bounds violation in friction model and derivation of `p_f0_high`
-- Look into exponential friction model in awrejcewicz_analysis_2005 or something else in there.
+- docs: Derivation of `p_f0_high`
 - Dart friction model taking into account pressure inside of the dart.
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1485097150386798753>
     - See 2026-03-21 and 2026-03-22 handwritten notes (particularly the top of 2026-03-22 p. 1 as that has the equation to use boxed).
