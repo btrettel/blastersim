@@ -1870,7 +1870,8 @@ end subroutine check_sys
 !tripwire$ end
 
 pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
-    ! Use Hénon's trick to ensure that `x == x_stop`.
+    ! Use Hénon's trick to ensure that `x == x_stop` with better conservation properties.
+    ! More specifically:
     ! Uses the secant method to find `dt` where `x == x_stop` for control volume number `i_cv_interp`.
     
     type(si_time), intent(in)                      :: t_old, dt

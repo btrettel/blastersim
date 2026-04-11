@@ -1,7 +1,5 @@
 ### v0.2.0
 
-- Use t-score instead of z-score for confidence intervals
-    - Get t-score from alpha.
 - docs: Note which diameter to use for projectiles on the outside of the barrel.
 - Update Ranger plunger head weight and friction.
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1485348392157839592>

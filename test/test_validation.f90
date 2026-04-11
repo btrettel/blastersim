@@ -12,8 +12,6 @@ use prec, only: WP
 use unittest, only: test_results_type
 implicit none
 
-real(WP), parameter :: Z_HALF_ALPHA = 1.96_WP
-
 type(test_results_type) :: tests
 
 call tests%start_tests("validation.nml")
@@ -26,12 +24,15 @@ contains
 
 subroutine predicted_v_muzzle_vs_observed(output_basename, predicted_v_muzzle, actual_v_muzzle, actual_v_muzzle_stdev, &
                                             actual_v_muzzle_n)
+    use validation, only: student_t
+    
     character(len=*), intent(in)  :: output_basename
     type(si_velocity), intent(in) :: predicted_v_muzzle(:), actual_v_muzzle(:), actual_v_muzzle_stdev(:)
     integer, intent(in)           :: actual_v_muzzle_n(:)
     
     integer           :: gp_unit, i_data, n_data
     type(si_velocity) :: maximum_muzzle_velocity, muzzle_velocity_error
+    real(WP)          :: t_half_alpha
     
     n_data = size(predicted_v_muzzle)
     call maximum_muzzle_velocity%v%init_const(0.0_WP, size(predicted_v_muzzle(1)%v%d))
@@ -42,7 +43,12 @@ subroutine predicted_v_muzzle_vs_observed(output_basename, predicted_v_muzzle, a
     write(unit=gp_unit, fmt="(a)") '$data << EOD'
     write(unit=gp_unit, fmt="(a)") '# predicted_v_muzzle actual_v_muzzle actual_v_muzzle_error'
     do i_data = 1, n_data
-        muzzle_velocity_error = Z_HALF_ALPHA*actual_v_muzzle_stdev(i_data)/sqrt(real(actual_v_muzzle_n(i_data), WP))
+        if (actual_v_muzzle_n(i_data) < 11) then
+            t_half_alpha = 0.0_WP
+        else
+            t_half_alpha = student_t(0.025_WP, actual_v_muzzle_n(i_data) - 1)
+        end if
+        muzzle_velocity_error = t_half_alpha*actual_v_muzzle_stdev(i_data)/sqrt(real(actual_v_muzzle_n(i_data), WP))
         write(unit=gp_unit, fmt="(g0, a, g0, a, g0)") predicted_v_muzzle(i_data)%v%v, " ", actual_v_muzzle(i_data)%v%v, " ", &
                                                         muzzle_velocity_error%v%v
         maximum_muzzle_velocity = max(maximum_muzzle_velocity, predicted_v_muzzle(i_data))
@@ -120,6 +126,7 @@ subroutine pneumatic_validation(tests)
     
     use prec, only: CL
     use port, only: path_join
+    use validation, only: student_t
     
     type(test_results_type), intent(in out) :: tests
     
@@ -133,6 +140,7 @@ subroutine pneumatic_validation(tests)
     character(len=CL)                               :: path_array(2), input_file
     type(si_velocity), dimension(size(INPUT_FILES)) :: predicted_v_muzzle, actual_v_muzzle, actual_v_muzzle_stdev
     integer                                         :: i_data, rc_predicted, actual_v_muzzle_n(size(INPUT_FILES)), actual_rc
+    real(WP) :: t_half_alpha, abs_tol
     
     path_array(1) = "examples"
     
@@ -142,10 +150,16 @@ subroutine pneumatic_validation(tests)
         call run_pneumatic_get_mv(input_file, predicted_v_muzzle(i_data), rc_predicted, actual_v_muzzle(i_data), &
                                     actual_v_muzzle_stdev(i_data), actual_v_muzzle_n(i_data), actual_rc)
         
+        if (actual_v_muzzle_n(i_data) < 11) then
+            abs_tol = 1.0_WP
+        else
+            t_half_alpha = student_t(0.025_WP, actual_v_muzzle_n(i_data) - 1)
+            abs_tol = t_half_alpha*actual_v_muzzle_stdev(i_data)%v%v/sqrt(real(actual_v_muzzle_n(i_data), WP))
+        end if
         call tests%integer_eq(rc_predicted, actual_rc, trim(INPUT_FILES(i_data)) // ", status%rc")
         if (actual_rc == 0) call tests%real_eq(predicted_v_muzzle(i_data)%v%v, actual_v_muzzle(i_data)%v%v, &
                                 trim(INPUT_FILES(i_data)) // ", muzzle velocity (validation)", &
-                                abs_tol=Z_HALF_ALPHA*actual_v_muzzle_stdev(i_data)%v%v/sqrt(real(actual_v_muzzle_n(i_data), WP)))
+                                abs_tol=abs_tol)
     end do
     
     call predicted_v_muzzle_vs_observed("pneumatic-validation", predicted_v_muzzle, actual_v_muzzle, actual_v_muzzle_stdev, &
