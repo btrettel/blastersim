@@ -125,10 +125,20 @@ For speed, once the documentation numbers are generated, these BlasterSim tests 
 \section{BlasterSim source code conventions}\label{conventions}
 % TODO
 
-Some code comments contain bibliographic keys referring to the BlasterSim documentation's BibTeX database.
+\begin{itemize}
+\item Some code comments contain bibliographic keys referring to the BlasterSim documentation's BibTeX database.
 The BibTeX database is located at docs/blastersim.bib, and the associated keys can be found there.
 
-The control volume index for the barrel is \texttt{I\_BARREL}, which is set to 1. This convention allows BlasterSim to easily know which control volume is the barrel.
+\item Some code comments may refer to handwritten notes.
+I intend to slowly clean up and add these notes to this documentation.
+
+\item Constants (\texttt{parameter}s in Fortran terminology) are denoted by capitalizing the variable name.
+Note that this is different from convention used for intensive and extensive quantities in the typeset math in this documentation as discussed in \secref{notation}.
+Because each variable in BlasterSim's source code is given a unit (see \secref{unit-checking}), whether a quantity is extensive or intensive can be determined from the units for that quantity, if unclear.
+
+\item The control volume index for the barrel is \texttt{I\_BARREL}, which is set to 1.
+This convention allows BlasterSim to easily know which control volume is the barrel.
+\end{itemize}
 
 % TODO: converting between LaTeX variable names and source code variable names
 

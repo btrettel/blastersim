@@ -12,6 +12,10 @@
 - Coaxial springers: Just add `d_coaxial_inner`?
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1484698930083135688>
 - Make `p_s` larger to prevent the slight backwards motion more?
+- Add physics-based adaptive time step.
+    - $\Delta t = \min(\Delta t_\text{max}, \min_i C_{\Delta t, m} \frac{m_i}{\dv{m_i}{t}}, \min_i C_{\Delta t, E} \frac{E_i}{\dv{E_i}{t}}
+    - Update "Time integration" section of the docs to note this.
+    - Add tripwrite to code for "Time integration" section of the docs.
 - How can I get section numbers from the docs to print in BlasterSim code? Circular dependency?
 - Documentation for making a BlasterSim release
     - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`

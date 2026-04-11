@@ -36,6 +36,13 @@ At the moment, the pneumatic and springer modes of BlasterSim use only dry air, 
 For completeness, this guide will be written as if multiple gas species are present.
 The mass fraction $y$ and gas species index $k$ which identifies the gas are used.
 
+In the typeset math in this documentation, when there are separate intensive and extensive versions of the same quantity, the two will be distinguished by making the extensive version uppercase and the intensive version lowercase.
+For example, internal energy per unit mass is $u$ and internal energy is $U$.
+Note that this convention is not followed in the typeset math when it is conventional to make an extensive quantity lowercase (like mass $m$) or an intensive quantity uppercase (like $R$), only when there are separate intensive and extensive versions of the same quantity.
+This capitalization convention is not followed in BlasterSim's source code.
+See \secref{conventions} for a discussion of the capitalization convention followed in the source code.
+Because each variable in BlasterSim's source code is given a unit (see \secref{unit-checking}), whether a quantity is extensive or intensive can be determined from the units for that quantity, if unclear.
+
 \subsection{Conservation laws}\label{conservation-laws}
 % TODO
 % mass conservation

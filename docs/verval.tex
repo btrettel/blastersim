@@ -41,7 +41,7 @@ These return codes indicate no errors were detected.
 BlasterSim contains hundreds of run-time assertions which perform deeper internal consistency checks.
 These additional checks are disabled in the released versions of BlasterSim for speed but are enabled during all developer testing runs for debugging purposes.
 
-\subsection{Compile-time unit checking}
+\subsection{Compile-time unit checking}\label{unit-checking}
 
 Variables in BlasterSim are assigned units like meters or seconds, allowing the Fortran compiler to check for inconsistencies.
 This is achieved through a system called genunits which generates a custom Fortran module containing the required Fortran types~\cite{trettel_compile-time_2025,trettel_btrettelflt_2026}.
