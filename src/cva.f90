@@ -1639,6 +1639,8 @@ subroutine run(config, sys_start, sys_end, status)
         call move_alloc(from=sys_old,  to=sys_temp)
         call move_alloc(from=sys_new,  to=sys_old)
         call move_alloc(from=sys_temp, to=sys_new)
+        
+        call assert(t%v%v <= T_STOP_DEFAULT, "cva (run): t <= T_STOP_DEFAULT violated")
     end do time_loop
     
     if (status%rc == SUCCESS_RUN_RC) then

@@ -41,7 +41,6 @@
     - dwell time
 - docs: Tutorials section
     - <https://onegoodtutorial.org/>
-- Why was time over 1 s when I reduced the time step when trying a high flow rate? Add an assertion to check for this.
 - Add functional dependencies of $p_{\text{f},i}$ to the $\dv{\dot{x}_i}{t}$ equation in the docs.
 - Nonlinear spring model.
     - Split spring force and energy into spring.f90? Might also want to move EOSes into eos.f90.
