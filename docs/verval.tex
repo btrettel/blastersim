@@ -17,21 +17,23 @@ These tests do not test that the governing equations are appropriate in the firs
 \subsection{Run-time consistency checks}\label{run-time-checks}
 
 Every time step, BlasterSim performs internal consistency checks to alert the user if the simulation is becoming inaccurate in a detectable way.
+If an error is detected, BlasterSim terminates the simulation and prints out the return code.
 These checks are made in the \texttt{check\_sys} subroutine of cva.f90.
-The specific checks performed include:
-\begin{itemize}
-    \item Whether the simulation ran for $\tstopdefault$~seconds without the projectile leaving the barrel, indicating that the projectile likely won't ever leave the barrel. (\texttt{run} subroutine return code 1) % chktex 12
-    \item Whether a control volume has negative mass. (\texttt{run} subroutine return code 2) % chktex 12
-    \item Whether a control volume has negative temperature. (\texttt{run} subroutine return code 3) % chktex 12
-    \item Whether the total system mass deviates from the starting mass by more than $\masstolerance$. (\texttt{run} subroutine return code 4) % chktex 12
-    \item Whether the total system energy deviates from the starting energy by more than $\energytolerance$. (\texttt{run} subroutine return code 5) % chktex 12
-    \item If automatic differentiation is used, whether any component of the gradient of the total system mass deviates by more than $\massderivtolerance$ (regardless of the units). (\texttt{run} subroutine return code 6) % chktex 12
-    \item If automatic differentiation is used, whether any component of the gradient of the total system energy deviates by more than $\energyderivtolerance$ (regardless of the units). (\texttt{run} subroutine return code 7) % chktex 12
-    \item Whether the ideal gas equation of state has become inaccurate due to the pressure increasing above the critical pressure. (\texttt{run} subroutine return code 8) % chktex 12
-    \item Whether the coordinates of any plunger become desynchronized between control volumes on either side of the mentioned plunger by more than $\mirrorxtolerance$~m. (\texttt{run} subroutine return code 9) % chktex 12
-\end{itemize}
+The specific checks performed and the associated return codes include:
+\begin{description}
+\item[return code 1:] Whether the simulation ran for $\tstopdefault$~seconds without the projectile leaving the barrel, indicating that the projectile likely won't ever leave the barrel.
+\item[return code 2:] Whether a control volume has negative mass.
+\item[return code 3:] Whether a control volume has negative temperature.
+\item[return code 4:] Whether the total system mass deviates from the starting mass by more than $\masstolerance$.
+\item[return code 5:] Whether the total system energy deviates from the starting energy by more than $\energytolerance$.
+\item[return code 6:] If automatic differentiation is used, whether any component of the gradient of the total system mass deviates by more than $\massderivtolerance$ (regardless of the units).
+\item[return code 7:] If automatic differentiation is used, whether any component of the gradient of the total system energy deviates by more than $\energyderivtolerance$ (regardless of the units).
+\item[return code 8:] Whether the ideal gas equation of state has become inaccurate due to the pressure increasing above the critical pressure.
+\item[return code 9:] Whether the coordinates of any plunger become desynchronized between control volumes on either side of the mentioned plunger by more than $\mirrorxtolerance$~m.
+\item[return code 10:] Whether the coordinate of a projectile/plunger goes negative, indicating that the control volume has negative volume and that the projectile/plunger has not only impacted the end but gone through the end.
+\end{description}
 
-The thresholds used for these checks are somewhat arbitrary and are based on what conservatively seems to never cause problems in practice.
+The thresholds used for some of these checks are somewhat arbitrary and are based on what conservatively seems to never cause problems in practice.
 
 For a discussion of return codes -1 and 0, see \secref{csv} on the CSV output variable \texttt{rc}.
 These return codes indicate no errors were detected.

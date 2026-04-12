@@ -45,7 +45,7 @@ integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
 integer, public, parameter :: MAX_CV_TYPE    = 2
 
-!tripwire$ begin 094359D3 Update \secref{run-time-checks} and `rc` in geninput_*.nml.
+!tripwire$ begin 6A50BFCD Update \secref{run-time-checks} and `rc` in geninput_*.nml.
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
 integer, public, parameter :: SUCCESS_RUN_RC                = 0
 integer, public, parameter :: TIMEOUT_RUN_RC                = 1
@@ -57,11 +57,12 @@ integer, public, parameter :: MASS_DERIV_TOLERANCE_RUN_RC   = 6
 integer, public, parameter :: ENERGY_DERIV_TOLERANCE_RUN_RC = 7
 integer, public, parameter :: IDEAL_EOS_RUN_RC              = 8
 integer, public, parameter :: MIRROR_X_TOLERANCE_RUN_RC     = 9
-integer, public, parameter :: X_BLOW_UP_RUN_RC              = 10
-integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 11
-integer, public, parameter :: M_BLOW_UP_RUN_RC              = 12
-integer, public, parameter :: E_BLOW_UP_RUN_RC              = 13
-integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 14
+integer, public, parameter :: NEGATIVE_CV_X_RUN_RC          = 10
+integer, public, parameter :: X_BLOW_UP_RUN_RC              = 11
+integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 12
+integer, public, parameter :: M_BLOW_UP_RUN_RC              = 13
+integer, public, parameter :: E_BLOW_UP_RUN_RC              = 14
+integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 15
 !tripwire$ end
 
 integer, public, parameter :: HEADER_ROW_TYPE = 1
@@ -1656,7 +1657,7 @@ subroutine run(config, sys_start, sys_end, status)
     status%t = t
 end subroutine run
 
-!tripwire$ begin D852A4B2 Update `\secref{run-time-checks}` of verval.tex when changing `check_sys`.
+!tripwire$ begin 044DEB18 Update `\secref{run-time-checks}` and `rc` in geninput_*.nml.
 pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_start
@@ -1685,6 +1686,16 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
             status%rc = SUCCESS_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
+            return
+        end if
+        
+        ! Check whether the plunger position is within the bounds.
+        if (sys%cv(i_cv)%x%v%v < 0.0_WP) then
+            status%rc = NEGATIVE_CV_X_RUN_RC
+            allocate(status%i_cv(1))
+            status%i_cv(1) = i_cv
+            allocate(status%data(1))
+            status%data(1) = sys%cv(i_cv)%x%v%v
             return
         end if
         
@@ -1884,7 +1895,7 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     type(si_time) :: dt_i, dt_im1, dt_im2
     real(WP)      :: x_tol
     type(cv_system_type), allocatable :: sys_i, sys_im1, sys_im2, sys_temp
-    integer, parameter :: MAX_ITERS = 10
+    integer, parameter :: MAX_ITERS = 50
     
     x_tol = 100.0_WP*spacing(sys_old%cv(i_cv_interp)%x_stop%v%v)
     

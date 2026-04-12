@@ -12,6 +12,8 @@ use prec, only: WP
 use unittest, only: test_results_type
 implicit none
 
+real(WP), parameter :: ALPHA = 0.05_WP
+
 type(test_results_type) :: tests
 
 call tests%start_tests("validation.nml")
@@ -46,7 +48,7 @@ subroutine predicted_v_muzzle_vs_observed(output_basename, predicted_v_muzzle, a
         if (actual_v_muzzle_n(i_data) < 11) then
             t_half_alpha = 0.0_WP
         else
-            t_half_alpha = student_t(0.025_WP, actual_v_muzzle_n(i_data) - 1)
+            t_half_alpha = student_t(ALPHA/2.0_WP, actual_v_muzzle_n(i_data) - 1)
         end if
         muzzle_velocity_error = t_half_alpha*actual_v_muzzle_stdev(i_data)/sqrt(real(actual_v_muzzle_n(i_data), WP))
         write(unit=gp_unit, fmt="(g0, a, g0, a, g0)") predicted_v_muzzle(i_data)%v%v, " ", actual_v_muzzle(i_data)%v%v, " ", &
@@ -153,7 +155,7 @@ subroutine pneumatic_validation(tests)
         if (actual_v_muzzle_n(i_data) < 11) then
             abs_tol = 1.0_WP
         else
-            t_half_alpha = student_t(0.025_WP, actual_v_muzzle_n(i_data) - 1)
+            t_half_alpha = student_t(ALPHA/2.0_WP, actual_v_muzzle_n(i_data) - 1)
             abs_tol = t_half_alpha*actual_v_muzzle_stdev(i_data)%v%v/sqrt(real(actual_v_muzzle_n(i_data), WP))
         end if
         call tests%integer_eq(rc_predicted, actual_rc, trim(INPUT_FILES(i_data)) // ", status%rc")

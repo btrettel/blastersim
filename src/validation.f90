@@ -21,7 +21,7 @@ pure function z_tail_cdf(z)
     
     real(WP), intent(in) :: z
     
-    real(WP) :: z_tail_cdf
+    real(WP) :: z_tail_cdf ! right tail CDF
     
     z_tail_cdf = 0.5_WP*(1.0_WP - erf(z/sqrt(2.0_WP)))
     
@@ -47,7 +47,7 @@ pure function t_tail_cdf(student_t, dof)
     real(WP), intent(in) :: student_t
     integer, intent(in)  :: dof
     
-    real(WP) :: t_tail_cdf
+    real(WP) :: t_tail_cdf ! right tail CDF
 
     real(WP) :: v, tt
     real(WP), parameter  :: A1 = 0.09979441_WP, A2 = -0.581821_WP, A3 = 1.390993_WP, &
@@ -86,53 +86,53 @@ pure function t_tail_cdf(student_t, dof)
                     print_real=[student_t, t_tail_cdf], print_integer=[dof])
 end function t_tail_cdf
 
-pure function student_t(t_tail_cdf_, dof)
+pure function student_t(t_half_alpha, dof)
     use prec, only: WP
     use checks, only: assert, is_close
     
-    real(WP), intent(in) :: t_tail_cdf_
+    real(WP), intent(in) :: t_half_alpha
     integer, intent(in)  :: dof
     
     real(WP) :: student_t
     
     integer, parameter :: MAX_ITERS = 100
     real(WP) :: student_t_i, student_t_im1, student_t_im2, &
-                t_tail_cdf_i, t_tail_cdf_im1, t_tail_cdf_im2
+                t_half_alpha_i, t_half_alpha_im1, t_half_alpha_im2
     integer  :: i
     
     ! `student_t_im2` is based on the upper bound from Chebyshev's inequality.
-    !student_t_im2  = 1.0_WP/sqrt(2.0_WP*abs(t_tail_cdf_))
+    !student_t_im2  = 1.0_WP/sqrt(2.0_WP*abs(t_half_alpha))
     ! This one caused numerical problems.
     
     student_t_im2  = 3.0_WP
-    t_tail_cdf_im2 = t_tail_cdf(student_t_im2, dof)
+    t_half_alpha_im2 = t_tail_cdf(student_t_im2, dof)
     
     student_t_im1  = 1.96_WP
-    t_tail_cdf_im1 = t_tail_cdf(student_t_im1, dof)
+    t_half_alpha_im1 = t_tail_cdf(student_t_im1, dof)
     
-    if (t_tail_cdf_ > 0.5_WP) then
+    if (t_half_alpha > 0.5_WP) then
         student_t_im2  = -student_t_im2
-        t_tail_cdf_im2 = 1.0_WP - t_tail_cdf_im2
+        t_half_alpha_im2 = 1.0_WP - t_half_alpha_im2
         
         student_t_im1  = -student_t_im1
-        t_tail_cdf_im1 = 1.0_WP - t_tail_cdf_im1
+        t_half_alpha_im1 = 1.0_WP - t_half_alpha_im1
     end if
     
     call assert(.not. is_close(student_t_im1, student_t_im2), &
                     "validation (student_t): student_t_im1 /= student_t_im2 violated")
     do i = 1, MAX_ITERS
-        !print *, i, student_t_im1, t_tail_cdf_im1, student_t_im2, t_tail_cdf_im2, t_tail_cdf_
-        if (abs(t_tail_cdf_im1 - t_tail_cdf_im2) < 100.0_WP*spacing(t_tail_cdf_)) exit
+        !print *, i, student_t_im1, t_half_alpha_im1, student_t_im2, t_half_alpha_im2, t_half_alpha
+        if (abs(t_half_alpha_im1 - t_half_alpha_im2) < 100.0_WP*spacing(t_half_alpha)) exit
         
-        student_t_i  = student_t_im1 + (student_t_im1 - student_t_im2) * (t_tail_cdf_ - t_tail_cdf_im1) &
-                                            / (t_tail_cdf_im1 - t_tail_cdf_im2)
-        t_tail_cdf_i = t_tail_cdf(student_t_i, dof)
+        student_t_i  = student_t_im1 + (student_t_im1 - student_t_im2) * (t_half_alpha - t_half_alpha_im1) &
+                                            / (t_half_alpha_im1 - t_half_alpha_im2)
+        t_half_alpha_i = t_tail_cdf(student_t_i, dof)
         
         student_t_im2 = student_t_im1
         student_t_im1 = student_t_i
         
-        t_tail_cdf_im2 = t_tail_cdf_im1
-        t_tail_cdf_im1 = t_tail_cdf_i
+        t_half_alpha_im2 = t_half_alpha_im1
+        t_half_alpha_im1 = t_half_alpha_i
     end do
     
     student_t = student_t_i

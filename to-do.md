@@ -1,5 +1,6 @@
 ### v0.2.0
 
+- Make `sys_interp` return an error code if the maximum number of iterations is exceeded.
 - docs: Note which diameter to use for projectiles on the outside of the barrel.
 - Update Ranger plunger head weight and friction.
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1485348392157839592>
@@ -127,7 +128,6 @@
     - Thanks appendix
         - Andrew Trettel for macOS binary
         - Radioactive for data
-    - In V&V chapter, discuss running all the tests with `make check` (or jom or NMAKE)
     - Add index to docs.
         - <https://www.overleaf.com/learn/latex/Indices>
         - <https://en.wikibooks.org/wiki/LaTeX/Indexing>
@@ -140,12 +140,16 @@
     - Use forcing to set x_min and x_max? Make how far the force extends out depend on `dt`. You'd have to track energy lost to this forcing for the energy balance and also the estimate of plunger impact energy.
         - This seems to be the easiest way to do it. It would not require changes to handle zero volume as the piston should always stop before volume decreases to zero, unlike the sudden impact approach.
         - Do I need "impact" force in both directions to reach an equilibrium position? I guess not as overdamped systems exist. This would then allow me to not have any impact force as the piston moves away. Also, the piston could oscillate back and forth even if there is no damping on the back direction as there still would be force on the back direction.
-    - Would suddenly stopping the piston when it goes past the stop cause problems with the derivatives? Yes. After impact, $\dot{x} = 0$ and $x = x_\text{min}$. But what do I pick for the derivatives of $\dot{x}$ and $x$? Unlikely. If $t$ is constant, impact might not have occurred if one of the differentiable variables were different. So $\dot{x}$ and $x$ should have specific values that I don't know.
+    - Would suddenly stopping the piston when it goes past the stop cause problems with the derivatives? Yes. After impact, $\dot{x} = 0$ and $x = x_\text{min}$. But what do I pick for the derivatives of $\dot{x}$ and $x$? Unlikely zero. If $t$ is constant, impact might not have occurred if one of the differentiable variables were different. So $\dot{x}$ and $x$ should have specific values that I don't know.
+        - The coefficient of restitution model suggests that the plunger velocity after impact is proportional to the plunger velocity before impact. This presumably includes the derivatives. A coefficient of restitution of zero would set the derivatives to zero too and I'm not sure that's right.
+        - Modeling the impact process as a spring of varying $k$ could figure out what derivatives to use. It would seem to me that it would just be a roundabout way to get the same result as the coefficient of restitution.
+        - A coefficient of restitution of zero not being great for UQ might simply be a limitation of FOSM.
     - Related: Make BlasterSim handle zero volume CVs. For zero volume, use pressure on other side of connection? What should I do if there are multiple connections? Minimum connected pressure?
         - Changing the $p$ equation of state at low volume would introduce a complexity. I'd need to feed in an alternative pressure value to use from the linked control volumes. Picking the minimum pressure of the linked control volumes would satisfy the requirement that nothing can flow to a higher pressure. If I simply required that $x$ be finite, that would lead to unphysical oscillations in pressure as the first time step could flow too much mass into the small CV, leading to high pressure, leading to backflow, etc. What do I pick for the switching point? It would make sense to compare the volumes of the different connected control volumes. If the current control volume is much smaller than a connected control volume, then it could get the pressure from the connected control volume.
         - It would be best to not change the $m$ equation as that would violate mass conservation.
         - Link $x$ and $m$ so that as $x \rightarrow 0$, $m \rightarrow 0$ so $p$ will remain finite?
         - A correction approach might work: If in the next time step, $x$ is anticipated to be zero or below, change $\dot{m}_{i\,\rightarrow\,j}$ so that $m$ goes to zero and change $x$ to zero. I suppose it would be reasonable to scale $\dot{m}_{i\,\rightarrow\,j}$ when there are multiple non-zero entries. Redo the entire time step? If this is done, how can $x$ increase above zero again? Mass entering while $x$ is zero would trigger the mass to be adjusted, which wouldn't work for inflows. I guess I need logic so that for inflows, $x$ is adjusted, and for outflows $\dot{m}_{i\,\rightarrow\,j}$ is adjusted.
+        - Adjusting the mass flow rate equations may be the best approach.
     - Test cases for piston impact:
         - Doesn't overshoot when approaching.
         - No effect on piston trajectory when moving away from stopping point.
