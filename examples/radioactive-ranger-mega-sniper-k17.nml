@@ -26,6 +26,8 @@
 ! [8] <https://discord.com/channels/825852031239061545/1462571693628461157/1485063608391045130>
 ! Likely too low, but hard to say how much.
 
+! [9] <https://discord.com/channels/825852031239061545/1462571693628461157/1485348392157839592>
+
 &springer
 ! barrel
 d_barrel  = 19.7358e-3 ! m (assumed same diameter as [1])
@@ -39,8 +41,8 @@ vol_dead = 2.9415514e-5 ! m3 [1]
 
 ! plunger tube
 d_plunger    = 43.6e-3 ! m [1]
-m_plunger    = 20.10   ! g [2]
-p_fs_plunger = 0.0     ! kPa (guessed as it seems to be low friction)
+m_plunger    = 20.68   ! g [9] (weight including lubricant)
+p_fs_plunger = 0.14    ! kPa [9] (rounded to 2 sig. figs. as it's very approximate)
 p_fd_plunger = 0.0     ! kPa (guessed as it seems to be low friction)
 
 ! spring (K17)

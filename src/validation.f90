@@ -98,7 +98,7 @@ pure function student_t(t_half_alpha, dof)
     integer, parameter :: MAX_ITERS = 100
     real(WP) :: student_t_i, student_t_im1, student_t_im2, &
                 t_half_alpha_i, t_half_alpha_im1, t_half_alpha_im2
-    integer  :: i
+    integer  :: rc, i
     
     ! `student_t_im2` is based on the upper bound from Chebyshev's inequality.
     !student_t_im2  = 1.0_WP/sqrt(2.0_WP*abs(t_half_alpha))
@@ -120,9 +120,13 @@ pure function student_t(t_half_alpha, dof)
     
     call assert(.not. is_close(student_t_im1, student_t_im2), &
                     "validation (student_t): student_t_im1 /= student_t_im2 violated")
+    rc = 1
     do i = 1, MAX_ITERS
         !print *, i, student_t_im1, t_half_alpha_im1, student_t_im2, t_half_alpha_im2, t_half_alpha
-        if (abs(t_half_alpha_im1 - t_half_alpha_im2) < 100.0_WP*spacing(t_half_alpha)) exit
+        if (abs(t_half_alpha_im1 - t_half_alpha_im2) < 100.0_WP*spacing(t_half_alpha)) then
+            rc = 0
+            exit
+        end if
         
         student_t_i  = student_t_im1 + (student_t_im1 - student_t_im2) * (t_half_alpha - t_half_alpha_im1) &
                                             / (t_half_alpha_im1 - t_half_alpha_im2)
@@ -134,6 +138,8 @@ pure function student_t(t_half_alpha, dof)
         t_half_alpha_im2 = t_half_alpha_im1
         t_half_alpha_im1 = t_half_alpha_i
     end do
+    
+    if (rc /= 0) error stop "validation (student_t): MAX_ITERS reached"
     
     student_t = student_t_i
 end function student_t

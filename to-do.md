@@ -7,8 +7,6 @@
     - `CUSTOM_MODE = 0`, `PNEUMATIC_MODE = 1`, `SPRINGER_MODE = 2`
     - Use to determine which energy efficiency formula to use.
 - docs: Note which diameter to use for projectiles on the outside of the barrel.
-- Update Ranger plunger head weight and friction.
-    - <https://discord.com/channels/825852031239061545/1462571693628461157/1485348392157839592>
 - docs: Derivation of `p_f0_high`
 - Coaxial springers: Just add `d_coaxial_inner`?
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1484698930083135688>
