@@ -7,8 +7,6 @@
     - `CUSTOM_MODE = 0`, `PNEUMATIC_MODE = 1`, `SPRINGER_MODE = 2`
     - Use to determine which energy efficiency formula to use.
 - docs: Note which diameter to use for projectiles on the outside of the barrel.
-- Coaxial springers: Just add `d_coaxial_inner`?
-    - <https://discord.com/channels/825852031239061545/1462571693628461157/1484698930083135688>
 - Make `p_s` larger to prevent the slight backwards motion more?
 - Add physics-based adaptive time step.
     - $\Delta t = \min(\Delta t_\text{max}, \min_i C_{\Delta t, m} \frac{m_i}{\dv{m_i}{t}}, \min_i C_{\Delta t, E} \frac{E_i}{\dv{E_i}{t}}

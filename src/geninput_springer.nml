@@ -274,12 +274,26 @@ variable_name         = "d_plunger"
 type_definition       = "type(si_length)"
 required              = .true.
 tex_unit              = "m"
-tex_description       = "Inner diameter of the plunger tube."
+tex_description       = "Inner diameter of the plunger tube, which is the outer diameter of the plunger."
 tex_variable_name     = "$d_\text{plunger}$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
+bound_fmt             = "f3.1"
+/
+
+&input_variable
+variable_name         = "d_coaxial_inner"
+type_definition       = "type(si_length)"
+required              = .false.
+tex_unit              = "m"
+tex_description       = "For coaxial springers with annular plunger tubes, this is the inner diameter of the plunger, which is the outer diameter of the barrel tube. For conventional springers, this is zero, which eliminates the coaxial setup and is the default."
+tex_variable_name     = "$d_\text{coaxial,inner}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+default_value         = "0.0"
 bound_fmt             = "f3.1"
 /
 
