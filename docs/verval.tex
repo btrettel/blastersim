@@ -31,6 +31,7 @@ The specific checks performed and the associated return codes include:
 \item[return code 8:] Whether the ideal gas equation of state has become inaccurate due to the pressure increasing above the critical pressure.
 \item[return code 9:] Whether the coordinates of any plunger become desynchronized between control volumes on either side of the mentioned plunger by more than $\mirrorxtolerance$~m.
 \item[return code 10:] Whether the coordinate of a projectile/plunger goes negative, indicating that the control volume has negative volume and that the projectile/plunger has not only impacted the end but gone through the end.
+\item[return code 11:] Whether the maximum number of iterations ($\maxiters$) was reached when interpolating to a particular projectile/plunger location. This indicates that BlasterSim was unable to properly handle an event like projectile exit or a plunger impacting the end of the plunger tube.
 \end{description}
 
 The thresholds used for some of these checks are somewhat arbitrary and are based on what conservatively seems to never cause problems in practice.

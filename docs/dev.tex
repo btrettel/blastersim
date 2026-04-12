@@ -123,7 +123,6 @@ This will slow down compilation of the documentation
 For speed, once the documentation numbers are generated, these BlasterSim tests will not be run again when compiling the documentation unless BlasterSim's code changes.
 
 \section{BlasterSim source code conventions}\label{conventions}
-% TODO
 
 \begin{itemize}
 \item Some code comments contain bibliographic keys referring to the BlasterSim documentation's BibTeX database.
@@ -138,10 +137,14 @@ Because each variable in BlasterSim's source code is given a unit (see \secref{u
 
 \item The control volume index for the barrel is \texttt{I\_BARREL}, which is set to 1.
 This convention allows BlasterSim to easily know which control volume is the barrel.
+
+\item \texttt{integer} variables named \texttt{rc} are used for return codes.
+0 or negative return codes indicate success, with 0 being normal success and negative numbers having a special context-dependent meaning.
+The \texttt{parameter} \texttt{SUCCESS\_RC} is set to 0 and used to improve readability.
+Positive return codes indicate failure.
 \end{itemize}
 
 % TODO: converting between LaTeX variable names and source code variable names
-% TODO: run rc sign convention
 
 \section{Road map}\label{road-map}
 

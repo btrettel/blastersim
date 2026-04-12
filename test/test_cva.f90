@@ -63,7 +63,7 @@ contains
 
 subroutine write_defaults()
     use cva, only: DT_DEFAULT, T_STOP_DEFAULT, MASS_TOLERANCE, ENERGY_TOLERANCE, MASS_DERIV_TOLERANCE, &
-                    ENERGY_DERIV_TOLERANCE, MIRROR_X_TOLERANCE
+                    ENERGY_DERIV_TOLERANCE, MIRROR_X_TOLERANCE, MAX_ITERS
     use gasdata, only: P_ATM, TEMP_ATM
     use convert, only: CONVERT_C_TO_K, CONVERT_PA_TO_KPA
     use io, only: write_latex_engineering
@@ -82,6 +82,7 @@ subroutine write_defaults()
     call write_latex_engineering(tex_unit, MASS_DERIV_TOLERANCE, "massderivtolerance", "f4.1")
     call write_latex_engineering(tex_unit, ENERGY_DERIV_TOLERANCE, "energyderivtolerance", "f4.1")
     call write_latex_engineering(tex_unit, MIRROR_X_TOLERANCE, "mirrorxtolerance", "f3.1")
+    write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\maxiters}{", MAX_ITERS, "}"
     close(tex_unit)
 end subroutine write_defaults
 

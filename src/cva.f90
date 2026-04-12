@@ -45,9 +45,11 @@ integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
 integer, public, parameter :: MAX_CV_TYPE    = 2
 
-!tripwire$ begin 6A50BFCD Update \secref{run-time-checks} and `rc` in geninput_*.nml.
+integer, public, parameter :: SUCCESS_RC = 0
+
+!tripwire$ begin 110FCFA7 Update \secref{run-time-checks} and `rc` in geninput_*.nml.
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
-integer, public, parameter :: SUCCESS_RUN_RC                = 0
+integer, public, parameter :: SUCCESS_RUN_RC                = SUCCESS_RC
 integer, public, parameter :: TIMEOUT_RUN_RC                = 1
 integer, public, parameter :: NEGATIVE_CV_M_TOTAL_RUN_RC    = 2
 integer, public, parameter :: NEGATIVE_CV_TEMP_RUN_RC       = 3
@@ -58,12 +60,15 @@ integer, public, parameter :: ENERGY_DERIV_TOLERANCE_RUN_RC = 7
 integer, public, parameter :: IDEAL_EOS_RUN_RC              = 8
 integer, public, parameter :: MIRROR_X_TOLERANCE_RUN_RC     = 9
 integer, public, parameter :: NEGATIVE_CV_X_RUN_RC          = 10
-integer, public, parameter :: X_BLOW_UP_RUN_RC              = 11
-integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 12
-integer, public, parameter :: M_BLOW_UP_RUN_RC              = 13
-integer, public, parameter :: E_BLOW_UP_RUN_RC              = 14
-integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 15
+integer, public, parameter :: MAX_ITER_SYS_INTERP_RUN_RC    = 11
+!integer, public, parameter :: X_BLOW_UP_RUN_RC              = 
+!integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 
+!integer, public, parameter :: M_BLOW_UP_RUN_RC              = 
+!integer, public, parameter :: E_BLOW_UP_RUN_RC              = 
+!integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 
 !tripwire$ end
+
+integer, public, parameter :: MAX_ITERS = 50
 
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
@@ -1593,7 +1598,7 @@ subroutine run(config, sys_start, sys_end, status)
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp
     
     character(len=CL)     :: error_message
-    integer               :: n_d, i, csv_unit
+    integer               :: n_d, i, csv_unit, rc_sys_interp
     type(si_time)         :: t, t_old
     type(run_status_type) :: status_final
     
@@ -1626,7 +1631,7 @@ subroutine run(config, sys_start, sys_end, status)
         !print *, t%v%v
         
         call check_sys(config, sys_new, sys_start, t, status)
-        if (status%rc >= 0) exit time_loop
+        if (status%rc >= SUCCESS_RC) exit time_loop
         if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
             call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)
         end if
@@ -1638,12 +1643,15 @@ subroutine run(config, sys_start, sys_end, status)
     
     if (status%rc == SUCCESS_RUN_RC) then
         ! If successful, use Hénon's trick to ensure that `x == x_stop`.
-        call sys_interp(t_old, config%dt, status%i_cv(1), sys_old, sys_new, t, sys_end)
+        call sys_interp(t_old, config%dt, status%i_cv(1), sys_old, sys_new, t, sys_end, rc_sys_interp)
         
         call check_sys(config, sys_end, sys_start, t, status_final)
         ! This will make sure that the status rc stays the same if everything is okay but `x` is a bit short.
         if (status_final%rc /= CONTINUE_RUN_RC) then
             status = status_final
+            if (rc_sys_interp == MAX_ITER_SYS_INTERP_RUN_RC) then
+                status%rc = rc_sys_interp
+            end if
         end if
     else
         sys_end = sys_new
@@ -1880,7 +1888,7 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
 end subroutine check_sys
 !tripwire$ end
 
-pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
+pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end, rc)
     ! Use Hénon's trick to ensure that `x == x_stop` with better conservation properties.
     ! More specifically:
     ! Uses the secant method to find `dt` where `x == x_stop` for control volume number `i_cv_interp`.
@@ -1890,12 +1898,12 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     type(cv_system_type), allocatable, intent(in)  :: sys_old, sys_new
     type(si_time), intent(out)                     :: t
     type(cv_system_type), allocatable, intent(out) :: sys_end
+    integer, intent(out)                           :: rc
     
     integer       :: i
     type(si_time) :: dt_i, dt_im1, dt_im2
     real(WP)      :: x_tol
     type(cv_system_type), allocatable :: sys_i, sys_im1, sys_im2, sys_temp
-    integer, parameter :: MAX_ITERS = 50
     
     x_tol = 100.0_WP*spacing(sys_old%cv(i_cv_interp)%x_stop%v%v)
     
@@ -1909,9 +1917,13 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end)
     sys_im2 = sys_old
     sys_im1 = sys_new
     
+    rc = MAX_ITER_SYS_INTERP_RUN_RC
     do i = 1, MAX_ITERS
         ! The stopping criteria is based on the difference between iterates due to risk of catastrophic cancellation.
-        if (abs(sys_im1%cv(i_cv_interp)%x%v%v - sys_im2%cv(i_cv_interp)%x%v%v) < x_tol) exit 
+        if (abs(sys_im1%cv(i_cv_interp)%x%v%v - sys_im2%cv(i_cv_interp)%x%v%v) < x_tol) then
+            rc = SUCCESS_RC
+            exit 
+        end if
         
         ! <https://en.wikipedia.org/wiki/Secant_method#The_method>
         dt_i = dt_im1 - (dt_im1 - dt_im2) * (sys_im1%cv(i_cv_interp)%x - sys_old%cv(i_cv_interp)%x_stop) &

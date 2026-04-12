@@ -1,21 +1,23 @@
-### v0.2.0
+### v0.3.0
 
-- Make `sys_interp` return an error code if the maximum number of iterations is exceeded.
+- Add pressure effects on `d_e`.
+- Add leaks around the projectile.
+    - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
+- `sys%mode` member variable
+    - `CUSTOM_MODE = 0`, `PNEUMATIC_MODE = 1`, `SPRINGER_MODE = 2`
+    - Use to determine which energy efficiency formula to use.
 - docs: Note which diameter to use for projectiles on the outside of the barrel.
 - Update Ranger plunger head weight and friction.
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1485348392157839592>
 - docs: Derivation of `p_f0_high`
-- Dart friction model taking into account pressure inside of the dart.
-    - <https://discord.com/channels/825852031239061545/1462571693628461157/1485097150386798753>
-    - See 2026-03-21 and 2026-03-22 handwritten notes (particularly the top of 2026-03-22 p. 1 as that has the equation to use boxed).
 - Coaxial springers: Just add `d_coaxial_inner`?
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1484698930083135688>
 - Make `p_s` larger to prevent the slight backwards motion more?
 - Add physics-based adaptive time step.
     - $\Delta t = \min(\Delta t_\text{max}, \min_i C_{\Delta t, m} \frac{m_i}{\dv{m_i}{t}}, \min_i C_{\Delta t, E} \frac{E_i}{\dv{E_i}{t}}
+        - This might not work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates lead to negative temperatures.
     - Update "Time integration" section of the docs to note this.
-    - Add tripwrite to code for "Time integration" section of the docs.
-- How can I get section numbers from the docs to print in BlasterSim code? Circular dependency?
+    - Add tripwire to code for "Time integration" section of the docs.
 - Documentation for making a BlasterSim release
     - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`
     - ```
@@ -43,22 +45,8 @@
     - efficiency (depends on mode)
     - dwell time
 - docs: Tutorials section
-- git hook to run tests if code changed
-- Debug logging
-    - Add extra debug columns in CSV file?
-    - Some sort of time step stability criteria?
-    - Have nesting of messages like PETSc to better understand call structure
-- Look more at problem of high flow rates causing negative temperatures.
-    - It appears that the problem is caused by the volume being small from the plunger nearly impacting the end of the plunger tube. An adaptive time step would help, but the plunger impact model is also needed.
-    - Why was time over 1 s when I reduced the time step?
-- `check_sys`
-    - Time step criteria based on flow rate to empty CV? This wouldn't work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates lead to negative temperatures.
-    - Make `check_sys` check that `x > 0` and note in the documentation that the plunger hitting the end of the plunger tube would make this be violated
-    - Try "Lipschitz constant estimate" suggested by Gemini.
-    - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
-- Use linters including fortitude.
-- Test CSV output with Python.
-- Make characterization tests for stdout and CSV output for springer-example.csv and pneumatic-example.csv.
+    - <https://onegoodtutorial.org/>
+- Why was time over 1 s when I reduced the time step when trying a high flow rate? Add an assertion to check for this.
 - Add functional dependencies of $p_{\text{f},i}$ to the $\dv{\dot{x}_i}{t}$ equation in the docs.
 - Nonlinear spring model.
     - Split spring force and energy into spring.f90? Might also want to move EOSes into eos.f90.
@@ -68,51 +56,13 @@
     - `SPRING_MODEL = ILIJIC_SPRING`: Look at ilijic_nonlinearity_2025 eqs. 29 and 30
     - Another possibility: Arbitrary displacement vs. force curves, using cubic splines for smoothness
     - Look into force models for elastic tubing and other non-linear springs
-- Add another test for `test_alpha_m_dot` to test the sign.
-- <https://onegoodtutorial.org/>
 - <https://academia.stackexchange.com/questions/14010/how-do-you-cite-a-github-repository>
-- Change `scaling_factor` in geninput_*.nml to match CSV output.
-    - ms: `t_opening` (done)
-    - g: masses (done)
-    - Keep `dt` as seconds as it's much smaller than 1 ms (also would need to change `DT_DEFAULT` to be in ms; but it's used in s in code in places too)
-    - Which units should be used for volume? I guess to be consistent with using m for length everywhere (since the most appropriate units vary) would be to use m3 for volume.
 - Set time per CSV row output in input file, which will be converted to `csv_frequency`.
-- Easier validation tests
-    - Make a system where you can provide filenames only so that you can have even less boilerplate.
-    - Predicted vs. actual plot generation for validation section of docs.
-- Check your saved papers for springer and pneumatic experimental data
-    - springers
-        - compton_internal_2007 (need rotational KE)
-- Add LLM logs to repo?
-- Note in validation section: Blasters are assumed to have constant `d_e` and `b` unless the flow restriction changes. No pressure effects on `d_e`.
-- For consistency, make macros for LaTeX variable names?
-- Add leaks around the projectile.
-    - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
-- Add control volume for back side of plunger for springers.
-- `sys%mode` member variable
-    - `CUSTOM_MODE = 0`, `PNEUMATIC_MODE = 1`, `SPRINGER_MODE = 2`
-    - Use to determine which energy efficiency formula to use.
-- Make more validation cases from Radioactive's data.
-    - How much does friction need to increase to use full flow area?
-    - How much does `delta_leak` need to increase to use full flow area?
 - docs: refer to figure for every variable in springer figure like `delta_pre`
 - docs: l_spring = l_pre + delta_pre, l_tube = l_compressed + l_head + l_draw
-
 - CSV: Change `e` to `e_g` for gas energy?
-- Valve opening time
-    - Order-of-accuracy test for valve opening model as that includes time as a factor. This kills two birds with one stone by making this test order-of-accuracy of `m_dot` as well. Use `m_dot_0` with `a_e = 0`.
 - Document how variable names are converted from LaTeX and code, as a general rule.
 - Have a conversion table for LaTeX and code variable names.
-- Document `logical`s in `\secref{inputs-general}`: `.true.` and `.false.`
-- Try more compilers:
-    - Silverfrost FTN95
-    - NAG
-    - Oracle
-    - nvfortran
-    - lfortran
-    - IBM xlf
-- Add `logical` types to geninput.
-- Run Valgrind to find if there are any more uninitialized variables.
 - docs:
     - Process test output and put the results in the documentation.
         - LaTeX documentation
@@ -137,35 +87,19 @@
         - gnuplot's `TikZ` and `pdfcairo` terminals don't work properly with LaTeXML.
 - Plunger head motion bounds (lower and upper) (plunger impact)
     - Lower is not necessarily zero.
-    - Use forcing to set x_min and x_max? Make how far the force extends out depend on `dt`. You'd have to track energy lost to this forcing for the energy balance and also the estimate of plunger impact energy.
-        - This seems to be the easiest way to do it. It would not require changes to handle zero volume as the piston should always stop before volume decreases to zero, unlike the sudden impact approach.
-        - Do I need "impact" force in both directions to reach an equilibrium position? I guess not as overdamped systems exist. This would then allow me to not have any impact force as the piston moves away. Also, the piston could oscillate back and forth even if there is no damping on the back direction as there still would be force on the back direction.
-    - Would suddenly stopping the piston when it goes past the stop cause problems with the derivatives? Yes. After impact, $\dot{x} = 0$ and $x = x_\text{min}$. But what do I pick for the derivatives of $\dot{x}$ and $x$? Unlikely zero. If $t$ is constant, impact might not have occurred if one of the differentiable variables were different. So $\dot{x}$ and $x$ should have specific values that I don't know.
-        - The coefficient of restitution model suggests that the plunger velocity after impact is proportional to the plunger velocity before impact. This presumably includes the derivatives. A coefficient of restitution of zero would set the derivatives to zero too and I'm not sure that's right.
-        - Modeling the impact process as a spring of varying $k$ could figure out what derivatives to use. It would seem to me that it would just be a roundabout way to get the same result as the coefficient of restitution.
-        - A coefficient of restitution of zero not being great for UQ might simply be a limitation of FOSM.
-    - Related: Make BlasterSim handle zero volume CVs. For zero volume, use pressure on other side of connection? What should I do if there are multiple connections? Minimum connected pressure?
-        - Changing the $p$ equation of state at low volume would introduce a complexity. I'd need to feed in an alternative pressure value to use from the linked control volumes. Picking the minimum pressure of the linked control volumes would satisfy the requirement that nothing can flow to a higher pressure. If I simply required that $x$ be finite, that would lead to unphysical oscillations in pressure as the first time step could flow too much mass into the small CV, leading to high pressure, leading to backflow, etc. What do I pick for the switching point? It would make sense to compare the volumes of the different connected control volumes. If the current control volume is much smaller than a connected control volume, then it could get the pressure from the connected control volume.
-        - It would be best to not change the $m$ equation as that would violate mass conservation.
-        - Link $x$ and $m$ so that as $x \rightarrow 0$, $m \rightarrow 0$ so $p$ will remain finite?
-        - A correction approach might work: If in the next time step, $x$ is anticipated to be zero or below, change $\dot{m}_{i\,\rightarrow\,j}$ so that $m$ goes to zero and change $x$ to zero. I suppose it would be reasonable to scale $\dot{m}_{i\,\rightarrow\,j}$ when there are multiple non-zero entries. Redo the entire time step? If this is done, how can $x$ increase above zero again? Mass entering while $x$ is zero would trigger the mass to be adjusted, which wouldn't work for inflows. I guess I need logic so that for inflows, $x$ is adjusted, and for outflows $\dot{m}_{i\,\rightarrow\,j}$ is adjusted.
-        - Adjusting the mass flow rate equations may be the best approach.
+    - Generalize `sys_interp` to interpolate to positions other than `x_stop`, including `x_min` and `x_max`.
+    - Coefficient of restitution model for impact velocity on both ends.
+    - Make BlasterSim handle zero volume CVs. Simplest approach would be to make pressure zero in `cv%p` if `cv%x` is zero. Alternatively, `x_min` could always be greater than zero.
     - Test cases for piston impact:
-        - Doesn't overshoot when approaching.
-        - No effect on piston trajectory when moving away from stopping point.
-        - Make sure derivatives are correct after impact. I'm not sure what they should be, though.
+        - Bounds respected.
+        - Rebound velocity is correct.
+        - Dissipated energy is correct.
     - <https://discord.com/channels/825852031239061545/825852073382772758/1484298391956488396>
         - > Plunger bounce has always seemed like a major factor in traditional springers in my testing.
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1475663102073766055>
     - Print a warning for plunger impact after it is handled properly and have a different exit code.
 - Optimal barrel length mode where the barrel length is not specified and BlasterSim stops where acceleration is zero.
     - It would be important to stop the backwards motion before adding this, otherwise BlasterSim will stop at the wrong time.
-- Make going on level deeper (`%v`) optional in geninput when using genunits.
-- Add option for `*_stdev` variables to geninput.
-- Get documentation done before sensitivity analysis.
-    - Get sensitivity analysis done before UQ.
-    - Get UQ done before optimization so that all optimization is robust for simplicity (no need to have both non-robust and robust optimization set up).
-        - UQ: include stdev output in CSV file
 - `make dist`
 - `make web`
 - `make deploy`
@@ -173,11 +107,54 @@
     - `make blastersim-*-source.zip`
     - `make blastersim-*-linux-x86-64.zip`
     - upload online
-- <https://github.com/sylvainhalle/textidote>
 - Make Python script generate an animation of a springer based on BlasterSim output.
 
 ***
 
+- How can I get section numbers from the docs to print in BlasterSim code? Circular dependency?
+- git hook to run tests if code changed
+- Debug logging
+    - Add extra debug columns in CSV file?
+    - Some sort of time step stability criteria?
+    - Have nesting of messages like PETSc to better understand call structure
+- Add another test for `test_alpha_m_dot` to test the sign.
+- Document `logical`s in `\secref{inputs-general}`: `.true.` and `.false.`
+- Try more compilers:
+    - Silverfrost FTN95
+    - NAG
+    - Oracle
+    - nvfortran
+    - lfortran
+    - IBM xlf
+- Add `logical` types to geninput.
+- Run Valgrind to find if there are any more uninitialized variables.
+- Make going on level deeper (`%v`) optional in geninput when using genunits.
+- Add option for `*_stdev` variables to geninput.
+- Get documentation done before sensitivity analysis.
+    - Get sensitivity analysis done before UQ.
+    - Get UQ done before optimization so that all optimization is robust for simplicity (no need to have both non-robust and robust optimization set up).
+        - UQ: include stdev output in CSV file
+- <https://github.com/sylvainhalle/textidote>
+- Valve opening time
+    - Order-of-accuracy test for valve opening model as that includes time as a factor. This kills two birds with one stone by making this test order-of-accuracy of `m_dot` as well. Use `m_dot_0` with `a_e = 0`.
+- `check_sys`
+    - Try "Lipschitz constant estimate" suggested by Gemini.
+    - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
+- Use linters including fortitude.
+- Test CSV output with Python.
+- Make characterization tests for stdout and CSV output for springer-example.csv and pneumatic-example.csv.
+- Check your saved papers for springer and pneumatic experimental data
+    - springers
+        - compton_internal_2007 (need rotational KE)
+- Add LLM logs to repo?
+- For consistency, make macros for LaTeX variable names?
+- Add control volume for back side of plunger for springers.
+- Make more validation cases from Radioactive's data.
+    - How much does friction need to increase to use full flow area?
+    - How much does `delta_leak` need to increase to use full flow area?
+- Dart friction model taking into account pressure inside of the dart.
+    - <https://discord.com/channels/825852031239061545/1462571693628461157/1485097150386798753>
+    - See 2026-03-21 and 2026-03-22 handwritten notes (particularly the top of 2026-03-22 p. 1 as that has the equation to use boxed).
 - Check that $\dot{x}_0$ derivative is now good with exact solution.
 - Test `m_spring` in `d_xdot_d_t` and `m_p_ke`.
 - transonic corrections in the barrel (corner_theory_1950 eq. 123)
