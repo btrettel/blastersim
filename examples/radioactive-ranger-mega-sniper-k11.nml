@@ -49,7 +49,7 @@ m_spring = 89.40     ! g [2]
 delta_pre = 69.55e-3 ! m
 
 ! flow restriction
-d_e = 6.8e-3 ! m (calibrated, 92.25 m/s to match average)
+d_e = 6.8e-3 ! m (calibrated, 92.54 m/s to match average)
 !d_e = 13.5763e-3 ! m (full flow area)
 b   = 0.5    ! unitless (guessed)
 

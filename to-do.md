@@ -1,13 +1,12 @@
 ### v0.3.0
 
-- Add pressure effects on `d_e`.
+- Add pressure effects on `d_e`. Make `d_e` an array so that it can be coefficients on a polynomial?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
 - `sys%mode` member variable
     - `CUSTOM_MODE = 0`, `PNEUMATIC_MODE = 1`, `SPRINGER_MODE = 2`
     - Use to determine which energy efficiency formula to use.
 - docs: Note which diameter to use for projectiles on the outside of the barrel.
-- docs: Derivation of `p_f0_high`
 - Coaxial springers: Just add `d_coaxial_inner`?
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1484698930083135688>
 - Make `p_s` larger to prevent the slight backwards motion more?

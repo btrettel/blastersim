@@ -114,10 +114,10 @@ $t_{\text{opening},i \rightarrow j}$ is the valve opening time, the time it take
 
 This equation may seem overly complicated, but is the simplest polynomial equation that satisfies a few constraints:
 \begin{align}
-    \alpha_{i \rightarrow j}(0)                                            &= \alpha_{0,i \rightarrow j} \qquad \text{(set initial valve opening fraction)} \\
-    {\dv{\alpha_{i \rightarrow j}}{t}}(0)                                  &= \dot{\alpha}_{0,i \rightarrow j} \qquad \text{(set initial valve opening rate)} \\
-    \alpha_{i \rightarrow j}(t_{\text{opening},i \rightarrow j})           &= 1 \qquad \text{(valve is fully open at}~t_{\text{opening},i \rightarrow j}~\text{)} \\ % chktex 1 chktex 9
-    {\dv{\alpha_{i \rightarrow j}}{t}}(t_{\text{opening},i \rightarrow j}) &= 0 \qquad \text{(needed for automatic differentiation)}
+    \alpha_{i \rightarrow j}(0)                                            &= \alpha_{0,i \rightarrow j} &\text{(set initial valve opening fraction)} \\
+    {\dv{\alpha_{i \rightarrow j}}{t}}(0)                                  &= \dot{\alpha}_{0,i \rightarrow j} &\text{(set initial valve opening rate)} \\
+    \alpha_{i \rightarrow j}(t_{\text{opening},i \rightarrow j})           &= 1 &\text{(valve is fully open at}~t_{\text{opening},i \rightarrow j}~\text{)} \\ % chktex 1 chktex 9
+    {\dv{\alpha_{i \rightarrow j}}{t}}(t_{\text{opening},i \rightarrow j}) &= 0 &\text{(needed for automatic differentiation)}
 \end{align}
 
 When the valve is fully open, $\alpha_{i \rightarrow j}$ no longer changes with time, so its derivative is zero.
@@ -228,16 +228,29 @@ A piecewise function is implemented in cva.f90 as \texttt{p\_f0} so that the act
     \begin{cases} 
         p_{\text{fe},i},                                         & \text{if}~|p_{\text{fe},i}| \leq p_\text{s}, \\
         \sgn(p_{\text{fe},i}) \cdot p_{\text{f0},i,\text{high}}, & \text{if}~|p_{\text{fe},i}| >    p_\text{s},
-    \end{cases}\label{eq:effective friction pressure smooth}
+    \end{cases}\label{eq:smoothed static friction min}
 \end{equation}
 where $p_\text{s}$ is chosen to be a somewhat arbitrary fraction of $p_{\text{fs},i}$ and
 \begin{equation}
-    p_{\text{f0},i,\text{high}} = p_{\text{fs},i} \tanh\left(\frac{|p_{\text{fe},i}| - p_\text{s}}{p_{\text{fs},i} - p_\text{s}} + \arctanh\left(\frac{p_\text{s}}{p_{\text{fs},i}}\right)\right).
+    p_{\text{f0},i,\text{high}} = p_{\text{fs},i} \tanh\left(\frac{|p_{\text{fe},i}| - p_\text{s}}{p_{\text{fs},i} - p_\text{s}} + \arctanh\left(\frac{p_\text{s}}{p_{\text{fs},i}}\right)\right). \label{eq:smoothed static friction min high}
 \end{equation}
 
+$p_{\text{f0},i}$ defined in this way will exactly balance static friction up to an equilibrium pressure of $p_\text{s}$, and smoothly transition to the maximum static friction after that.
+
 Note that despite the appearance of $\sgn(p_{\text{fe},i})$ and $|p_{\text{fe},i}|$,
-\eqref{effective friction pressure smooth} % chktex 2
+\eqref{smoothed static friction min} % chktex 2
 is continuous and has continuous derivatives as those terms only become discontinuous at $p_{\text{fe},i} = 0$ and do not appear in the branch where $p_{\text{fe},i} = 0$.
+
+\Eqref{smoothed static friction min high} can be derived starting with a $\tanh$ function written in the following form:
+\begin{equation}
+    p_{\text{f0},i,\text{high}}(p_{\text{fe},i}) = a \tanh(b \cdot |p_{\text{fe},i}| + c),
+\end{equation}
+and finding the values of the coefficients $a$, $b$, and $c$ that satisfy the following constraints:
+\begin{align}
+    p_{\text{f0},i,\text{high}}(p_\text{s})                         &= p_\text{s}      &\text{(continuity of value)} \\
+    {\dv{p_{\text{f0},i,\text{high}}}{p_{\text{fe},i}}}(p_\text{s}) &= 1               &\text{(continuity of derivative)} \\
+    p_{\text{f0},i,\text{high}}(\infty)                             &= p_{\text{fs},i} &\text{(maximum static friction pressure)}
+\end{align}
 
 \subsection{Plunger impact}\label{plunger-impact}
 
