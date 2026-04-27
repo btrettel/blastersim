@@ -1921,7 +1921,10 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end,
     
     rc = MAX_ITER_SYS_INTERP_RUN_RC
     do i = 1, MAX_ITERS
-        ! The stopping criteria is based on the difference between iterates due to risk of catastrophic cancellation.
+        ! This is one of the stopping criteria recommended by Wikipedia.
+        ! <https://en.wikipedia.org/wiki/Secant_method#Computational_example>
+        ! ellis_fortran_1994 p. 642 recommends a criteria based on how close the iteration is to the desired value.
+        ! Note that the derivatives do not factor into this stopping criteria, as a value is what is being interpolated to.
         if (abs(sys_im1%cv(i_cv_interp)%x%v%v - sys_im2%cv(i_cv_interp)%x%v%v) < x_tol) then
             rc = SUCCESS_RC
             exit 

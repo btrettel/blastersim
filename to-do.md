@@ -1,5 +1,13 @@
 ### v0.3.0
 
+- docs: Discuss why to not model vacuum in limitatios section.
+- docs: Discuss use of `run_config_type` and other derived types.
+- Change `SUCCESS_RUN_RC` to `SUCCESS_RC`, which is used globally for simplicity.
+- Add physics-based adaptive time step.
+    - $\Delta t = \min(\Delta t_\text{max}, \min_i C_{\Delta t, m} \frac{m_i}{\dv{m_i}{t}}, \min_i C_{\Delta t, E} \frac{E_i}{\dv{E_i}{t}}
+        - This might not work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates lead to negative temperatures.
+    - Update "Time integration" section of the docs to note this.
+    - Add tripwire to code for "Time integration" section of the docs.
 - Add pressure effects on `d_e`. Make `d_e` an array so that it can be coefficients on a polynomial?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
@@ -7,11 +15,6 @@
     - `CUSTOM_MODE = 0`, `PNEUMATIC_MODE = 1`, `SPRINGER_MODE = 2`
     - Use to determine which energy efficiency formula to use.
 - Make `p_s` larger to prevent the slight backwards motion more?
-- Add physics-based adaptive time step.
-    - $\Delta t = \min(\Delta t_\text{max}, \min_i C_{\Delta t, m} \frac{m_i}{\dv{m_i}{t}}, \min_i C_{\Delta t, E} \frac{E_i}{\dv{E_i}{t}}
-        - This might not work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates lead to negative temperatures.
-    - Update "Time integration" section of the docs to note this.
-    - Add tripwire to code for "Time integration" section of the docs.
 - Documentation for making a BlasterSim release
     - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`
     - ```
@@ -37,6 +40,7 @@
     - Check acceleration to know if under-barreled or over-barreled and print acceleration.
     - Explain the meaning of the return code if there is an error.
     - efficiency (depends on mode)
+        - energy breakdown table
     - dwell time
 - docs: Tutorials section
     - <https://onegoodtutorial.org/>
@@ -81,6 +85,7 @@
 - Plunger head motion bounds (lower and upper) (plunger impact)
     - Lower is not necessarily zero.
     - Generalize `sys_interp` to interpolate to positions other than `x_stop`, including `x_min` and `x_max`.
+        - Generalize `sys_interp` to interpolate to where acceleration is zero for optimal barrel length.
     - Coefficient of restitution model for impact velocity on both ends.
     - Make BlasterSim handle zero volume CVs. Simplest approach would be to make pressure zero in `cv%p` if `cv%x` is zero. Alternatively, `x_min` could always be greater than zero.
     - Test cases for piston impact:
@@ -92,7 +97,7 @@
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1475663102073766055>
     - Print a warning for plunger impact after it is handled properly and have a different exit code.
 - Optimal barrel length mode where the barrel length is not specified and BlasterSim stops where acceleration is zero.
-    - It would be important to stop the backwards motion before adding this, otherwise BlasterSim will stop at the wrong time.
+    - It would be important to stop the backwards motion before adding this, otherwise BlasterSim will stop at the wrong time. Or I could pick the optimal barrel length after a certain time or after a certain travel distance.
 - `make dist`
 - `make web`
 - `make deploy`
@@ -148,6 +153,9 @@
 - Dart friction model taking into account pressure inside of the dart.
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1485097150386798753>
     - See 2026-03-21 and 2026-03-22 handwritten notes (particularly the top of 2026-03-22 p. 1 as that has the equation to use boxed).
+    - Related: How can I handle dead volume in the dart?
+        - This just increases the dead volume for the barrel.
+        - Could have normal dead volume and a separate dead volume for the projectile.
 - Check that $\dot{x}_0$ derivative is now good with exact solution.
 - Test `m_spring` in `d_xdot_d_t` and `m_p_ke`.
 - transonic corrections in the barrel (corner_theory_1950 eq. 123)
@@ -195,10 +203,13 @@
             - <https://discord.com/channels/146386512873783296/146680423173455872/1389713797173743788>
         - Simulation isn't worthwhile because it takes less time to figure things out experimentally. Not true from my perspective. In practice, the alternative to simulation has been speculation. People spend a huge amount of time working on things that a simulation could show is not plausible. That's a waste of time. If anything, simulation saves time by reducing the amount of experiments that need to be done. Simulation and experimentation are complementary.
         - How do I calculate optimal barrel length?
-            - Comment on some common formulas, give better approximate formulas based on adiabatic process relations, and say how to do it in BlasterSim.
+            - Make optimal barrel length equation developed from BlasterSim data.
+            - Comment on some common formulas, give better approximate formulas based on adiabatic process relations or other physical principles calibrated to BlasterSim simulations, and say how to calculate it in BlasterSim.
             - <https://www.reddit.com/r/Nerf/comments/1k428am/ideal_barrel_length_math/>
             - <https://www.reddit.com/r/Nerf/comments/186ckcn/formula_for_optimal_barrel_length/>
             - <http://btrettel.nerfers.com/archives/54>
+            - <https://discord.com/channels/825852031239061545/825852033898774543/1461868273858642193>
+            - <https://www.reddit.com/r/Nerf/comments/1slrurd/aluminum_barrel_lenght/>
     - API
         - `i_cv_mirror = 0` disables mirror CVs; use for constant volume chambers
     - Write Fortran code to output gas data table to put in documentation.
@@ -245,6 +256,8 @@
 - Maybe: Add energy loss term for valves?
 - Maybe: Quadratic `u` and `h` can be easily solved explicitly
 - exterior ballistics
+    - More recent drag data: <https://old.reddit.com/r/Nerf/comments/1sov3d6/nerf_air_resistance_calculator/>
+    - Older drag data: <http://btrettel.nerfers.com/archives/78>
 - Error messages:
     - When mass or temperature goes negative, suggest that perhaps the effective area is too large.
 - Make subroutine to fit `sys%con(:, :)%a_e`, `sys%con(:, :)%b`, `sys%cv(:)%p_fs`, `sys%cv(:)%p_fd` for all `con_types` and `cv_types`.
@@ -253,7 +266,7 @@
     - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
     - Use loss coefficients to estimate effective area?
     - Make regression for loss coefficient considering contraction ratio and entrance radius of curvature?
-- Couple BlasterSim with some sort of geometric analysis. Optimal transfer port geometry (considering dead space), optimal notch geometry to minimize weight, etc.
+- Couple BlasterSim with some sort of geometric analysis. Optimal flow restriction geometry (considering dead space), optimal notch geometry to minimize weight, etc.
 - Have ability to run multiple cycles and terminate when mass gets low in any particular CV.
 - If I use a constant pressure/temperature CV to model a HPA or CO2 tank, then I'll still need a way to estimate the real gas internal energy and enthalpy. Going all the way with a better equation of state and thermodynamic properties might not be much more complex. I could make each control volume use a different EOS if I want to avoid iterations associated with a different EOS.
 - Post-projectile-exit analysis to wait until plunger impact, but still interpolate to get muzzle velocity.
@@ -273,7 +286,6 @@
         - pneumatics might want to use less gas mass per shot
         - spring compression
             - <https://discord.com/channels/727038380054937610/1172390267890958366/1466253503151476877>
-- Stopping criteria based on acceleration to find optimal barrel length
 - Check entropy conservation.
 - Order-of-accuracy tests
     - single control volume constant pressure test with atmospheric pressure and friction
@@ -405,9 +417,6 @@ Questions to think about:
     - Initial barrel volume is the dead volume. CSA is the area the axial force is acting on.
 - How can I handle having a rod inside the barrel?
     - If I use CSA instead of diameter, use the actual CSA and not the (outer) diameter.
-- How can I handle dead volume in the dart?
-    - This just increases the dead volume for the barrel.
-    - Could have normal dead volume and a separate dead volume for the projectile.
 
 ***
 
@@ -489,6 +498,7 @@ GUI ideas:
 - Get some ideas about how to make a good UI from Engine Simulator.
     - <https://www.youtube.com/watch?v=ndUyNJEk4ng>
     - <https://github.com/Engine-Simulator/engine-sim-community-edition>
+- <https://winteracter.uk/>
 
 ***
 

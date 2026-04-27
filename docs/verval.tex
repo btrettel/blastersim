@@ -69,6 +69,9 @@ However, consider what happens the velocity \texttt{v} is given the wrong unit:
 The compiler error message quickly tells the programmer that this code has a bug.
 In this case, the bug is in the variable definition and not in the highlighted line, however, often the compiler will identify precisely which term in the line has the bug.
 
+The specific units used in cva.f90 and BlasterSim's core simulation procedures otherwise are SI units.
+BlasterSim input and output may use other units, but the genunits types themselves represent SI units.
+
 \subsection{Verification test suite}
 
 The test suite mentioned at the start of \secref{verval} has \totaltests\, the vast majority of which are verification tests checking that various functions and subroutines of BlasterSim produce the expected results.

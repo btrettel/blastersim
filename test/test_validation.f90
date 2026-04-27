@@ -65,7 +65,9 @@ subroutine predicted_v_muzzle_vs_observed(output_basename, predicted_v_muzzle, a
     write(unit=gp_unit, fmt="(g0, a, g0)") maximum_muzzle_velocity%v%v, " ", maximum_muzzle_velocity%v%v
     
     write(unit=gp_unit, fmt="(a)") 'EOD'
-    write(unit=gp_unit, fmt="(a)") 'set term tikz'
+    
+    ! `clip` will remove whitespace on the outside.
+    write(unit=gp_unit, fmt="(a)") 'set term tikz clip'
     write(unit=gp_unit, fmt="(3a)") 'set output "', output_basename, '.tikz"'
     write(unit=gp_unit, fmt="(a, g0, a)") 'set xrange [0:', maximum_muzzle_velocity%v%v, ']'
     write(unit=gp_unit, fmt="(a, g0, a)") 'set yrange [0:', maximum_muzzle_velocity%v%v, ']'
@@ -77,7 +79,8 @@ subroutine predicted_v_muzzle_vs_observed(output_basename, predicted_v_muzzle, a
                                         '$data with yerrorbars linecolor "black"'
     
     ! Why use `pngcairo` and not `png`? `png` doesn't support dashed lines.
-    write(unit=gp_unit, fmt="(a)") 'set term pngcairo'
+    ! `crop` will remove whitespace on the outside.
+    write(unit=gp_unit, fmt="(a)") 'set term pngcairo crop'
     write(unit=gp_unit, fmt="(3a)") 'set output "', output_basename, '.png"'
     write(unit=gp_unit, fmt="(a)") 'set xlabel "predicted average muzzle velocity (m/s)"'
     write(unit=gp_unit, fmt="(a)") 'set ylabel "actual average muzzle velocity (m/s)"'
