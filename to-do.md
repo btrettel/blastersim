@@ -2,7 +2,6 @@
 
 - docs: Note that $c_\text{c}$ (coefficient of contraction) and $c_\text{v}$ need to be considered separately. Energy losses could make $c_\text{v}$ appreciably lower than 1. I guess the loss coefficient effectively calculates $c_\text{v}$ if the area ($c_\text{c}$) is known.
 - docs: Discuss use of derived types defined in cva.f90.
-- Change `SUCCESS_RUN_RC` to `SUCCESS_RC`, which is used globally for simplicity.
 - Add physics-based adaptive time step.
     - $\Delta t = \min(\Delta t_\text{max}, \min_i C_{\Delta t, m} \frac{m_i}{\dv{m_i}{t}}, \min_i C_{\Delta t, E} \frac{E_i}{\dv{E_i}{t}}
         - This might not work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates lead to negative temperatures.

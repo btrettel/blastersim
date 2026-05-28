@@ -1435,7 +1435,7 @@ subroutine test_conservation_1(tests)
     use convert
     use gasdata, only: DRY_AIR
     use prec, only: PI
-    use cva, only: MIRROR_CV_TYPE, SUCCESS_RUN_RC, cv_system_type, run_config_type, run_status_type, &
+    use cva, only: MIRROR_CV_TYPE, SUCCESS_RC, cv_system_type, run_config_type, run_status_type, &
                     run
     
     type(test_results_type), intent(in out) :: tests
@@ -1546,9 +1546,9 @@ subroutine test_conservation_1(tests)
     call config%set("test_conservation", 1, csv_output=.true., csv_frequency=100)
     call run(config, sys_start, sys_end, status)
     
-    call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_conservation, status%rc")
+    call tests%integer_eq(status%rc, SUCCESS_RC, "test_conservation, status%rc")
     
-    if (status%rc /= SUCCESS_RUN_RC) then
+    if (status%rc /= SUCCESS_RC) then
         print *, status%data(1), status%i_cv(1)
     end if
     
@@ -1831,7 +1831,7 @@ end subroutine test_mirror_2
 
 subroutine test_check_sys(tests)
     use gasdata, only: DRY_AIR, H2O
-    use cva, only: IDEAL_EOS, NORMAL_CV_TYPE, CONTINUE_RUN_RC, SUCCESS_RUN_RC, TIMEOUT_RUN_RC, NEGATIVE_CV_M_TOTAL_RUN_RC, &
+    use cva, only: IDEAL_EOS, NORMAL_CV_TYPE, CONTINUE_RUN_RC, SUCCESS_RC, TIMEOUT_RUN_RC, NEGATIVE_CV_M_TOTAL_RUN_RC, &
                     NEGATIVE_CV_TEMP_RUN_RC, MASS_TOLERANCE_RUN_RC, ENERGY_TOLERANCE_RUN_RC, &
                     MASS_DERIV_TOLERANCE_RUN_RC, ENERGY_DERIV_TOLERANCE_RUN_RC, IDEAL_EOS_RUN_RC, &
                     MIRROR_X_TOLERANCE_RUN_RC, MIRROR_CV_TYPE, &
@@ -1910,7 +1910,7 @@ subroutine test_check_sys(tests)
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, CONTINUE_RUN_RC, "test_check_sys, CONTINUE_RUN_RC, status%rc")
     
-    ! `SUCCESS_RUN_RC`
+    ! `SUCCESS_RC`
     
     call sys%cv(1)%x%v%init_const(4.0_WP, n_d)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
@@ -1953,9 +1953,9 @@ subroutine test_check_sys(tests)
     sys%cv(2)%i_cv_mirror = 0
     
     call check_sys(config, sys, sys_start, t, status)
-    call tests%integer_eq(status%rc, SUCCESS_RUN_RC, "test_check_sys, SUCCESS_RUN_RC, status%rc")
-    call tests%integer_eq(size(status%i_cv), 1, "test_check_sys, SUCCESS_RUN_RC, size(status%i_cv)")
-    call tests%integer_eq(status%i_cv(1), 1, "test_check_sys, SUCCESS_RUN_RC, status%i_cv(1)")
+    call tests%integer_eq(status%rc, SUCCESS_RC, "test_check_sys, SUCCESS_RC, status%rc")
+    call tests%integer_eq(size(status%i_cv), 1, "test_check_sys, SUCCESS_RC, size(status%i_cv)")
+    call tests%integer_eq(status%i_cv(1), 1, "test_check_sys, SUCCESS_RC, status%i_cv(1)")
     
     ! `TIMEOUT_RUN_RC`
     

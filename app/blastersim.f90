@@ -11,7 +11,7 @@ use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT, OUTPUT_UNIT
 use prec, only: CL
 use cli, only: get_input_file_name_from_cli
 use io, only: I_BARREL, read_pneumatic_namelist, read_springer_namelist
-use cva, only: run_config_type, cv_system_type, run_status_type, T_STOP_DEFAULT, SUCCESS_RUN_RC, TIMEOUT_RUN_RC, run
+use cva, only: run_config_type, cv_system_type, run_status_type, T_STOP_DEFAULT, SUCCESS_RC, TIMEOUT_RUN_RC, run
 use stopcodes, only: EX_OK, EX_USAGE
 use rev, only: TAG, REVISION_DATE, MODIFIED
 use checks, only: assert
@@ -60,8 +60,8 @@ end block nml_blk
 
 call run(config, sys_start, sys_end, status)
 
-!tripwire$ begin 640DA585 Update `\secref{run-time-checks}` of verval.tex.
-if (status%rc == SUCCESS_RUN_RC) then
+!tripwire$ begin 8D3E5FED Update `\secref{run-time-checks}` of verval.tex.
+if (status%rc == SUCCESS_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
     write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
     stop EX_OK, quiet=.true.

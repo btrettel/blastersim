@@ -47,9 +47,8 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin 110FCFA7 Update \secref{run-time-checks} and `rc` in geninput_*.nml.
+!tripwire$ begin E6E5D8C8 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
-integer, public, parameter :: SUCCESS_RUN_RC                = SUCCESS_RC
 integer, public, parameter :: TIMEOUT_RUN_RC                = 1
 integer, public, parameter :: NEGATIVE_CV_M_TOTAL_RUN_RC    = 2
 integer, public, parameter :: NEGATIVE_CV_TEMP_RUN_RC       = 3
@@ -1643,7 +1642,7 @@ subroutine run(config, sys_start, sys_end, status)
         call assert(t%v%v <= T_STOP_DEFAULT, "cva (run): t <= T_STOP_DEFAULT violated")
     end do time_loop
     
-    if (status%rc == SUCCESS_RUN_RC) then
+    if (status%rc == SUCCESS_RC) then
         ! If successful, use Hénon's trick to ensure that `x == x_stop`.
         call sys_interp(t_old, config%dt, status%i_cv(1), sys_old, sys_new, t, sys_end, rc_sys_interp)
         
@@ -1667,7 +1666,7 @@ subroutine run(config, sys_start, sys_end, status)
     status%t = t
 end subroutine run
 
-!tripwire$ begin 044DEB18 Update `\secref{run-time-checks}` and `rc` in geninput_*.nml.
+!tripwire$ begin 8ADBB496 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
 pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_start
@@ -1693,7 +1692,7 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
     do i_cv = 1, n_cv
         ! Check whether the projectile left the barrel.
         if (sys%cv(i_cv)%x >= sys%cv(i_cv)%x_stop) then
-            status%rc = SUCCESS_RUN_RC
+            status%rc = SUCCESS_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
             return
