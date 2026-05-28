@@ -2372,7 +2372,7 @@ subroutine test_check_sys(tests)
     ! TODO: `E_F_BLOW_UP_RUN_RC`
 end subroutine test_check_sys
 
-!tripwire$ begin C75F7EAC Update `\secref{exact-solution}` of verval.tex when changing the exact solution test if necessary.
+!tripwire$ begin AE0D918C Update `\secref{exact-solution}` of verval.tex when changing the exact solution test if necessary.
 pure function exact_x_dot(sys_0, x)
     use checks, only: assert, is_close
     use cva, only: IDEAL_EOS, CONST_EOS, NORMAL_CV_TYPE, MIRROR_CV_TYPE, cv_system_type
@@ -2482,7 +2482,7 @@ subroutine exact_x_dot_de(n, ne, ne_d)
     ! However, `sys_interp` is not called if `rc == TIMEOUT_RUN_RC` as it is here..
     dt = t_stop / real(n, WP)
     
-    call config%set("test_exact", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false.)
+    call config%set("test_exact", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false., const_dt=.true.)
     call run(config, sys_start, sys_end, status)
     
     x_dot_exact = exact_x_dot(sys_start, sys_end%cv(2)%x)

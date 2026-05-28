@@ -1,10 +1,7 @@
 ### v0.3.0
 
-- docs: Note that $c_\text{c}$ (coefficient of contraction) and $c_\text{v}$ need to be considered separately. Energy losses could make $c_\text{v}$ appreciably lower than 1. I guess the loss coefficient effectively calculates $c_\text{v}$ if the area ($c_\text{c}$) is known.
-- docs: Discuss use of derived types defined in cva.f90.
-- Add physics-based adaptive time step.
-    - $\Delta t = \min(\Delta t_\text{max}, \min_i C_{\Delta t, m} \frac{m_i}{\dv{m_i}{t}}, \min_i C_{\Delta t, E} \frac{E_i}{\dv{E_i}{t}}
-        - This might not work right if the CV should empty as might be the case for springers. I could still check $\Delta m/m$ for each CV. Some sort of time step criteria could help avoid problems where high flow rates lead to negative temperatures.
+- Make `csv_frequency` based on time, not number of time steps.
+- Add adaptive time step.
     - Update "Time integration" section of the docs to note this.
     - Add tripwire to code for "Time integration" section of the docs.
 - Add pressure effects on `d_e`. Make `d_e` an array so that it can be coefficients on a polynomial?
@@ -105,6 +102,8 @@
     - `make blastersim-*-linux-x86-64.zip`
     - upload online
 - Make Python script generate an animation of a springer based on BlasterSim output.
+- docs: Note that $c_\text{c}$ (coefficient of contraction) and $c_\text{v}$ need to be considered separately. Energy losses could make $c_\text{v}$ appreciably lower than 1. I guess the loss coefficient effectively calculates $c_\text{v}$ if the area ($c_\text{c}$) is known.
+- docs: Discuss use of derived types defined in cva.f90.
 
 ***
 

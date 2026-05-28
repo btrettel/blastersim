@@ -17,7 +17,7 @@ private
 public :: smooth_min
 public :: d_x_d_t, d_x_dot_d_t, d_m_k_d_t, d_e_d_t, d_e_f_d_t
 public :: f_m_dot, g_m_dot
-public :: time_step, run, check_sys, write_csv_row
+public :: calculate_next_time_step, run, check_sys, write_csv_row
 
 ! pressure ratio laminar flow nominally starts at
 ! based on first part of beater_pneumatic_2007 eq. 5.4
@@ -27,9 +27,14 @@ real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 ! ruby_equivalent_2000
 real(WP), public, parameter :: C_MS = 1.0_WP/3.0_WP ! unitless
 
-real(WP), public, parameter :: X_STOP_DEFAULT         = 1.0e2_WP   ! m
-real(WP), public, parameter :: DT_DEFAULT             = 1.0e-5_WP  ! s
-real(WP), public, parameter :: T_STOP_DEFAULT         = 0.1_WP     ! s
+real(WP), public, parameter :: X_STOP_DEFAULT           = 1.0e2_WP   ! m
+logical, public, parameter  :: CSV_OUTPUT_DEFAULT       = .false.    ! no CSV output by default
+integer, public, parameter  :: CSV_FREQUENCY_DEFAULT    = 10         ! time steps
+real(WP), public, parameter :: T_STOP_DEFAULT           = 0.1_WP     ! s
+real(WP), public, parameter :: DT_DEFAULT               = 1.0e-5_WP  ! s
+logical, public, parameter  :: TOLERANCE_CHECKS_DEFAULT = .true.     ! tolerance checks are enabled by default
+logical, public, parameter  :: CONST_DT_DEFAULT         = .true.     ! variable `dt` not implemented yet
+
 real(WP), public, parameter :: MASS_TOLERANCE         = 1.0e-5_WP  ! unitless
 real(WP), public, parameter :: ENERGY_TOLERANCE       = 1.0e-4_WP  ! unitless
 real(WP), public, parameter :: MASS_DERIV_TOLERANCE   = 1.0e-8_WP  ! unitless
@@ -164,6 +169,7 @@ type, public :: run_config_type
     integer            :: csv_frequency
     type(si_time)      :: t_stop, dt
     logical            :: tolerance_checks
+    logical            :: const_dt
 contains
     procedure :: set => set_run_config
 end type run_config_type
@@ -530,7 +536,7 @@ pure function rho_cv(cv)
     call assert_mass(cv, "rho_cv")
     
     vol = cv%vol()
-    call assert(vol%v%v > 0.0_WP, "cva (rho_cv): volume is zero", print_real=[vol%v%v])
+    call assert(vol%v%v > 0.0_WP, "cva (rho_cv): volume is zero or smaller", print_real=[vol%v%v])
     rho_cv = cv%m_total() / vol
     
     select case (cv%eos)
@@ -1422,7 +1428,7 @@ pure function e_total_sys(sys)
     end do
 end function e_total_sys
 
-pure subroutine time_step(sys_old, t, dt, sys_new)
+pure subroutine calculate_next_time_step(sys_old, t, dt, sys_new)
     ! Advances by one time step.
     
     type(cv_system_type), allocatable, intent(in)  :: sys_old
@@ -1493,9 +1499,9 @@ pure subroutine time_step(sys_old, t, dt, sys_new)
                                                                         )/6.0_WP
         end do
         
-        call assert_mass(sys_new%cv(i_cv), "time_step")
+        call assert_mass(sys_new%cv(i_cv), "calculate_next_time_step")
     end do
-end subroutine time_step
+end subroutine calculate_next_time_step
 
 pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out)
     type(si_time), intent(in)                      :: t_old ! time of previous time step
@@ -1540,7 +1546,7 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out)
     end do
 end subroutine rk_stage
 
-subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt, tolerance_checks)
+subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt, tolerance_checks, const_dt)
     class(run_config_type), intent(out) :: config
     character(len=*), intent(in)        :: id ! CSV file name
     integer, intent(in)                 :: n_d
@@ -1548,14 +1554,14 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
     logical, intent(in), optional       :: csv_output
     integer, intent(in), optional       :: csv_frequency
     type(si_time), intent(in), optional :: t_stop, dt
-    logical, intent(in), optional       :: tolerance_checks
+    logical, intent(in), optional       :: tolerance_checks, const_dt
     
     config%id = id
     
     if (present(csv_output)) then
         config%csv_output = csv_output
     else
-        config%csv_output = .false.
+        config%csv_output = CSV_OUTPUT_DEFAULT
     end if
     
     if (present(csv_frequency)) then
@@ -1563,7 +1569,7 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
                         print_logical=[csv_output])
         config%csv_frequency = csv_frequency
     else
-        config%csv_frequency = 10
+        config%csv_frequency = CSV_FREQUENCY_DEFAULT
     end if
     
     if (present(t_stop)) then
@@ -1581,7 +1587,13 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
     if (present(tolerance_checks)) then
         config%tolerance_checks = tolerance_checks
     else
-        config%tolerance_checks = .true.
+        config%tolerance_checks = TOLERANCE_CHECKS_DEFAULT
+    end if
+    
+    if (present(const_dt)) then
+        config%const_dt = const_dt
+    else
+        config%const_dt = CONST_DT_DEFAULT
     end if
 end subroutine set_run_config
 
@@ -1598,7 +1610,7 @@ subroutine run(config, sys_start, sys_end, status)
     
     character(len=CL)     :: error_message
     integer               :: n_d, i, csv_unit, rc_sys_interp
-    type(si_time)         :: t, t_old
+    type(si_time)         :: t, t_old, dt
     type(run_status_type) :: status_final
     
     n_d = size(sys_start%cv(1)%x%v%d)
@@ -1621,10 +1633,11 @@ subroutine run(config, sys_start, sys_end, status)
         call write_csv_row(csv_unit, sys_old, t, status, NUMBER_ROW_TYPE)
     end if
     
+    dt = config%dt
     time_loop: do
-        call time_step(sys_old, t, config%dt, sys_new)
+        call calculate_next_time_step(sys_old, t, dt, sys_new)
         t_old = t
-        t     = t + config%dt
+        t     = t + dt
         i     = i + 1
         
         !print *, t%v%v
@@ -1644,7 +1657,7 @@ subroutine run(config, sys_start, sys_end, status)
     
     if (status%rc == SUCCESS_RC) then
         ! If successful, use Hénon's trick to ensure that `x == x_stop`.
-        call sys_interp(t_old, config%dt, status%i_cv(1), sys_old, sys_new, t, sys_end, rc_sys_interp)
+        call sys_interp(t_old, dt, status%i_cv(1), sys_old, sys_new, t, sys_end, rc_sys_interp)
         
         call check_sys(config, sys_end, sys_start, t, status_final)
         ! This will make sure that the status rc stays the same if everything is okay but `x` is a bit short.
@@ -1940,7 +1953,7 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end,
         call assert(dt_i <= dt, "cva (sys_interp): dt_i can not be greater than dt", &
                         print_real=[dt_i%v%v], print_integer=[i])
         
-        call time_step(sys_old, t_old + dt_i, dt_i, sys_i)
+        call calculate_next_time_step(sys_old, t_old + dt_i, dt_i, sys_i)
         
         call assert(sys_i%cv(i_cv_interp)%x >= sys_old%cv(i_cv_interp)%x, &
                         "cva (sys_interp): x_i >= x_old violated", &
