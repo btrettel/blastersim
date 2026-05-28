@@ -1,7 +1,7 @@
 ### v0.3.0
 
-- docs: Discuss why to not model vacuum in limitatios section.
-- docs: Discuss use of `run_config_type` and other derived types.
+- docs: Note that $c_\text{c}$ (coefficient of contraction) and $c_\text{v}$ need to be considered separately. Energy losses could make $c_\text{v}$ appreciably lower than 1. I guess the loss coefficient effectively calculates $c_\text{v}$ if the area ($c_\text{c}$) is known.
+- docs: Discuss use of derived types defined in cva.f90.
 - Change `SUCCESS_RUN_RC` to `SUCCESS_RC`, which is used globally for simplicity.
 - Add physics-based adaptive time step.
     - $\Delta t = \min(\Delta t_\text{max}, \min_i C_{\Delta t, m} \frac{m_i}{\dv{m_i}{t}}, \min_i C_{\Delta t, E} \frac{E_i}{\dv{E_i}{t}}
@@ -147,9 +147,6 @@
 - Add LLM logs to repo?
 - For consistency, make macros for LaTeX variable names?
 - Add control volume for back side of plunger for springers.
-- Make more validation cases from Radioactive's data.
-    - How much does friction need to increase to use full flow area?
-    - How much does `delta_leak` need to increase to use full flow area?
 - Dart friction model taking into account pressure inside of the dart.
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1485097150386798753>
     - See 2026-03-21 and 2026-03-22 handwritten notes (particularly the top of 2026-03-22 p. 1 as that has the equation to use boxed).
@@ -271,7 +268,8 @@
 - If I use a constant pressure/temperature CV to model a HPA or CO2 tank, then I'll still need a way to estimate the real gas internal energy and enthalpy. Going all the way with a better equation of state and thermodynamic properties might not be much more complex. I could make each control volume use a different EOS if I want to avoid iterations associated with a different EOS.
 - Post-projectile-exit analysis to wait until plunger impact, but still interpolate to get muzzle velocity.
 - optimization
-    - common optimization activities: optimal barrel length
+    - common dependent variables to optimize
+        - barrel length
     - objective functions: maximize muzzle velocity, minimize input energy, minimize input gas mass (to maximize number of shots per tank in a simpler way as minimum input gas mass assumes all gas in the tank can be extracted)
     - optimize GA parameters to most quickly optimize an example pneumatic blaster
     - parallel optimization
@@ -286,6 +284,8 @@
         - pneumatics might want to use less gas mass per shot
         - spring compression
             - <https://discord.com/channels/727038380054937610/1172390267890958366/1466253503151476877>
+    - For optimization, have ability to pick discrete values taken from text file.
+        - How can UQ be handled with this? Have a second column for uncertainty?
 - Check entropy conservation.
 - Order-of-accuracy tests
     - single control volume constant pressure test with atmospheric pressure and friction
@@ -402,6 +402,22 @@
     - Output
     - Software engineering
 - Make flow restriction model consider both $K_\text{L}$ and area reduction.
+- dynamic friction values: <https://discord.com/channels/727038380054937610/1172390267890958366/1444963197755986033>
+- Make reduced order model for optimal barrel length given only the most important variables.
+    - Comparison with simplified optimal barrel length theory
+    - Related: <https://discord.com/channels/825852031239061545/825852033898774543/1461868273858642193>
+        - > You could try to prove the empiric 1.8/1 PT volume to barrel volume ideal ratio
+- old input file ideas
+    - `exterior` namelist
+    - `terminal` namelist
+    - other
+        - `optimization` namelist
+        - `calibration` namelist
+- <http://www.zdspb.com/tech/index.html>
+    - Make sure that you can model paintball guns easily too to get that part of the market.
+- UQ
+    - FOSM for robust optimization
+    - Model fitting with uncertainties.
 
 ***
 
@@ -524,6 +540,9 @@ GUI ideas:
             - <https://hardforum.com/>
 - BlasterSim tutorial on YouTube, with slides showing each control volume and how they are connected to what's in the input file.
     - This could also be good marketing.
+- Similar hobby simulators:
+    - <http://www.thehalls-in-bfe.com/GGDT>
+    - <https://openrocket.info/>
 
 ***
 

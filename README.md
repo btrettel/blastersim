@@ -1,6 +1,6 @@
 # BlasterSim
 
-BlasterSim simulates pneumatic and spring compressed gas guns with a [lumped parameter](https://en.wikipedia.org/wiki/Lumped-element_model) model.
+BlasterSim simulates pneumatic and spring compressed gas guns with an adiabatic [lumped parameter](https://en.wikipedia.org/wiki/Lumped-element_model) model.
 
 BlasterSim is under development and not feature-complete.
 

@@ -122,7 +122,7 @@ Note that these Make commands will run some BlasterSim tests to generate some nu
 This will slow down compilation of the documentation
 For speed, once the documentation numbers are generated, these BlasterSim tests will not be run again when compiling the documentation unless BlasterSim's code changes.
 
-\section{BlasterSim source coding conventions}\label{conventions}
+\section{BlasterSim source and documentation coding conventions}\label{conventions}
 
 \begin{itemize}
 \item In cva.f90 and BlasterSim's core simulation procedures otherwise, all variables are in SI units.
@@ -145,6 +145,21 @@ This convention allows BlasterSim to easily know which control volume is the bar
 0 or negative return codes indicate success, with 0 being normal success and negative numbers having a special context-dependent meaning.
 The \texttt{parameter} \texttt{SUCCESS\_RC} is set to 0 and used to improve readability.
 Positive return codes indicate failure.
+
+\item The subroutine \texttt{run} is the main simulation loop in BlasterSim.
+\texttt{run} takes an initial state and runs the simulation until a termination criteria is met.
+The derived type \texttt{run\_status\_type} is returned by \texttt{run}.
+\texttt{run\_status\_type} contains a return code \texttt{rc} and a time \texttt{t}
+If \texttt{rc} is not \texttt{SUCCESS\_RC}, then \texttt{run\_status\_type} optionally can set arrays \texttt{i\_cv} and \texttt{data} to contain information about particular control volumes to make error and warning messages more meaningful.
+
+\item In the documentation, put no more than one sentence per line of LaTeX code.
+Breaking up a sentence into clauses may be useful in some contexts as well,
+and breaking up a mathematical expression into multiple LaTeX lines is also often useful.
+In LaTeX, a new line does not create a new paragraph if the next line has text.
+An empty line creates a paragraph.
+This helps identify changes easier with some diff programs,
+allows adding comments on a per-sentence basis in LaTeX,
+and can ease identifying where LaTeX compilation errors are.
 \end{itemize}
 
 % TODO: converting between LaTeX variable names and source code variable names

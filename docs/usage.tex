@@ -2,7 +2,7 @@
 
 \section{Introduction}\label{intro}
 
-BlasterSim simulates pneumatic and spring compressed gas guns with a \href{https://en.wikipedia.org/wiki/Lumped-element_model}{lumped parameter} model.
+BlasterSim simulates pneumatic and spring compressed gas guns with an adiabatic \href{https://en.wikipedia.org/wiki/Lumped-element_model}{lumped parameter} model.
 
 With BlasterSim, you simulate a foam dart blaster or any other compressed gas gun before building. % chktex 20
 BlasterSim can also help answer hypothetical questions about an existing build, like whether performance will benefit from a particular change.
@@ -223,6 +223,9 @@ Loose projectiles with less cross-sectional area and also leaks are not handled.
 \item Projectile length is not a factor in BlasterSim's model.
 Projectile length would impact projectile friction, however, projectile friction is modeled purely empirically.
 Presumably the friction pressure would increase in roughly linear proportion to the projectile length due to the contact area staying the same if the projectile outer diameter is equal to the barrel inner diameter.
+\item In springers, it is possible that the plunger can pull a vacuum on its nominally ``atmospheric'' side due to the flow into the back side of the plunger tube being restricted.
+This can not be modeled in BlasterSim's springer mode at the moment.
+I figure it would be easier for someone to add vent holes or improve the flow otherwise if the back side of the plunger pulling a vacuum is believed to be an issue, so there is no clear reason to model this.
 \end{itemize}
 
 \section{Known issues}\label{known-issues}
