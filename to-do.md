@@ -1,9 +1,7 @@
 ### v0.3.0
 
-- Make `csv_frequency` based on time, not number of time steps.
-- Add adaptive time step.
-    - Update "Time integration" section of the docs to note this.
-    - Add tripwire to code for "Time integration" section of the docs.
+- Reformulate from $m_j$ (CV mass) to $\log \rho_j/\rho_{atm}$ (where $\rho_j$ is CV mass density of species $j$) and $e$ (CV gas thermal energy) to $\log u/u_0$ (where $u$ is CV specific internal energy). $m_j = A\,x\,\rho_j$ and $e = A\,x\,u$. This will ensure that CV mass and energy are always non-negative, and that as $x$ goes to zero, CV mass and energy also go to zero. It might also avoid the need to iterate on the EOS for non-ideal EOSes.
+    - Figure out why mass fraction function didn't work before when doing this?
 - Add pressure effects on `d_e`. Make `d_e` an array so that it can be coefficients on a polynomial?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
@@ -416,6 +414,10 @@
 - UQ
     - FOSM for robust optimization
     - Model fitting with uncertainties.
+- Make `csv_frequency` based on time, not number of time steps.
+- Add adaptive time step?
+    - Update "Time integration" section of the docs to note this.
+    - Add tripwire to code for "Time integration" section of the docs.
 
 ***
 

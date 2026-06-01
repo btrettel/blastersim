@@ -27,13 +27,13 @@ real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 ! ruby_equivalent_2000
 real(WP), public, parameter :: C_MS = 1.0_WP/3.0_WP ! unitless
 
-real(WP), public, parameter :: X_STOP_DEFAULT           = 1.0e2_WP   ! m
-logical, public, parameter  :: CSV_OUTPUT_DEFAULT       = .false.    ! no CSV output by default
-integer, public, parameter  :: CSV_FREQUENCY_DEFAULT    = 10         ! time steps
-real(WP), public, parameter :: T_STOP_DEFAULT           = 0.1_WP     ! s
-real(WP), public, parameter :: DT_DEFAULT               = 1.0e-5_WP  ! s
-logical, public, parameter  :: TOLERANCE_CHECKS_DEFAULT = .true.     ! tolerance checks are enabled by default
-logical, public, parameter  :: CONST_DT_DEFAULT         = .true.     ! variable `dt` not implemented yet
+real(WP), public, parameter :: X_STOP_DEFAULT           = 1.0e2_WP  ! m
+logical, public, parameter  :: CSV_OUTPUT_DEFAULT       = .false.   ! no CSV output by default
+integer, public, parameter  :: CSV_FREQUENCY_DEFAULT    = 10        ! time steps
+real(WP), public, parameter :: T_STOP_DEFAULT           = 0.1_WP    ! s
+real(WP), public, parameter :: DT_DEFAULT               = 1.0e-5_WP ! s
+logical, public, parameter  :: TOLERANCE_CHECKS_DEFAULT = .true.    ! tolerance checks are enabled by default
+logical, public, parameter  :: CONST_DT_DEFAULT         = .true.    ! variable `dt` not implemented yet
 
 real(WP), public, parameter :: MASS_TOLERANCE         = 1.0e-5_WP  ! unitless
 real(WP), public, parameter :: ENERGY_TOLERANCE       = 1.0e-4_WP  ! unitless
@@ -244,7 +244,7 @@ pure function e_total(cv)
     e_total = cv%e + cv%e_f + cv%e_s() + cv%e_k()
 end function e_total
 
-!tripwire$ begin 3A25678B Update `\secref{equations-of-state}` of theory.tex if necessary.
+!tripwire$ begin CA44288D Update `\secref{equations-of-state}` of theory.tex if necessary.
 pure function p_eos(cv, rho, temp)
     ! Calculate pressure using the equation of state.
     
@@ -257,8 +257,10 @@ pure function p_eos(cv, rho, temp)
     
     select case (cv%eos)
         case (IDEAL_EOS)
-            call assert(rho%v%v  > 0.0_WP, "cva (p_eos, IDEAL_EOS): rho%v > 0 violated", print_real=[rho%v%v])
-            call assert(temp%v%v > 0.0_WP, "cva (p_eos, IDEAL_EOS): temp%v > 0 violated", print_real=[temp%v%v])
+            call assert(rho%v%v  > 0.0_WP, "cva (p_eos, IDEAL_EOS): rho%v > 0 violated, " // trim(cv%label), &
+                            print_real=[rho%v%v, cv%x%v%v, cv%x_dot%v%v, cv%m(1)%v%v, cv%e%v%v])
+            call assert(temp%v%v > 0.0_WP, "cva (p_eos, IDEAL_EOS): temp%v > 0 violated, " // trim(cv%label), &
+                            print_real=[temp%v%v, cv%x%v%v, cv%x_dot%v%v, cv%m(1)%v%v, cv%e%v%v])
             call assert_dimension(rho%v%d, temp%v%d)
             
             n_d   = size(rho%v%d)
