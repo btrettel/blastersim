@@ -49,11 +49,15 @@ Because each variable in BlasterSim's source code is given a unit (see \secref{u
 % energy conservation
 
 \begin{equation}
-    \dv{\dot{m}_{k,i}}{t} = \sum_j \left(y_{k,j} \dot{m}_{j \rightarrow i} - y_{k,i} \dot{m}_{i \rightarrow j}\right)\label{eq:mass conservation}
+    \dv{m_{k,i}}{t} = \sum_j \left(y_{k,j} \dot{m}_{j \rightarrow i} - y_{k,i} \dot{m}_{i \rightarrow j}\right)\label{eq:mass conservation}
 \end{equation}
 
 \begin{equation}
     \dv{E_i}{t} = -p_i \, A_i \, \dot{x}_i + \sum_j \left(\dot{m}_{j \rightarrow i} h_j - \dot{m}_{i \rightarrow j} h_i\right)\label{eq:energy conservation}
+\end{equation}
+
+\begin{equation}
+    m_i = \sum_k m_{k,i}
 \end{equation}
 
 % TODO: note that definition of $E_i$ could include more than thermal energy and might in the future

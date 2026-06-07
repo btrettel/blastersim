@@ -1,7 +1,26 @@
 ### v0.3.0
 
-- Reformulate from $m_j$ (CV mass) to $\log \rho_j/\rho_{atm}$ (where $\rho_j$ is CV mass density of species $j$) and $e$ (CV gas thermal energy) to $\log u/u_0$ (where $u$ is CV specific internal energy). $m_j = A\,x\,\rho_j$ and $e = A\,x\,u$. This will ensure that CV mass and energy are always non-negative, and that as $x$ goes to zero, CV mass and energy also go to zero. It might also avoid the need to iterate on the EOS for non-ideal EOSes.
+- Reformulate from $m_j$ (CV mass) to $\log \rho_j/\rho_{atm}$ (where $\rho_j$ is CV mass density of species $j$) and $e$ (CV gas thermal energy) to $\log u/u_0$ (where $u$ is CV specific internal energy). $m_j = A\,x\,\rho_j$ and $e = A\,x\,u$. This will ensure that CV mass and energy are always non-negative, and that as $x$ goes to zero, CV mass and energy also go to zero.
     - Figure out why mass fraction function didn't work before when doing this?
+    - Need test on constancy of CV mass as `x` changes.
+    - Use $e$ for total CV energy.
+    - `log_rho`: $\log \frac{\rho}{\rho_0}$
+    - `log_u`: $\log \frac{u}{u_0}$
+- Plunger head motion bounds (lower and upper) (plunger impact)
+    - Start out with a coefficient of restitution of zero as that's the simplest case. Then later add a non-zero coefficient of restitution.
+    - Lower is not necessarily zero.
+    - Generalize `sys_interp` to interpolate to positions other than `x_stop`, including `x_min` and `x_max`.
+        - Generalize `sys_interp` to interpolate to where acceleration is zero for optimal barrel length.
+    - Coefficient of restitution model for impact velocity on both ends.
+    - Make BlasterSim handle zero volume CVs. Simplest approach would be to make pressure zero in `cv%p` if `cv%x` is zero. Alternatively, `x_min` could always be greater than zero.
+    - Test cases for piston impact:
+        - Bounds respected.
+        - Rebound velocity is correct.
+        - Dissipated energy is correct.
+    - <https://discord.com/channels/825852031239061545/825852073382772758/1484298391956488396>
+        - > Plunger bounce has always seemed like a major factor in traditional springers in my testing.
+    - <https://discord.com/channels/727038380054937610/1172390267890958366/1475663102073766055>
+    - Print a warning for plunger impact after it is handled properly and have a different exit code.
 - Add pressure effects on `d_e`. Make `d_e` an array so that it can be coefficients on a polynomial?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
@@ -76,20 +95,6 @@
     - LaTeXML issues:
         - `\lstinputlisting[breaklines=true]` doesn't wrap.
         - gnuplot's `TikZ` and `pdfcairo` terminals don't work properly with LaTeXML.
-- Plunger head motion bounds (lower and upper) (plunger impact)
-    - Lower is not necessarily zero.
-    - Generalize `sys_interp` to interpolate to positions other than `x_stop`, including `x_min` and `x_max`.
-        - Generalize `sys_interp` to interpolate to where acceleration is zero for optimal barrel length.
-    - Coefficient of restitution model for impact velocity on both ends.
-    - Make BlasterSim handle zero volume CVs. Simplest approach would be to make pressure zero in `cv%p` if `cv%x` is zero. Alternatively, `x_min` could always be greater than zero.
-    - Test cases for piston impact:
-        - Bounds respected.
-        - Rebound velocity is correct.
-        - Dissipated energy is correct.
-    - <https://discord.com/channels/825852031239061545/825852073382772758/1484298391956488396>
-        - > Plunger bounce has always seemed like a major factor in traditional springers in my testing.
-    - <https://discord.com/channels/727038380054937610/1172390267890958366/1475663102073766055>
-    - Print a warning for plunger impact after it is handled properly and have a different exit code.
 - Optimal barrel length mode where the barrel length is not specified and BlasterSim stops where acceleration is zero.
     - It would be important to stop the backwards motion before adding this, otherwise BlasterSim will stop at the wrong time. Or I could pick the optimal barrel length after a certain time or after a certain travel distance.
 - `make dist`
@@ -418,6 +423,8 @@
 - Add adaptive time step?
     - Update "Time integration" section of the docs to note this.
     - Add tripwire to code for "Time integration" section of the docs.
+    - Consider a minimum time step to allow integration to continue no matter what. What's the smallest time scale I expect to appear here?
+- Use type system to enforce thermodynamic constraints in some way?
 
 ***
 
@@ -515,6 +522,7 @@ GUI ideas:
     - <https://www.youtube.com/watch?v=ndUyNJEk4ng>
     - <https://github.com/Engine-Simulator/engine-sim-community-edition>
 - <https://winteracter.uk/>
+- BlasterSim CLI version is free, GUI version costs money?
 
 ***
 

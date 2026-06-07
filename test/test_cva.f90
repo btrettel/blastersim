@@ -21,8 +21,8 @@ call tests%start_tests("cva.nml")
 call write_defaults()
 
 call test_m_total(tests)
-call test_p_eos_ideal(tests)
-call test_constant_eos(tests)
+call test_p_cv_ideal(tests)
+call test_constant_cv(tests)
 call test_rho_eos(tests)
 call test_r_cv(tests)
 call test_p_c(tests)
@@ -118,22 +118,20 @@ subroutine test_m_total(tests)
     call tests%real_eq(chi(2)%v%v, 5.0_WP/6.0_WP, "chi(2)")
 end subroutine test_m_total
 
-subroutine test_p_eos_ideal(tests)
+subroutine test_p_cv_ideal(tests)
     use gasdata, only: P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR
     use cva, only: cv_type, NORMAL_CV_TYPE, IDEAL_EOS
     
     type(test_results_type), intent(in out) :: tests
 
-    type(si_mass_density) :: rho
     type(si_temperature)  :: temp
     type(si_pressure)     :: p
     type(cv_type)         :: cv
     
-    call rho%v%init_const(RHO_ATM, 0)
-    call temp%v%init_const(TEMP_ATM, 0)
+    call cv%x%v%init_const(1.0_WP, 0)
+    call cv%csa%v%init_const(1.0_WP, 0)
     allocate(cv%m(1))
-    call cv%m(1)%v%init_const(1.0_WP, 0)
-    call cv%e%v%init_const(1.0_WP, 0)
+    call cv%m(1)%v%init_const(RHO_ATM, 0)
     cv%i_cv_mirror = 2
     cv%type = NORMAL_CV_TYPE
     cv%eos  = IDEAL_EOS
@@ -141,12 +139,15 @@ subroutine test_p_eos_ideal(tests)
     allocate(cv%gas(1))
     cv%gas(1) = DRY_AIR
     
-    p = cv%p_eos(rho, temp)
+    call temp%v%init_const(TEMP_ATM, 0)
+    cv%e = cv%m(1)*cv%gas(1)%u(temp)
     
-    call tests%real_eq(p%v%v, P_ATM, "p_eos, normal CV, atmospheric", abs_tol=20.0_WP)
-end subroutine test_p_eos_ideal
+    p = cv%p()
+    
+    call tests%real_eq(p%v%v, P_ATM, "p_cv, normal CV, atmospheric", abs_tol=20.0_WP)
+end subroutine test_p_cv_ideal
 
-subroutine test_constant_eos(tests)
+subroutine test_constant_cv(tests)
     use gasdata, only: P_ATM, TEMP_ATM, DRY_AIR
     use cva, only: cv_type, CONST_EOS
     
@@ -170,14 +171,14 @@ subroutine test_constant_eos(tests)
     allocate(cv%gas(1))
     cv%gas(1) = DRY_AIR
     
-    p    = cv%p_eos(rho, cv%temp_const)
+    p    = cv%p()
     temp = cv%temp()
     rho  = cv%rho()
     
-    call tests%real_eq(p%v%v, P_ATM, "p_eos, constant CV")
+    call tests%real_eq(p%v%v, P_ATM, "p_cv, constant CV")
     call tests%real_eq(temp%v%v, TEMP_ATM, "temp_cv, constant CV")
     call tests%real_eq(rho%v%v, 2.0_WP, "rho_cv, constant CV") ! calculated from mass, not meaningful
-end subroutine test_constant_eos
+end subroutine test_constant_cv
 
 subroutine test_rho_eos(tests)
     use gasdata, only: P_ATM, TEMP_ATM, RHO_ATM, DRY_AIR

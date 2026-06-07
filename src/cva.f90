@@ -110,7 +110,6 @@ contains
     procedure :: e_s
     procedure :: e_k
     procedure :: e_total
-    procedure :: p_eos
     procedure :: rho_eos
     procedure :: p_c
     procedure :: y
@@ -244,37 +243,42 @@ pure function e_total(cv)
     e_total = cv%e + cv%e_f + cv%e_s() + cv%e_k()
 end function e_total
 
-!tripwire$ begin CA44288D Update `\secref{equations-of-state}` of theory.tex if necessary.
-pure function p_eos(cv, rho, temp)
+!tripwire$ begin 957DB865 Update `\secref{equations-of-state}` of theory.tex if necessary.
+pure function p_cv(cv)
     ! Calculate pressure using the equation of state.
     
-    class(cv_type), intent(in)        :: cv
-    type(si_mass_density), intent(in) :: rho
-    type(si_temperature), intent(in)  :: temp
-    type(si_pressure)                 :: p_eos
+    class(cv_type), intent(in) :: cv
+    
+    type(si_pressure) :: p_cv
+    
+    type(si_mass_density) :: rho
+    type(si_temperature)  :: temp
     
     integer :: n_d ! number of derivatives
     
+    rho  = cv%rho()
+    temp = cv%temp()
+    
     select case (cv%eos)
         case (IDEAL_EOS)
-            call assert(rho%v%v  > 0.0_WP, "cva (p_eos, IDEAL_EOS): rho%v > 0 violated, " // trim(cv%label), &
+            call assert(rho%v%v  > 0.0_WP, "cva (p_cv, IDEAL_EOS): rho%v > 0 violated, " // trim(cv%label), &
                             print_real=[rho%v%v, cv%x%v%v, cv%x_dot%v%v, cv%m(1)%v%v, cv%e%v%v])
-            call assert(temp%v%v > 0.0_WP, "cva (p_eos, IDEAL_EOS): temp%v > 0 violated, " // trim(cv%label), &
+            call assert(temp%v%v > 0.0_WP, "cva (p_cv, IDEAL_EOS): temp%v > 0 violated, " // trim(cv%label), &
                             print_real=[temp%v%v, cv%x%v%v, cv%x_dot%v%v, cv%m(1)%v%v, cv%e%v%v])
             call assert_dimension(rho%v%d, temp%v%d)
             
-            n_d   = size(rho%v%d)
-            p_eos = rho * cv%r() * temp
+            n_d  = size(rho%v%d)
+            p_cv = rho * cv%r() * temp
         case (CONST_EOS)
             call assert(is_close(temp%v%v, cv%temp_const%v%v), "cva (p_eos, CONST_EOS): temp /= temp_const", &
                             print_real=[temp%v%v, cv%temp_const%v%v])
-            p_eos = cv%p_const
+            p_cv = cv%p_const
         case default
-            error stop "cva (p_eos): invalid cv%eos"
+            error stop "cva (p_cv): invalid cv%eos"
     end select
     
-    call assert(p_eos%v%v > 0.0_WP, "cva (p_eos): p_eos%v > 0 violated", print_real=[p_eos%v%v])
-end function p_eos
+    call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated", print_real=[p_cv%v%v])
+end function p_cv
 
 pure function rho_eos(cv, p, temp, y)
     ! Calculate density using the equation of state.
@@ -550,22 +554,6 @@ pure function rho_cv(cv)
             error stop "cva (rho_cv): invalid cv%eos"
     end select
 end function rho_cv
-
-pure function p_cv(cv)
-    class(cv_type), intent(in) :: cv
-    
-    type(si_pressure) :: p_cv
-    
-    type(si_mass_density) :: rho
-    type(si_temperature)  :: temp
-    
-    rho  = cv%rho()
-    temp = cv%temp()
-    
-    p_cv = cv%p_eos(rho, temp)
-    
-    call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated", print_real=[p_cv%v%v])
-end function p_cv
 
 pure function u_cv(cv)
     class(cv_type), intent(in) :: cv
