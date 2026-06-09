@@ -254,8 +254,6 @@ pure function p_cv(cv)
     type(si_mass_density) :: rho
     type(si_temperature)  :: temp
     
-    integer :: n_d ! number of derivatives
-    
     rho  = cv%rho()
     temp = cv%temp()
     
@@ -267,7 +265,6 @@ pure function p_cv(cv)
                             print_real=[temp%v%v, cv%x%v%v, cv%x_dot%v%v, cv%m(1)%v%v, cv%e%v%v])
             call assert_dimension(rho%v%d, temp%v%d)
             
-            n_d  = size(rho%v%d)
             p_cv = rho * cv%r() * temp
         case (CONST_EOS)
             call assert(is_close(temp%v%v, cv%temp_const%v%v), "cva (p_eos, CONST_EOS): temp /= temp_const", &
