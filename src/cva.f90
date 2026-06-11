@@ -2055,7 +2055,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
         do k_gas = 1, n_gas
             select case (row_type)
                 case (HEADER_ROW_TYPE)
-                    write(unit=csv_unit, fmt="(4a)", advance="no") '"m (mg, ', &
+                    write(unit=csv_unit, fmt="(5a)", advance="no") '"m (mg, ', &
                             trim(sys%cv(i_cv)%gas(k_gas)%label), ', ', &
                             trim(sys%cv(i_cv)%label), ')",'
                 case (NUMBER_ROW_TYPE)
