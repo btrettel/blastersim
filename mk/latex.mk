@@ -6,10 +6,10 @@ docs$(DIR_SEP)verval.tex \
 docs$(DIR_SEP)dev.tex \
 docs$(DIR_SEP)springer-figures.tex \
 docs$(DIR_SEP)control-volume-figure.tex \
-docs$(DIR_SEP)exact-solution-figure.tex
+docs$(DIR_SEP)single-cv-exact-figure.tex
 
 TEX_GEN = docs$(DIR_SEP)rev.tex \
-docs$(DIR_SEP)test_exact.tex \
+docs$(DIR_SEP)test_single_cv_exact.tex \
 docs$(DIR_SEP)geninput_pneumatic.tex \
 docs$(DIR_SEP)geninput_springer.tex \
 docs$(DIR_SEP)pneumatic-example.nml \
@@ -21,6 +21,7 @@ docs$(DIR_SEP)units.f90 \
 docs$(DIR_SEP)test_units_pass.txt \
 docs$(DIR_SEP)test_units_fail.txt \
 docs$(DIR_SEP)compiler.tex \
+docs$(DIR_SEP)test_single_cv_exact.tex \
 docs$(DIR_SEP)tests.tex \
 docs$(DIR_SEP)pneumatic-validation.tikz \
 docs$(DIR_SEP)pneumatic-validation.png
@@ -87,8 +88,11 @@ docs$(DIR_SEP)blastersim-out-2.txt: blastersim$(BINEXT) docs$(DIR_SEP)springer-e
 docs$(DIR_SEP)rev.tex: rev.tex
 	$(CP) rev.tex docs$(DIR_SEP)rev.tex
 
-docs$(DIR_SEP)test_exact.tex: test_exact.tex
-	$(CP) test_exact.tex docs$(DIR_SEP)test_exact.tex
+docs$(DIR_SEP)single_cv_exact_figure.tex: single_cv_exact_figure.tex
+	$(CP) single_cv_exact_figure.tex docs$(DIR_SEP)single_cv_exact_figure.tex
+
+docs$(DIR_SEP)test_single_cv_exact.tex: test_single_cv_exact.tex
+	$(CP) test_single_cv_exact.tex docs$(DIR_SEP)test_single_cv_exact.tex
 
 docs$(DIR_SEP)geninput_pneumatic.tex: src$(DIR_SEP)geninput_pneumatic.tex
 	$(CP) src$(DIR_SEP)geninput_pneumatic.tex docs$(DIR_SEP)geninput_pneumatic.tex

@@ -4,10 +4,10 @@
     - New tests before implementing this:
         - Constancy of CV mass as `x` changes.
         - Order-of-accuracy test with $\dot{m}$.
+            - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
     - Figure out why mass fraction function didn't work before when doing this?
     - `rho_cv`: Keep this member function as it's for the overall mass density, not mass density of a particular species.
     - Use $e$ for total CV energy, something else for non-specific gas internal energy.
-    - Unfortunately, use of $\log \frac{\rho}{\rho_0}$ would make it impossible to have zero of a particular species in a CV. Using $\log \frac{u}{u_0}$ would not have the same problem as I don't expect internal energy to ever go to zero, but is avoided for consistency.
 - Plunger head motion bounds (lower and upper) (plunger impact)
     - Start out with a coefficient of restitution of zero as that's the simplest case. Then later add a non-zero coefficient of restitution.
     - Lower is not necessarily zero.

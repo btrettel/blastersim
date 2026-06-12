@@ -28,13 +28,7 @@ src$(DIR_SEP)geninput_pneumatic.f90 src$(DIR_SEP)geninput_pneumatic.tex: src$(DI
 src$(DIR_SEP)geninput_springer.f90 src$(DIR_SEP)geninput_springer.tex: src$(DIR_SEP)geninput_springer.nml
 	geninput$(BINEXT) src$(DIR_SEP)geninput_springer.nml
 
-test_conservation.csv: test_cva$(BINEXT)
-	$(RUN)test_cva$(BINEXT)
-
-test_exact.tex: test_cva$(BINEXT)
-	$(RUN)test_cva$(BINEXT)
-
-defaults.tex: test_cva$(BINEXT)
+test_conservation.csv test_single_cv_exact.tex test_exact.tex defaults.tex: test_cva$(BINEXT)
 	$(RUN)test_cva$(BINEXT)
 
 io.nml: test$(DIR_SEP)pneumatic-default.nml test$(DIR_SEP)pneumatic-non-default.nml test$(DIR_SEP)springer-default.nml test$(DIR_SEP)springer-non-default.nml

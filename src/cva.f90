@@ -243,7 +243,7 @@ pure function e_total(cv)
     e_total = cv%e + cv%e_f + cv%e_s() + cv%e_k()
 end function e_total
 
-!tripwire$ begin 957DB865 Update `\secref{equations-of-state}` of theory.tex if necessary.
+!tripwire$ begin 3A66744C Update `\secref{equations-of-state}` of theory.tex if necessary.
 pure function p_cv(cv)
     ! Calculate pressure using the equation of state.
     
@@ -1969,7 +1969,7 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end,
     t = t_old + dt_i
 end subroutine sys_interp
 
-!tripwire$ begin 889C8C9C Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
+!tripwire$ begin 4A32E340 Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
 subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     use convert, only: CONVERT_S_TO_MS, CONVERT_KG_TO_MG, CONVERT_PA_TO_KPA
     

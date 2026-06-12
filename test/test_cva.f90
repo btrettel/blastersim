@@ -14,7 +14,7 @@ implicit none
 
 type(test_results_type) :: tests
 
-real(WP), parameter :: TEST_EXACT_T_STOP = 0.0273_WP
+real(WP), parameter :: TEST_SINGLE_CV_EXACT_T_STOP = 0.0273_WP
 
 call tests%start_tests("cva.nml")
 
@@ -53,7 +53,7 @@ call test_conservation_1(tests)
 call test_conservation_2(tests)
 call test_mirror_1(tests)
 call test_mirror_2(tests)
-call test_exact(tests)
+call test_single_cv_exact(tests)
 
 call test_check_sys(tests)
 
@@ -2373,7 +2373,7 @@ subroutine test_check_sys(tests)
     ! TODO: `E_F_BLOW_UP_RUN_RC`
 end subroutine test_check_sys
 
-!tripwire$ begin AE0D918C Update `\secref{exact-solution}` of verval.tex when changing the exact solution test if necessary.
+!tripwire$ begin 2B35CF66 Update `\secref{single-cv-exact}` of verval.tex when changing this exact solution test if necessary.
 pure function exact_x_dot(sys_0, x)
     use checks, only: assert, is_close
     use cva, only: IDEAL_EOS, CONST_EOS, NORMAL_CV_TYPE, MIRROR_CV_TYPE, cv_system_type
@@ -2474,16 +2474,16 @@ subroutine exact_x_dot_de(n, ne, ne_d)
     call sys_start%cv(2)%set(x_0, x_dot, y, p_0, temp_atm, "barrel", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
                                 delta_pre, [DRY_AIR], 1, isentropic_filling=.true., p_atm=p_atm, constant_friction=.true.)
     
-    call assert(sys_start%cv(2)%constant_friction, "test_exact, cv%constant_friction")
+    call assert(sys_start%cv(2)%constant_friction, "test_single_cv_exact, cv%constant_friction")
     
-    call t_stop%v%init_const(TEST_EXACT_T_STOP, N_D)
+    call t_stop%v%init_const(TEST_SINGLE_CV_EXACT_T_STOP, N_D)
     
     ! At first I thought that the number of time steps needed to be an integer.
     ! That was to avoid a reduction in order-of-accuracy from `sys_interp`.
     ! However, `sys_interp` is not called if `rc == TIMEOUT_RUN_RC` as it is here..
     dt = t_stop / real(n, WP)
     
-    call config%set("test_exact", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false., const_dt=.true.)
+    call config%set("test_single_cv_exact", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false., const_dt=.true.)
     call run(config, sys_start, sys_end, status)
     
     x_dot_exact = exact_x_dot(sys_start, sys_end%cv(2)%x)
@@ -2492,7 +2492,7 @@ subroutine exact_x_dot_de(n, ne, ne_d)
         print *, "ENERGY_DERIV_TOLERANCE_RUN_RC"
         print *, status%data(1), int(status%data(2)), ENERGY_DERIV_TOLERANCE
     end if
-    call assert(status%rc == TIMEOUT_RUN_RC, "test_exact, status%rc")
+    call assert(status%rc == TIMEOUT_RUN_RC, "test_single_cv_exact, status%rc")
     
     do i_var = 1, N_VAR
         select case (i_var)
@@ -2513,7 +2513,7 @@ subroutine exact_x_dot_de(n, ne, ne_d)
     end do
 end subroutine exact_x_dot_de
 
-subroutine test_exact(tests)
+subroutine test_single_cv_exact(tests)
     ! Tests using exact solution with projectile and one internal control volume.
     ! There is also an additional constant control volume for the atmosphere, but no real calculations are done by that.
     ! Also tests that `cv%constant_friction = .true.` works.
@@ -2534,31 +2534,31 @@ subroutine test_exact(tests)
     real(WP) :: dt
     
     n  = [500, 1000]
-    dt = TEST_EXACT_T_STOP / real(n(2), WP)
+    dt = TEST_SINGLE_CV_EXACT_T_STOP / real(n(2), WP)
     
     call exact_x_dot_de(10000, ne_fine, ne_d_fine)
     
-    call tests%real_eq(ne_fine(1)%v, 0.0_WP, "test_exact, x_dot numerical error", abs_tol=1.0e-12_WP)
-    call tests%real_eq(ne_d_fine(1, 1), 0.0_WP, "test_exact, d(x_dot)/d(csa) numerical error", abs_tol=1.0e-11_WP)
-    call tests%real_eq(ne_d_fine(1, 2), 0.0_WP, "test_exact, d(x_dot)/d(p_atm) numerical error", abs_tol=1.0e-18_WP)
-    call tests%real_eq(ne_d_fine(1, 3), 0.0_WP, "test_exact, d(x_dot)/d(x_0) numerical error", abs_tol=1.0e-11_WP)
-    call tests%real_eq(ne_d_fine(1, 4), 0.0_WP, "test_exact, d(x_dot)/d(p_0) numerical error", abs_tol=1.0e-18_WP)
-    call tests%real_eq(ne_d_fine(1, 5), 0.0_WP, "test_exact, d(x_dot)/d(m_p) numerical error", abs_tol=1.0e-13_WP)
-    call tests%real_eq(ne_d_fine(1, 6), 0.0_WP, "test_exact, d(x_dot)/d(p_f) numerical error", abs_tol=1.0e-18_WP)
+    call tests%real_eq(ne_fine(1)%v, 0.0_WP, "test_single_cv_exact, x_dot numerical error", abs_tol=1.0e-12_WP)
+    call tests%real_eq(ne_d_fine(1, 1), 0.0_WP, "test_single_cv_exact, d(x_dot)/d(csa) numerical error", abs_tol=1.0e-11_WP)
+    call tests%real_eq(ne_d_fine(1, 2), 0.0_WP, "test_single_cv_exact, d(x_dot)/d(p_atm) numerical error", abs_tol=1.0e-18_WP)
+    call tests%real_eq(ne_d_fine(1, 3), 0.0_WP, "test_single_cv_exact, d(x_dot)/d(x_0) numerical error", abs_tol=1.0e-11_WP)
+    call tests%real_eq(ne_d_fine(1, 4), 0.0_WP, "test_single_cv_exact, d(x_dot)/d(p_0) numerical error", abs_tol=1.0e-18_WP)
+    call tests%real_eq(ne_d_fine(1, 5), 0.0_WP, "test_single_cv_exact, d(x_dot)/d(m_p) numerical error", abs_tol=1.0e-13_WP)
+    call tests%real_eq(ne_d_fine(1, 6), 0.0_WP, "test_single_cv_exact, d(x_dot)/d(p_f) numerical error", abs_tol=1.0e-18_WP)
     
     ! I guess that I'm running into floating point error if I make the time step smaller than around the default.
     ! 4th order accuracy sure convergences fast!
-    call convergence_test(n, exact_x_dot_de, [4.0_WP], "test_exact, passing", tests, &
+    call convergence_test(n, exact_x_dot_de, [4.0_WP], "test_single_cv_exact, passing", tests, &
                             p_tol=[0.03_WP], p_d_tol=[0.14_WP], p=p, ne=ne)
     
-    call assert(size(p) == 1, "test_cva (test_exact): size(p) == 1 violated", print_integer=[size(p)])
-    open(newunit=tex_unit, action="write", status="replace", position="rewind", file="test_exact.tex", delim="quote")
+    call assert(size(p) == 1, "test_cva (test_single_cv_exact): size(p) == 1 violated", print_integer=[size(p)])
+    open(newunit=tex_unit, action="write", status="replace", position="rewind", file="test_single_cv_exact.tex", delim="quote")
     write(unit=tex_unit, fmt="(a)") "% auto-generated"
-    call write_latex_engineering(tex_unit, dt, "testexactdt", "f4.1")
+    call write_latex_engineering(tex_unit, dt, "testsinglecvexactdt", "f4.1")
     call write_latex_engineering(tex_unit, ne(1), "xdoterror", "f5.3")
     write(unit=tex_unit, fmt="(a, f5.3, a)") "\newcommand*{\xdotorder}{", p(1), "}"
     close(tex_unit)
-end subroutine test_exact
+end subroutine test_single_cv_exact
 !tripwire$ end
 
 end program test_cva

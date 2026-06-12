@@ -78,13 +78,13 @@ The test suite mentioned at the start of \secref{verval} has \totaltests\, the v
 This section details some of the more important verification tests.
 At the moment, only one test is listed here.
 
-\subsubsection{Comparison with exact solution}\label{exact-solution}
+\subsubsection{Comparison with single control volume exact solution}\label{single-cv-exact}
 
 To test that the time integration in BlasterSim is working correctly, an exact solution for a simple case was constructed.
 This case has only two control volumes, one for the barrel, and one for the atmosphere.
-See \figref{exact solution} for an illustration of this test case.
+See \figref{single cv exact} for an illustration of this test case.
 
-\input{exact-solution-figure.tex}
+\input{single-cv-exact-figure.tex}
 
 The barrel is initially filled with pressurized gas and the projectile has both dynamic and static friction pressure set to $p_\text{f}$.
 The tube has a constant cross-sectional area of $A$, so the volume of the barrel is $V = A\,x$.
@@ -126,8 +126,8 @@ In terms of the projectile velocity, the result is
     \dot{x} = \sqrt{\dot{x}_0^2 + \frac{2 A}{m_\text{p}} \left[\frac{p_0 \left(x_0^\gamma\,x^{1-\gamma} - x_0\right)}{1 - \gamma} - (p_\text{atm} + p_\text{f}) (x - x_0)\right]}.
 \end{equation}
 
-\input{test_exact.tex}
-This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact}. For $\Delta t = \testexactdt$~s, the numerical error was measured at $\xdoterror$~m/s, which is negligible. The numerical order-of-accuracy was measured at $\xdotorder$, which is close to the theoretically expected order-of-accuracy of $4$ for the RK4 integrator. In other words, not only does BlasterSim closely match the exact solution, but BlasterSim's numerical error decreases at the theoretically expected rate as the time step decreases. This is the most rigorous test that can be made with an exact solution. For more information on order-of-accuracy verification, see \citet[\S~2.3]{roy_review_2005}.
+\input{test_single_cv_exact.tex}
+This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact}. For $\Delta t = \testsinglecvexactdt$~s, the numerical error was measured at $\xdoterror$~m/s, which is negligible. The numerical order-of-accuracy was measured at $\xdotorder$, which is close to the theoretically expected order-of-accuracy of $4$ for the RK4 integrator. In other words, not only does BlasterSim closely match the exact solution, but BlasterSim's numerical error decreases at the theoretically expected rate as the time step decreases. This is the most rigorous test that can be made with an exact solution. For more information on order-of-accuracy verification, see \citet[\S~2.3]{roy_review_2005}.
 
 \section{Validation}\label{validation}
 
