@@ -2563,7 +2563,7 @@ subroutine test_single_cv_exact(tests)
 end subroutine test_single_cv_exact
 !tripwire$ end
 
-!tripwire$ begin 137D09A3 Update `\secref{plunger-impact-exact}` of verval.tex.
+!tripwire$ begin 3D482649 Update `\secref{plunger-impact-exact}` of verval.tex.
 pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
     use cva, only: cv_system_type
     use checks, only: assert
@@ -2582,7 +2582,7 @@ pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
     type(si_pressure)     :: p_atm
     type(si_temperature)  :: temp_atm
     type(si_inverse_mass) :: rm_p
-    type(si_pressure)     :: p_f
+    type(si_pressure)     :: p, p_f
     type(si_stiffness)    :: k
     type(si_length)       :: delta_pre
     
@@ -2625,7 +2625,8 @@ pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
     call p_f%v%init_const(0.0_WP, n_d)
     call k%v%init_const(0.0_WP, n_d)
     call delta_pre%v%init_const(0.0_WP, n_d)
-    call plunger_impact_sys_0%cv(2)%set(x_0, x_dot, y, p_atm, temp_atm, "plunger tube", csa, &
+    p = rho * DRY_AIR%r(n_d) * temp
+    call plunger_impact_sys_0%cv(2)%set(x_0, x_dot, y, p, temp, "plunger tube", csa, &
                                             rm_p, p_f, p_f, k, delta_pre, [DRY_AIR], 1)
 end function plunger_impact_sys_0
 
@@ -2668,7 +2669,7 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
     integer, parameter   :: N_VAR = 2, N_D = 4
     integer              :: i_var, i_d
     
-    type(si_mass_density) :: rho
+    type(si_mass_density) :: rho, rho_numerical
     type(si_area)         :: csa
     type(si_length)       :: x_0
     type(si_velocity)     :: x_dot
@@ -2690,6 +2691,10 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
     call temp%v%init_const(3.0_WP*TEMP_ATM, N_D)
     
     sys_0 = plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
+    
+    sys_0 = plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
+    rho_numerical = sys_0%cv(2)%rho()
+    call tests%real_eq(rho_numerical%v%v, rho%v%v, "test_plunger_impact_1, rho")
     
     t_impact = -x_0/x_dot
     call assert(t_impact%v%v > TEST_PLUNGER_IMPACT_1_T_STOP, &
@@ -2742,7 +2747,7 @@ subroutine test_plunger_impact_1(tests)
     integer :: n(2)
     real(WP), allocatable :: p(:), ne(:)
     
-    n  = [10, 100]
+    n  = [500, 1000]
     
     call convergence_test(n, exact_plunger_impact_1_de, [4.0_WP, 4.0_WP], "test_plunger_impact_1, passing", tests, &
                             p_tol=[0.03_WP, 0.03_WP], p_d_tol=[0.14_WP, 0.14_WP], p=p, ne=ne)
