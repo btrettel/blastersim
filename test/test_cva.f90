@@ -54,6 +54,7 @@ call test_conservation_2(tests)
 call test_mirror_1(tests)
 call test_mirror_2(tests)
 call test_single_cv_exact(tests)
+call test_plunger_impact_1(tests)
 
 call test_check_sys(tests)
 
@@ -2373,7 +2374,7 @@ subroutine test_check_sys(tests)
     ! TODO: `E_F_BLOW_UP_RUN_RC`
 end subroutine test_check_sys
 
-!tripwire$ begin 2B35CF66 Update `\secref{single-cv-exact}` of verval.tex when changing this exact solution test if necessary.
+!tripwire$ begin CF3B4C23 Update `\secref{single-cv-exact}` of verval.tex.
 pure function exact_x_dot(sys_0, x)
     use checks, only: assert, is_close
     use cva, only: IDEAL_EOS, CONST_EOS, NORMAL_CV_TYPE, MIRROR_CV_TYPE, cv_system_type
@@ -2480,7 +2481,7 @@ subroutine exact_x_dot_de(n, ne, ne_d)
     
     ! At first I thought that the number of time steps needed to be an integer.
     ! That was to avoid a reduction in order-of-accuracy from `sys_interp`.
-    ! However, `sys_interp` is not called if `rc == TIMEOUT_RUN_RC` as it is here..
+    ! However, `sys_interp` is not called if `rc == TIMEOUT_RUN_RC` as it is here.
     dt = t_stop / real(n, WP)
     
     call config%set("test_single_cv_exact", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false., const_dt=.true.)
@@ -2560,5 +2561,98 @@ subroutine test_single_cv_exact(tests)
     close(tex_unit)
 end subroutine test_single_cv_exact
 !tripwire$ end
+
+!tripwire$ begin 5A4E3F20 Update `\secref{plunger-impact-exact}` of verval.tex.
+pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
+    use cva, only: cv_system_type
+    use checks, only: assert
+    use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
+    
+    type(si_mass_density), intent(in) :: rho
+    type(si_area), intent(in)         :: csa
+    type(si_length), intent(in)       :: x_0
+    type(si_velocity), intent(in)     :: x_dot
+    type(si_temperature), intent(in)  :: temp
+    
+    type(cv_system_type), allocatable :: plunger_impact_sys_0
+    
+    integer               :: n_d
+    type(unitless)        :: y(1)
+    type(si_pressure)     :: p_atm
+    type(si_temperature)  :: temp_atm
+    type(si_inverse_mass) :: rm_p
+    type(si_pressure)     :: p_f
+    type(si_stiffness)    :: k
+    type(si_length)       :: delta_pre
+    
+    call assert(rho%v%v   > 0.0_WP, "test_cva (plunger_impact_sys_0): rho > 0 violated")
+    call assert(csa%v%v   > 0.0_WP, "test_cva (plunger_impact_sys_0): csa > 0 violated")
+    call assert(x_0%v%v   > 0.0_WP, "test_cva (plunger_impact_sys_0): x_0 > 0 violated")
+    call assert(x_dot%v%v < 0.0_WP, "test_cva (plunger_impact_sys_0): x_dot < 0 violated")
+    call assert(temp%v%v  > 0.0_WP, "test_cva (plunger_impact_sys_0): temp > 0 violated")
+    
+    n_d = size(rho%v%d)
+    
+    call p_atm%v%init_const(P_ATM_, n_d)
+    call temp_atm%v%init_const(TEMP_ATM_, n_d)
+    
+    allocate(plunger_impact_sys_0)
+    allocate(plunger_impact_sys_0%cv(2))
+    allocate(plunger_impact_sys_0%con(2, 2))
+    
+    ! connections
+    plunger_impact_sys_0%con(1, 1)%active = .false.
+    plunger_impact_sys_0%con(1, 2)%active = .false.
+    plunger_impact_sys_0%con(2, 2)%active = .false.
+    
+    plunger_impact_sys_0%con(2, 1)%active = .true.
+    call plunger_impact_sys_0%con(2, 1)%a_e%v%init_const(1.0_WP, 0)
+    call plunger_impact_sys_0%con(2, 1)%b%v%init_const(0.5_WP, 0)
+    call plunger_impact_sys_0%con(2, 1)%t_opening%v%init_const(0.0_WP, 0)
+    call plunger_impact_sys_0%con(2, 1)%alpha_0%v%init_const(1.0_WP, 0)
+    call plunger_impact_sys_0%con(2, 1)%alpha_dot_0%v%init_const(0.0_WP, 0)
+    plunger_impact_sys_0%con(2, 1)%m_dot_0 = -rho*csa*x_dot
+    
+    ! same for every CV
+    call y(1)%v%init_const(1.0_WP, n_d)
+    
+    ! CV 1: atmosphere
+    call plunger_impact_sys_0%cv(1)%set_const("atmosphere", csa, p_atm, temp_atm, [DRY_AIR], y, 2)
+    
+    ! CV 2: plunger tube
+    call rm_p%v%init_const(0.0_WP, n_d)
+    call p_f%v%init_const(0.0_WP, n_d)
+    call k%v%init_const(0.0_WP, n_d)
+    call delta_pre%v%init_const(0.0_WP, n_d)
+    call plunger_impact_sys_0%cv(2)%set(x_0, x_dot, y, p_atm, temp_atm, "plunger tube", csa, &
+                                            rm_p, p_f, p_f, k, delta_pre, [DRY_AIR], 1)
+end function plunger_impact_sys_0
+
+subroutine test_plunger_impact_1(tests)
+    use cva, only: cv_system_type
+    use gasdata, only: TEMP_ATM, RHO_ATM
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    type(si_mass_density) :: rho
+    type(si_area)         :: csa
+    type(si_length)       :: x_0
+    type(si_velocity)     :: x_dot
+    type(si_temperature)  :: temp
+    
+    type(cv_system_type), allocatable :: sys_0
+    
+    integer, parameter :: N_D = 5
+    
+    call rho%v%init(2.0_WP*RHO_ATM, 1, N_D)
+    call csa%v%init(1.0_WP, 2, N_D)
+    call x_0%v%init(1.0_WP, 3, N_D)
+    call x_dot%v%init(-10.0_WP, 4, N_D)
+    call temp%v%init(3.0_WP*TEMP_ATM, 5, N_D)
+    
+    sys_0 = plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
+    
+    call tests%integer_eq(1, 1, "test_plunger_impact_1, placeholder")
+end subroutine test_plunger_impact_1
 
 end program test_cva

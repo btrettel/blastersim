@@ -76,7 +76,7 @@ BlasterSim input and output may use other units, but the genunits types themselv
 
 The test suite mentioned at the start of \secref{verval} has \totaltests\, the vast majority of which are verification tests checking that various functions and subroutines of BlasterSim produce the expected results.
 This section details some of the more important verification tests.
-At the moment, only one test is listed here.
+At the moment, the tests listed here are incomplete.
 
 \subsubsection{Comparison with single control volume exact solution}\label{single-cv-exact}
 
@@ -128,6 +128,10 @@ In terms of the projectile velocity, the result is
 
 \input{test_single_cv_exact.tex}
 This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact}. For $\Delta t = \testsinglecvexactdt$~s, the numerical error was measured at $\xdoterror$~m/s, which is negligible. The numerical order-of-accuracy was measured at $\xdotorder$, which is close to the theoretically expected order-of-accuracy of $4$ for the RK4 integrator. In other words, not only does BlasterSim closely match the exact solution, but BlasterSim's numerical error decreases at the theoretically expected rate as the time step decreases. This is the most rigorous test that can be made with an exact solution. For more information on order-of-accuracy verification, see \citet[\S~2.3]{roy_review_2005}.
+
+\subsubsection{Comparison with plunger impact exact solution}\label{plunger-impact-exact}
+
+TODO
 
 \section{Validation}\label{validation}
 

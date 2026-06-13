@@ -19,10 +19,12 @@
         - Bounds respected.
         - Rebound velocity is correct.
         - Dissipated energy is correct.
+        - Energy remains conserved through impact.
     - <https://discord.com/channels/825852031239061545/825852073382772758/1484298391956488396>
         - > Plunger bounce has always seemed like a major factor in traditional springers in my testing.
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1475663102073766055>
     - Print a warning for plunger impact after it is handled properly and have a different exit code.
+    - Need "blowdown" mode for springers to get plunger impact energy when impact is after projectile leaves the barrel.
 - Add pressure effects on `d_e`. Make `d_e` an array so that it can be coefficients on a polynomial?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
