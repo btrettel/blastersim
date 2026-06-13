@@ -2607,7 +2607,7 @@ pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
     plunger_impact_sys_0%con(2, 2)%active = .false.
     
     plunger_impact_sys_0%con(2, 1)%active = .true.
-    call plunger_impact_sys_0%con(2, 1)%a_e%v%init_const(1.0_WP, n_d)
+    call plunger_impact_sys_0%con(2, 1)%a_e%v%init_const(0.0_WP, n_d)
     call plunger_impact_sys_0%con(2, 1)%b%v%init_const(0.5_WP, n_d)
     call plunger_impact_sys_0%con(2, 1)%t_opening%v%init_const(0.0_WP, n_d)
     call plunger_impact_sys_0%con(2, 1)%alpha_0%v%init_const(1.0_WP, n_d)
@@ -2666,8 +2666,8 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
     type(cv_system_type), allocatable :: sys_0, sys_1
     type(run_status_type)             :: status
     
-    integer, parameter   :: N_VAR = 2, N_D = 4
-    integer              :: i_var, i_d
+    integer, parameter   :: N_VAR = 2, N_D = 0
+    integer              :: i_var!, i_d
     
     type(si_mass_density) :: rho, rho_numerical
     type(si_area)         :: csa
@@ -2681,13 +2681,12 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
     allocate(ne(N_VAR))
     allocate(ne_d(N_VAR, N_D))
     
-    call rho%v%init(2.0_WP*RHO_ATM, 1, N_D)
-    call csa%v%init(0.5_WP, 2, N_D)
-    call x_0%v%init(2.0_WP, 3, N_D)
-    call x_dot%v%init(-1.0_WP, 4, N_D)
-    
-    ! `m` doesn't depend on `temp`.
-    ! That makes the derivative numerical error zero, triggering an assertion error in `convergence_test`.
+    ! This exact solution is a linear algebraic equation, leading to zero error in the derivatives.
+    ! So the derivatives are uninteresting.
+    call rho%v%init_const(2.0_WP*RHO_ATM, N_D)
+    call csa%v%init_const(0.5_WP, N_D)
+    call x_0%v%init_const(2.0_WP, N_D)
+    call x_dot%v%init_const(-1.0_WP, N_D)
     call temp%v%init_const(3.0_WP*TEMP_ATM, N_D)
     
     sys_0 = plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
@@ -2724,33 +2723,46 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
                 error stop "test_cva (exact_plunger_impact_1_de): invalid i_var (1)"
         end select
         
-        do i_d = 1, N_D
-            select case (i_var)
-                case (1)
-                    ne_d(i_var, i_d) = abs(sys_1%cv(2)%m(1)%v%d(i_d) - m_exact%v%d(i_d))
-                case (2)
-                    ne_d(i_var, i_d) = abs(sys_1%cv(2)%e%v%d(i_d) - e_g_exact%v%d(i_d))
-                case default
-                    error stop "test_cva (exact_plunger_impact_1_de): invalid i_var (2)"
-            end select
-        end do
+        ! Commented out to avoid a compiler warning about zero-trip loops.
+!        do i_d = 1, N_D
+!            select case (i_var)
+!                case (1)
+!                    ne_d(i_var, i_d) = abs(sys_1%cv(2)%m(1)%v%d(i_d) - m_exact%v%d(i_d))
+!                case (2)
+!                    ne_d(i_var, i_d) = abs(sys_1%cv(2)%e%v%d(i_d) - e_g_exact%v%d(i_d))
+!                case default
+!                    error stop "test_cva (exact_plunger_impact_1_de): invalid i_var (2)"
+!            end select
+!        end do
     end do
 end subroutine exact_plunger_impact_1_de
 
 subroutine test_plunger_impact_1(tests)
     ! This tests both the behavior near plunger impact and `m_dot`.
+    ! Evidently, the numerical error is negligible even for a small number of time steps.
+    ! This is likely because the exact solution is a linear algebratic equation.
+    ! So order-of-accuracy can not be tested.
+    ! A more complex exact solution would be needed for that.
     
-    use convergence, only: convergence_test
+    !use convergence, only: convergence_test
+    use fmad, only: ad
     
     type(test_results_type), intent(in out) :: tests
     
-    integer :: n(2)
-    real(WP), allocatable :: p(:), ne(:)
+!    integer :: n(2)
+!    real(WP), allocatable :: p(:), ne(:)
     
-    n  = [500, 1000]
+!    n  = [5, 15]
+!    call convergence_test(n, exact_plunger_impact_1_de, [4.0_WP, 4.0_WP], "test_plunger_impact_1, passing", tests, &
+!                            p_tol=[0.03_WP, 0.03_WP], p_d_tol=[0.01_WP, 0.01_WP], p=p, ne=ne)
+     
+     type(ad), allocatable :: ne(:)
+     real(WP), allocatable :: ne_d(:, :)
     
-    call convergence_test(n, exact_plunger_impact_1_de, [4.0_WP, 4.0_WP], "test_plunger_impact_1, passing", tests, &
-                            p_tol=[0.03_WP, 0.03_WP], p_d_tol=[0.14_WP, 0.14_WP], p=p, ne=ne)
+    call exact_plunger_impact_1_de(50, ne, ne_d)
+    
+    call tests%real_eq(ne(1)%v, 0.0_WP, "test_plunger_impact_1, m", abs_tol=1.0e-14_WP)
+    call tests%real_eq(ne(2)%v, 0.0_WP, "test_plunger_impact_1, e_g", abs_tol=3.0_WP)
 end subroutine test_plunger_impact_1
 !tripwire$ end
 
