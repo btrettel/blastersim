@@ -14,7 +14,8 @@ implicit none
 
 type(test_results_type) :: tests
 
-real(WP), parameter :: TEST_SINGLE_CV_EXACT_T_STOP = 0.0273_WP
+real(WP), parameter :: TEST_SINGLE_CV_EXACT_T_STOP  = 0.0273_WP
+real(WP), parameter :: TEST_PLUNGER_IMPACT_1_T_STOP = 0.1_WP
 
 call tests%start_tests("cva.nml")
 
@@ -2562,7 +2563,7 @@ subroutine test_single_cv_exact(tests)
 end subroutine test_single_cv_exact
 !tripwire$ end
 
-!tripwire$ begin 5A4E3F20 Update `\secref{plunger-impact-exact}` of verval.tex.
+!tripwire$ begin 137D09A3 Update `\secref{plunger-impact-exact}` of verval.tex.
 pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
     use cva, only: cv_system_type
     use checks, only: assert
@@ -2606,11 +2607,11 @@ pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
     plunger_impact_sys_0%con(2, 2)%active = .false.
     
     plunger_impact_sys_0%con(2, 1)%active = .true.
-    call plunger_impact_sys_0%con(2, 1)%a_e%v%init_const(1.0_WP, 0)
-    call plunger_impact_sys_0%con(2, 1)%b%v%init_const(0.5_WP, 0)
-    call plunger_impact_sys_0%con(2, 1)%t_opening%v%init_const(0.0_WP, 0)
-    call plunger_impact_sys_0%con(2, 1)%alpha_0%v%init_const(1.0_WP, 0)
-    call plunger_impact_sys_0%con(2, 1)%alpha_dot_0%v%init_const(0.0_WP, 0)
+    call plunger_impact_sys_0%con(2, 1)%a_e%v%init_const(1.0_WP, n_d)
+    call plunger_impact_sys_0%con(2, 1)%b%v%init_const(0.5_WP, n_d)
+    call plunger_impact_sys_0%con(2, 1)%t_opening%v%init_const(0.0_WP, n_d)
+    call plunger_impact_sys_0%con(2, 1)%alpha_0%v%init_const(1.0_WP, n_d)
+    call plunger_impact_sys_0%con(2, 1)%alpha_dot_0%v%init_const(0.0_WP, n_d)
     plunger_impact_sys_0%con(2, 1)%m_dot_0 = -rho*csa*x_dot
     
     ! same for every CV
@@ -2628,31 +2629,124 @@ pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
                                             rm_p, p_f, p_f, k, delta_pre, [DRY_AIR], 1)
 end function plunger_impact_sys_0
 
-subroutine test_plunger_impact_1(tests)
+pure function exact_plunger_impact_m(sys_0, t)
     use cva, only: cv_system_type
-    use gasdata, only: TEMP_ATM, RHO_ATM
     
-    type(test_results_type), intent(in out) :: tests
+    type(cv_system_type), intent(in), allocatable :: sys_0
+    type(si_time), intent(in)                     :: t
+    
+    type(si_mass) :: exact_plunger_impact_m
+    
+    exact_plunger_impact_m = sys_0%cv(2)%rho() * sys_0%cv(2)%csa * (sys_0%cv(2)%x + sys_0%cv(2)%x_dot*t)
+end function exact_plunger_impact_m
+
+pure function exact_plunger_impact_e_g(sys_0, t)
+    use cva, only: cv_system_type
+    
+    type(cv_system_type), intent(in), allocatable :: sys_0
+    type(si_time), intent(in)                     :: t
+    
+    type(si_energy) :: exact_plunger_impact_e_g
+    
+    exact_plunger_impact_e_g = sys_0%cv(2)%rho() * sys_0%cv(2)%csa * sys_0%cv(2)%u() * (sys_0%cv(2)%x + sys_0%cv(2)%x_dot*t)
+end function exact_plunger_impact_e_g
+
+subroutine exact_plunger_impact_1_de(n, ne, ne_d)
+    use fmad, only: ad
+    use cva, only: TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, run
+    use gasdata, only: TEMP_ATM, RHO_ATM
+    use checks, only: assert, is_close
+    
+    integer, intent(in)                :: n
+    type(ad), intent(out), allocatable :: ne(:)
+    real(WP), intent(out), allocatable :: ne_d(:, :)
+    
+    type(run_config_type)             :: config
+    type(cv_system_type), allocatable :: sys_0, sys_1
+    type(run_status_type)             :: status
+    
+    integer, parameter   :: N_VAR = 2, N_D = 4
+    integer              :: i_var, i_d
     
     type(si_mass_density) :: rho
     type(si_area)         :: csa
     type(si_length)       :: x_0
     type(si_velocity)     :: x_dot
     type(si_temperature)  :: temp
+    type(si_time)         :: t_impact, t_stop, dt
+    type(si_mass)         :: m_exact
+    type(si_energy)       :: e_g_exact
     
-    type(cv_system_type), allocatable :: sys_0
-    
-    integer, parameter :: N_D = 5
+    allocate(ne(N_VAR))
+    allocate(ne_d(N_VAR, N_D))
     
     call rho%v%init(2.0_WP*RHO_ATM, 1, N_D)
-    call csa%v%init(1.0_WP, 2, N_D)
-    call x_0%v%init(1.0_WP, 3, N_D)
-    call x_dot%v%init(-10.0_WP, 4, N_D)
-    call temp%v%init(3.0_WP*TEMP_ATM, 5, N_D)
+    call csa%v%init(0.5_WP, 2, N_D)
+    call x_0%v%init(2.0_WP, 3, N_D)
+    call x_dot%v%init(-1.0_WP, 4, N_D)
+    
+    ! `m` doesn't depend on `temp`.
+    ! That makes the derivative numerical error zero, triggering an assertion error in `convergence_test`.
+    call temp%v%init_const(3.0_WP*TEMP_ATM, N_D)
     
     sys_0 = plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
     
-    call tests%integer_eq(1, 1, "test_plunger_impact_1, placeholder")
+    t_impact = -x_0/x_dot
+    call assert(t_impact%v%v > TEST_PLUNGER_IMPACT_1_T_STOP, &
+                    "test_plunger_impact_1, t_impact > TEST_PLUNGER_IMPACT_1_T_STOP violated")
+    m_exact = exact_plunger_impact_m(sys_0, t_impact)
+    call assert(is_close(m_exact%v%v, 0.0_WP), &
+                    "test_plunger_impact_1, m_exact(t_impact) == 0 violated")
+    
+    call t_stop%v%init_const(TEST_PLUNGER_IMPACT_1_T_STOP, N_D)
+    dt = t_stop / real(n, WP)
+    
+    call config%set("test_plunger_impact_1", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false., const_dt=.true.)
+    call run(config, sys_0, sys_1, status)
+    
+    call assert(status%rc == TIMEOUT_RUN_RC, "test_plunger_impact_1, status%rc")
+    
+    m_exact   = exact_plunger_impact_m(sys_0, t_stop)
+    e_g_exact = exact_plunger_impact_e_g(sys_0, t_stop)
+    
+    do i_var = 1, N_VAR
+        select case (i_var)
+            case (1)
+                ne(i_var) = abs(sys_1%cv(2)%m(1)%v - m_exact%v)
+            case (2)
+                ne(i_var) = abs(sys_1%cv(2)%e%v - e_g_exact%v)
+            case default
+                error stop "test_cva (exact_plunger_impact_1_de): invalid i_var (1)"
+        end select
+        
+        do i_d = 1, N_D
+            select case (i_var)
+                case (1)
+                    ne_d(i_var, i_d) = abs(sys_1%cv(2)%m(1)%v%d(i_d) - m_exact%v%d(i_d))
+                case (2)
+                    ne_d(i_var, i_d) = abs(sys_1%cv(2)%e%v%d(i_d) - e_g_exact%v%d(i_d))
+                case default
+                    error stop "test_cva (exact_plunger_impact_1_de): invalid i_var (2)"
+            end select
+        end do
+    end do
+end subroutine exact_plunger_impact_1_de
+
+subroutine test_plunger_impact_1(tests)
+    ! This tests both the behavior near plunger impact and `m_dot`.
+    
+    use convergence, only: convergence_test
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    integer :: n(2)
+    real(WP), allocatable :: p(:), ne(:)
+    
+    n  = [10, 100]
+    
+    call convergence_test(n, exact_plunger_impact_1_de, [4.0_WP, 4.0_WP], "test_plunger_impact_1, passing", tests, &
+                            p_tol=[0.03_WP, 0.03_WP], p_d_tol=[0.14_WP, 0.14_WP], p=p, ne=ne)
 end subroutine test_plunger_impact_1
+!tripwire$ end
 
 end program test_cva
