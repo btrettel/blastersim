@@ -5,6 +5,7 @@
         - Constancy of CV mass as `x` changes.
         - Order-of-accuracy test with $\dot{m}$.
             - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
+    - Set $d/d\,t$ for $\rho$ and $u$ to zero at $x = 0$ as this is consistent with the exact solution? Unclear if this is what's found by L'Hopital.
     - Figure out why mass fraction function didn't work before when doing this?
     - `rho_cv`: Keep this member function as it's for the overall mass density, not mass density of a particular species.
     - Use $e$ for total CV energy, something else for non-specific gas internal energy.

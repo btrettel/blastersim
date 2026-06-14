@@ -2652,6 +2652,27 @@ pure function exact_plunger_impact_e_g(sys_0, t)
     exact_plunger_impact_e_g = sys_0%cv(2)%rho() * sys_0%cv(2)%csa * sys_0%cv(2)%u() * (sys_0%cv(2)%x + sys_0%cv(2)%x_dot*t)
 end function exact_plunger_impact_e_g
 
+pure function exact_plunger_impact_x(sys_0, t)
+    use cva, only: cv_system_type
+    
+    type(cv_system_type), intent(in), allocatable :: sys_0
+    type(si_time), intent(in)                     :: t
+    
+    type(si_length) :: exact_plunger_impact_x
+    
+    exact_plunger_impact_x = sys_0%cv(2)%x + sys_0%cv(2)%x_dot*t
+end function exact_plunger_impact_x
+
+pure function exact_plunger_impact_x_dot(sys_0)
+    use cva, only: cv_system_type
+    
+    type(cv_system_type), intent(in), allocatable :: sys_0
+    
+    type(si_velocity) :: exact_plunger_impact_x_dot
+    
+    exact_plunger_impact_x_dot = sys_0%cv(2)%x_dot
+end function exact_plunger_impact_x_dot
+
 subroutine exact_plunger_impact_1_de(n, ne, ne_d)
     use fmad, only: ad
     use cva, only: TIMEOUT_RUN_RC, cv_system_type, run_config_type, run_status_type, run
@@ -2666,13 +2687,13 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
     type(cv_system_type), allocatable :: sys_0, sys_1
     type(run_status_type)             :: status
     
-    integer, parameter   :: N_VAR = 2, N_D = 0
+    integer, parameter   :: N_VAR = 4, N_D = 0
     integer              :: i_var!, i_d
     
     type(si_mass_density) :: rho, rho_numerical
     type(si_area)         :: csa
-    type(si_length)       :: x_0
-    type(si_velocity)     :: x_dot
+    type(si_length)       :: x_0, x_exact
+    type(si_velocity)     :: x_dot, x_dot_exact
     type(si_temperature)  :: temp
     type(si_time)         :: t_impact, t_stop, dt
     type(si_mass)         :: m_exact
@@ -2710,8 +2731,10 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
     
     call assert(status%rc == TIMEOUT_RUN_RC, "test_plunger_impact_1, status%rc")
     
-    m_exact   = exact_plunger_impact_m(sys_0, t_stop)
-    e_g_exact = exact_plunger_impact_e_g(sys_0, t_stop)
+    m_exact     = exact_plunger_impact_m(sys_0, t_stop)
+    e_g_exact   = exact_plunger_impact_e_g(sys_0, t_stop)
+    x_exact     = exact_plunger_impact_x(sys_0, t_stop)
+    x_dot_exact = exact_plunger_impact_x_dot(sys_0)
     
     do i_var = 1, N_VAR
         select case (i_var)
@@ -2719,6 +2742,10 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
                 ne(i_var) = abs(sys_1%cv(2)%m(1)%v - m_exact%v)
             case (2)
                 ne(i_var) = abs(sys_1%cv(2)%e%v - e_g_exact%v)
+            case (3)
+                ne(i_var) = abs(sys_1%cv(2)%x%v - x_exact%v)
+            case (4)
+                ne(i_var) = abs(sys_1%cv(2)%x_dot%v - x_dot_exact%v)
             case default
                 error stop "test_cva (exact_plunger_impact_1_de): invalid i_var (1)"
         end select
@@ -2763,6 +2790,8 @@ subroutine test_plunger_impact_1(tests)
     
     call tests%real_eq(ne(1)%v, 0.0_WP, "test_plunger_impact_1, m", abs_tol=1.0e-14_WP)
     call tests%real_eq(ne(2)%v, 0.0_WP, "test_plunger_impact_1, e_g", abs_tol=3.0_WP)
+    call tests%real_eq(ne(3)%v, 0.0_WP, "test_plunger_impact_1, x")
+    call tests%real_eq(ne(4)%v, 0.0_WP, "test_plunger_impact_1, x_dot")
 end subroutine test_plunger_impact_1
 !tripwire$ end
 
