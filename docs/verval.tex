@@ -131,7 +131,39 @@ This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact
 
 \subsubsection{Comparison with plunger impact exact solution}\label{plunger-impact-exact}
 
-TODO
+\input{plunger-impact-exact-figure.tex}
+
+In \figref{plunger impact exact}, a constant velocity ($\dot{x}$) plunger is approaching the end of the plunger tube.
+In BlasterSim, a constant velocity plunger can be created by making the plunger have infinite mass, so no force will be able to change the plunger's velocity.
+The mass flow rate out of the plunger tube is set to a constant $\dot{m}$ defined so that it perfectly balances the plunger mass flow rate:
+\begin{equation}
+    \dot{m} = -\rho\,A\,\dot{x}. \label{eq:plunger impact exact mass flow rate}
+\end{equation}
+Note that $\dot{x}$ is negative here, so $\dot{m}$ is positive.
+Because $\dot{m}$, $A$, and $\dot{x}$, are constant, $\rho$ is necessarily also constant.
+
+\Eqref{plunger impact exact mass flow rate} will necessarily be the mass flow rate as $x$ approaches 0 (as the plunger approaches impact) because there will be no volume to absorb the difference between the plunger mass flow rate and the mass flow rate out of the plunger tube, so this test case should approximate conditions as the plunger approaches impact.
+
+The complete solution is:
+\begin{align}
+    m(t)       &= \rho\,A (x_0 + \dot{x}\,t), \\
+    E(t)       &= \rho\,A u (x_0 + \dot{x}\,t), \\
+    x(t)       &= x_0 + \dot{x}\,t, \\
+    \dot{x}(t) &= \dot{x}, \\
+    u(t)       &= u, \\
+    \rho(t)    &= \rho,
+\end{align}
+where $x_0$ is the initial plunger position.
+
+The plunger impacts the end of the plunger tube at time
+\begin{equation}
+    t_\text{impact} = -\frac{x_0}{\dot{x}}.
+\end{equation}
+
+\input{test_plunger_impact_1.tex}
+The solution in this case is simply a series of linear algebraic equations, and BlasterSim solves these equations extremely accurately even for large time steps.
+Consequently, the order-of-accuracy test used in \secref{single-cv-exact} can not be applied as the numerical error is negligible.
+After the plunger has moved for $\plungerimpacttone$~s, the error in $m$ is $\plungerimpactmerror$~kg, the error in $E$ is $\plungerimpactegerror$~J (negligible compared against the expected energy of $\plungerimpacteg$~J), the error in $x$ is $\plungerimpactxerror$~m, and the error in $\dot{x}$ is $\plungerimpactxdoterror$~m/s.
 
 \section{Validation}\label{validation}
 

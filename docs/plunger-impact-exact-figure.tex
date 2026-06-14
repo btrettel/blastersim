@@ -1,0 +1,41 @@
+% chktex-file 1 chktex-file 8
+
+\tikzmath{
+\dplunger    = 1;
+\ycenter     = \dplunger/2;
+\larrow      = 1;
+\xarrowstart = \lplungertube;
+\xarrowend   = \lplungertube + \larrow;
+\dmdot       = 0.5;
+\ylowmdot    = (\dplunger - \dmdot)/2; 
+\yhighmdot   = \ylowmdot + \dmdot;
+\ylowmid     = \ycenter + \dmdot/6;
+\yhighmid    = \ycenter - \dmdot/6;
+\xgas        = 7*\lplungertube/8;
+\xs          = \xplungerheadstart/2;
+\ys          = 0.5;
+}
+
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\draw[thick] (\lplungertube, \yhighmdot) -- (\lplungertube, \dplunger) -- (0, \dplunger) -- (0, 0)         -- (\lplungertube, 0) -- (\lplungertube, \ylowmdot);
+
+\draw[thick,dashed] (\xarrowstart, \ylowmdot) -- (\xarrowstart, \yhighmdot);
+\draw[thick] (\xarrowstart, \yhighmdot) -- (\xarrowend, \yhighmdot) -- node[right] {$\dot{m}$} (\xarrowend, \ylowmdot) -- (\xarrowstart, \ylowmdot);
+\draw[->,thick] (\xarrowstart, \yhighmid) -- (\xarrowend, \yhighmid);
+\draw[->,thick] (\xarrowstart, \ylowmid)  -- (\xarrowend, \ylowmid);
+
+\fill[fill=gray,draw=black,thick] (\xplungerheadstart, 0) rectangle ++(\lplungerhead, \dplunger) node[pos=0.5] {\small\color{white}p};
+
+\draw[<->,thick] (\xplungerheadend, \halfyfullspringabove) -- node[below] {$x$} (\lplungertube, \halfyfullspringabove);
+\draw[thick,dashed] (\lplungertube, \yfullspringabove) -- (\lplungertube, 0);
+\draw[thick,dashed] (\xplungerheadend, \yfullspringabove) -- (\xplungerheadend, 0);
+
+\draw[<->,thick] (\xdplunger, \dplunger) -- node[right] {$A$} (\xdplunger, 0);
+
+\draw[->,thick] (\xarrowend, \halfyfullspringabove) node[below right] {gas} -- (\xgas, \ycenter);
+\end{tikzpicture}
+\caption{Plunger impact test case.\label{fig:plunger impact exact}}
+\end{figure}
+
