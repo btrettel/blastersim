@@ -45,4 +45,4 @@ tests.html docs$(DIR_SEP)tests.tex: $(TESTNML)
 # Additional files to clean #
 #############################
 
-CLEAN_MANUAL = src$(DIR_SEP)units.f90 test_conservation.nml test_exact.tex src$(DIR_SEP)geninput_springer.f90 src$(DIR_SEP)geninput_springer.tex *.csv tests.html *.gp docs$(DIR_SEP)LaTeXML.cache
+CLEAN_MANUAL = src$(DIR_SEP)units.f90 test_conservation.nml test_exact.tex src$(DIR_SEP)geninput_springer.f90 src$(DIR_SEP)geninput_springer.tex *.csv tests.html *.gp docs$(DIR_SEP)LaTeXML.cache pneumatic-validation.png pneumatic-validation.tikz

@@ -1,14 +1,20 @@
 ### v0.3.0
 
-- Reformulate from $m_j$ (CV mass) to $\rho_j$ (where $\rho_j$ is CV mass density of species $j$) and $e$ (CV gas thermal energy) to $u$ (where $u$ is CV specific internal energy). $m_j = A\,x\,\rho_j$ and $e = A\,x\,u$. This will ensure that as $x$ goes to zero, CV mass and energy also go to zero.
-    - New tests before implementing this:
-        - Constancy of CV mass as `x` changes.
-        - Order-of-accuracy test with $\dot{m}$.
-            - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
-    - Set $d/d\,t$ for $\rho$ and $u$ to zero at $x = 0$ as this is consistent with the exact solution? Unclear if this is what's found by L'Hopital.
-    - Figure out why mass fraction function didn't work before when doing this?
-    - `rho_cv`: Keep this member function as it's for the overall mass density, not mass density of a particular species.
-    - Use $e$ for total CV energy, something else for non-specific gas internal energy.
+- Change barrel so that $x = 0$ is initial projectile position, $x = \ell_\text{travel}$ is the final projectile position, and $x = -x_\text{dead}$ is the start of the control volume.
+- Switch to unit conversion functions like CEA: <https://github.com/nasa/cea/blob/main/source/units.f90>
+- `cv%m` => `cv%m_k`, comment about "(species numbered by k)"
+    - `cv_type`, `cv_delta_type`
+- `cv%e` => `cv%e_g`
+    - `cv_type`, `cv_delta_type`
+- Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
+    - idea from <https://news.ycombinator.com/item?id=48554595>
+- springers: split the dead space between the barrel and plunger tube
+    - see 2026-06-16 handwritten notes
+    - Check that behavior when the plunger impacts changed (that is, no longer out of sync)
+    - `k_gas` => `k`, note in documentation on coding conventions that i and j are typically used for CVs, k is typically used for gas species
+    - Add event detection to interpolate to point where plunger impacts
+    - Make ideal gas law for pressure depend on $\dot{m}$ to allow it to work when $x = 0$?
+    - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
 - Plunger head motion bounds (lower and upper) (plunger impact)
     - Start out with a coefficient of restitution of zero as that's the simplest case. Then later add a non-zero coefficient of restitution.
     - Lower is not necessarily zero.
@@ -100,6 +106,11 @@
     - LaTeXML issues:
         - `\lstinputlisting[breaklines=true]` doesn't wrap.
         - gnuplot's `TikZ` and `pdfcairo` terminals don't work properly with LaTeXML.
+    - Redirect from btrettel.nerfers.com to BlasterSim docs.
+    - Add data sources to user's guide.
+        - TODO: Atean
+        - Jelle's dart masses: <https://tinyurl.com/foamprojectileweight>
+            - <https://discord.com/channels/146386512873783296/146387185724162050/1085001956919103508>
 - Optimal barrel length mode where the barrel length is not specified and BlasterSim stops where acceleration is zero.
     - It would be important to stop the backwards motion before adding this, otherwise BlasterSim will stop at the wrong time. Or I could pick the optimal barrel length after a certain time or after a certain travel distance.
 - `make dist`

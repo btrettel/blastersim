@@ -1552,7 +1552,8 @@ subroutine test_conservation_1(tests)
     call tests%integer_eq(status%rc, SUCCESS_RC, "test_conservation, status%rc")
     
     if (status%rc /= SUCCESS_RC) then
-        print *, status%data(1), status%i_cv(1)
+        if (allocated(status%data)) print *, status%data(1)
+        if (allocated(status%i_cv)) print *, status%i_cv(1)
     end if
     
     e_s_3_start = sys_start%cv(3)%e_s()
@@ -1579,7 +1580,7 @@ subroutine test_conservation_1(tests)
     
     e_chamber_atm = sys_end%cv(1)%e_total()
     call tests%character_eq(sys_end%cv(1)%label, "atmosphere for chamber", "test_conservation, chamber atmosphere label")
-    call tests%real_lt(e_chamber_atm%v%v, 0.0_WP, "test_conservation, chamber atmosphere energy is non-zero")
+    call tests%real_lt(e_chamber_atm%v%v, 0.0_WP, "test_conservation, chamber atmosphere energy sign")
     call tests%real_gt(abs(sys_end%cv(1)%x_dot%v%v), 0.0_WP, &
                         "test_conservation, chamber atmosphere plunger velocity is non-zero")
     call tests%real_eq(sys_end%cv(1)%x_dot%v%v, -sys_end%cv(3)%x_dot%v%v, &
@@ -1589,7 +1590,7 @@ subroutine test_conservation_1(tests)
     
     e_barrel_atm = sys_end%cv(2)%e_total()
     call tests%character_eq(sys_end%cv(2)%label, "atmosphere for barrel", "test_conservation, barrel atmosphere label")
-    call tests%real_gt(e_barrel_atm%v%v, 0.0_WP, "test_conservation, barrel atmosphere energy is non-zero")
+    call tests%real_gt(e_barrel_atm%v%v, 0.0_WP, "test_conservation, barrel atmosphere energy sign")
     call tests%real_gt(abs(sys_end%cv(2)%x_dot%v%v), 0.0_WP, &
                         "test_conservation, barrel atmosphere projectile/plunger velocity is non-zero")
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, -sys_end%cv(4)%x_dot%v%v, &
@@ -1671,6 +1672,11 @@ subroutine test_conservation_2(tests)
     call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_conservation_2, status%rc")
+    
+    if (status%rc /= TIMEOUT_RUN_RC) then
+        if (allocated(status%data)) print *, status%data(1)
+        if (allocated(status%i_cv)) print *, status%i_cv(1)
+    end if
     
     m_dry_air_start = sys_start%cv(1)%m(1) + sys_start%cv(2)%m(1)
     m_dry_air_end   = sys_end%cv(1)%m(1)   + sys_end%cv(2)%m(1)
@@ -1874,6 +1880,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -1894,6 +1901,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -1921,6 +1929,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -1941,6 +1950,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -1971,6 +1981,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -1991,6 +2002,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2019,6 +2031,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m(2)%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2039,6 +2052,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m(2)%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2070,6 +2084,7 @@ subroutine test_check_sys(tests)
     call temp%v%init_const(-100.0_WP, n_d)
     sys%cv(2)%e = sys%cv(2)%m(1)*DRY_AIR%u(temp)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2090,6 +2105,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
     sys%cv(1)%e = sys_start%e_total() - sys%cv(2)%e
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2121,6 +2137,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2141,6 +2158,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2168,6 +2186,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e%v%init_const(2.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2188,6 +2207,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2215,6 +2235,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2235,6 +2256,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2264,6 +2286,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e%v%init(1.0_WP, 1, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2284,6 +2307,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2313,6 +2337,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m(2)%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2333,6 +2358,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m(2)%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2563,7 +2589,7 @@ subroutine test_single_cv_exact(tests)
 end subroutine test_single_cv_exact
 !tripwire$ end
 
-!tripwire$ begin BED6445D Update `\secref{plunger-impact-exact}` of verval.tex.
+!tripwire$ begin 05EE6EAC Update `\secref{plunger-impact-exact}` of verval.tex.
 pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
     use cva, only: cv_system_type
     use checks, only: assert
@@ -2820,7 +2846,7 @@ subroutine test_plunger_impact_1(tests)
     
     open(newunit=tex_unit, action="write", status="replace", position="rewind", file="test_plunger_impact_1.tex", delim="quote")
     write(unit=tex_unit, fmt="(a)") "% auto-generated"
-    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\plungerimpacttone}{", t_stop%v%v, "}"
+    write(unit=tex_unit, fmt="(a, f4.2, a)") "\newcommand*{\plungerimpacttone}{", t_stop%v%v, "}"
     call write_latex_engineering(tex_unit, ne(1)%v, "plungerimpactmerror", "f5.3")
     write(unit=tex_unit, fmt="(a, f5.3, a)") "\newcommand*{\plungerimpactegerror}{", ne(2)%v, "}"
     call write_latex_engineering(tex_unit, e_g_exact%v%v, "plungerimpacteg", "f5.3")

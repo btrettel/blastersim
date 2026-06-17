@@ -84,6 +84,7 @@ type, public :: cv_type ! control volume
     type(si_mass), allocatable :: m(:)  ! mass(es) of gas(es) in control volume
     type(si_energy)            :: e     ! energy of gas in control volume
     type(si_energy)            :: e_f   ! energy lost to projectile/plunger friction in control volume
+    type(si_energy)            :: e_i      ! energy lost to plunger impact in control volume
     
     ! constants
     character(len=32)           :: label       ! human-readable label for control volume
@@ -240,7 +241,7 @@ pure function e_total(cv)
     
     type(si_energy) :: e_total
     
-    e_total = cv%e + cv%e_f + cv%e_s() + cv%e_k()
+    e_total = cv%e + cv%e_f + cv%e_i + cv%e_s() + cv%e_k()
 end function e_total
 
 !tripwire$ begin 3A66744C Update `\secref{equations-of-state}` of theory.tex if necessary.
@@ -380,17 +381,17 @@ pure function y(cv)
     
     type(unitless) :: y(size(cv%m))
     
-    integer        :: i
+    integer        :: k_gas
     type(si_mass)  :: m_total
     type(unitless) :: y_sum
     
     call y_sum%v%init_const(0.0_WP, size(cv%m(1)%v%d))
     m_total = cv%m_total()
-    do i = 1, size(cv%m)
-        y(i)  = cv%m(i) / m_total
-        y_sum = y_sum + y(i)
-        call assert(y(i)%v%v >= 0.0_WP, "cva (y): y >= 0 violated", print_real=[y(i)%v%v])
-        call assert(y(i)%v%v <= 1.0_WP, "cva (y): y <= 1 violated", print_real=[y(i)%v%v])
+    do k_gas = 1, size(cv%m)
+        y(k_gas)  = cv%m(k_gas) / m_total
+        y_sum = y_sum + y(k_gas)
+        call assert(y(k_gas)%v%v >= 0.0_WP, "cva (y): y >= 0 violated", print_real=[y(k_gas)%v%v])
+        call assert(y(k_gas)%v%v <= 1.0_WP, "cva (y): y <= 1 violated", print_real=[y(k_gas)%v%v])
     end do
     
     call assert(is_close(y_sum%v%v, 1.0_WP), "cva (y): y does not sum to 1")
@@ -557,7 +558,7 @@ pure function u_cv(cv)
     
     type(si_specific_energy) :: u_cv
     
-    integer              :: i
+    integer              :: k_gas
     type(si_mass)        :: m_total
     type(si_temperature) :: temp
     
@@ -567,8 +568,8 @@ pure function u_cv(cv)
     temp    = cv%temp()
     
     call u_cv%v%init_const(0.0_WP, size(cv%m(1)%v%d))
-    do i = 1, size(cv%m)
-        u_cv = u_cv + cv%m(i)*cv%gas(i)%u(temp)/m_total
+    do k_gas = 1, size(cv%m)
+        u_cv = u_cv + cv%m(k_gas)*cv%gas(k_gas)%u(temp)/m_total
     end do
     
     call assert(u_cv%v%v > 0.0_WP, "cva (u_cv): u_cv > 0 violated", print_real=[u_cv%v%v])
@@ -579,7 +580,7 @@ pure function h_cv(cv)
     
     type(si_specific_energy) :: h_cv
     
-    integer              :: i
+    integer              :: k_gas
     type(si_mass)        :: m_total
     type(si_temperature) :: temp
     type(unitless)       :: y
@@ -590,14 +591,14 @@ pure function h_cv(cv)
     temp    = cv%temp()
     
     call h_cv%v%init_const(0.0_WP, size(cv%m(1)%v%d))
-    do i = 1, size(cv%m)
+    do k_gas = 1, size(cv%m)
         if (.not. is_close(m_total%v%v, 0.0_WP)) then
-            y = cv%m(i)/m_total
+            y = cv%m(k_gas)/m_total
         else
             ! TODO: Not sure the derivatives of this should be zero.
             call y%v%init_const(0.0_WP, size(cv%m(1)%v%d))
         end if
-        h_cv = h_cv + y*cv%gas(i)%h(temp)
+        h_cv = h_cv + y*cv%gas(k_gas)%h(temp)
     end do
     
     call assert(h_cv%v%v >= 0.0_WP, "cva (h_cv): h_cv > 0 violated", print_real=[h_cv%v%v])
@@ -659,7 +660,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     logical, intent(in), optional           :: constant_friction
     type(si_velocity), intent(in), optional :: v_scale_s, v_scale_d
     
-    integer              :: i, n_d
+    integer              :: k_gas, n_d
     type(si_temperature) :: temp
     type(si_mass)        :: m_total
     type(unitless)       :: gamma_cv, y_sum
@@ -670,6 +671,8 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     cv%x     = x
     cv%x_dot = x_dot
     call cv%e_f%v%init_const(0.0_WP, n_d)
+    call cv%e_i%v%init_const(0.0_WP, n_d)
+    
     ! `p` and `temp` will be handled below
     
     cv%label       = label
@@ -766,16 +769,16 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     allocate(cv%m(size(y)))
     call y_sum%v%init_const(0.0_WP, n_d)
     call m_total%v%init_const(1.0_WP, n_d)
-    do i = 1, size(y)
-        call assert(gas(i)%gamma > 1.0_WP, "cva (set): gas%gamma > 1 violated", print_real=[gas(i)%gamma])
-        call assert(gas(i)%mm    > 0.0_WP, "cva (set): gas%mm > 0 violated", print_real=[gas(i)%mm])
+    do k_gas = 1, size(y)
+        call assert(gas(k_gas)%gamma > 1.0_WP, "cva (set): gas%gamma > 1 violated", print_real=[gas(k_gas)%gamma])
+        call assert(gas(k_gas)%mm    > 0.0_WP, "cva (set): gas%mm > 0 violated", print_real=[gas(k_gas)%mm])
         
         ! to catch using g/mol by mistake
-        call assert(gas(i)%mm    < 0.1_WP, "cva (set): gas%mm < 0.1 violated", print_real=[gas(i)%mm])
+        call assert(gas(k_gas)%mm    < 0.1_WP, "cva (set): gas%mm < 0.1 violated", print_real=[gas(k_gas)%mm])
         
-        call assert(gas(i)%p_c   > 0.0_WP, "cva (set): gas%p_c > 0 violated", print_real=[gas(i)%p_c])
+        call assert(gas(k_gas)%p_c   > 0.0_WP, "cva (set): gas%p_c > 0 violated", print_real=[gas(k_gas)%p_c])
         
-        y_sum = y_sum + y(i)
+        y_sum = y_sum + y(k_gas)
     end do
     
     call assert(is_close(y_sum%v%v, 1.0_WP), "cva (set): mass fractions do not sum to 1", print_real=[y_sum%v%v])
@@ -798,9 +801,9 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     
     ! Now set `m` and `e`
     call cv%e%v%init_const(0.0_WP, n_d)
-    do i = 1, size(y)
-        cv%m(i) = y(i)*m_total
-        cv%e    = cv%e + cv%m(i)*cv%gas(i)%u(temp)
+    do k_gas = 1, size(y)
+        cv%m(k_gas) = y(k_gas)*m_total
+        cv%e        = cv%e + cv%m(k_gas)*cv%gas(k_gas)%u(temp)
     end do
     
     call assert_mass(cv, "set")
@@ -844,6 +847,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     call cv%x%v%init_const(1.0_WP, n_d)
     call cv%e%v%init_const(0.0_WP, n_d)
     call cv%e_f%v%init_const(0.0_WP, n_d)
+    call cv%e_i%v%init_const(0.0_WP, n_d)
     call cv%rm_p%v%init_const(0.0_WP, n_d)
     call cv%p_fs%v%init_const(0.0_WP, n_d)
     call cv%p_fd%v%init_const(0.0_WP, n_d)
@@ -1195,14 +1199,14 @@ pure subroutine assert_mass(cv, procedure_name)
     type(cv_type), intent(in)    :: cv
     character(len=*), intent(in) :: procedure_name
     
-    integer       :: i
+    integer       :: k_gas
     type(si_mass) :: m_total
     
     call assert(len(trim(procedure_name)) > 0, "cva (assert_mass): procedure name should not be empty")
     
-    do i = 1, size(cv%m)
-        call assert(cv%m(i)%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m >= 0 violated", &
-                        print_real=[cv%m(i)%v%v], print_integer=[i])
+    do k_gas = 1, size(cv%m)
+        call assert(cv%m(k_gas)%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m >= 0 violated", &
+                        print_real=[cv%m(k_gas)%v%v], print_integer=[k_gas])
     end do
     
     m_total = cv%m_total()
@@ -1426,6 +1430,8 @@ pure subroutine calculate_next_time_step(sys_old, t, dt, sys_new)
     
     integer :: i_cv, n_cv, k_gas, n_gas, n_d
     
+    ! TODO: `e_i`, energy lost to plunger impact in control volume
+    
     n_cv  = size(sys_old%cv)
     n_gas = size(sys_old%cv(1)%m)
     n_d   = size(sys_old%cv(1)%m(1)%v%d)
@@ -1510,6 +1516,8 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out)
     do i_cv = 1, n_cv
         allocate(cv_delta_out(i_cv)%m(n_gas))
     end do
+    
+    ! TODO: `e_i`, energy lost to plunger impact in control volume
     
     sys = sys_old
     do i_cv = 1, n_cv
@@ -1969,7 +1977,7 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end,
     t = t_old + dt_i
 end subroutine sys_interp
 
-!tripwire$ begin 4A32E340 Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
+!tripwire$ begin BD17E829 Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
 subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     use convert, only: CONVERT_S_TO_MS, CONVERT_KG_TO_MG, CONVERT_PA_TO_KPA
     
@@ -2145,6 +2153,8 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 case default
                     error stop "cva (write_csv_row, e_k): invalid row_type"
             end select
+            
+            ! TODO: `e_i`, energy lost to plunger impact in control volume
         end if
     end do
     
