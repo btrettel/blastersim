@@ -2,6 +2,8 @@
 
 \section{Interior ballistics}\label{interior-ballistics}
 
+% TODO: Check that all variables are defined.
+
 \subsection{Control volume notation}\label{notation}
 
 \input{control-volume-figure.tex}
@@ -158,8 +160,9 @@ More detailed modeling of pilot-operated valves could make determining the valve
     \dv{x_i}{t}       &= \dot{x}_i \\
     \dv{\dot{x}_i}{t} &=
     \frac{A_i}{m_{\text{eff},i}} \left(p_i - p_{\text{mirror},i} - p_{\text{f},i}\right)
-    - \frac{k_i}{m_{\text{eff},i}} \left(x_i + \Delta_{\text{pre},i}\right) \label{eq:Newton's second law}
+    - \frac{k_i}{m_{\text{eff},i}} \left(x_i - x_{\text{min},i} + \Delta_{\text{pre},i}\right) \label{eq:Newton's second law}
 \end{align}
+% TODO: Define $x_{\text{min},i}$
 
 When a spring is present, the effective mass of the plunger factors in the spring mass.
 The spring is not moving at a uniform velocity as one end is stationary, so it would be incorrect to add all the spring mass to the effective mass.

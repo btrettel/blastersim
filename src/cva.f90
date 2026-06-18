@@ -978,7 +978,7 @@ pure function p_f0(cv, p_fe)
 end function p_f0
 !tripwire$ end
 
-!tripwire$ begin 421AC426 Update `\secref{known-issues}`, `\secref{equations-of-motion}`, `\secref{plunger-impact}` if necessary.
+!tripwire$ begin BDABE578 Update `\secref{known-issues}`, `\secref{equations-of-motion}`, `\secref{plunger-impact}` if necessary.
 pure function d_x_d_t(sys, i_cv)
     type(cv_system_type), intent(in) :: sys
     integer, intent(in)              :: i_cv
@@ -1089,7 +1089,7 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
 end function d_x_dot_d_t_normal
 !tripwire$ end
 
-!tripwire$ begin D7BABCFA Update \secref{conservation-laws} of theory.tex if necessary.
+!tripwire$ begin 23A2CF10 Update \secref{conservation-laws} of theory.tex if necessary.
 pure function d_m_k_d_t(sys, m_dot, k_gas, i_cv)
     type(cv_system_type), intent(in)    :: sys
     type(si_mass_flow_rate), intent(in) :: m_dot(:, :)

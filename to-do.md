@@ -1,5 +1,6 @@
 ### v0.3.0
 
+- Change convergence.f90 to ooatest.f90.
 - Switch to unit conversion functions like CEA: <https://github.com/nasa/cea/blob/main/source/units.f90>
 - `cv%m` => `cv%m_k`, comment about "(species numbered by k)"
     - `cv_type`, `cv_delta_type`
@@ -299,6 +300,7 @@
         - pneumatics might want to use less gas mass per shot
         - spring compression
             - <https://discord.com/channels/727038380054937610/1172390267890958366/1466253503151476877>
+            - <https://discord.com/channels/825852031239061545/825852073382772758/1517111131230048276>
     - For optimization, have ability to pick discrete values taken from text file.
         - How can UQ be handled with this? Have a second column for uncertainty?
 - Check entropy conservation.
