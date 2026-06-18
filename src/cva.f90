@@ -28,6 +28,7 @@ real(WP), public, parameter :: P_RL = 0.999_WP ! unitless
 real(WP), public, parameter :: C_MS = 1.0_WP/3.0_WP ! unitless
 
 real(WP), public, parameter :: X_STOP_DEFAULT           = 1.0e2_WP  ! m
+real(WP), public, parameter :: X_MIN_DEFAULT            = 0.0_WP    ! m
 logical, public, parameter  :: CSV_OUTPUT_DEFAULT       = .false.   ! no CSV output by default
 integer, public, parameter  :: CSV_FREQUENCY_DEFAULT    = 10        ! time steps
 real(WP), public, parameter :: T_STOP_DEFAULT           = 0.1_WP    ! s
@@ -84,7 +85,7 @@ type, public :: cv_type ! control volume
     type(si_mass), allocatable :: m(:)  ! mass(es) of gas(es) in control volume
     type(si_energy)            :: e     ! energy of gas in control volume
     type(si_energy)            :: e_f   ! energy lost to projectile/plunger friction in control volume
-    type(si_energy)            :: e_i      ! energy lost to plunger impact in control volume
+    type(si_energy)            :: e_i   ! energy lost to plunger impact in control volume
     
     ! constants
     character(len=32)           :: label       ! human-readable label for control volume
@@ -96,7 +97,7 @@ type, public :: cv_type ! control volume
     type(si_velocity)           :: v_scale_s   ! velocity scale over which part of static friction pressure becomes active
     type(si_velocity)           :: v_scale_d   ! velocity scale over which dynamic friction pressure becomes active
     type(si_stiffness)          :: k           ! stiffness of spring attached to plunger
-    type(si_length)             :: delta_pre   ! spring precompression
+    type(si_length)             :: delta_pre   ! spring precompression at `x = x_min`
     type(gas_type), allocatable :: gas(:)      ! gas data
     integer                     :: i_cv_mirror ! index of control volume to use in pressure difference calculation
     ! `i_cv_mirror = 0` disables mirror CVs. Use that for constant volume chambers.
@@ -104,6 +105,7 @@ type, public :: cv_type ! control volume
     type(si_temperature)        :: temp_const  ! if `cv%eos = CONST_EOS`, then `cv%temp() = temp_const`
     type(unitless), allocatable :: y_const(:)  ! if `cv%eos = CONST_EOS`, then this mass fraction will be used
     type(si_length)             :: x_stop      ! `x` location where simulation will stop
+    type(si_length)             :: x_min       ! minimum `x` location that the projectile/plunger can't move past
     type(si_mass)               :: m_spring    ! mass of spring
     logical                     :: constant_friction ! whether `p_f` will be constant or not
 contains
@@ -595,7 +597,7 @@ pure function h_cv(cv)
         if (.not. is_close(m_total%v%v, 0.0_WP)) then
             y = cv%m(k_gas)/m_total
         else
-            ! TODO: Not sure the derivatives of this should be zero.
+            ! TODO: Not sure the derivatives of this should be zero. Try L'Hopital and see what it should be?
             call y%v%init_const(0.0_WP, size(cv%m(1)%v%d))
         end if
         h_cv = h_cv + y*cv%gas(k_gas)%h(temp)
@@ -630,7 +632,7 @@ pure function gamma_cv(cv, y)
 end function gamma_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, delta_pre, gas, &
-                            i_cv_mirror, x_stop, isentropic_filling, p_atm, eos, type, m_spring, constant_friction, &
+                            i_cv_mirror, x_stop, x_min, isentropic_filling, p_atm, eos, type, m_spring, constant_friction, &
                             v_scale_s, v_scale_d)
     class(cv_type), intent(in out) :: cv
     
@@ -652,6 +654,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     integer, intent(in)               :: i_cv_mirror ! index of control volume to use in pressure difference calculation
     
     type(si_length), intent(in), optional   :: x_stop   ! `x` location where simulation will stop
+    type(si_length), intent(in), optional   :: x_min    ! minimum `x` location that the projectile/plunger can't move past
     logical, intent(in), optional           :: isentropic_filling
     type(si_pressure), intent(in), optional :: p_atm    ! atmospheric pressure (only requried if `isentropic_filling = .true.`
     integer, intent(in), optional           :: eos      ! equation of state to use
@@ -692,6 +695,17 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
                     print_real=[cv%x%v%v, cv%x_stop%v%v])
     else
         call cv%x_stop%v%init_const(X_STOP_DEFAULT, n_d)
+    end if
+    
+    if (present(x_min)) then
+        cv%x_min = x_min
+        
+        call assert(cv%x_min%v%v < cv%x_stop%v%v, "cva (set): x_min >= x_stop will cause immediate termination of run", &
+                    print_real=[cv%x%v%v, cv%x_min%v%v, cv%x_stop%v%v])
+        call assert(cv%x_min%v%v <= cv%x%v%v, "cva (set): x_min > x will crash immediately", &
+                    print_real=[cv%x%v%v, cv%x_min%v%v, cv%x_stop%v%v])
+    else
+        call cv%x_min%v%init_const(X_MIN_DEFAULT, n_d)
     end if
     
     if (present(isentropic_filling)) then
@@ -854,6 +868,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     call cv%k%v%init_const(0.0_WP, n_d)
     call cv%delta_pre%v%init_const(0.0_WP, n_d)
     call cv%x_stop%v%init_const(X_STOP_DEFAULT, n_d)
+    call cv%x_min%v%init_const(X_MIN_DEFAULT, n_d)
     
     call assert(cv%x%v%v < cv%x_stop%v%v, "cva (set_const): x >= x_stop will cause immediate termination of run", &
                     print_real=[cv%x%v%v, cv%x_stop%v%v])
@@ -1062,7 +1077,8 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
         call p_mirror%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
     end if
     
-    p_fe = sys%cv(i_cv)%p() - p_mirror - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x + sys%cv(i_cv)%delta_pre)
+    p_fe = sys%cv(i_cv)%p() - p_mirror &
+                - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_min + sys%cv(i_cv)%delta_pre)
     
     ! This calculates the effective (inverse) mass of the projectile/plunger factoring in the spring mass.
     ! ruby_equivalent_2000
@@ -1100,7 +1116,8 @@ pure function d_m_k_d_t(sys, m_dot, k_gas, i_cv)
         if (.not. is_close(m_total%v%v, 0.0_WP)) then
             y_k_i = sys%cv(i_cv)%m(k_gas) / m_total
         else
-            call y_k_i%v%init_const(0.0_WP, n_d) ! TODO: Not sure the derivatives of this should be zero.
+            ! TODO: Not sure the derivatives of this should be zero. Try L'Hopital and see what it should be?
+            call y_k_i%v%init_const(0.0_WP, n_d)
         end if
     end if
     
@@ -1115,7 +1132,8 @@ pure function d_m_k_d_t(sys, m_dot, k_gas, i_cv)
             if (.not. is_close(m_total%v%v, 0.0_WP)) then
                 y_k_j = sys%cv(j_cv)%m(k_gas) / m_total
             else
-                call y_k_j%v%init_const(0.0_WP, n_d) ! TODO: Not sure the derivatives of this should be zero.
+                ! TODO: Not sure the derivatives of this should be zero. Try L'Hopital and see what it should be?
+                call y_k_j%v%init_const(0.0_WP, n_d)
             end if
         end if
         

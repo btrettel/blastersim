@@ -37,6 +37,7 @@ call test_set_normal_2(tests)
 call test_set_normal_3(tests)
 call test_set_const(tests)
 call test_rates(tests)
+!call test_zero_acceleration(tests)
 call test_u_h_cv(tests)
 call test_gamma_cv(tests)
 
@@ -875,6 +876,15 @@ subroutine test_rates(tests)
     d_e_f_d_t_ = d_e_f_d_t(sys, 2)
     call tests%real_eq(d_e_f_d_t_%v%v, 4.0_WP*10.0_WP*1.0e5_WP, "d_e_f_d_t")
 end subroutine test_rates
+
+!subroutine test_zero_acceleration(tests)
+!    use gasdata, only: DRY_AIR
+!    use cva, only: cv_system_type, d_x_dot_d_t
+    
+!    type(test_results_type), intent(in out) :: tests
+    
+    
+!end subroutine test_zero_acceleration
 
 subroutine test_u_h_cv(tests)
     use gasdata, only: N2, H2O

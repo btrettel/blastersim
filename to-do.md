@@ -1,27 +1,22 @@
 ### v0.3.0
 
-- Change barrel so that $x = 0$ is initial projectile position, $x = \ell_\text{travel}$ is the final projectile position, and $x = -x_\text{dead}$ is the start of the control volume.
 - Switch to unit conversion functions like CEA: <https://github.com/nasa/cea/blob/main/source/units.f90>
 - `cv%m` => `cv%m_k`, comment about "(species numbered by k)"
     - `cv_type`, `cv_delta_type`
 - `cv%e` => `cv%e_g`
     - `cv_type`, `cv_delta_type`
-- Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
-    - idea from <https://news.ycombinator.com/item?id=48554595>
+- `test_acceleration`: Check some points where acceleration should be zero like where the spring has zero force for various `delta_pre` and `x_min`..
 - springers: split the dead space between the barrel and plunger tube
     - see 2026-06-16 handwritten notes
+    - Change springer barrel so that both plunger tube and barrel have dead volume.
     - Check that behavior when the plunger impacts changed (that is, no longer out of sync)
     - `k_gas` => `k`, note in documentation on coding conventions that i and j are typically used for CVs, k is typically used for gas species
-    - Add event detection to interpolate to point where plunger impacts
-    - Make ideal gas law for pressure depend on $\dot{m}$ to allow it to work when $x = 0$?
-    - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
 - Plunger head motion bounds (lower and upper) (plunger impact)
-    - Start out with a coefficient of restitution of zero as that's the simplest case. Then later add a non-zero coefficient of restitution.
-    - Lower is not necessarily zero.
+    - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
     - Generalize `sys_interp` to interpolate to positions other than `x_stop`, including `x_min` and `x_max`.
         - Generalize `sys_interp` to interpolate to where acceleration is zero for optimal barrel length.
     - Coefficient of restitution model for impact velocity on both ends.
-    - Make BlasterSim handle zero volume CVs. Simplest approach would be to make pressure zero in `cv%p` if `cv%x` is zero. Alternatively, `x_min` could always be greater than zero.
+        - Start out with a coefficient of restitution of zero as that's the simplest case. Then later add a non-zero coefficient of restitution.
     - Test cases for piston impact:
         - Bounds respected.
         - Rebound velocity is correct.
@@ -32,6 +27,9 @@
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1475663102073766055>
     - Print a warning for plunger impact after it is handled properly and have a different exit code.
     - Need "blowdown" mode for springers to get plunger impact energy when impact is after projectile leaves the barrel.
+    - Add `cv%e_i` being negative to `check_sys` and `test_check_sys`
+- Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
+    - idea from <https://news.ycombinator.com/item?id=48554595>
 - Add pressure effects on `d_e`. Make `d_e` an array so that it can be coefficients on a polynomial?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
