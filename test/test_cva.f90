@@ -2411,7 +2411,7 @@ subroutine test_check_sys(tests)
     ! TODO: `E_F_BLOW_UP_RUN_RC`
 end subroutine test_check_sys
 
-!tripwire$ begin CF3B4C23 Update `\secref{single-cv-exact}` of verval.tex.
+!tripwire$ begin C785EAC1 Update `\secref{single-cv-exact}` of verval.tex.
 pure function exact_x_dot(sys_0, x)
     use checks, only: assert, is_close
     use cva, only: IDEAL_EOS, CONST_EOS, NORMAL_CV_TYPE, MIRROR_CV_TYPE, cv_system_type
@@ -2560,7 +2560,7 @@ subroutine test_single_cv_exact(tests)
     ! I'm not sure all of these will show 4th order accuracy, however, as not all are solved for directly via RK4.
     
     use fmad, only: ad
-    use convergence, only: convergence_test
+    use ooa, only: ooa_test
     use checks, only: assert
     use io, only: write_latex_engineering
     
@@ -2586,7 +2586,7 @@ subroutine test_single_cv_exact(tests)
     
     ! I guess that I'm running into floating point error if I make the time step smaller than around the default.
     ! 4th order accuracy sure convergences fast!
-    call convergence_test(n, exact_x_dot_de, [4.0_WP], "test_single_cv_exact, passing", tests, &
+    call ooa_test(n, exact_x_dot_de, [4.0_WP], "test_single_cv_exact, passing", tests, &
                             p_tol=[0.03_WP], p_d_tol=[0.14_WP], p=p, ne=ne)
     
     call assert(size(p) == 1, "test_cva (test_single_cv_exact): size(p) == 1 violated", print_integer=[size(p)])
@@ -2599,7 +2599,7 @@ subroutine test_single_cv_exact(tests)
 end subroutine test_single_cv_exact
 !tripwire$ end
 
-!tripwire$ begin 05EE6EAC Update `\secref{plunger-impact-exact}` of verval.tex.
+!tripwire$ begin AD03F28D Update `\secref{plunger-impact-exact}` of verval.tex.
 pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
     use cva, only: cv_system_type
     use checks, only: assert
@@ -2796,7 +2796,7 @@ subroutine test_plunger_impact_1(tests)
     ! So order-of-accuracy can not be tested.
     ! A more complex exact solution would be needed for that.
     
-    !use convergence, only: convergence_test
+    !use ooa, only: ooa_test
     use fmad, only: ad
     use cva, only: cv_system_type
     use checks, only: assert, is_close
@@ -2809,7 +2809,7 @@ subroutine test_plunger_impact_1(tests)
 !    real(WP), allocatable :: p(:), ne(:)
     
 !    n  = [5, 15]
-!    call convergence_test(n, exact_plunger_impact_1_de, [4.0_WP, 4.0_WP], "test_plunger_impact_1, passing", tests, &
+!    call ooa_test(n, exact_plunger_impact_1_de, [4.0_WP, 4.0_WP], "test_plunger_impact_1, passing", tests, &
 !                            p_tol=[0.03_WP, 0.03_WP], p_d_tol=[0.01_WP, 0.01_WP], p=p, ne=ne)
      
     type(cv_system_type), allocatable :: sys_0

@@ -1,18 +1,18 @@
-! Module for procedures used for convergence testing.
+! Module for procedures used for order-of-accuracy testing.
 ! Standard: Fortran 2018
 ! Preprocessor: none
 ! Author: Ben Trettel (<http://trettel.us/>)
 ! Project: [BlasterSim](https://github.com/btrettel/blastersim)
 ! License: [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html)
 
-module convergence
+module ooa
 
 use fmad, only: ad
 use prec, only: WP
 implicit none
 private
 
-public :: dnorm, convergence_test, logspace
+public :: dnorm, ooa_test, logspace
 
 interface dnorm
     ! <https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html>
@@ -35,7 +35,7 @@ end interface dnorm
 
 contains
 
-subroutine convergence_test(n_arr, solver_ne, p_expected, message, tests, p_tol, p_d_tol, p, ne)
+subroutine ooa_test(n_arr, solver_ne, p_expected, message, tests, p_tol, p_d_tol, p, ne)
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     use checks, only: assert, assert_dimension
     use unittest, only: test_results_type
@@ -69,7 +69,7 @@ subroutine convergence_test(n_arr, solver_ne, p_expected, message, tests, p_tol,
             ! Numerical error (usually discretization error) is calculated in here.
             ! A norm can be used or a local metric can be used.
             
-            ! Instead pass out `ne_v` and calculate `ne_d` in `convergence_test`?
+            ! Instead pass out `ne_v` and calculate `ne_d` in `ooa_test`?
             ! Start as-is, later figure out how to refactor to simplify.
             
             ! Previously, additional tests could be added to be used with `tests`.
@@ -104,11 +104,11 @@ subroutine convergence_test(n_arr, solver_ne, p_expected, message, tests, p_tol,
     call assert_dimension(p_tol_, p_expected)
     call assert_dimension(p_d_tol_, p_expected)
     
-    call assert(size(n_arr) >= 2,       "convergence (convergence_test): n_arr should have at least 2 elements to calculate p")
-    call assert(all(n_arr > 0),         "convergence (convergence_test): n can not be zero or negative")
-    call assert(len(message) > 0,       "convergence (convergence_test): message can not be empty")
-    call assert(all(p_tol_ > 0.0_WP),   "convergence (convergence_test): p_tol is too small")
-    call assert(all(p_d_tol_ > 0.0_WP), "convergence (convergence_test): p_d_tol is too small")
+    call assert(size(n_arr) >= 2,       "convergence (ooa_test): n_arr should have at least 2 elements to calculate p")
+    call assert(all(n_arr > 0),         "convergence (ooa_test): n can not be zero or negative")
+    call assert(len(message) > 0,       "convergence (ooa_test): message can not be empty")
+    call assert(all(p_tol_ > 0.0_WP),   "convergence (ooa_test): p_tol is too small")
+    call assert(all(p_d_tol_ > 0.0_WP), "convergence (ooa_test): p_d_tol is too small")
     
     n_n = size(n_arr)
     
@@ -117,7 +117,7 @@ subroutine convergence_test(n_arr, solver_ne, p_expected, message, tests, p_tol,
     ! MAYBE: Run convergence tests in parallel later?
     do i_n = 1, n_n
         if (i_n > 1) then
-            call assert(n_arr(i_n) > n_arr(i_n - 1), "convergence (convergence_test): n_arr is not in ascending order")
+            call assert(n_arr(i_n) > n_arr(i_n - 1), "convergence (ooa_test): n_arr is not in ascending order")
         end if
         
         call solver_ne(n_arr(i_n), ne_v_i_n, ne_d_i_n)
@@ -194,7 +194,7 @@ subroutine convergence_test(n_arr, solver_ne, p_expected, message, tests, p_tol,
     
     ! Check that the orders of accuracy are as expected.
     do i_var = 1, n_var
-        call assert(p_expected(i_var) > 0.0_WP, "convergence (convergence_test): p_expected is zero or negative, " &
+        call assert(p_expected(i_var) > 0.0_WP, "convergence (ooa_test): p_expected is zero or negative, " &
                                                 // "which probably isn't desired")
         
         write(unit=i_var_string, fmt="(i0)") i_var
@@ -209,7 +209,7 @@ subroutine convergence_test(n_arr, solver_ne, p_expected, message, tests, p_tol,
                                     // ")=expected, var=" // trim(i_var_string), abs_tol=p_d_tol_(i_var))
         end do
     end do
-end subroutine convergence_test
+end subroutine ooa_test
 
 subroutine assert_numerical_error(ne_v, i_var, i_d)
     use checks, only: assert, TOL_FACTOR
@@ -228,7 +228,7 @@ subroutine assert_numerical_error(ne_v, i_var, i_d)
     end if
     
     call assert(ne_v > TOL_FACTOR * spacing(0.0_WP), &
-                    "convergence (convergence_test): " // trim(adjustl(arg_string)) // "=" // trim(adjustl(ne_string)) &
+                    "convergence (ooa_test): " // trim(adjustl(arg_string)) // "=" // trim(adjustl(ne_string)) &
                         // ", but it must be > 0. " &
                         // "If one or more variables are expected to be exact, test that separately with real_eq.")
 end subroutine assert_numerical_error
@@ -492,4 +492,4 @@ pure function logspace(loglower, logupper, n)
     end do
 end function logspace
 
-end module convergence
+end module ooa
