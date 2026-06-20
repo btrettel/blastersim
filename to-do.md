@@ -1,6 +1,5 @@
 ### v0.3.0
 
-- Change convergence.f90 to ooatest.f90.
 - Switch to unit conversion functions like CEA: <https://github.com/nasa/cea/blob/main/source/units.f90>
 - `cv%m` => `cv%m_k`, comment about "(species numbered by k)"
     - `cv_type`, `cv_delta_type`
