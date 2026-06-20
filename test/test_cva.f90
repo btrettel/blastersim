@@ -1843,7 +1843,7 @@ subroutine test_check_sys(tests)
     use cva, only: IDEAL_EOS, NORMAL_CV_TYPE, CONTINUE_RUN_RC, SUCCESS_RC, TIMEOUT_RUN_RC, NEGATIVE_CV_M_TOTAL_RUN_RC, &
                     NEGATIVE_CV_TEMP_RUN_RC, MASS_TOLERANCE_RUN_RC, ENERGY_TOLERANCE_RUN_RC, &
                     MASS_DERIV_TOLERANCE_RUN_RC, ENERGY_DERIV_TOLERANCE_RUN_RC, IDEAL_EOS_RUN_RC, &
-                    MIRROR_X_TOLERANCE_RUN_RC, MIRROR_CV_TYPE, X_LE_X_MIN_RUN_RC, &
+                    MIRROR_X_TOLERANCE_RUN_RC, MIRROR_CV_TYPE, X_LT_X_MIN_RUN_RC, &
                     !X_BLOW_UP_RUN_RC, M_BLOW_UP_RUN_RC, E_BLOW_UP_RUN_RC, E_F_BLOW_UP_RUN_RC, X_DOT_BLOW_UP_RUN_RC, &
                     run_config_type, cv_system_type, run_status_type, check_sys
     
@@ -2414,7 +2414,7 @@ subroutine test_check_sys(tests)
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, MIRROR_X_TOLERANCE_RUN_RC, "test_check_sys, MIRROR_X_TOLERANCE_RUN_RC, status%rc")
     
-    ! `X_LE_X_MIN_RUN_RC`
+    ! `X_LT_X_MIN_RUN_RC`
     
     call sys%cv(1)%x%v%init_const(4.0_WP, n_d)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
@@ -2461,9 +2461,9 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%x_min%v%init_const(1.0_WP, n_d)
     
     call check_sys(config, sys, sys_start, t, status)
-    call tests%integer_eq(status%rc, X_LE_X_MIN_RUN_RC, "test_check_sys, X_LE_X_MIN_RUN_RC, status%rc")
-    call tests%integer_eq(size(status%i_cv), 1, "test_check_sys, X_LE_X_MIN_RUN_RC, size(status%i_cv)")
-    call tests%integer_eq(status%i_cv(1), 2, "test_check_sys, X_LE_X_MIN_RUN_RC, status%i_cv(1)")
+    call tests%integer_eq(status%rc, X_LT_X_MIN_RUN_RC, "test_check_sys, X_LT_X_MIN_RUN_RC, status%rc")
+    call tests%integer_eq(size(status%i_cv), 1, "test_check_sys, X_LT_X_MIN_RUN_RC, size(status%i_cv)")
+    call tests%integer_eq(status%i_cv(1), 2, "test_check_sys, X_LT_X_MIN_RUN_RC, status%i_cv(1)")
     
     ! TODO: `X_BLOW_UP_RUN_RC`
     ! TODO: `X_DOT_BLOW_UP_RUN_RC`
@@ -2472,7 +2472,7 @@ subroutine test_check_sys(tests)
     ! TODO: `E_F_BLOW_UP_RUN_RC`
 end subroutine test_check_sys
 
-!tripwire$ begin C785EAC1 Update `\secref{single-cv-exact}` of verval.tex.
+!tripwire$ begin 1CE8A229 Update `\secref{single-cv-exact}` of verval.tex.
 pure function exact_x_dot(sys_0, x)
     use checks, only: assert, is_close
     use cva, only: IDEAL_EOS, CONST_EOS, NORMAL_CV_TYPE, MIRROR_CV_TYPE, cv_system_type
@@ -2578,7 +2578,7 @@ subroutine exact_x_dot_de(n, ne, ne_d)
     call t_stop%v%init_const(TEST_SINGLE_CV_EXACT_T_STOP, N_D)
     
     ! At first I thought that the number of time steps needed to be an integer.
-    ! That was to avoid a reduction in order-of-accuracy from `sys_interp`.
+    ! That was to avoid a reduction in order-of-accuracy from `get_sys_at_x`.
     ! However, `sys_interp` is not called if `rc == TIMEOUT_RUN_RC` as it is here.
     dt = t_stop / real(n, WP)
     

@@ -265,9 +265,21 @@ and finding the values of the coefficients $a$, $b$, and $c$ that satisfy the fo
 
 \subsection{Plunger impact}\label{plunger-impact}
 
-At the moment, BlasterSim does not handle plunger impact with the end of the plunger tube, and will crash if that occurs.
-Plunger impact will be handled in a future version of BlasterSim.
-Plunger impact does not appear to be necessary in the springers simulated so far, but certainly it is a factor in some springers.
+When the plunger impacts the end of the plunger tube, the plunger tube will rebound.
+The amount of rebound can be controlled through the coefficient of restitution, $e_\text{p}$.
+The velocity of the plunger before impact, $\dot{x}_i$, is related to the velocity of the plunger after impact, $\dot{x}_i^\prime$:
+\begin{equation}
+    \dot{x}_i^\prime = -e_{\text{p},i}\,\dot{x}_i.
+\end{equation}
+
+The negative sign shows that the plunger will change from moving towards the end of the plunger tube to moving away from the end of the plunger tube.
+
+The amount of energy dissipated in the impact, $\Delta e_{\text{m},i}$ is tracked in BlasterSim for each control volume:
+\begin{equation}
+    \Delta e_{\text{m},i} = \frac{1}{2} m_{\text{eff},i} \left(\dot{x}_i^2 - \dot{x}_i^{\prime\kern1pt2}\right).
+\end{equation}
+
+Tracking the total amount of energy dissipated in impact can be useful to improve blaster longevity.
 
 %\section{Exterior ballistics}\label{exterior-ballistics}
 % TODO later

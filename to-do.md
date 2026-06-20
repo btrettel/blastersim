@@ -1,12 +1,9 @@
 ### v0.3.0
 
+- Add `x_ref` to use in CSV output. Use `x_ref=x_dead` instead of `x_min=x_dead` in `create_barrel`. Update CSV output docs on this.
 - Plunger head motion bounds (lower and upper) (plunger impact)
-    - Make `check_sys` have a return code for `x < x_min`.
-    - Make a subroutine handle plunger impact including `sys_interp`, coefficient of restitution, etc.
+    - Add coefficient of restitution to inputs.
     - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
-    - Later: Generalize `sys_interp` to interpolate to where acceleration is zero for optimal barrel length.
-    - Coefficient of restitution model for impact velocity on both ends.
-        - Start out with a coefficient of restitution of zero as that's the simplest case. Then later add a non-zero coefficient of restitution.
     - Test cases for piston impact:
         - Bounds respected.
         - Rebound velocity is correct.
@@ -18,6 +15,8 @@
     - Print a warning for plunger impact after it is handled properly and have a different exit code.
     - Need "blowdown" mode for springers to get plunger impact energy when impact is after projectile leaves the barrel.
     - Check that behavior when the plunger impacts changed (that is, no longer out of sync)
+    - Document how dead volume in springers differs from pneumatics.
+- Test `get_sys_at_x`. Adding `call move_alloc(from=sys_im1, to=sys_i)` fixed a bug that presumably could explain why the `x` values returned by `get_sys_at_x` seemed a bit off before.
 - Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
     - <https://news.ycombinator.com/item?id=48554595>
     - <https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions>
@@ -235,6 +234,7 @@
     - Minimum of multiple time scales?
 - Try multiple CV exact solution. One constant pressure chamber, one barrel?
 - nmlfuzz using geninput data
+- Create `sys_a_event` to find where acceleration is zero for optimal barrel length.
 
 ***
 

@@ -54,8 +54,8 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin 17DF5DFB Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
-integer, public, parameter :: X_LE_X_MIN_RUN_RC             = -2
+!tripwire$ begin D9A1A6AD Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
+integer, public, parameter :: X_LT_X_MIN_RUN_RC             = -2
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
 integer, public, parameter :: TIMEOUT_RUN_RC                = 1
 integer, public, parameter :: NEGATIVE_CV_M_TOTAL_RUN_RC    = 2
@@ -67,7 +67,7 @@ integer, public, parameter :: ENERGY_DERIV_TOLERANCE_RUN_RC = 7
 integer, public, parameter :: IDEAL_EOS_RUN_RC              = 8
 integer, public, parameter :: MIRROR_X_TOLERANCE_RUN_RC     = 9
 integer, public, parameter :: NEGATIVE_CV_X_RUN_RC          = 10
-integer, public, parameter :: MAX_ITER_SYS_INTERP_RUN_RC    = 11
+integer, public, parameter :: MAX_ITER_GET_SYS_AT_X_RUN_RC  = 11
 !integer, public, parameter :: X_BLOW_UP_RUN_RC              = 
 !integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 
 !integer, public, parameter :: M_BLOW_UP_RUN_RC              = 
@@ -120,14 +120,15 @@ contains
     procedure :: p_c
     procedure :: y
     procedure :: chi
-    procedure :: r     => r_cv
-    procedure :: temp  => temp_cv
-    procedure :: vol   => vol_cv
-    procedure :: rho   => rho_cv
-    procedure :: p     => p_cv
-    procedure :: u     => u_cv
-    procedure :: h     => h_cv
-    procedure :: gamma => gamma_cv
+    procedure :: r        => r_cv
+    procedure :: temp     => temp_cv
+    procedure :: vol      => vol_cv
+    procedure :: rho      => rho_cv
+    procedure :: p        => p_cv
+    procedure :: u        => u_cv
+    procedure :: h        => h_cv
+    procedure :: gamma    => gamma_cv
+    procedure :: r_mp_eff => r_mp_eff_cv
     procedure :: set
     procedure :: set_const
     procedure :: p_f
@@ -991,7 +992,7 @@ pure function p_f0(cv, p_fe)
 end function p_f0
 !tripwire$ end
 
-!tripwire$ begin BDABE578 Update `\secref{known-issues}`, `\secref{equations-of-motion}`, `\secref{plunger-impact}` if necessary.
+!tripwire$ begin 902E7B2B Update `\secref{known-issues}`, `\secref{equations-of-motion}`, `\secref{plunger-impact}` if necessary.
 pure function d_x_d_t(sys, i_cv)
     type(cv_system_type), intent(in) :: sys
     integer, intent(in)              :: i_cv
@@ -1072,7 +1073,7 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
     
     type(si_pressure)     :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
     type(si_pressure)     :: p_mirror
-    type(si_inverse_mass) :: r_mp_eff ! effective mass of projectile/plunger
+    type(si_inverse_mass) :: r_mp_eff ! effective inverse mass of projectile/plunger
     
     call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_x_dot_d_t_normal): cv%csa > 0 violated", &
                     print_real=[sys%cv(i_cv)%csa%v%v], print_integer=[i_cv])
@@ -1093,13 +1094,22 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
     p_fe = sys%cv(i_cv)%p() - p_mirror &
                 - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_min + sys%cv(i_cv)%delta_pre)
     
-    ! This calculates the effective (inverse) mass of the projectile/plunger factoring in the spring mass.
-    ! ruby_equivalent_2000
-    r_mp_eff = sys%cv(i_cv)%rm_p / (1.0_WP + C_MS * sys%cv(i_cv)%m_spring * sys%cv(i_cv)%rm_p)
+    r_mp_eff = sys%cv(i_cv)%r_mp_eff()
     
     d_x_dot_d_t_normal = sys%cv(i_cv)%csa*r_mp_eff*(sys%cv(i_cv)%p() - p_mirror - sys%cv(i_cv)%p_f(p_fe)) &
                             - sys%cv(i_cv)%k*r_mp_eff*(sys%cv(i_cv)%x + sys%cv(i_cv)%delta_pre)
 end function d_x_dot_d_t_normal
+
+pure function r_mp_eff_cv(cv)
+    ! This calculates the effective inverse mass of the projectile/plunger factoring in the spring mass.
+    ! ruby_equivalent_2000
+    
+    class(cv_type), intent(in) :: cv
+    
+    type(si_inverse_mass) :: r_mp_eff_cv
+    
+    r_mp_eff_cv = cv%rm_p / (1.0_WP + C_MS * cv%m_spring * cv%rm_p)
+end function r_mp_eff_cv
 !tripwire$ end
 
 !tripwire$ begin B862672E Update \secref{conservation-laws} of theory.tex if necessary.
@@ -1632,10 +1642,10 @@ subroutine run(config, sys_start, sys_end, status)
     type(cv_system_type), allocatable, intent(out) :: sys_end
     type(run_status_type), intent(out)             :: status
     
-    type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp
+    type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp, sys_event
     
     character(len=CL)     :: error_message
-    integer               :: n_d, i, csv_unit, rc_sys_interp
+    integer               :: n_d, i, csv_unit, rc_get_sys_at_x
     type(si_time)         :: t, t_old, dt
     type(run_status_type) :: status_final
     
@@ -1669,7 +1679,17 @@ subroutine run(config, sys_start, sys_end, status)
         !print *, t%v%v
         
         call check_sys(config, sys_new, sys_start, t, status)
+        if (status%rc == X_LT_X_MIN_RUN_RC) then
+            call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_min, &
+                                sys_old, sys_new, t, sys_event, rc_get_sys_at_x)
+            if (rc_get_sys_at_x == SUCCESS_RC) then
+                call get_sys_after_impact(status%i_cv(1), sys_event, sys_new)
+            else
+                status%rc = MAX_ITER_GET_SYS_AT_X_RUN_RC
+            end if
+        end if
         if (status%rc >= SUCCESS_RC) exit time_loop
+        
         if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
             call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)
         end if
@@ -1683,14 +1703,15 @@ subroutine run(config, sys_start, sys_end, status)
     
     if (status%rc == SUCCESS_RC) then
         ! If successful, use Hénon's trick to ensure that `x == x_stop`.
-        call sys_interp(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_stop, sys_old, sys_new, t, sys_end, rc_sys_interp)
+        call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_stop, &
+                                sys_old, sys_new, t, sys_end, rc_get_sys_at_x)
         
         call check_sys(config, sys_end, sys_start, t, status_final)
         ! This will make sure that the status rc stays the same if everything is okay but `x` is a bit short.
         if (status_final%rc /= CONTINUE_RUN_RC) then
             status = status_final
-            if (rc_sys_interp == MAX_ITER_SYS_INTERP_RUN_RC) then
-                status%rc = rc_sys_interp
+            if (rc_get_sys_at_x == MAX_ITER_GET_SYS_AT_X_RUN_RC) then
+                status%rc = rc_get_sys_at_x
             end if
         end if
     else
@@ -1705,7 +1726,7 @@ subroutine run(config, sys_start, sys_end, status)
     status%t = t
 end subroutine run
 
-!tripwire$ begin 6053B52A Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
+!tripwire$ begin CC9C5CC9 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
 pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_start
@@ -1737,9 +1758,9 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
             return
         end if
         
-        ! Check whether `x <= x_min`.
-        if (sys%cv(i_cv)%x <= sys%cv(i_cv)%x_min) then
-            status%rc = X_LE_X_MIN_RUN_RC
+        ! Check whether `x < x_min`.
+        if (sys%cv(i_cv)%x < sys%cv(i_cv)%x_min) then
+            status%rc = X_LT_X_MIN_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
             return
@@ -1936,17 +1957,17 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
 end subroutine check_sys
 !tripwire$ end
 
-pure subroutine sys_interp(t_old, dt, i_cv_interp, x_interp, sys_old, sys_new, t, sys_end, rc)
-    ! Use Hénon's trick to ensure that `x == x_interp` with better conservation properties.
+pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new, t, sys_event, rc)
+    ! Use Hénon's trick to ensure that `x == x_event` with better conservation properties.
     ! More specifically:
-    ! Uses the secant method to find `dt` where `x == x_interp` for control volume number `i_cv_interp`.
+    ! Uses the secant method to find `dt` where `x == x_event` for control volume number `i_cv_x_event`.
     
     type(si_time), intent(in)                      :: t_old, dt
-    integer, intent(in)                            :: i_cv_interp ! control volume number to interpolate based on
-    type(si_length), intent(in)                    :: x_interp
+    integer, intent(in)                            :: i_cv_x_event ! control volume number to interpolate based on
+    type(si_length), intent(in)                    :: x_event
     type(cv_system_type), allocatable, intent(in)  :: sys_old, sys_new
     type(si_time), intent(out)                     :: t
-    type(cv_system_type), allocatable, intent(out) :: sys_end
+    type(cv_system_type), allocatable, intent(out) :: sys_event
     integer, intent(out)                           :: rc
     
     integer       :: i
@@ -1954,46 +1975,47 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, x_interp, sys_old, sys_new, t
     real(WP)      :: x_tol
     type(cv_system_type), allocatable :: sys_i, sys_im1, sys_im2, sys_temp
     
-    x_tol = 100.0_WP*spacing(x_interp%v%v)
+    x_tol = 100.0_WP*spacing(x_event%v%v)
     
-    call dt_im2%v%init_const(0.0_WP, size(sys_new%cv(i_cv_interp)%x%v%d))
+    call dt_im2%v%init_const(0.0_WP, size(sys_new%cv(i_cv_x_event)%x%v%d))
     dt_im1 = dt
     
     sys_im2 = sys_old
     sys_im1 = sys_new
     
-    rc = MAX_ITER_SYS_INTERP_RUN_RC
+    rc = MAX_ITER_GET_SYS_AT_X_RUN_RC
     do i = 1, MAX_ITERS
         ! This is one of the stopping criteria recommended by Wikipedia.
         ! <https://en.wikipedia.org/wiki/Secant_method#Computational_example>
         ! ellis_fortran_1994 p. 642 recommends a criteria based on how close the iteration is to the desired value.
         ! Note that the derivatives do not factor into this stopping criteria, as a value is what is being interpolated to.
-        if (abs(sys_im1%cv(i_cv_interp)%x%v%v - sys_im2%cv(i_cv_interp)%x%v%v) < x_tol) then
+        if (abs(sys_im1%cv(i_cv_x_event)%x%v%v - sys_im2%cv(i_cv_x_event)%x%v%v) < x_tol) then
             rc = SUCCESS_RC
+            call move_alloc(from=sys_im1, to=sys_i)
             exit 
         end if
         
         ! <https://en.wikipedia.org/wiki/Secant_method#The_method>
-        dt_i = dt_im1 - (dt_im1 - dt_im2) * (sys_im1%cv(i_cv_interp)%x - x_interp) &
-                    / (sys_im1%cv(i_cv_interp)%x - sys_im2%cv(i_cv_interp)%x)
+        dt_i = dt_im1 - (dt_im1 - dt_im2) * (sys_im1%cv(i_cv_x_event)%x - x_event) &
+                    / (sys_im1%cv(i_cv_x_event)%x - sys_im2%cv(i_cv_x_event)%x)
         
         !print *, dt_i%v%v, dt_im1%v%v, dt_im2%v%v
         
-        call assert(dt_i%v%v >= 0.0_WP, "cva (sys_interp): dt_i can not be negative", &
+        call assert(dt_i%v%v >= 0.0_WP, "cva (get_sys_at_x): dt_i can not be negative", &
                         print_real=[dt_i%v%v], print_integer=[i])
-        call assert(dt_i <= dt, "cva (sys_interp): dt_i can not be greater than dt", &
+        call assert(dt_i <= dt, "cva (get_sys_at_x): dt_i can not be greater than dt", &
                         print_real=[dt_i%v%v], print_integer=[i])
         
         call calculate_next_time_step(sys_old, t_old + dt_i, dt_i, sys_i)
         
-        call assert(sys_i%cv(i_cv_interp)%x >= sys_old%cv(i_cv_interp)%x, &
-                        "cva (sys_interp): x_i >= x_old violated", &
-                        print_real=[sys_old%cv(i_cv_interp)%x%v%v, sys_i%cv(i_cv_interp)%x%v%v, &
-                        sys_new%cv(i_cv_interp)%x%v%v, dt_i%v%v], print_integer=[i])
-        call assert(sys_i%cv(i_cv_interp)%x <= sys_new%cv(i_cv_interp)%x, &
-                        "cva (sys_interp): x_i <= x_new violated", &
-                        print_real=[sys_old%cv(i_cv_interp)%x%v%v, sys_i%cv(i_cv_interp)%x%v%v, &
-                        sys_new%cv(i_cv_interp)%x%v%v, dt_i%v%v], print_integer=[i])
+        call assert(sys_i%cv(i_cv_x_event)%x >= sys_old%cv(i_cv_x_event)%x, &
+                        "cva (get_sys_at_x): x_i >= x_old violated", &
+                        print_real=[sys_old%cv(i_cv_x_event)%x%v%v, sys_i%cv(i_cv_x_event)%x%v%v, &
+                        sys_new%cv(i_cv_x_event)%x%v%v, dt_i%v%v], print_integer=[i])
+        call assert(sys_i%cv(i_cv_x_event)%x <= sys_new%cv(i_cv_x_event)%x, &
+                        "cva (get_sys_at_x): x_i <= x_new violated", &
+                        print_real=[sys_old%cv(i_cv_x_event)%x%v%v, sys_i%cv(i_cv_x_event)%x%v%v, &
+                        sys_new%cv(i_cv_x_event)%x%v%v, dt_i%v%v], print_integer=[i])
         
         dt_im2 = dt_im1
         dt_im1 = dt_i
@@ -2004,14 +2026,37 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, x_interp, sys_old, sys_new, t
         call move_alloc(from=sys_temp, to=sys_i)
     end do
     
-    sys_end = sys_i
-    call assert(is_close(sys_end%cv(i_cv_interp)%x%v%v, x_interp%v%v, &
+    call assert(allocated(sys_i), "cva (get_sys_at_x): sys_i should be allocated here", &
+                    print_integer=[rc])
+    
+    sys_event = sys_i
+    call assert(is_close(sys_event%cv(i_cv_x_event)%x%v%v, x_event%v%v, &
                             abs_tol=max(100.0_WP*x_tol, 1.0e-6_WP)), &
-                    "cva (sys_interp): x_end is not close to x_interp", &
-                    print_real=[sys_end%cv(i_cv_interp)%x%v%v, x_interp%v%v])
+                    "cva (get_sys_at_x): x_end is not close to x_event", &
+                    print_real=[sys_event%cv(i_cv_x_event)%x%v%v, x_event%v%v])
     
     t = t_old + dt_i
-end subroutine sys_interp
+end subroutine get_sys_at_x
+
+!tripwire$ begin 7A91FDEB Update `\secref{plunger-impact}` of theory.tex.
+pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
+    ! Set `sys_before_impact` to the instant immediately after plunger impact.
+    ! `sys_before_impact` is right before plunger impact occurs (plunger velocity has no changed yet).
+    
+    integer, intent(in)                            :: i_cv ! control volume where `x_dot` and `e_m` will change
+    type(cv_system_type), allocatable, intent(in)  :: sys_before_impact
+    type(cv_system_type), allocatable, intent(out) :: sys_after_impact
+    
+    call assert(sys_after_impact%cv(i_cv)%cor%v%v >= 0.0_WP, "cva (get_sys_after_impact): cor >= 0 violated")
+    call assert(sys_after_impact%cv(i_cv)%cor%v%v <= 1.0_WP, "cva (get_sys_after_impact): cor <= 1 violated")
+    
+    sys_after_impact                = sys_before_impact
+    sys_after_impact%cv(i_cv)%x_dot = -sys_after_impact%cv(i_cv)%cor*sys_after_impact%cv(i_cv)%x_dot
+    sys_after_impact%cv(i_cv)%e_m   = sys_after_impact%cv(i_cv)%e_m &
+                                        + (0.5_WP/sys_after_impact%cv(i_cv)%r_mp_eff()) &
+                                            *(square(sys_before_impact%cv(i_cv)%x_dot) - square(sys_after_impact%cv(i_cv)%x_dot))
+end subroutine get_sys_after_impact
+!tripwire$ end
 
 !tripwire$ begin C596FF8D Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
 subroutine write_csv_row(csv_unit, sys, t, status, row_type)
