@@ -95,24 +95,24 @@ This should remain approximately constant and is present for debugging purposes.
     Floating-point number.
     Units of kg/m$^3$.
     Not present for constant pressure control volumes like atmospheres.
-    \item \texttt{e\_f} ($e_{\text{f},i}$): Energy lost due to friction on the projectile/plunger.
+    \item \texttt{e\_f} ($E_{\text{f},i}$): Energy lost due to friction on the projectile/plunger.
     Floating-point number.
     Units of J.
     Not present for one side of a projectile/plunger control volume to avoid double counting.
     % TODO: Add definition of this term.
-    \item \texttt{e\_s} ($e_{\text{s},i}$): Spring potential energy.
+    \item \texttt{e\_s} ($E_{\text{s},i}$): Spring potential energy.
     Floating-point number.
     Units of J.
     Not present for one side of a projectile/plunger control volume to avoid double counting.
     % TODO: Add definition of this term.
-    \item \texttt{e\_k} ($e_{\text{k},i}$): Projectile/plunger kinetic energy.
+    \item \texttt{e\_k} ($E_{\text{k},i}$): Projectile/plunger kinetic energy.
     Floating-point number.
     Units of J.
     Not present for one side of a projectile/plunger control volume to avoid double counting.
     For control volumes with springs ($m_\text{spring} \ne 0$~kg), the added mass from the spring is factored in as well.
     See~\eqref{effective mass} for how the spring mass factors in.
     % TODO: Add definition of this term
-    \item \texttt{e\_m} ($e_{\text{m},i}$): Energy lost to plunger impact.
+    \item \texttt{e\_m} ($E_{\text{m},i}$): Energy lost to plunger impact.
     Floating-point number.
     Units of J.
     See~\secref{plunger-impact} for details of how this is calculated.
@@ -120,7 +120,7 @@ This should remain approximately constant and is present for debugging purposes.
 \end{itemize}
 \item \texttt{rc}: Return code of \texttt{run} subroutine.
 Integer.
-A value of -1 means that BlasterSim will continue to the next time step.
+A value of -1 and below means that BlasterSim will continue to the next time step.
 A value of 0 means that BlasterSim completed the simulation successfully.
 Values above 0 indicate an error occurred and are discussed in \secref{run-time-checks}.
 \end{itemize}

@@ -1,9 +1,10 @@
 ### v0.3.0
 
 - Plunger head motion bounds (lower and upper) (plunger impact)
+    - Make `check_sys` have a return code for `x < x_min`.
+    - Make a subroutine handle plunger impact including `sys_interp`, coefficient of restitution, etc.
     - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
-    - Generalize `sys_interp` to interpolate to positions other than `x_stop`, including `x_min` and `x_max`.
-        - Generalize `sys_interp` to interpolate to where acceleration is zero for optimal barrel length.
+    - Later: Generalize `sys_interp` to interpolate to where acceleration is zero for optimal barrel length.
     - Coefficient of restitution model for impact velocity on both ends.
         - Start out with a coefficient of restitution of zero as that's the simplest case. Then later add a non-zero coefficient of restitution.
     - Test cases for piston impact:

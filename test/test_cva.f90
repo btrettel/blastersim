@@ -1843,7 +1843,7 @@ subroutine test_check_sys(tests)
     use cva, only: IDEAL_EOS, NORMAL_CV_TYPE, CONTINUE_RUN_RC, SUCCESS_RC, TIMEOUT_RUN_RC, NEGATIVE_CV_M_TOTAL_RUN_RC, &
                     NEGATIVE_CV_TEMP_RUN_RC, MASS_TOLERANCE_RUN_RC, ENERGY_TOLERANCE_RUN_RC, &
                     MASS_DERIV_TOLERANCE_RUN_RC, ENERGY_DERIV_TOLERANCE_RUN_RC, IDEAL_EOS_RUN_RC, &
-                    MIRROR_X_TOLERANCE_RUN_RC, MIRROR_CV_TYPE, &
+                    MIRROR_X_TOLERANCE_RUN_RC, MIRROR_CV_TYPE, X_LE_X_MIN_RUN_RC, &
                     !X_BLOW_UP_RUN_RC, M_BLOW_UP_RUN_RC, E_BLOW_UP_RUN_RC, E_F_BLOW_UP_RUN_RC, X_DOT_BLOW_UP_RUN_RC, &
                     run_config_type, cv_system_type, run_status_type, check_sys
     
@@ -1894,6 +1894,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
     sys%cv(1)%delta_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
+    call sys%cv(1)%x_min%v%init_const(0.0_WP, n_d)
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
@@ -1915,6 +1916,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
     sys%cv(2)%delta_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
+    call sys%cv(2)%x_min%v%init_const(0.0_WP, n_d)
     
     sys_start = sys
     
@@ -1943,6 +1945,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
     sys%cv(1)%delta_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
+    call sys%cv(1)%x_min%v%init_const(0.0_WP, n_d)
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
@@ -1964,6 +1967,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
     sys%cv(2)%delta_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
+    call sys%cv(2)%x_min%v%init_const(0.0_WP, n_d)
     
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, SUCCESS_RC, "test_check_sys, SUCCESS_RC, status%rc")
@@ -1995,6 +1999,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
     sys%cv(1)%delta_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
+    call sys%cv(1)%x_min%v%init_const(0.0_WP, n_d)
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
@@ -2016,6 +2021,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
     sys%cv(2)%delta_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
+    call sys%cv(2)%x_min%v%init_const(0.0_WP, n_d)
     
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_check_sys, TIMEOUT_RUN_RC, status%rc")
@@ -2045,6 +2051,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
     sys%cv(1)%delta_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
+    call sys%cv(1)%x_min%v%init_const(0.0_WP, n_d)
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
@@ -2066,6 +2073,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
     sys%cv(2)%delta_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
+    call sys%cv(2)%x_min%v%init_const(0.0_WP, n_d)
     
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, NEGATIVE_CV_M_TOTAL_RUN_RC, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, status%rc")
@@ -2098,6 +2106,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
     sys%cv(2)%delta_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
+    call sys%cv(1)%x_min%v%init_const(0.0_WP, n_d)
     
     call sys%cv(1)%x%v%init_const(0.1_WP, n_d)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
@@ -2119,6 +2128,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
     sys%cv(1)%delta_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
+    call sys%cv(2)%x_min%v%init_const(0.0_WP, n_d)
     
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, NEGATIVE_CV_TEMP_RUN_RC, "test_check_sys, NEGATIVE_CV_TEMP_RUN_RC, status%rc")
@@ -2151,6 +2161,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
     sys%cv(1)%delta_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
+    call sys%cv(1)%x_min%v%init_const(0.0_WP, n_d)
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
@@ -2172,6 +2183,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
     sys%cv(2)%delta_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
+    call sys%cv(2)%x_min%v%init_const(0.0_WP, n_d)
     
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, MASS_TOLERANCE_RUN_RC, "test_check_sys, MASS_TOLERANCE_RUN_RC, status%rc")
@@ -2200,6 +2212,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
     sys%cv(1)%delta_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
+    call sys%cv(1)%x_min%v%init_const(0.0_WP, n_d)
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
@@ -2221,6 +2234,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
     sys%cv(2)%delta_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
+    call sys%cv(2)%x_min%v%init_const(0.0_WP, n_d)
     
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, ENERGY_TOLERANCE_RUN_RC, "test_check_sys, ENERGY_TOLERANCE_RUN_RC, status%rc")
@@ -2249,6 +2263,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
     sys%cv(1)%delta_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
+    call sys%cv(1)%x_min%v%init_const(0.0_WP, n_d)
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
@@ -2270,6 +2285,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
     sys%cv(2)%delta_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
+    call sys%cv(2)%x_min%v%init_const(0.0_WP, n_d)
     
     call tests%integer_eq(size(sys%cv(1)%x%v%d), 2, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, n_d")
     call check_sys(config, sys, sys_start, t, status)
@@ -2300,6 +2316,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
     sys%cv(1)%delta_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
+    call sys%cv(1)%x_min%v%init_const(0.0_WP, n_d)
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
@@ -2321,6 +2338,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
     sys%cv(2)%delta_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
+    call sys%cv(2)%x_min%v%init_const(0.0_WP, n_d)
     
     call tests%integer_eq(size(sys%cv(1)%x%v%d), 2, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, n_d")
     call check_sys(config, sys, sys_start, t, status)
@@ -2351,6 +2369,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
     sys%cv(1)%delta_pre = -sys%cv(1)%x
     sys%cv(1)%i_cv_mirror = 0
+    call sys%cv(1)%x_min%v%init_const(0.0_WP, n_d)
     
     call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
@@ -2372,6 +2391,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
     sys%cv(2)%delta_pre = -sys%cv(2)%x
     sys%cv(2)%i_cv_mirror = 0
+    call sys%cv(2)%x_min%v%init_const(0.0_WP, n_d)
     
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, IDEAL_EOS_RUN_RC, "test_check_sys, IDEAL_EOS_RUN_RC, status%rc")
@@ -2393,6 +2413,57 @@ subroutine test_check_sys(tests)
     
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, MIRROR_X_TOLERANCE_RUN_RC, "test_check_sys, MIRROR_X_TOLERANCE_RUN_RC, status%rc")
+    
+    ! `X_LE_X_MIN_RUN_RC`
+    
+    call sys%cv(1)%x%v%init_const(4.0_WP, n_d)
+    call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%m_k(1)%v%init_const(0.25_WP, n_d)
+    call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
+    call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_m%v%init_const(0.0_WP, n_d)
+    sys%cv(1)%label = "CV1"
+    sys%cv(1)%eos   = IDEAL_EOS
+    sys%cv(1)%type  = NORMAL_CV_TYPE
+    sys%cv(1)%gas   = [DRY_AIR, H2O]
+    call sys%cv(1)%x_stop%v%init_const(10.0_WP, n_d)
+    call sys%cv(1)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%m_spring%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%k%v%init_const(10.0_WP, n_d)
+    sys%cv(1)%delta_pre = -sys%cv(1)%x
+    sys%cv(1)%i_cv_mirror = 0
+    call sys%cv(1)%x_min%v%init_const(0.0_WP, n_d)
+    
+    call sys%cv(2)%x%v%init_const(0.1_WP, n_d)
+    call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%m_k(1)%v%init_const(0.25_WP, n_d)
+    call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
+    call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_m%v%init_const(0.0_WP, n_d)
+    sys%cv(2)%label = "CV1"
+    sys%cv(2)%eos   = IDEAL_EOS
+    sys%cv(2)%type  = NORMAL_CV_TYPE
+    sys%cv(2)%gas   = [DRY_AIR, H2O]
+    call sys%cv(2)%x_stop%v%init_const(2.0_WP, n_d)
+    call sys%cv(2)%csa%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%rm_p%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%m_spring%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%p_fs%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%p_fd%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%k%v%init_const(10.0_WP, n_d)
+    sys%cv(2)%delta_pre = -sys%cv(2)%x
+    sys%cv(2)%i_cv_mirror = 0
+    call sys%cv(2)%x_min%v%init_const(1.0_WP, n_d)
+    
+    call check_sys(config, sys, sys_start, t, status)
+    call tests%integer_eq(status%rc, X_LE_X_MIN_RUN_RC, "test_check_sys, X_LE_X_MIN_RUN_RC, status%rc")
+    call tests%integer_eq(size(status%i_cv), 1, "test_check_sys, X_LE_X_MIN_RUN_RC, size(status%i_cv)")
+    call tests%integer_eq(status%i_cv(1), 2, "test_check_sys, X_LE_X_MIN_RUN_RC, status%i_cv(1)")
     
     ! TODO: `X_BLOW_UP_RUN_RC`
     ! TODO: `X_DOT_BLOW_UP_RUN_RC`

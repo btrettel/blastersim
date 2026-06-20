@@ -54,7 +54,8 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin E6E5D8C8 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
+!tripwire$ begin 17DF5DFB Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
+integer, public, parameter :: X_LE_X_MIN_RUN_RC             = -2
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
 integer, public, parameter :: TIMEOUT_RUN_RC                = 1
 integer, public, parameter :: NEGATIVE_CV_M_TOTAL_RUN_RC    = 2
@@ -1682,7 +1683,7 @@ subroutine run(config, sys_start, sys_end, status)
     
     if (status%rc == SUCCESS_RC) then
         ! If successful, use Hénon's trick to ensure that `x == x_stop`.
-        call sys_interp(t_old, dt, status%i_cv(1), sys_old, sys_new, t, sys_end, rc_sys_interp)
+        call sys_interp(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_stop, sys_old, sys_new, t, sys_end, rc_sys_interp)
         
         call check_sys(config, sys_end, sys_start, t, status_final)
         ! This will make sure that the status rc stays the same if everything is okay but `x` is a bit short.
@@ -1704,7 +1705,7 @@ subroutine run(config, sys_start, sys_end, status)
     status%t = t
 end subroutine run
 
-!tripwire$ begin 8ADBB496 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
+!tripwire$ begin 6053B52A Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
 pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_start
@@ -1731,6 +1732,14 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         ! Check whether the projectile left the barrel.
         if (sys%cv(i_cv)%x >= sys%cv(i_cv)%x_stop) then
             status%rc = SUCCESS_RC
+            allocate(status%i_cv(1))
+            status%i_cv(1) = i_cv
+            return
+        end if
+        
+        ! Check whether `x <= x_min`.
+        if (sys%cv(i_cv)%x <= sys%cv(i_cv)%x_min) then
+            status%rc = X_LE_X_MIN_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
             return
@@ -1927,13 +1936,14 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
 end subroutine check_sys
 !tripwire$ end
 
-pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end, rc)
-    ! Use Hénon's trick to ensure that `x == x_stop` with better conservation properties.
+pure subroutine sys_interp(t_old, dt, i_cv_interp, x_interp, sys_old, sys_new, t, sys_end, rc)
+    ! Use Hénon's trick to ensure that `x == x_interp` with better conservation properties.
     ! More specifically:
-    ! Uses the secant method to find `dt` where `x == x_stop` for control volume number `i_cv_interp`.
+    ! Uses the secant method to find `dt` where `x == x_interp` for control volume number `i_cv_interp`.
     
     type(si_time), intent(in)                      :: t_old, dt
     integer, intent(in)                            :: i_cv_interp ! control volume number to interpolate based on
+    type(si_length), intent(in)                    :: x_interp
     type(cv_system_type), allocatable, intent(in)  :: sys_old, sys_new
     type(si_time), intent(out)                     :: t
     type(cv_system_type), allocatable, intent(out) :: sys_end
@@ -1944,13 +1954,9 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end,
     real(WP)      :: x_tol
     type(cv_system_type), allocatable :: sys_i, sys_im1, sys_im2, sys_temp
     
-    x_tol = 100.0_WP*spacing(sys_old%cv(i_cv_interp)%x_stop%v%v)
+    x_tol = 100.0_WP*spacing(x_interp%v%v)
     
-    call assert(is_close(sys_old%cv(i_cv_interp)%x_stop%v%v, sys_new%cv(i_cv_interp)%x_stop%v%v), &
-                    "cva (sys_interp): x_stop is inconsistent", &
-                    print_real=[sys_old%cv(i_cv_interp)%x_stop%v%v, sys_new%cv(i_cv_interp)%x_stop%v%v])
-    
-    call dt_im2%v%init_const(0.0_WP, size(sys_new%cv(i_cv_interp)%x_stop%v%d))
+    call dt_im2%v%init_const(0.0_WP, size(sys_new%cv(i_cv_interp)%x%v%d))
     dt_im1 = dt
     
     sys_im2 = sys_old
@@ -1968,7 +1974,7 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end,
         end if
         
         ! <https://en.wikipedia.org/wiki/Secant_method#The_method>
-        dt_i = dt_im1 - (dt_im1 - dt_im2) * (sys_im1%cv(i_cv_interp)%x - sys_old%cv(i_cv_interp)%x_stop) &
+        dt_i = dt_im1 - (dt_im1 - dt_im2) * (sys_im1%cv(i_cv_interp)%x - x_interp) &
                     / (sys_im1%cv(i_cv_interp)%x - sys_im2%cv(i_cv_interp)%x)
         
         !print *, dt_i%v%v, dt_im1%v%v, dt_im2%v%v
@@ -1999,10 +2005,10 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end,
     end do
     
     sys_end = sys_i
-    call assert(is_close(sys_end%cv(i_cv_interp)%x%v%v, sys_end%cv(i_cv_interp)%x_stop%v%v, &
+    call assert(is_close(sys_end%cv(i_cv_interp)%x%v%v, x_interp%v%v, &
                             abs_tol=max(100.0_WP*x_tol, 1.0e-6_WP)), &
-                    "cva (sys_interp): x_end is not close to x_stop", &
-                    print_real=[sys_end%cv(i_cv_interp)%x%v%v, sys_end%cv(i_cv_interp)%x_stop%v%v])
+                    "cva (sys_interp): x_end is not close to x_interp", &
+                    print_real=[sys_end%cv(i_cv_interp)%x%v%v, x_interp%v%v])
     
     t = t_old + dt_i
 end subroutine sys_interp
