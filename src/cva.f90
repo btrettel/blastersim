@@ -83,7 +83,7 @@ type, public :: cv_type ! control volume
     type(si_length)            :: x      ! location of projectile/plunger
     type(si_velocity)          :: x_dot  ! velocity of projectile/plunger
     type(si_mass), allocatable :: m_k(:) ! mass(es) of gas(es) in control volume (species numbered by k)
-    type(si_energy)            :: e      ! energy of gas in control volume
+    type(si_energy)            :: e_g    ! energy of gas in control volume
     type(si_energy)            :: e_f    ! energy lost to projectile/plunger friction in control volume
     type(si_energy)            :: e_i    ! energy lost to plunger impact in control volume
     
@@ -135,7 +135,7 @@ type :: cv_delta_type
     type(si_length)            :: x      ! delta of location of projectile/plunger
     type(si_velocity)          :: x_dot  ! delta of velocity of projectile/plunger
     type(si_mass), allocatable :: m_k(:) ! delta of mass(es) of gas(es) in control volume (species numbered by k)
-    type(si_energy)            :: e      ! delta of energy of gas in control volume
+    type(si_energy)            :: e_g    ! delta of energy of gas in control volume
     type(si_energy)            :: e_f    ! delta of energy lost to projectile/plunger friction in control volume
 end type cv_delta_type
 
@@ -243,7 +243,7 @@ pure function e_total(cv)
     
     type(si_energy) :: e_total
     
-    e_total = cv%e + cv%e_f + cv%e_i + cv%e_s() + cv%e_k()
+    e_total = cv%e_g + cv%e_f + cv%e_i + cv%e_s() + cv%e_k()
 end function e_total
 
 !tripwire$ begin 90853DA3 Update `\secref{equations-of-state}` of theory.tex if necessary.
@@ -263,9 +263,9 @@ pure function p_cv(cv)
     select case (cv%eos)
         case (IDEAL_EOS)
             call assert(rho%v%v  > 0.0_WP, "cva (p_cv, IDEAL_EOS): rho%v > 0 violated, " // trim(cv%label), &
-                            print_real=[rho%v%v, cv%x%v%v, cv%x_dot%v%v, cv%m_k(1)%v%v, cv%e%v%v])
+                            print_real=[rho%v%v, cv%x%v%v, cv%x_dot%v%v, cv%m_k(1)%v%v, cv%e_g%v%v])
             call assert(temp%v%v > 0.0_WP, "cva (p_cv, IDEAL_EOS): temp%v > 0 violated, " // trim(cv%label), &
-                            print_real=[temp%v%v, cv%x%v%v, cv%x_dot%v%v, cv%m_k(1)%v%v, cv%e%v%v])
+                            print_real=[temp%v%v, cv%x%v%v, cv%x_dot%v%v, cv%m_k(1)%v%v, cv%e_g%v%v])
             call assert_dimension(rho%v%d, temp%v%d)
             
             p_cv = rho * cv%r() * temp
@@ -504,7 +504,7 @@ pure function temp_cv(cv)
             end do
             
             call temp_0_%v%init_const(TEMP_0, n_d)
-            temp_cv = temp_0_ + (cv%e - e_0) / heat_capacity
+            temp_cv = temp_0_ + (cv%e_g - e_0) / heat_capacity
         case (CONST_EOS)
             temp_cv = cv%temp_const
         case default
@@ -813,16 +813,16 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     
     m_total = cv%vol() * cv%rho_eos(p, temp, y)
     
-    ! Now set `m` and `e`
-    call cv%e%v%init_const(0.0_WP, n_d)
+    ! Now set `m_k` and `e_g`
+    call cv%e_g%v%init_const(0.0_WP, n_d)
     do l = 1, size(y)
         cv%m_k(l) = y(l)*m_total
-        cv%e      = cv%e + cv%m_k(l)*cv%gas(l)%u(temp)
+        cv%e_g    = cv%e_g + cv%m_k(l)*cv%gas(l)%u(temp)
     end do
     
     call assert_mass(cv, "set")
     call assert_dimension(cv%x%v%d, cv%x_dot%v%d)
-    call assert_dimension(cv%x%v%d, cv%e%v%d)
+    call assert_dimension(cv%x%v%d, cv%e_g%v%d)
     
     if (cv%eos == IDEAL_EOS) then
         ! This is checked here and not in `rho_eos` as the masses are not defined when `rho_eos` is called.
@@ -859,7 +859,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     end do
     
     call cv%x%v%init_const(1.0_WP, n_d)
-    call cv%e%v%init_const(0.0_WP, n_d)
+    call cv%e_g%v%init_const(0.0_WP, n_d)
     call cv%e_f%v%init_const(0.0_WP, n_d)
     call cv%e_i%v%init_const(0.0_WP, n_d)
     call cv%rm_p%v%init_const(0.0_WP, n_d)
@@ -1239,9 +1239,9 @@ pure subroutine assert_mass(cv, procedure_name)
             error stop "cva (assert_mass): invalid cv%eos"
     end select
     
-    ! I would also check that `cv%e` is positive here, but...
+    ! I would also check that `cv%e_g` is positive here, but...
     ! Strictly speaking, the people making the thermodynamic tables might not have made internal energy always positive.
-    ! Given that, violating `cv%e > 0` might be okay.
+    ! Given that, violating `cv%e_g > 0` might be okay.
     ! So I'm making the assertion based on temperature as that should always be positive.
     ! I can't put this assertion here because it would make this a recursive subroutine.
     ! The assertion in `temp_cv` is sufficient.
@@ -1431,7 +1431,7 @@ pure function e_total_sys(sys)
     
     integer :: i_cv
     
-    call e_total_sys%v%init_const(0.0_WP, size(sys%cv(1)%e%v%d))
+    call e_total_sys%v%init_const(0.0_WP, size(sys%cv(1)%e_g%v%d))
     do i_cv = 1, size(sys%cv)
         e_total_sys = e_total_sys + sys%cv(i_cv)%e_total()
     end do
@@ -1462,7 +1462,7 @@ pure subroutine calculate_next_time_step(sys_old, t, dt, sys_new)
     do i_cv = 1, n_cv
         call cv_delta_0(i_cv)%x%v%init_const(0.0_WP, n_d)
         call cv_delta_0(i_cv)%x_dot%v%init_const(0.0_WP, n_d)
-        call cv_delta_0(i_cv)%e%v%init_const(0.0_WP, n_d)
+        call cv_delta_0(i_cv)%e_g%v%init_const(0.0_WP, n_d)
         call cv_delta_0(i_cv)%e_f%v%init_const(0.0_WP, n_d)
         do k = 1, n_gas
             call cv_delta_0(i_cv)%m_k(k)%v%init_const(0.0_WP, n_d)
@@ -1492,10 +1492,10 @@ pure subroutine calculate_next_time_step(sys_old, t, dt, sys_new)
                                                         + 2.0_WP*cv_delta_3(i_cv)%x_dot &
                                                         + cv_delta_4(i_cv)%x_dot &
                                                         )/6.0_WP
-        sys_new%cv(i_cv)%e     = sys_old%cv(i_cv)%e + (cv_delta_1(i_cv)%e &
-                                                        + 2.0_WP*cv_delta_2(i_cv)%e &
-                                                        + 2.0_WP*cv_delta_3(i_cv)%e &
-                                                        + cv_delta_4(i_cv)%e &
+        sys_new%cv(i_cv)%e_g   = sys_old%cv(i_cv)%e_g + (cv_delta_1(i_cv)%e_g &
+                                                        + 2.0_WP*cv_delta_2(i_cv)%e_g &
+                                                        + 2.0_WP*cv_delta_3(i_cv)%e_g &
+                                                        + cv_delta_4(i_cv)%e_g &
                                                         )/6.0_WP
         sys_new%cv(i_cv)%e_f   = sys_old%cv(i_cv)%e_f + (cv_delta_1(i_cv)%e_f &
                                                         + 2.0_WP*cv_delta_2(i_cv)%e_f &
@@ -1541,7 +1541,7 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out)
     do i_cv = 1, n_cv
         sys%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + a*cv_delta_in(i_cv)%x
         sys%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + a*cv_delta_in(i_cv)%x_dot
-        sys%cv(i_cv)%e     = sys_old%cv(i_cv)%e     + a*cv_delta_in(i_cv)%e
+        sys%cv(i_cv)%e_g   = sys_old%cv(i_cv)%e_g   + a*cv_delta_in(i_cv)%e_g
         sys%cv(i_cv)%e_f   = sys_old%cv(i_cv)%e_f   + a*cv_delta_in(i_cv)%e_f
         do k = 1, n_gas
             sys%cv(i_cv)%m_k(k) = sys_old%cv(i_cv)%m_k(k) + a*cv_delta_in(i_cv)%m_k(k)
@@ -1551,7 +1551,7 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out)
     do i_cv = 1, n_cv
         cv_delta_out(i_cv)%x     = dt*d_x_d_t(sys, i_cv)
         cv_delta_out(i_cv)%x_dot = dt*d_x_dot_d_t(sys, i_cv)
-        cv_delta_out(i_cv)%e     = dt*d_e_d_t(sys%cv(i_cv), h_dot, i_cv)
+        cv_delta_out(i_cv)%e_g   = dt*d_e_d_t(sys%cv(i_cv), h_dot, i_cv)
         cv_delta_out(i_cv)%e_f   = dt*d_e_f_d_t(sys, i_cv)
         do k = 1, n_gas
             cv_delta_out(i_cv)%m_k(k) = dt*d_m_k_d_t(sys, m_dot, k, i_cv)
@@ -2096,7 +2096,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
             case (HEADER_ROW_TYPE)
                 write(unit=csv_unit, fmt="(3a)", advance="no") '"e (J, ', trim(sys%cv(i_cv)%label), ')",'
             case (NUMBER_ROW_TYPE)
-                write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%e%v%v, ","
+                write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%e_g%v%v, ","
             case default
                 error stop "cva (write_csv_row, e): invalid row_type"
         end select

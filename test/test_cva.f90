@@ -143,7 +143,7 @@ subroutine test_p_cv_ideal(tests)
     cv%gas(1) = DRY_AIR
     
     call temp%v%init_const(TEMP_ATM, 0)
-    cv%e = cv%m_k(1)*cv%gas(1)%u(temp)
+    cv%e_g = cv%m_k(1)*cv%gas(1)%u(temp)
     
     p = cv%p()
     
@@ -166,7 +166,7 @@ subroutine test_constant_cv(tests)
     call rho%v%init_const(1.0_WP, 0) ! Doesn't matter what this is set to initially.
     allocate(cv%m_k(1))
     call cv%m_k(1)%v%init_const(4.0_WP, 0)
-    call cv%e%v%init_const(1.0_WP, 0)
+    call cv%e_g%v%init_const(1.0_WP, 0)
     call cv%x%v%init_const(2.0_WP, 0)
     call cv%csa%v%init_const(1.0_WP, 0)
     cv%eos = CONST_EOS
@@ -200,7 +200,7 @@ subroutine test_rho_eos(tests)
     call y%v%init_const(1.0_WP, 0)
     allocate(cv%m_k(1))
     call cv%m_k(1)%v%init_const(1.0_WP, 0)
-    call cv%e%v%init_const(1.0_WP, 0)
+    call cv%e_g%v%init_const(1.0_WP, 0)
     cv%eos = IDEAL_EOS
     
     allocate(cv%gas(1))
@@ -252,7 +252,7 @@ subroutine test_r_cv(tests)
     y(4) = cv%m_k(4) / (cv%m_k(1) + cv%m_k(2) + cv%m_k(3) + cv%m_k(4))
     
     ! Needed to avoid an assertion failing.
-    call cv%e%v%init_const(1.0_WP, 0)
+    call cv%e_g%v%init_const(1.0_WP, 0)
     
     cv%eos = IDEAL_EOS
     
@@ -526,7 +526,7 @@ subroutine test_temp_cv_ideal(tests)
     cv%gas(1) = DRY_AIR
     
     ! moran_fundamentals_2008 table A-22, 300 K with 1 kg of mass
-    call cv%e%v%init_const(214.07e3_WP, 0)
+    call cv%e_g%v%init_const(214.07e3_WP, 0)
     
     temp = cv%temp()
     call tests%real_eq(temp%v%v, 300.0_WP, "temp_cv (qualitative)", abs_tol=5.0_WP)
@@ -605,7 +605,7 @@ subroutine test_set_normal_1(tests)
     ! Not exact, based on multiple of ambient density for simplicity.
     u = DRY_AIR%u(temp)
     call tests%real_eq(cv%m_k(1)%v%v, sqrt(2.0_WP)*RHO_ATM*0.05_WP, "test_set_normal_1, m(1)", abs_tol=1.0e-4_WP)
-    call tests%real_eq(cv%e%v%v, u%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP, "test_set_normal_1, e", abs_tol=10.0_WP)
+    call tests%real_eq(cv%e_g%v%v, u%v%v*sqrt(2.0_WP)*RHO_ATM*0.05_WP, "test_set_normal_1, e", abs_tol=10.0_WP)
 end subroutine test_set_normal_1
 
 subroutine test_set_normal_2(tests)
@@ -785,7 +785,7 @@ subroutine test_set_const(tests)
     
     call tests%real_eq(cv%x%v%v, 1.0_WP, "test_set_const, x")
     call tests%real_eq(cv%x_dot%v%v, 0.0_WP, "test_set_const, x_dot")
-    call tests%real_eq(cv%e%v%v, 0.0_WP, "test_set_const, e")
+    call tests%real_eq(cv%e_g%v%v, 0.0_WP, "test_set_const, e")
     call tests%real_eq(cv%rm_p%v%v, 0.0_WP, "test_set_const, rm_p")
     call tests%real_eq(cv%p_fs%v%v, 0.0_WP, "test_set_const, p_fs")
     call tests%real_eq(cv%p_fd%v%v, 0.0_WP, "test_set_const, p_fd")
@@ -1573,7 +1573,7 @@ subroutine test_conservation_1(tests)
     call tests%real_eq(e_k_3_start%v%v, 0.5_WP*(30.0e-3_WP)*(2.0_WP)**2, "test_conservation, e_k_3_start")
     
     e_start_3 = sys_start%cv(3)%e_total()
-    call tests%real_eq(e_start_3%v%v, sys_start%cv(3)%e%v%v + e_s_3_start%v%v + e_k_3_start%v%v, &
+    call tests%real_eq(e_start_3%v%v, sys_start%cv(3)%e_g%v%v + e_s_3_start%v%v + e_k_3_start%v%v, &
                             "test_conservation, sys_start%cv(3)%e_total()")
     
     m_start = sys_start%m_total()
@@ -1595,7 +1595,7 @@ subroutine test_conservation_1(tests)
                         "test_conservation, chamber atmosphere plunger velocity is non-zero")
     call tests%real_eq(sys_end%cv(1)%x_dot%v%v, -sys_end%cv(3)%x_dot%v%v, &
                         "test_conservation, chamber atmosphere velocity matches plunger velocity")
-    call tests%real_eq(e_chamber_atm%v%v, sys_end%cv(1)%e%v%v, &
+    call tests%real_eq(e_chamber_atm%v%v, sys_end%cv(1)%e_g%v%v, &
                             "test_conservation, chamber atmosphere energy is internal energy")
     
     e_barrel_atm = sys_end%cv(2)%e_total()
@@ -1605,7 +1605,7 @@ subroutine test_conservation_1(tests)
                         "test_conservation, barrel atmosphere projectile/plunger velocity is non-zero")
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, -sys_end%cv(4)%x_dot%v%v, &
                         "test_conservation, barrel atmosphere velocity matches projectile velocity")
-    call tests%real_eq(e_barrel_atm%v%v, sys_end%cv(2)%e%v%v, &
+    call tests%real_eq(e_barrel_atm%v%v, sys_end%cv(2)%e_g%v%v, &
                             "test_conservation, barrel atmosphere energy is internal energy")
     
     call tests%real_gt(sys_end%cv(3)%e_f%v%v, 0.0_WP, "test_conservation, chamber friction loss is non-zero")
@@ -1888,7 +1888,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
@@ -1909,7 +1909,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
@@ -1937,7 +1937,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
@@ -1958,7 +1958,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
@@ -1989,7 +1989,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
@@ -2010,7 +2010,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
@@ -2039,7 +2039,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%m_k(1)%v%init_const(-0.5_WP, n_d)
     call sys%cv(1)%m_k(2)%v%init_const(0.0_WP, n_d)
-    call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
@@ -2060,7 +2060,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%m_k(1)%v%init_const(1.5_WP, n_d)
     call sys%cv(2)%m_k(2)%v%init_const(0.0_WP, n_d)
-    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
@@ -2092,7 +2092,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m_k(1)%v%init_const(0.5_WP, n_d)
     call sys%cv(2)%m_k(2)%v%init_const(0.0_WP, n_d)
     call temp%v%init_const(-100.0_WP, n_d)
-    sys%cv(2)%e = sys%cv(2)%m_k(1)*DRY_AIR%u(temp)
+    sys%cv(2)%e_g = sys%cv(2)%m_k(1)*DRY_AIR%u(temp)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
@@ -2113,7 +2113,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
-    sys%cv(1)%e = sys_start%e_total() - sys%cv(2)%e
+    sys%cv(1)%e_g = sys_start%e_total() - sys%cv(2)%e_g
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
@@ -2145,7 +2145,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%m_k(1)%v%init_const(0.5_WP, n_d)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
@@ -2166,7 +2166,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
@@ -2194,7 +2194,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(1)%e%v%init_const(2.0_WP, n_d)
+    call sys%cv(1)%e_g%v%init_const(2.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
@@ -2215,7 +2215,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
@@ -2243,7 +2243,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%m_k(1)%v%init(0.25_WP, 1, n_d)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
@@ -2264,7 +2264,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
@@ -2294,7 +2294,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(1)%e%v%init(1.0_WP, 1, n_d)
+    call sys%cv(1)%e_g%v%init(1.0_WP, 1, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
@@ -2315,7 +2315,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%m_k(1)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
-    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
@@ -2345,7 +2345,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%m_k(1)%v%init_const(0.5_WP, n_d)
     call sys%cv(1)%m_k(2)%v%init_const(0.0_WP, n_d)
-    call sys%cv(1)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
@@ -2366,7 +2366,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%x_dot%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%m_k(1)%v%init_const(0.5_WP, n_d)
     call sys%cv(2)%m_k(2)%v%init_const(0.0_WP, n_d)
-    call sys%cv(2)%e%v%init_const(1.0_WP, n_d)
+    call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
@@ -2766,7 +2766,7 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
             case (1)
                 ne(i_var) = abs(sys_1%cv(2)%m_k(1)%v - m_exact%v)
             case (2)
-                ne(i_var) = abs(sys_1%cv(2)%e%v - e_g_exact%v)
+                ne(i_var) = abs(sys_1%cv(2)%e_g%v - e_g_exact%v)
             case (3)
                 ne(i_var) = abs(sys_1%cv(2)%x%v - x_exact%v)
             case (4)
@@ -2781,7 +2781,7 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
 !                case (1)
 !                    ne_d(i_var, i_d) = abs(sys_1%cv(2)%m_k(1)%v%d(i_d) - m_exact%v%d(i_d))
 !                case (2)
-!                    ne_d(i_var, i_d) = abs(sys_1%cv(2)%e%v%d(i_d) - e_g_exact%v%d(i_d))
+!                    ne_d(i_var, i_d) = abs(sys_1%cv(2)%e_g%v%d(i_d) - e_g_exact%v%d(i_d))
 !                case default
 !                    error stop "test_cva (exact_plunger_impact_1_de): invalid i_var (2)"
 !            end select

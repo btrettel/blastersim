@@ -1,10 +1,6 @@
 ### v0.3.0
 
 - Switch to unit conversion functions like CEA: <https://github.com/nasa/cea/blob/main/source/units.f90>
-- `cv%m` => `cv%m_k`, comment about "(species numbered by k)"
-    - `cv_type`, `cv_delta_type`
-- `cv%e` => `cv%e_g`
-    - `cv_type`, `cv_delta_type`
 - `test_acceleration`: Check some points where acceleration should be zero like where the spring has zero force for various `delta_pre` and `x_min`..
 - springers: split the dead space between the barrel and plunger tube
     - see 2026-06-16 handwritten notes
