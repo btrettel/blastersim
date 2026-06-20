@@ -29,6 +29,7 @@ real(WP), public, parameter :: C_MS = 1.0_WP/3.0_WP ! unitless
 
 real(WP), public, parameter :: X_STOP_DEFAULT           = 1.0e2_WP  ! m
 real(WP), public, parameter :: X_MIN_DEFAULT            = 0.0_WP    ! m
+real(WP), public, parameter :: COR_DEFAULT              = 0.0_WP
 logical, public, parameter  :: CSV_OUTPUT_DEFAULT       = .false.   ! no CSV output by default
 integer, public, parameter  :: CSV_FREQUENCY_DEFAULT    = 10        ! time steps
 real(WP), public, parameter :: T_STOP_DEFAULT           = 0.1_WP    ! s
@@ -85,7 +86,7 @@ type, public :: cv_type ! control volume
     type(si_mass), allocatable :: m_k(:) ! mass(es) of gas(es) in control volume (species numbered by k)
     type(si_energy)            :: e_g    ! energy of gas in control volume
     type(si_energy)            :: e_f    ! energy lost to projectile/plunger friction in control volume
-    type(si_energy)            :: e_i    ! energy lost to plunger impact in control volume
+    type(si_energy)            :: e_m    ! energy lost to plunger impact in control volume
     
     ! constants
     character(len=32)           :: label       ! human-readable label for control volume
@@ -107,6 +108,7 @@ type, public :: cv_type ! control volume
     type(si_length)             :: x_stop      ! `x` location where simulation will stop
     type(si_length)             :: x_min       ! minimum `x` location that the projectile/plunger can't move past
     type(si_mass)               :: m_spring    ! mass of spring
+    type(unitless)              :: cor         ! coefficient of restitution during plunger impact
     logical                     :: constant_friction ! whether `p_f` will be constant or not
 contains
     procedure :: m_total
@@ -243,7 +245,7 @@ pure function e_total(cv)
     
     type(si_energy) :: e_total
     
-    e_total = cv%e_g + cv%e_f + cv%e_i + cv%e_s() + cv%e_k()
+    e_total = cv%e_g + cv%e_f + cv%e_m + cv%e_s() + cv%e_k()
 end function e_total
 
 !tripwire$ begin 27C28AF4 Update `\secref{equations-of-state}` of theory.tex if necessary.
@@ -632,8 +634,8 @@ pure function gamma_cv(cv, y)
 end function gamma_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, delta_pre, gas, &
-                            i_cv_mirror, x_stop, x_min, isentropic_filling, p_atm, eos, type, m_spring, constant_friction, &
-                            v_scale_s, v_scale_d)
+                            i_cv_mirror, x_stop, x_min, isentropic_filling, p_atm, eos, type, m_spring, cor, &
+                            constant_friction, v_scale_s, v_scale_d)
     class(cv_type), intent(in out) :: cv
     
     ! time varying
@@ -660,6 +662,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     integer, intent(in), optional           :: eos      ! equation of state to use
     integer, intent(in), optional           :: type     ! type of CV to use
     type(si_mass), intent(in), optional     :: m_spring ! mass of spring
+    type(unitless), intent(in), optional    :: cor      ! coefficient of restitution during plunger impact
     logical, intent(in), optional           :: constant_friction
     type(si_velocity), intent(in), optional :: v_scale_s, v_scale_d
     
@@ -674,7 +677,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     cv%x     = x
     cv%x_dot = x_dot
     call cv%e_f%v%init_const(0.0_WP, n_d)
-    call cv%e_i%v%init_const(0.0_WP, n_d)
+    call cv%e_m%v%init_const(0.0_WP, n_d)
     
     ! `p` and `temp` will be handled below
     
@@ -712,6 +715,15 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
         isentropic_filling_ = isentropic_filling
     else
         isentropic_filling_ = .false.
+    end if
+    
+    if (present(cor)) then
+        cv%cor = cor
+        
+        call assert(cv%cor%v%v >= 0.0_WP, "cva (set): cor >= 0 violated", print_real=[cv%cor%v%v])
+        call assert(cv%cor%v%v <= 1.0_WP, "cva (set): cor <= 1 violated", print_real=[cv%cor%v%v])
+    else
+        call cv%cor%v%init_const(COR_DEFAULT, n_d)
     end if
     
     if (present(constant_friction)) then
@@ -861,7 +873,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     call cv%x%v%init_const(1.0_WP, n_d)
     call cv%e_g%v%init_const(0.0_WP, n_d)
     call cv%e_f%v%init_const(0.0_WP, n_d)
-    call cv%e_i%v%init_const(0.0_WP, n_d)
+    call cv%e_m%v%init_const(0.0_WP, n_d)
     call cv%rm_p%v%init_const(0.0_WP, n_d)
     call cv%p_fs%v%init_const(0.0_WP, n_d)
     call cv%p_fd%v%init_const(0.0_WP, n_d)
@@ -1995,7 +2007,7 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end,
     t = t_old + dt_i
 end subroutine sys_interp
 
-!tripwire$ begin 29E291B8 Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
+!tripwire$ begin C596FF8D Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
 subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     use convert, only: CONVERT_S_TO_MS, CONVERT_KG_TO_MG, CONVERT_PA_TO_KPA
     
@@ -2172,7 +2184,15 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                     error stop "cva (write_csv_row, e_k): invalid row_type"
             end select
             
-            ! TODO: `e_i`, energy lost to plunger impact in control volume
+            ! `e_m`, energy lost to plunger impact in control volume
+            select case (row_type)
+                case (HEADER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(3a)", advance="no") '"e_m (J, ', trim(sys%cv(i_cv)%label), ')",'
+                case (NUMBER_ROW_TYPE)
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%e_m%v%v, ","
+                case default
+                    error stop "cva (write_csv_row, e_m): invalid row_type"
+            end select
         end if
     end do
     

@@ -1880,7 +1880,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -1901,7 +1901,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -1929,7 +1929,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -1950,7 +1950,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -1981,7 +1981,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2002,7 +2002,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2031,7 +2031,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m_k(2)%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2052,7 +2052,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m_k(2)%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2084,7 +2084,7 @@ subroutine test_check_sys(tests)
     call temp%v%init_const(-100.0_WP, n_d)
     sys%cv(2)%e_g = sys%cv(2)%m_k(1)*DRY_AIR%u(temp)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2105,7 +2105,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
     sys%cv(1)%e_g = sys_start%e_total() - sys%cv(2)%e_g
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2137,7 +2137,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2158,7 +2158,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2186,7 +2186,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e_g%v%init_const(2.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2207,7 +2207,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2235,7 +2235,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2256,7 +2256,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2286,7 +2286,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(1)%e_g%v%init(1.0_WP, 1, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2307,7 +2307,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m_k(2)%v%init_const(0.25_WP, n_d)
     call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE
@@ -2337,7 +2337,7 @@ subroutine test_check_sys(tests)
     call sys%cv(1)%m_k(2)%v%init_const(0.0_WP, n_d)
     call sys%cv(1)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(1)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(1)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(1)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(1)%label = "CV1"
     sys%cv(1)%eos   = IDEAL_EOS
     sys%cv(1)%type  = NORMAL_CV_TYPE
@@ -2358,7 +2358,7 @@ subroutine test_check_sys(tests)
     call sys%cv(2)%m_k(2)%v%init_const(0.0_WP, n_d)
     call sys%cv(2)%e_g%v%init_const(1.0_WP, n_d)
     call sys%cv(2)%e_f%v%init_const(0.0_WP, n_d)
-    call sys%cv(2)%e_i%v%init_const(0.0_WP, n_d)
+    call sys%cv(2)%e_m%v%init_const(0.0_WP, n_d)
     sys%cv(2)%label = "CV1"
     sys%cv(2)%eos   = IDEAL_EOS
     sys%cv(2)%type  = NORMAL_CV_TYPE

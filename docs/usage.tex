@@ -112,6 +112,11 @@ This should remain approximately constant and is present for debugging purposes.
     For control volumes with springs ($m_\text{spring} \ne 0$~kg), the added mass from the spring is factored in as well.
     See~\eqref{effective mass} for how the spring mass factors in.
     % TODO: Add definition of this term
+    \item \texttt{e\_m} ($e_{\text{m},i}$): Energy lost to plunger impact.
+    Floating-point number.
+    Units of J.
+    See~\secref{plunger-impact} for details of how this is calculated.
+    % TODO: Add definition of this term
 \end{itemize}
 \item \texttt{rc}: Return code of \texttt{run} subroutine.
 Integer.

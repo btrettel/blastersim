@@ -16,7 +16,6 @@
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1475663102073766055>
     - Print a warning for plunger impact after it is handled properly and have a different exit code.
     - Need "blowdown" mode for springers to get plunger impact energy when impact is after projectile leaves the barrel.
-    - Add `cv%e_i` being negative to `check_sys` and `test_check_sys`
     - Check that behavior when the plunger impacts changed (that is, no longer out of sync)
 - Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
     - <https://news.ycombinator.com/item?id=48554595>
