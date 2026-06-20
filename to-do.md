@@ -1,10 +1,5 @@
 ### v0.3.0
 
-- springers: split the dead space between the barrel and plunger tube
-    - see 2026-06-16 handwritten notes
-    - Change springer barrel so that both plunger tube and barrel have dead volume.
-    - Check that behavior when the plunger impacts changed (that is, no longer out of sync)
-    - `k_gas` => `k`, note in documentation on coding conventions that i and j are typically used for CVs, k is typically used for gas species
 - Plunger head motion bounds (lower and upper) (plunger impact)
     - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
     - Generalize `sys_interp` to interpolate to positions other than `x_stop`, including `x_min` and `x_max`.
@@ -22,10 +17,12 @@
     - Print a warning for plunger impact after it is handled properly and have a different exit code.
     - Need "blowdown" mode for springers to get plunger impact energy when impact is after projectile leaves the barrel.
     - Add `cv%e_i` being negative to `check_sys` and `test_check_sys`
+    - Check that behavior when the plunger impacts changed (that is, no longer out of sync)
 - Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
     - <https://news.ycombinator.com/item?id=48554595>
     - <https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions>
         - <https://news.ycombinator.com/item?id=48592087>
+- note in documentation on coding conventions that i and j are typically used for CVs, k is typically used for gas species
 - Add pressure effects on `d_e`. Make `d_e` an array so that it can be coefficients on a polynomial?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$

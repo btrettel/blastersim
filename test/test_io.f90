@@ -204,7 +204,13 @@ subroutine test_read_springer_namelist_non_default(tests)
         call tests%real_eq(sys%cv(I_BARREL)%p_fs%v%v, 5.0e3_WP, "read_springer_namelist, non-default values, p_fs_proj")
         
         vol_dead = sys%cv(I_BARREL)%x*sys%cv(I_BARREL)%csa
-        call tests%real_eq(vol_dead%v%v, 20.0e-6_WP, "read_springer_namelist, non-default values, vol_dead")
+        call tests%real_eq(vol_dead%v%v, 10.0e-6_WP, "read_springer_namelist, non-default values, vol_dead (barrel, 1)")
+        
+        vol_dead = sys%cv(I_BARREL)%x_min*sys%cv(I_BARREL)%csa
+        call tests%real_eq(vol_dead%v%v, 10.0e-6_WP, "read_springer_namelist, non-default values, vol_dead (barrel, 2)")
+        
+        vol_dead = sys%cv(I_PLUNGER)%x_min*sys%cv(I_PLUNGER)%csa
+        call tests%real_eq(vol_dead%v%v, 10.0e-6_WP, "read_springer_namelist, non-default values, vol_dead (plunger)")
         
         call tests%character_eq(config%id, "springer-non-default", "read_springer_namelist, non-default values, id")
         
@@ -278,7 +284,13 @@ subroutine test_read_springer_namelist_default(tests)
         call tests%real_eq(sys%cv(I_BARREL)%p_fs%v%v, 5.0e3_WP, "read_springer_namelist, default values, p_fs_proj")
         
         vol_dead = sys%cv(I_BARREL)%x*sys%cv(I_BARREL)%csa
-        call tests%real_eq(vol_dead%v%v, 20.0e-6_WP, "read_springer_namelist, default values, vol_dead")
+        call tests%real_eq(vol_dead%v%v, 10.0e-6_WP, "read_springer_namelist, default values, vol_dead (barrel, 1)")
+        
+        vol_dead = sys%cv(I_BARREL)%x_min*sys%cv(I_BARREL)%csa
+        call tests%real_eq(vol_dead%v%v, 10.0e-6_WP, "read_springer_namelist, default values, vol_dead (barrel, 2)")
+        
+        vol_dead = sys%cv(I_PLUNGER)%x_min*sys%cv(I_PLUNGER)%csa
+        call tests%real_eq(vol_dead%v%v, 10.0e-6_WP, "read_springer_namelist, default values, vol_dead (plunger)")
         
         call tests%character_eq(config%id, "springer-default", "read_springer_namelist, default values, id")
         

@@ -188,6 +188,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     type(si_velocity)  :: x_dot
     type(unitless)     :: y(1)
     type(si_area)      :: csa_plunger, csa_barrel
+    type(si_length)    :: x_dead_plunger
     
     integer, parameter :: I_PLUNGER = 2, I_BARREL_ATM  = 3, I_PLUNGER_ATM = 4
     
@@ -244,14 +245,15 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     
     ! `sys%cv(I_BARREL)`: barrel
     csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
-    call create_barrel(vol_dead_u, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
+    call create_barrel(vol_dead_u/2.0_WP, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
                         BARREL_GAS, I_BARREL_ATM, sys%cv(I_BARREL))
     
     ! `sys%cv(I_PLUNGER)`: plunger tube
-    csa_plunger = (PI/4.0_WP)*(square(d_plunger_u) - square(d_coaxial_inner_u))
+    csa_plunger    = (PI/4.0_WP)*(square(d_plunger_u) - square(d_coaxial_inner_u))
+    x_dead_plunger = vol_dead_u/(2.0_WP*csa_plunger)
     call sys%cv(I_PLUNGER)%set(l_draw_u, x_dot, y, p_atm_u, temp_atm_u, "plunger tube", csa_plunger, &
                         1.0_WP/m_plunger_u, p_fs_plunger_u, p_fd_plunger_u, k_u, delta_pre_u, PLUNGER_GAS, I_PLUNGER_ATM, &
-                        m_spring=m_spring_u)
+                        m_spring=m_spring_u, x_min=x_dead_plunger)
     
     ! `sys%cv(I_BARREL_ATM)`: atmosphere for barrel
     call sys%cv(I_BARREL_ATM)%set_const("atmosphere for barrel", csa_barrel, p_atm_u, temp_atm_u, BARREL_ATM_GAS, &
