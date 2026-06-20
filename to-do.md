@@ -1,7 +1,5 @@
 ### v0.3.0
 
-- Switch to unit conversion functions like CEA: <https://github.com/nasa/cea/blob/main/source/units.f90>
-- `test_acceleration`: Check some points where acceleration should be zero like where the spring has zero force for various `delta_pre` and `x_min`..
 - springers: split the dead space between the barrel and plunger tube
     - see 2026-06-16 handwritten notes
     - Change springer barrel so that both plunger tube and barrel have dead volume.
@@ -438,6 +436,9 @@
     - Add tripwire to code for "Time integration" section of the docs.
     - Consider a minimum time step to allow integration to continue no matter what. What's the smallest time scale I expect to appear here?
 - Use type system to enforce thermodynamic constraints in some way?
+- Switch to unit conversion functions like CEA: <https://github.com/nasa/cea/blob/main/source/units.f90>
+    - I want to use these in initialization expressions, but only intrinsic functions are allowed. So this doesn't work.
+        - <https://fortran-lang.discourse.group/t/user-defined-functions-in-constant-expressions/1509>
 
 ***
 

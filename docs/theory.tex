@@ -172,6 +172,10 @@ The effective mass equation used is
 \end{equation}
 where $C_\text{ms} = \tfrac{1}{3}$ as suggested by \citet{ruby_equivalent_2000} for a stiff spring.
 
+Note that the variable $x_i$ in \eqref{Newton's second law} internally in BlasterSim differs from \texttt{x} as printed by BlasterSim in the CSV output.
+To ease understanding for users of BlasterSim, \texttt{x} in the CSV output is defined as the distance between the projectile/plunger location and the minimum $x$ location like the end of the plunger tube.
+Mathematically, $\texttt{x} = x_i - x_{\text{min},i}$.
+
 \subsection{Projectile and plunger friction model}\label{friction}
 
 Consider a projectile/plunger p with both static and dynamic friction.

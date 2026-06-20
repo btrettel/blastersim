@@ -246,7 +246,7 @@ pure function e_total(cv)
     e_total = cv%e_g + cv%e_f + cv%e_i + cv%e_s() + cv%e_k()
 end function e_total
 
-!tripwire$ begin 90853DA3 Update `\secref{equations-of-state}` of theory.tex if necessary.
+!tripwire$ begin 27C28AF4 Update `\secref{equations-of-state}` of theory.tex if necessary.
 pure function p_cv(cv)
     ! Calculate pressure using the equation of state.
     
@@ -1995,7 +1995,7 @@ pure subroutine sys_interp(t_old, dt, i_cv_interp, sys_old, sys_new, t, sys_end,
     t = t_old + dt_i
 end subroutine sys_interp
 
-!tripwire$ begin D5B1B559 Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
+!tripwire$ begin 29E291B8 Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
 subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     use convert, only: CONVERT_S_TO_MS, CONVERT_KG_TO_MG, CONVERT_PA_TO_KPA
     
@@ -2061,7 +2061,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 case (HEADER_ROW_TYPE)
                     write(unit=csv_unit, fmt="(3a)", advance="no") '"x (m, ', trim(sys%cv(i_cv)%label), ')",'
                 case (NUMBER_ROW_TYPE)
-                    write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%x%v%v, ","
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%x%v%v - sys%cv(i_cv)%x_min%v%v, ","
                 case default
                     error stop "cva (write_csv_row, x): invalid row_type"
             end select
@@ -2081,7 +2081,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
         do k = 1, n_gas
             select case (row_type)
                 case (HEADER_ROW_TYPE)
-                    write(unit=csv_unit, fmt="(5a)", advance="no") '"m (mg, ', &
+                    write(unit=csv_unit, fmt="(5a)", advance="no") '"m_k (mg, ', &
                             trim(sys%cv(i_cv)%gas(k)%label), ', ', &
                             trim(sys%cv(i_cv)%label), ')",'
                 case (NUMBER_ROW_TYPE)
@@ -2094,7 +2094,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
         ! `e`, energy of gas in control volume
         select case (row_type)
             case (HEADER_ROW_TYPE)
-                write(unit=csv_unit, fmt="(3a)", advance="no") '"e (J, ', trim(sys%cv(i_cv)%label), ')",'
+                write(unit=csv_unit, fmt="(3a)", advance="no") '"e_g (J, ', trim(sys%cv(i_cv)%label), ')",'
             case (NUMBER_ROW_TYPE)
                 write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%e_g%v%v, ","
             case default
