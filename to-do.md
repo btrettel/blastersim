@@ -5,6 +5,7 @@
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1285109487828467774>
     - <https://www.youtube.com/watch?v=mwP1k-bcjcA>
 - Add upper limit on number of time steps to catch stalling.
+    - Check if there was plunger impact and if the coefficient of restitution is small. If so, suggest making the coefficient of restitution larger or zero.
 - Maybe: Add `x_ref` to use in CSV output. Use `x_ref=x_dead` instead of `x_min=x_dead` in `create_barrel`. Update CSV output docs on this.
 - Document `e_f` governing equation.
 - Make exact solution with `e_f` and motion in both directions.
@@ -12,10 +13,6 @@
     - A discontinuous friction equation would allow me to set `x_min=x_dead` for the barrel.
     - A discontinuous friction equation would probably keep `e_f` positive.
 - Plunger head motion bounds (lower and upper) (plunger impact)
-    - How can I make this work if the coefficient of restitution is zero? One time step will be at the limit, the next will take it past the limit, and the only way to keep it at the limit would be a time step of zero!
-        - Detect when the time step is zero and terminate?
-        - Detect when the time step is zero and set the plunger mass to infinite so that it won't move?
-        - Have an extra force at `x == x_min` to prevent motion?
     - Add coefficient of restitution to inputs.
     - Print a warning for plunger impact before dart exit and have a different exit code. I imagine plunger impact before dart exit will hurt accuracy due to the vibration.
     - Need "blowdown" mode for springers to get plunger impact energy when impact is after projectile leaves the barrel.

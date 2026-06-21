@@ -29,7 +29,7 @@ real(WP), public, parameter :: C_MS = 1.0_WP/3.0_WP ! unitless
 
 real(WP), public, parameter :: X_STOP_DEFAULT           = 1.0e2_WP  ! m
 real(WP), public, parameter :: X_MIN_DEFAULT            = 0.0_WP    ! m
-real(WP), public, parameter :: COR_DEFAULT              = 0.1_WP
+real(WP), public, parameter :: COR_DEFAULT              = 0.0_WP
 logical, public, parameter  :: CSV_OUTPUT_DEFAULT       = .false.   ! no CSV output by default
 integer, public, parameter  :: CSV_FREQUENCY_DEFAULT    = 10        ! time steps
 real(WP), public, parameter :: T_STOP_DEFAULT           = 0.1_WP    ! s
@@ -225,20 +225,12 @@ pure function e_k(cv)
     
     class(cv_type), intent(in) :: cv
     
-    type(si_energy)       :: e_k
-    type(si_inverse_mass) :: rm_p_eff ! effective mass of projectile/plunger
+    type(si_energy) :: e_k
     
     if (is_close(cv%rm_p%v%v, 0.0_WP) .or. (cv%type == MIRROR_CV_TYPE)) then
-        if (is_close(cv%rm_p%v%v, 0.0_WP)) then
-            ! `MIRROR_CV_TYPE` might simply copy what the other CV has, so it might not have no inverse mass.
-            call assert(is_close(cv%k%v%v, 0.0_WP), "cva (e_k): if the plunger is immobile, k should be zero", &
-                            print_real=[cv%k%v%v])
-        end if
-        
         call e_k%v%init_const(0.0_WP, size(cv%x_dot%v%d))
     else
-        rm_p_eff = cv%rm_p_eff()
-        e_k = 0.5_WP*square(cv%x_dot)/rm_p_eff
+        e_k = 0.5_WP*square(cv%x_dot)/cv%rm_p_eff()
     end if
 end function e_k
 
@@ -722,7 +714,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     if (present(cor)) then
         cv%cor = cor
         
-        call assert(cv%cor%v%v >  0.0_WP, "cva (set): cor >= 0 violated", print_real=[cv%cor%v%v])
+        call assert(cv%cor%v%v >= 0.0_WP, "cva (set): cor >= 0 violated", print_real=[cv%cor%v%v])
         call assert(cv%cor%v%v <= 1.0_WP, "cva (set): cor <= 1 violated", print_real=[cv%cor%v%v])
     else
         call cv%cor%v%init_const(COR_DEFAULT, n_d)
@@ -2046,7 +2038,7 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     t = t_old + dt_i
 end subroutine get_sys_at_x
 
-!tripwire$ begin 19F1D695 Update `\secref{plunger-impact}` of theory.tex.
+!tripwire$ begin 6CB60BAD Update `\secref{plunger-impact}` of theory.tex.
 pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
     ! Set `sys_before_impact` to the instant immediately after plunger impact.
     ! `sys_before_impact` is right before plunger impact occurs (plunger velocity has no changed yet).
@@ -2057,7 +2049,7 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
     
     integer :: i_cv_mirror
     
-    call assert(sys_before_impact%cv(i_cv)%cor%v%v >  0.0_WP, "cva (get_sys_after_impact): cor >= 0 violated")
+    call assert(sys_before_impact%cv(i_cv)%cor%v%v >= 0.0_WP, "cva (get_sys_after_impact): cor >= 0 violated")
     call assert(sys_before_impact%cv(i_cv)%cor%v%v <= 1.0_WP, "cva (get_sys_after_impact): cor <= 1 violated")
     
     sys_after_impact                = sys_before_impact
@@ -2073,6 +2065,17 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
                                             + (0.5_WP/sys_after_impact%cv(i_cv)%rm_p_eff()) &
                                                 *(square(sys_before_impact%cv(i_cv)%x_dot) &
                                                     - square(sys_after_impact%cv(i_cv)%x_dot))
+        
+        ! This is a fair bit of a hack.
+        ! If the coefficient of restitution is zero, the plunger head right after impact is at `x_min`.
+        ! The next time step will move the plunger head past `x_min`.
+        ! The only time step size that will prevent that is `dt = 0`! So the simulation stalls.
+        ! Preventing all plunger motion by making the effective mass infinite is one way around this.
+        ! TODO: It would be better to add a force active only if `is_close(cv%x%v%v, cv%x_min%v%v)` to keep the plunger stationary.
+        ! Then if the pressure in the CV overcomes the counteracting force, the plunger can start moving again.
+        if (is_close(sys_after_impact%cv(i_cv)%x_dot%v%v, 0.0_WP)) then
+            call sys_after_impact%cv(i_cv)%rm_p%v%init_const(0.0_WP, size(sys_after_impact%cv(i_cv)%rm_p%v%d))
+        end if
     end if
 end subroutine get_sys_after_impact
 !tripwire$ end

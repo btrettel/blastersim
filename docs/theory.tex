@@ -281,6 +281,21 @@ The amount of energy dissipated in the impact, $\Delta e_{\text{m},i}$ is tracke
 
 Tracking the total amount of energy dissipated in impact can be useful to improve blaster longevity.
 
+If the coefficient of restitution is zero so that the plunger velocity after impact is zero, BlasterSim applies an approximation for the moment.
+The plunger will become immobile after impact.
+This approximation is a simple way to prevent simulation progress from stalling.
+After impact, the plunger tube is located at the end of the plunger tube.
+If the coefficient of restitution is zero, then the plunger will initially have zero velocity after impact.
+However, the force on the plunger will push it past the end of the plunger tube in the simulation.
+BlasterSim simply identifies when the plunger moves past the end of the plunger tube and picks a time step to exactly hit the end of the plunger tube.
+BlasterSim at the moment does not additionally apply an extra force to prevent the plunger from moving if it is at the end of the plunger tube, which would be more physically realistic.
+Consequently, to prevent the plunger tube from moving, it is made immobile in this situation.
+In the future, if desirable, BlasterSim could apply a force when the plunger is at the end of the plunger tube to keep the plunger stationary.
+The difference with the force is that it might be possible for the force to be overcome by the pressure inside the plunger, making the plunger start moving again.
+Making the plunger immobile prevents that motion, but is a reasonable approximation for springers.
+It would not be a reasonable approximation when simulating the full cycle of a HPA blaster using an air cylinder.
+It is likely that coefficients of restitution that are too small may have similar stalling problems that this approximation will not handle properly.
+
 %\section{Exterior ballistics}\label{exterior-ballistics}
 % TODO later
 
