@@ -54,7 +54,7 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin D9A1A6AD Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
+!tripwire$ begin A1B9C040 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
 integer, public, parameter :: X_LT_X_MIN_RUN_RC             = -2
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
 integer, public, parameter :: TIMEOUT_RUN_RC                = 1
@@ -67,7 +67,8 @@ integer, public, parameter :: ENERGY_DERIV_TOLERANCE_RUN_RC = 7
 integer, public, parameter :: IDEAL_EOS_RUN_RC              = 8
 integer, public, parameter :: MIRROR_X_TOLERANCE_RUN_RC     = 9
 integer, public, parameter :: NEGATIVE_CV_X_RUN_RC          = 10
-integer, public, parameter :: MAX_ITER_GET_SYS_AT_X_RUN_RC  = 11
+integer, public, parameter :: MAX_ITERS_TIME_LOOP_RUN_RC    = 11
+integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X_RUN_RC = 12
 !integer, public, parameter :: X_BLOW_UP_RUN_RC              = 
 !integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 
 !integer, public, parameter :: M_BLOW_UP_RUN_RC              = 
@@ -75,7 +76,8 @@ integer, public, parameter :: MAX_ITER_GET_SYS_AT_X_RUN_RC  = 11
 !integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 
 !tripwire$ end
 
-integer, public, parameter :: MAX_ITERS = 50
+integer, public, parameter :: MAX_ITERS_TIME_LOOP    = 10**8
+integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X = 50
 
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
@@ -1681,10 +1683,14 @@ subroutine run(config, sys_start, sys_end, status)
             if (rc_get_sys_at_x == SUCCESS_RC) then
                 call get_sys_after_impact(status%i_cv(1), sys_event, sys_new)
             else
-                status%rc = MAX_ITER_GET_SYS_AT_X_RUN_RC
+                status%rc = MAX_ITERS_GET_SYS_AT_X_RUN_RC
             end if
         end if
         if (status%rc >= SUCCESS_RC) exit time_loop
+        if (i >= MAX_ITERS_TIME_LOOP) then
+            status%rc = MAX_ITERS_TIME_LOOP_RUN_RC
+            exit time_loop
+        end if
         
         if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
             call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)
@@ -1706,7 +1712,7 @@ subroutine run(config, sys_start, sys_end, status)
         ! This will make sure that the status rc stays the same if everything is okay but `x` is a bit short.
         if (status_final%rc /= CONTINUE_RUN_RC) then
             status = status_final
-            if (rc_get_sys_at_x == MAX_ITER_GET_SYS_AT_X_RUN_RC) then
+            if (rc_get_sys_at_x == MAX_ITERS_GET_SYS_AT_X_RUN_RC) then
                 status%rc = rc_get_sys_at_x
             end if
         end if
@@ -1983,8 +1989,8 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     sys_im2 = sys_old
     sys_im1 = sys_new
     
-    rc = MAX_ITER_GET_SYS_AT_X_RUN_RC
-    do i = 1, MAX_ITERS
+    rc = MAX_ITERS_GET_SYS_AT_X_RUN_RC
+    do i = 1, MAX_ITERS_GET_SYS_AT_X
         ! This is one of the stopping criteria recommended by Wikipedia.
         ! <https://en.wikipedia.org/wiki/Secant_method#Computational_example>
         ! ellis_fortran_1994 p. 642 recommends a criteria based on how close the iteration is to the desired value.

@@ -1,5 +1,6 @@
 ### v0.3.0
 
+- Move `write_csv_row` to io.f90. This can't be done as it's called from cva.f90, which depends on io.f90.
 - Document how dead volume in springers differs from pneumatics.
 - Estimate reasonable coefficient of restitution from videos.
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1285109487828467774>
