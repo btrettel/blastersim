@@ -399,3 +399,22 @@ lower_bound_not_equal = .false.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
 /
+
+&input_variable
+variable_name         = "cor"
+type_definition       = "type(unitless)"
+required              = .false.
+tex_unit              = "1"
+tex_description       = "Coefficient of restitution of the plunger head."
+tex_description_2     = "Default value is $\cordefault$. By default, the plunger will stop moving when it hits the end of the plunger tube. Increase \texttt{cor} to have rebound. Note that small non-zero values of \texttt{cor} may lead to numerical issues, so if you have trouble, try decreasing \texttt{cor} to zero or increasing it significantly, whichever is most appropriate."
+tex_variable_name     = "$e_\text{p}$"
+lower_bound_active    = .true.
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+upper_bound_active    = .true.
+upper_bound           = 1.0
+upper_bound_not_equal = .false.
+default_value         = "COR_DEFAULT"
+no_kind_default_value = .true.
+bound_fmt             = "f3.1"
+/

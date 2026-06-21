@@ -2086,8 +2086,10 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
 end subroutine get_sys_after_impact
 !tripwire$ end
 
-!tripwire$ begin C596FF8D Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
+!tripwire$ begin DF0F623F Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
 subroutine write_csv_row(csv_unit, sys, t, status, row_type)
+    ! It might make more sense to put this in a separate file. io.f90 won't do as it depends on cva.f90.
+    
     use convert, only: CONVERT_S_TO_MS, CONVERT_KG_TO_MG, CONVERT_PA_TO_KPA
     
     integer, intent(in)                           :: csv_unit

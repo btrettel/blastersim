@@ -1,12 +1,9 @@
 ### v0.3.0
 
-- Move `write_csv_row` to io.f90. This can't be done as it's called from cva.f90, which depends on io.f90.
-- Document how dead volume in springers differs from pneumatics.
 - Estimate reasonable coefficient of restitution from videos.
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1285109487828467774>
     - <https://www.youtube.com/watch?v=mwP1k-bcjcA>
-- Add upper limit on number of time steps to catch stalling.
-    - Check if there was plunger impact and if the coefficient of restitution is small. If so, suggest making the coefficient of restitution larger or zero.
+- Maybe: `MAX_ITERS_TIME_LOOP_RUN_RC`: Check if there was plunger impact and if the coefficient of restitution is small. If so, suggest making the coefficient of restitution larger or zero.
 - Maybe: Add `x_ref` to use in CSV output. Use `x_ref=x_dead` instead of `x_min=x_dead` in `create_barrel`. Update CSV output docs on this.
 - Document `e_f` governing equation.
 - Make exact solution with `e_f` and motion in both directions.
@@ -14,10 +11,8 @@
     - A discontinuous friction equation would allow me to set `x_min=x_dead` for the barrel.
     - A discontinuous friction equation would probably keep `e_f` positive.
 - Plunger head motion bounds (lower and upper) (plunger impact)
-    - Add coefficient of restitution to inputs.
     - Print a warning for plunger impact before dart exit and have a different exit code. I imagine plunger impact before dart exit will hurt accuracy due to the vibration.
     - Need "blowdown" mode for springers to get plunger impact energy when impact is after projectile leaves the barrel.
-    - Add Beer and Johnson reference to theory.tex on the coefficient of restitution.
     - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
     - Test cases for piston impact:
         - Bounds respected.
