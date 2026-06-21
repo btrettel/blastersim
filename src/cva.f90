@@ -29,7 +29,7 @@ real(WP), public, parameter :: C_MS = 1.0_WP/3.0_WP ! unitless
 
 real(WP), public, parameter :: X_STOP_DEFAULT           = 1.0e2_WP  ! m
 real(WP), public, parameter :: X_MIN_DEFAULT            = 0.0_WP    ! m
-real(WP), public, parameter :: COR_DEFAULT              = 0.0_WP
+real(WP), public, parameter :: COR_DEFAULT              = 0.1_WP
 logical, public, parameter  :: CSV_OUTPUT_DEFAULT       = .false.   ! no CSV output by default
 integer, public, parameter  :: CSV_FREQUENCY_DEFAULT    = 10        ! time steps
 real(WP), public, parameter :: T_STOP_DEFAULT           = 0.1_WP    ! s
@@ -722,7 +722,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     if (present(cor)) then
         cv%cor = cor
         
-        call assert(cv%cor%v%v >= 0.0_WP, "cva (set): cor >= 0 violated", print_real=[cv%cor%v%v])
+        call assert(cv%cor%v%v >  0.0_WP, "cva (set): cor >= 0 violated", print_real=[cv%cor%v%v])
         call assert(cv%cor%v%v <= 1.0_WP, "cva (set): cor <= 1 violated", print_real=[cv%cor%v%v])
     else
         call cv%cor%v%init_const(COR_DEFAULT, n_d)
@@ -1682,8 +1682,12 @@ subroutine run(config, sys_start, sys_end, status)
         if (status%rc == X_LT_X_MIN_RUN_RC) then
             call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_min, &
                                 sys_old, sys_new, t, sys_event, rc_get_sys_at_x)
+            !print *, "impact 1", t_old%v%v, t%v%v, rc_get_sys_at_x
             if (rc_get_sys_at_x == SUCCESS_RC) then
                 call get_sys_after_impact(status%i_cv(1), sys_event, sys_new)
+!                print *, "impact 2", sys_old%cv(status%i_cv(1))%x_dot%v%v, &
+!                                        sys_event%cv(status%i_cv(1))%x_dot%v%v, &
+!                                        sys_new%cv(status%i_cv(1))%x_dot%v%v
             else
                 status%rc = MAX_ITER_GET_SYS_AT_X_RUN_RC
             end if
@@ -1974,8 +1978,12 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     type(si_time) :: dt_i, dt_im1, dt_im2
     real(WP)      :: x_tol
     type(cv_system_type), allocatable :: sys_i, sys_im1, sys_im2, sys_temp
+    type(si_length) :: min_x, max_x
     
     x_tol = 100.0_WP*spacing(x_event%v%v)
+    
+    min_x = min(sys_old%cv(i_cv_x_event)%x, sys_new%cv(i_cv_x_event)%x)
+    max_x = max(sys_old%cv(i_cv_x_event)%x, sys_new%cv(i_cv_x_event)%x)
     
     call dt_im2%v%init_const(0.0_WP, size(sys_new%cv(i_cv_x_event)%x%v%d))
     dt_im1 = dt
@@ -2008,12 +2016,12 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
         
         call calculate_next_time_step(sys_old, t_old + dt_i, dt_i, sys_i)
         
-        call assert(sys_i%cv(i_cv_x_event)%x >= sys_old%cv(i_cv_x_event)%x, &
-                        "cva (get_sys_at_x): x_i >= x_old violated", &
+        call assert(sys_i%cv(i_cv_x_event)%x >= min_x, &
+                        "cva (get_sys_at_x): x_i >= min_x violated", &
                         print_real=[sys_old%cv(i_cv_x_event)%x%v%v, sys_i%cv(i_cv_x_event)%x%v%v, &
                         sys_new%cv(i_cv_x_event)%x%v%v, dt_i%v%v], print_integer=[i])
-        call assert(sys_i%cv(i_cv_x_event)%x <= sys_new%cv(i_cv_x_event)%x, &
-                        "cva (get_sys_at_x): x_i <= x_new violated", &
+        call assert(sys_i%cv(i_cv_x_event)%x <= max_x, &
+                        "cva (get_sys_at_x): x_i <= max_x violated", &
                         print_real=[sys_old%cv(i_cv_x_event)%x%v%v, sys_i%cv(i_cv_x_event)%x%v%v, &
                         sys_new%cv(i_cv_x_event)%x%v%v, dt_i%v%v], print_integer=[i])
         
@@ -2038,7 +2046,7 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     t = t_old + dt_i
 end subroutine get_sys_at_x
 
-!tripwire$ begin 7A91FDEB Update `\secref{plunger-impact}` of theory.tex.
+!tripwire$ begin 445443E1 Update `\secref{plunger-impact}` of theory.tex.
 pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
     ! Set `sys_before_impact` to the instant immediately after plunger impact.
     ! `sys_before_impact` is right before plunger impact occurs (plunger velocity has no changed yet).
@@ -2047,12 +2055,12 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
     type(cv_system_type), allocatable, intent(in)  :: sys_before_impact
     type(cv_system_type), allocatable, intent(out) :: sys_after_impact
     
-    call assert(sys_after_impact%cv(i_cv)%cor%v%v >= 0.0_WP, "cva (get_sys_after_impact): cor >= 0 violated")
-    call assert(sys_after_impact%cv(i_cv)%cor%v%v <= 1.0_WP, "cva (get_sys_after_impact): cor <= 1 violated")
+    call assert(sys_before_impact%cv(i_cv)%cor%v%v >  0.0_WP, "cva (get_sys_after_impact): cor >= 0 violated")
+    call assert(sys_before_impact%cv(i_cv)%cor%v%v <= 1.0_WP, "cva (get_sys_after_impact): cor <= 1 violated")
     
     sys_after_impact                = sys_before_impact
-    sys_after_impact%cv(i_cv)%x_dot = -sys_after_impact%cv(i_cv)%cor*sys_after_impact%cv(i_cv)%x_dot
-    sys_after_impact%cv(i_cv)%e_m   = sys_after_impact%cv(i_cv)%e_m &
+    sys_after_impact%cv(i_cv)%x_dot = -sys_before_impact%cv(i_cv)%cor*sys_before_impact%cv(i_cv)%x_dot
+    sys_after_impact%cv(i_cv)%e_m   = sys_before_impact%cv(i_cv)%e_m &
                                         + (0.5_WP/sys_after_impact%cv(i_cv)%r_mp_eff()) &
                                             *(square(sys_before_impact%cv(i_cv)%x_dot) - square(sys_after_impact%cv(i_cv)%x_dot))
 end subroutine get_sys_after_impact

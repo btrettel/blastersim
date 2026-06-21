@@ -1,7 +1,10 @@
 ### v0.3.0
 
+- Does projectile/plunger kinetic energy factor in added mass?
+- Create function for effective mass, not effective inverse mass.
 - Add `x_ref` to use in CSV output. Use `x_ref=x_dead` instead of `x_min=x_dead` in `create_barrel`. Update CSV output docs on this.
 - Plunger head motion bounds (lower and upper) (plunger impact)
+    - How can I make this work if the coefficient of restitution is zero?
     - Add coefficient of restitution to inputs.
     - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
     - Test cases for piston impact:
