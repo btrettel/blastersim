@@ -128,7 +128,7 @@ contains
     procedure :: u        => u_cv
     procedure :: h        => h_cv
     procedure :: gamma    => gamma_cv
-    procedure :: r_mp_eff => r_mp_eff_cv
+    procedure :: rm_p_eff => rm_p_eff_cv
     procedure :: set
     procedure :: set_const
     procedure :: p_f
@@ -226,7 +226,7 @@ pure function e_k(cv)
     class(cv_type), intent(in) :: cv
     
     type(si_energy)       :: e_k
-    type(si_inverse_mass) :: r_mp_eff ! effective mass of projectile/plunger
+    type(si_inverse_mass) :: rm_p_eff ! effective mass of projectile/plunger
     
     if (is_close(cv%rm_p%v%v, 0.0_WP) .or. (cv%type == MIRROR_CV_TYPE)) then
         if (is_close(cv%rm_p%v%v, 0.0_WP)) then
@@ -237,8 +237,8 @@ pure function e_k(cv)
         
         call e_k%v%init_const(0.0_WP, size(cv%x_dot%v%d))
     else
-        r_mp_eff = cv%rm_p / (1.0_WP + C_MS * cv%m_spring * cv%rm_p)
-        e_k = 0.5_WP*square(cv%x_dot)/r_mp_eff
+        rm_p_eff = cv%rm_p_eff()
+        e_k = 0.5_WP*square(cv%x_dot)/rm_p_eff
     end if
 end function e_k
 
@@ -1073,7 +1073,7 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
     
     type(si_pressure)     :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
     type(si_pressure)     :: p_mirror
-    type(si_inverse_mass) :: r_mp_eff ! effective inverse mass of projectile/plunger
+    type(si_inverse_mass) :: rm_p_eff ! effective inverse mass of projectile/plunger
     
     call assert(sys%cv(i_cv)%csa%v%v > 0.0_WP, "cva (d_x_dot_d_t_normal): cv%csa > 0 violated", &
                     print_real=[sys%cv(i_cv)%csa%v%v], print_integer=[i_cv])
@@ -1094,22 +1094,22 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
     p_fe = sys%cv(i_cv)%p() - p_mirror &
                 - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_min + sys%cv(i_cv)%delta_pre)
     
-    r_mp_eff = sys%cv(i_cv)%r_mp_eff()
+    rm_p_eff = sys%cv(i_cv)%rm_p_eff()
     
-    d_x_dot_d_t_normal = sys%cv(i_cv)%csa*r_mp_eff*(sys%cv(i_cv)%p() - p_mirror - sys%cv(i_cv)%p_f(p_fe)) &
-                            - sys%cv(i_cv)%k*r_mp_eff*(sys%cv(i_cv)%x + sys%cv(i_cv)%delta_pre)
+    d_x_dot_d_t_normal = sys%cv(i_cv)%csa*rm_p_eff*(sys%cv(i_cv)%p() - p_mirror - sys%cv(i_cv)%p_f(p_fe)) &
+                            - sys%cv(i_cv)%k*rm_p_eff*(sys%cv(i_cv)%x + sys%cv(i_cv)%delta_pre)
 end function d_x_dot_d_t_normal
 
-pure function r_mp_eff_cv(cv)
+pure function rm_p_eff_cv(cv)
     ! This calculates the effective inverse mass of the projectile/plunger factoring in the spring mass.
     ! ruby_equivalent_2000
     
     class(cv_type), intent(in) :: cv
     
-    type(si_inverse_mass) :: r_mp_eff_cv
+    type(si_inverse_mass) :: rm_p_eff_cv
     
-    r_mp_eff_cv = cv%rm_p / (1.0_WP + C_MS * cv%m_spring * cv%rm_p)
-end function r_mp_eff_cv
+    rm_p_eff_cv = cv%rm_p / (1.0_WP + C_MS * cv%m_spring * cv%rm_p)
+end function rm_p_eff_cv
 !tripwire$ end
 
 !tripwire$ begin B862672E Update \secref{conservation-laws} of theory.tex if necessary.
@@ -1224,6 +1224,10 @@ pure function d_e_f_d_t(sys, i_cv)
             p_fe = sys%cv(i_cv)%p() - p_mirror - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x + sys%cv(i_cv)%delta_pre)
             
             d_e_f_d_t = sys%cv(i_cv)%p_f(p_fe) * sys%cv(i_cv)%csa * sys%cv(i_cv)%x_dot
+            
+            ! TODO: Reenable this assertion after figuring out why `e_f` decreases in some cases.
+!            call assert(d_e_f_d_t%v%v >= 0.0_WP, "cva (d_e_f_d_t): e_f should not decrease", &
+!                            print_real=[d_e_f_d_t%v%v])
         case (MIRROR_CV_TYPE)
             call d_e_f_d_t%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
             call assert(is_close(sys%cv(i_cv)%e_f%v%v, 0.0_WP), "cva (d_e_f_d_t): e_f must be zero for MIRROR_CV_TYPE", &
@@ -1682,12 +1686,8 @@ subroutine run(config, sys_start, sys_end, status)
         if (status%rc == X_LT_X_MIN_RUN_RC) then
             call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_min, &
                                 sys_old, sys_new, t, sys_event, rc_get_sys_at_x)
-            !print *, "impact 1", t_old%v%v, t%v%v, rc_get_sys_at_x
             if (rc_get_sys_at_x == SUCCESS_RC) then
                 call get_sys_after_impact(status%i_cv(1), sys_event, sys_new)
-!                print *, "impact 2", sys_old%cv(status%i_cv(1))%x_dot%v%v, &
-!                                        sys_event%cv(status%i_cv(1))%x_dot%v%v, &
-!                                        sys_new%cv(status%i_cv(1))%x_dot%v%v
             else
                 status%rc = MAX_ITER_GET_SYS_AT_X_RUN_RC
             end if
@@ -2060,9 +2060,13 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
     
     sys_after_impact                = sys_before_impact
     sys_after_impact%cv(i_cv)%x_dot = -sys_before_impact%cv(i_cv)%cor*sys_before_impact%cv(i_cv)%x_dot
-    sys_after_impact%cv(i_cv)%e_m   = sys_before_impact%cv(i_cv)%e_m &
-                                        + (0.5_WP/sys_after_impact%cv(i_cv)%r_mp_eff()) &
-                                            *(square(sys_before_impact%cv(i_cv)%x_dot) - square(sys_after_impact%cv(i_cv)%x_dot))
+    
+    if (.not. is_close(sys_after_impact%cv(i_cv)%rm_p%v%v, 0.0_WP)) then
+        sys_after_impact%cv(i_cv)%e_m = sys_before_impact%cv(i_cv)%e_m &
+                                            + (0.5_WP/sys_after_impact%cv(i_cv)%rm_p_eff()) &
+                                                *(square(sys_before_impact%cv(i_cv)%x_dot) &
+                                                    - square(sys_after_impact%cv(i_cv)%x_dot))
+    end if
 end subroutine get_sys_after_impact
 !tripwire$ end
 

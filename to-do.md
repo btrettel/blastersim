@@ -1,9 +1,13 @@
 ### v0.3.0
 
-- Does projectile/plunger kinetic energy factor in added mass?
-- Create function for effective mass, not effective inverse mass.
 - Add `x_ref` to use in CSV output. Use `x_ref=x_dead` instead of `x_min=x_dead` in `create_barrel`. Update CSV output docs on this.
+- Make exact solution with `e_f` and motion in both directions.
+- Document `e_f` governing equation.
+- Why does `e_f` go negative in plungers? Is it due to the continuous friction equation? Should I switch to a discontinuous friction equation?
 - Plunger head motion bounds (lower and upper) (plunger impact)
+    - Why is energy not conserved through impact?
+        - Setting friction to zero did not solve the problem.
+        - Reducing spring mass as much as possible (m_spring > 0 according to input validation, so it's made very small) allows running to completion, but only because plunger impact doesn't happen. Increasing the plunger mass to compensate shows the problem remains.
     - How can I make this work if the coefficient of restitution is zero?
     - Add coefficient of restitution to inputs.
     - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
@@ -19,6 +23,7 @@
     - Need "blowdown" mode for springers to get plunger impact energy when impact is after projectile leaves the barrel.
     - Check that behavior when the plunger impacts changed (that is, no longer out of sync)
     - Document how dead volume in springers differs from pneumatics.
+    - Add Beer and Johnson reference to theory.tex on the coefficient of restitution.
 - Test `get_sys_at_x`. Adding `call move_alloc(from=sys_im1, to=sys_i)` fixed a bug that presumably could explain why the `x` values returned by `get_sys_at_x` seemed a bit off before.
 - Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
     - <https://news.ycombinator.com/item?id=48554595>
