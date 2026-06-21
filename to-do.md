@@ -1,13 +1,12 @@
 ### v0.3.0
 
-- Add `x_ref` to use in CSV output. Use `x_ref=x_dead` instead of `x_min=x_dead` in `create_barrel`. Update CSV output docs on this.
+- Maybe: Add `x_ref` to use in CSV output. Use `x_ref=x_dead` instead of `x_min=x_dead` in `create_barrel`. Update CSV output docs on this.
 - Make exact solution with `e_f` and motion in both directions.
 - Document `e_f` governing equation.
 - Why does `e_f` go negative in plungers? Is it due to the continuous friction equation? Should I switch to a discontinuous friction equation?
+    - A discontinuous friction equation would allow me to set `x_min=x_dead` for the barrel.
+    - A discontinuous friction equation would probably keep `e_f` positive.
 - Plunger head motion bounds (lower and upper) (plunger impact)
-    - Why is energy not conserved through impact?
-        - Setting friction to zero did not solve the problem.
-        - Reducing spring mass as much as possible (m_spring > 0 according to input validation, so it's made very small) allows running to completion, but only because plunger impact doesn't happen. Increasing the plunger mass to compensate shows the problem remains.
     - How can I make this work if the coefficient of restitution is zero?
     - Add coefficient of restitution to inputs.
     - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$

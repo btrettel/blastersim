@@ -805,7 +805,7 @@ end subroutine test_set_const
 
 subroutine test_rates(tests)
     use gasdata, only: DRY_AIR
-    use cva, only: cv_system_type, d_x_d_t, d_x_dot_d_t, d_m_k_d_t, d_e_d_t, d_e_f_d_t
+    use cva, only: cv_system_type, d_x_d_t, d_x_dot_d_t, d_m_k_d_t, d_e_g_d_t, d_e_f_d_t
     
     type(test_results_type), intent(in out) :: tests
 
@@ -822,7 +822,7 @@ subroutine test_rates(tests)
     type(si_length)           :: delta_pre
     type(si_acceleration)     :: d_x_dot_d_t_
     type(si_mass_flow_rate)   :: m_dots(2, 2), d_m_1_d_t
-    type(si_energy_flow_rate) :: h_dots(2, 2), d_e_d_t_, d_e_f_d_t_
+    type(si_energy_flow_rate) :: h_dots(2, 2), d_e_g_d_t_, d_e_f_d_t_
     
     call x%v%init_const(1.5_WP, 0)
     call x_dot%v%init_const(10.0_WP, 0)
@@ -866,11 +866,11 @@ subroutine test_rates(tests)
     call h_dots(2, 1)%v%init_const(2.0e5_WP, 0)
     call h_dots(2, 2)%v%init_const(0.0_WP, 0)
     
-    d_e_d_t_ = d_e_d_t(sys%cv(2), h_dots, 1)
-    call tests%real_eq(d_e_d_t_%v%v, -p%v%v*csa%v%v*x_dot%v%v + 2.0e5_WP, "d_e_d_t(1)")
+    d_e_g_d_t_ = d_e_g_d_t(sys%cv(2), h_dots, 1)
+    call tests%real_eq(d_e_g_d_t_%v%v, -p%v%v*csa%v%v*x_dot%v%v + 2.0e5_WP, "d_e_g_d_t(1)")
     
-    d_e_d_t_ = d_e_d_t(sys%cv(2), h_dots, 2)
-    call tests%real_eq(d_e_d_t_%v%v, -p%v%v*csa%v%v*x_dot%v%v - 2.0e5_WP, "d_e_d_t(2)")
+    d_e_g_d_t_ = d_e_g_d_t(sys%cv(2), h_dots, 2)
+    call tests%real_eq(d_e_g_d_t_%v%v, -p%v%v*csa%v%v*x_dot%v%v - 2.0e5_WP, "d_e_g_d_t(2)")
     
     d_e_f_d_t_ = d_e_f_d_t(sys, 2)
     call tests%real_eq(d_e_f_d_t_%v%v, 4.0_WP*10.0_WP*1.0e5_WP, "d_e_f_d_t")

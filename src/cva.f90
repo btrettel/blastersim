@@ -15,7 +15,7 @@ implicit none
 private
 
 public :: smooth_min
-public :: d_x_d_t, d_x_dot_d_t, d_m_k_d_t, d_e_d_t, d_e_f_d_t
+public :: d_x_d_t, d_x_dot_d_t, d_m_k_d_t, d_e_g_d_t, d_e_f_d_t
 public :: f_m_dot, g_m_dot
 public :: calculate_next_time_step, run, check_sys, write_csv_row
 
@@ -992,7 +992,7 @@ pure function p_f0(cv, p_fe)
 end function p_f0
 !tripwire$ end
 
-!tripwire$ begin 902E7B2B Update `\secref{known-issues}`, `\secref{equations-of-motion}`, `\secref{plunger-impact}` if necessary.
+!tripwire$ begin E36C5EAB Update `\secref{known-issues}`, `\secref{equations-of-motion}`, `\secref{plunger-impact}` if necessary.
 pure function d_x_d_t(sys, i_cv)
     type(cv_system_type), intent(in) :: sys
     integer, intent(in)              :: i_cv
@@ -1112,7 +1112,7 @@ pure function rm_p_eff_cv(cv)
 end function rm_p_eff_cv
 !tripwire$ end
 
-!tripwire$ begin B862672E Update \secref{conservation-laws} of theory.tex if necessary.
+!tripwire$ begin 55C72232 Update \secref{conservation-laws} of theory.tex if necessary.
 pure function d_m_k_d_t(sys, m_dot, k, i_cv)
     type(cv_system_type), intent(in)    :: sys
     type(si_mass_flow_rate), intent(in) :: m_dot(:, :)
@@ -1164,29 +1164,29 @@ pure function d_m_k_d_t(sys, m_dot, k, i_cv)
     end do
 end function d_m_k_d_t
 
-pure function d_e_d_t(cv, h_dot, i_cv)
+pure function d_e_g_d_t(cv, h_dot, i_cv)
     type(cv_type), intent(in)             :: cv
     type(si_energy_flow_rate), intent(in) :: h_dot(:, :)
     integer, intent(in)                   :: i_cv
     
-    type(si_energy_flow_rate) :: d_e_d_t
+    type(si_energy_flow_rate) :: d_e_g_d_t
     
     integer :: n_cv, j_cv
     
-    call assert(size(h_dot, 1) == size(h_dot, 2), "cva (d_e_d_t): h_dots must be square", &
+    call assert(size(h_dot, 1) == size(h_dot, 2), "cva (d_e_g_d_t): h_dots must be square", &
                     print_integer=[size(h_dot, 1), size(h_dot, 2)])
     call assert_dimension(h_dot(1, 1)%v%d, cv%x%v%d)
-    call assert(cv%csa%v%v > 0.0_WP, "cva (d_e_d_t): cv%csa > 0 violated", print_real=[cv%csa%v%v])
+    call assert(cv%csa%v%v > 0.0_WP, "cva (d_e_g_d_t): cv%csa > 0 violated", print_real=[cv%csa%v%v])
     
-    d_e_d_t = -cv%p() * cv%csa * cv%x_dot
+    d_e_g_d_t = -cv%p() * cv%csa * cv%x_dot
     
     n_cv = size(h_dot, 1)
     do j_cv = 1, n_cv
-        call assert(is_close(h_dot(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_e_d_t): energy can not flow from self to self", &
+        call assert(is_close(h_dot(j_cv, j_cv)%v%v, 0.0_WP), "cva (d_e_g_d_t): energy can not flow from self to self", &
                         print_real=[h_dot(j_cv, j_cv)%v%v])
-        d_e_d_t = d_e_d_t + h_dot(j_cv, i_cv) - h_dot(i_cv, j_cv)
+        d_e_g_d_t = d_e_g_d_t + h_dot(j_cv, i_cv) - h_dot(i_cv, j_cv)
     end do
-end function d_e_d_t
+end function d_e_g_d_t
 !tripwire$ end
 
 pure function d_e_f_d_t(sys, i_cv)
@@ -1578,7 +1578,7 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out)
     do i_cv = 1, n_cv
         cv_delta_out(i_cv)%x     = dt*d_x_d_t(sys, i_cv)
         cv_delta_out(i_cv)%x_dot = dt*d_x_dot_d_t(sys, i_cv)
-        cv_delta_out(i_cv)%e_g   = dt*d_e_d_t(sys%cv(i_cv), h_dot, i_cv)
+        cv_delta_out(i_cv)%e_g   = dt*d_e_g_d_t(sys%cv(i_cv), h_dot, i_cv)
         cv_delta_out(i_cv)%e_f   = dt*d_e_f_d_t(sys, i_cv)
         do k = 1, n_gas
             cv_delta_out(i_cv)%m_k(k) = dt*d_m_k_d_t(sys, m_dot, k, i_cv)
@@ -2046,7 +2046,7 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     t = t_old + dt_i
 end subroutine get_sys_at_x
 
-!tripwire$ begin 445443E1 Update `\secref{plunger-impact}` of theory.tex.
+!tripwire$ begin 19F1D695 Update `\secref{plunger-impact}` of theory.tex.
 pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
     ! Set `sys_before_impact` to the instant immediately after plunger impact.
     ! `sys_before_impact` is right before plunger impact occurs (plunger velocity has no changed yet).
@@ -2055,11 +2055,18 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
     type(cv_system_type), allocatable, intent(in)  :: sys_before_impact
     type(cv_system_type), allocatable, intent(out) :: sys_after_impact
     
+    integer :: i_cv_mirror
+    
     call assert(sys_before_impact%cv(i_cv)%cor%v%v >  0.0_WP, "cva (get_sys_after_impact): cor >= 0 violated")
     call assert(sys_before_impact%cv(i_cv)%cor%v%v <= 1.0_WP, "cva (get_sys_after_impact): cor <= 1 violated")
     
     sys_after_impact                = sys_before_impact
     sys_after_impact%cv(i_cv)%x_dot = -sys_before_impact%cv(i_cv)%cor*sys_before_impact%cv(i_cv)%x_dot
+    
+    i_cv_mirror = sys_before_impact%cv(i_cv)%i_cv_mirror
+    if (i_cv_mirror >= 1) then
+        sys_after_impact%cv(i_cv_mirror)%x_dot = -sys_after_impact%cv(i_cv)%x_dot
+    end if
     
     if (.not. is_close(sys_after_impact%cv(i_cv)%rm_p%v%v, 0.0_WP)) then
         sys_after_impact%cv(i_cv)%e_m = sys_before_impact%cv(i_cv)%e_m &
