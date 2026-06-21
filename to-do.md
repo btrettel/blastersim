@@ -1,14 +1,25 @@
 ### v0.3.0
 
+- Document how dead volume in springers differs from pneumatics.
+- Estimate reasonable coefficient of restitution from videos.
+    - <https://discord.com/channels/727038380054937610/1172390267890958366/1285109487828467774>
+    - <https://www.youtube.com/watch?v=mwP1k-bcjcA>
+- Add upper limit on number of time steps to catch stalling.
 - Maybe: Add `x_ref` to use in CSV output. Use `x_ref=x_dead` instead of `x_min=x_dead` in `create_barrel`. Update CSV output docs on this.
-- Make exact solution with `e_f` and motion in both directions.
 - Document `e_f` governing equation.
+- Make exact solution with `e_f` and motion in both directions.
 - Why does `e_f` go negative in plungers? Is it due to the continuous friction equation? Should I switch to a discontinuous friction equation?
     - A discontinuous friction equation would allow me to set `x_min=x_dead` for the barrel.
     - A discontinuous friction equation would probably keep `e_f` positive.
 - Plunger head motion bounds (lower and upper) (plunger impact)
-    - How can I make this work if the coefficient of restitution is zero?
+    - How can I make this work if the coefficient of restitution is zero? One time step will be at the limit, the next will take it past the limit, and the only way to keep it at the limit would be a time step of zero!
+        - Detect when the time step is zero and terminate?
+        - Detect when the time step is zero and set the plunger mass to infinite so that it won't move?
+        - Have an extra force at `x == x_min` to prevent motion?
     - Add coefficient of restitution to inputs.
+    - Print a warning for plunger impact before dart exit and have a different exit code. I imagine plunger impact before dart exit will hurt accuracy due to the vibration.
+    - Need "blowdown" mode for springers to get plunger impact energy when impact is after projectile leaves the barrel.
+    - Add Beer and Johnson reference to theory.tex on the coefficient of restitution.
     - Test with plunger impact: $m(t)$, $E(t)$, $u(t)$, $\rho(t)$, $t_\text{impact}$
     - Test cases for piston impact:
         - Bounds respected.
@@ -18,11 +29,6 @@
     - <https://discord.com/channels/825852031239061545/825852073382772758/1484298391956488396>
         - > Plunger bounce has always seemed like a major factor in traditional springers in my testing.
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1475663102073766055>
-    - Print a warning for plunger impact after it is handled properly and have a different exit code.
-    - Need "blowdown" mode for springers to get plunger impact energy when impact is after projectile leaves the barrel.
-    - Check that behavior when the plunger impacts changed (that is, no longer out of sync)
-    - Document how dead volume in springers differs from pneumatics.
-    - Add Beer and Johnson reference to theory.tex on the coefficient of restitution.
 - Test `get_sys_at_x`. Adding `call move_alloc(from=sys_im1, to=sys_i)` fixed a bug that presumably could explain why the `x` values returned by `get_sys_at_x` seemed a bit off before.
 - Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
     - <https://news.ycombinator.com/item?id=48554595>

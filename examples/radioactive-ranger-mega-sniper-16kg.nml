@@ -56,6 +56,7 @@ delta_pre = 132.6e-3 ! m
 
 ! flow restriction
 d_e = 6.8e-3 ! m (calibrated for K11 average)
+!d_e = 13.5763e-3 ! m (full flow area)
 b   = 0.5    ! unitless (guessed)
 
 ! atmosphere
