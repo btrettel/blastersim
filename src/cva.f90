@@ -29,6 +29,7 @@ real(WP), public, parameter :: C_MS = 1.0_WP/3.0_WP ! unitless
 
 real(WP), public, parameter :: X_STOP_DEFAULT           = 1.0e2_WP  ! m
 real(WP), public, parameter :: X_MIN_DEFAULT            = 0.0_WP    ! m
+real(WP), public, parameter :: X_REF_DEFAULT            = 0.0_WP    ! m
 real(WP), public, parameter :: COR_DEFAULT              = 0.0_WP
 logical, public, parameter  :: CSV_OUTPUT_DEFAULT       = .false.   ! no CSV output by default
 integer, public, parameter  :: CSV_FREQUENCY_DEFAULT    = 10        ! time steps
@@ -110,6 +111,7 @@ type, public :: cv_type ! control volume
     type(unitless), allocatable :: y_const(:)  ! if `cv%eos = CONST_EOS`, then this mass fraction will be used
     type(si_length)             :: x_stop      ! `x` location where simulation will stop
     type(si_length)             :: x_min       ! minimum `x` location that the projectile/plunger can't move past
+    type(si_length)             :: x_ref       ! reference `x` value used to normalize output
     type(si_mass)               :: m_spring    ! mass of spring
     type(unitless)              :: cor         ! coefficient of restitution during plunger impact
     logical                     :: constant_friction ! whether `p_f` will be constant or not
@@ -630,7 +632,7 @@ pure function gamma_cv(cv, y)
 end function gamma_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, delta_pre, gas, &
-                            i_cv_mirror, x_stop, x_min, isentropic_filling, p_atm, eos, type, m_spring, cor, &
+                            i_cv_mirror, x_stop, x_min, x_ref, isentropic_filling, p_atm, eos, type, m_spring, cor, &
                             constant_friction, v_scale_s, v_scale_d)
     class(cv_type), intent(in out) :: cv
     
@@ -653,6 +655,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     
     type(si_length), intent(in), optional   :: x_stop   ! `x` location where simulation will stop
     type(si_length), intent(in), optional   :: x_min    ! minimum `x` location that the projectile/plunger can't move past
+    type(si_length), intent(in), optional   :: x_ref    ! reference `x` value used to normalize output
     logical, intent(in), optional           :: isentropic_filling
     type(si_pressure), intent(in), optional :: p_atm    ! atmospheric pressure (only requried if `isentropic_filling = .true.`
     integer, intent(in), optional           :: eos      ! equation of state to use
@@ -705,7 +708,12 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
                     print_real=[cv%x%v%v, cv%x_min%v%v, cv%x_stop%v%v])
     call assert(cv%x_min%v%v <= cv%x%v%v, "cva (set): x_min > x will crash immediately", &
                     print_real=[cv%x%v%v, cv%x_min%v%v, cv%x_stop%v%v])
-
+    
+    if (present(x_ref)) then
+        cv%x_ref = x_ref
+    else
+        call cv%x_ref%v%init_const(X_REF_DEFAULT, n_d)
+    end if
     
     if (present(isentropic_filling)) then
         isentropic_filling_ = isentropic_filling
@@ -2086,7 +2094,7 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
 end subroutine get_sys_after_impact
 !tripwire$ end
 
-!tripwire$ begin DF0F623F Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
+!tripwire$ begin 31BB33E7 Update `\secref{csv}` of usage.tex when changing `write_csv_row`.
 subroutine write_csv_row(csv_unit, sys, t, status, row_type)
     ! It might make more sense to put this in a separate file. io.f90 won't do as it depends on cva.f90.
     
@@ -2154,7 +2162,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
                 case (HEADER_ROW_TYPE)
                     write(unit=csv_unit, fmt="(3a)", advance="no") '"x (m, ', trim(sys%cv(i_cv)%label), ')",'
                 case (NUMBER_ROW_TYPE)
-                    write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%x%v%v - sys%cv(i_cv)%x_min%v%v, ","
+                    write(unit=csv_unit, fmt="(g0, a)", advance="no") sys%cv(i_cv)%x%v%v - sys%cv(i_cv)%x_ref%v%v, ","
                 case default
                     error stop "cva (write_csv_row, x): invalid row_type"
             end select

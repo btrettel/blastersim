@@ -66,8 +66,12 @@ Units of J.
 This should remain approximately constant and is present for debugging purposes.
 \item For each control volume $i$ (for a springer this would be the plunger tube, barrel, atmosphere for the plunger tube, and atmosphere for the barrel):
 \begin{itemize}
-    \item \texttt{x} ($x_i - x_{\text{min},i}$): Location of the projectile/plunger.
-    More specifically, the distance between the projectile/plunger and the minimum limit of the motion of the projectile/plunger (for example, the end of the plunger tube). % or the projectile's starting location).
+    \item \texttt{x} ($x_i - x_{\text{ref},i}$): Location of the projectile/plunger.
+    More specifically, the distance between the projectile/plunger and a reference location.
+    For plunger tubes, the reference location is picked so that the initial value of $\texttt{x} = \texttt{l\_draw}$ and the end of the plunger tube is $\texttt{x} = 0$.
+    For barrels, the reference location is picked to that the initial value of $\texttt{x} = 0$ and the end of the barrel is $\texttt{x} = \texttt{l\_travel}$.
+    Otherwise, $x_{\text{ref},i} = 0$.
+    The reference value is necessary to convert between BlasterSim's internal representation, which can be confusing as it factors in dead volume by adding extra $x_i$, and a more easily understood representation.
     Floating-point number.
     Units of m.
     Not present for constant pressure control volumes like atmospheres.

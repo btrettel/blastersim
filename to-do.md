@@ -1,5 +1,6 @@
 ### v0.3.0
 
+- Add side icon for `d_e` warnings.
 - Separately track plunger and spring kinetic energies.
 - Create `get_sys_at_peak_x_dot`
     - Stop at first deceleration with `travel > l_travel` (so meaning of `l_travel` changes). This way, you don't have to make `l_travel` an optional namelist variable.
@@ -25,7 +26,6 @@
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1285109487828467774>
     - <https://www.youtube.com/watch?v=mwP1k-bcjcA>
 - Maybe: `MAX_ITERS_TIME_LOOP_RUN_RC`: Check if there was plunger impact and if the coefficient of restitution is small. If so, suggest making the coefficient of restitution larger or zero.
-- Maybe: Add `x_ref` to use in CSV output. Use `x_ref=x_dead` instead of `x_min=x_dead` in `create_barrel`. Update CSV output docs on this.
 - Document `e_f` governing equation.
 - Make exact solution with `e_f` and motion in both directions.
 - Why does `e_f` go negative in plungers? Is it due to the continuous friction equation? Should I switch to a discontinuous friction equation?
@@ -294,7 +294,7 @@
     - Minimum of multiple time scales?
 - Try multiple CV exact solution. One constant pressure chamber, one barrel?
 - nmlfuzz using geninput data
-- Create `sys_a_event` to find where acceleration is zero for optimal barrel length.
+- Make how much dead space is in the plunger/chamber and barrel user-selectable? It should have little effect, though. Might make an interesting "property test" of sorts to see how much effect it has in reality.
 
 ***
 
