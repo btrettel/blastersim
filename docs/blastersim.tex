@@ -54,6 +54,22 @@
 \usetikzlibrary{shapes.geometric}
 \usetikzlibrary{arrows}
 
+% Modified from <https://tex.stackexchange.com/a/678468>
+% Posted by cis
+% Retrieved 2026-06-28, License - CC BY-SA 4.0
+\newcommand{\textbfwarning}[1]{%
+\iflatexml\else%
+\warningside%
+\fi%
+\textbf{#1}}
+\newcommand{\warningside}{%
+\marginpar{\Huge%
+\begin{tikzpicture}[baseline=0.5ex, inner xsep=0pt]
+\node[]{$\triangle$};
+\node[yshift=0.125ex, scale=0.45]{!};
+\end{tikzpicture}\space}% chktex 31
+}
+
 % convenient commands for referencing equations, figures, and tables
 
 \renewcommand*{\eqref}[1]{equation~\ref{eq:#1}}

@@ -55,7 +55,8 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin A1B9C040 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
+!tripwire$ begin B1197791 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
+integer, public, parameter :: X_DOT_DOT_LT_0_RUN_RC         = -3
 integer, public, parameter :: X_LT_X_MIN_RUN_RC             = -2
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
 integer, public, parameter :: TIMEOUT_RUN_RC                = 1
