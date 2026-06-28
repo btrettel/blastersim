@@ -698,14 +698,14 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     
     if (present(x_min)) then
         cv%x_min = x_min
-        
-        call assert(cv%x_min%v%v < cv%x_stop%v%v, "cva (set): x_min >= x_stop will cause immediate termination of run", &
-                    print_real=[cv%x%v%v, cv%x_min%v%v, cv%x_stop%v%v])
-        call assert(cv%x_min%v%v <= cv%x%v%v, "cva (set): x_min > x will crash immediately", &
-                    print_real=[cv%x%v%v, cv%x_min%v%v, cv%x_stop%v%v])
     else
         call cv%x_min%v%init_const(X_MIN_DEFAULT, n_d)
     end if
+    call assert(cv%x_min%v%v < cv%x_stop%v%v, "cva (set): x_min >= x_stop will cause immediate termination of run", &
+                    print_real=[cv%x%v%v, cv%x_min%v%v, cv%x_stop%v%v])
+    call assert(cv%x_min%v%v <= cv%x%v%v, "cva (set): x_min > x will crash immediately", &
+                    print_real=[cv%x%v%v, cv%x_min%v%v, cv%x_stop%v%v])
+
     
     if (present(isentropic_filling)) then
         isentropic_filling_ = isentropic_filling

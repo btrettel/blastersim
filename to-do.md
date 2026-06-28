@@ -1,5 +1,26 @@
 ### v0.3.0
 
+- Separately track plunger and spring kinetic energies.
+- Create `get_sys_at_peak_x_dot`
+    - Stop at first deceleration with `travel > l_travel` (so meaning of `l_travel` changes). This way, you don't have to make `l_travel` an optional namelist variable.
+    - `logical :: find_optimal_l_travel`
+- BlasterSim docs "Tutorials" chapter
+    - Find optimal barrel length, simplified method
+- Write specific governing equations for pneumatics and springers.
+- Look into `non_overridable`.
+- Add blowdown part of simulation.
+- Track both impact energy before projectile exit and total impact energy including blow down period.
+- Make BlasterSim more predictive by including a regression for flow through contractions. Then you won't need `d_e`.
+    - For optimization, on `d_e`, set upper limit from regression equation, lower limit to zero. You can add flow restrictions to get less. This could be useful to reduce impact energy.
+        - For optimization of plunger tube diameter, it would be easier to constraint the ratio of the plunger tube diameter to barrel diameter to be large so that `d_e` becomes independent of that ratio.
+    - docs: Note that $c_\text{c}$ (coefficient of contraction) and $c_\text{v}$ need to be considered separately. Energy losses could make $c_\text{v}$ appreciably lower than 1. I guess the loss coefficient effectively calculates $c_\text{v}$ if the area ($c_\text{c}$) is known. Energy losses in BlasterSim's formulation would factor mostly in to the enthalpy through the flow restriction, however, as BlasterSim assumes gas kinetic energy is negligible.
+    - Data to collect from the open literature:
+        - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
+        - Use loss coefficients to estimate effective area?
+        - Make regression for loss coefficient considering contraction ratio and entrance radius of curvature?
+- Print useful error message for each error code.
+- Test `cor` in springer inputs.
+- Use new plunger impact exact solution after impact and document it.
 - Estimate reasonable coefficient of restitution from videos.
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1285109487828467774>
     - <https://www.youtube.com/watch?v=mwP1k-bcjcA>
@@ -117,7 +138,6 @@
     - `make blastersim-*-linux-x86-64.zip`
     - upload online
 - Make Python script generate an animation of a springer based on BlasterSim output.
-- docs: Note that $c_\text{c}$ (coefficient of contraction) and $c_\text{v}$ need to be considered separately. Energy losses could make $c_\text{v}$ appreciably lower than 1. I guess the loss coefficient effectively calculates $c_\text{v}$ if the area ($c_\text{c}$) is known.
 - docs: Discuss use of derived types defined in cva.f90.
 
 ***
@@ -213,13 +233,47 @@
             - <https://discord.com/channels/146386512873783296/146680423173455872/1389713797173743788>
         - Simulation isn't worthwhile because it takes less time to figure things out experimentally. Not true from my perspective. In practice, the alternative to simulation has been speculation. People spend a huge amount of time working on things that a simulation could show is not plausible. That's a waste of time. If anything, simulation saves time by reducing the amount of experiments that need to be done. Simulation and experimentation are complementary.
         - How do I calculate optimal barrel length?
-            - Make optimal barrel length equation developed from BlasterSim data.
+            - Make optimal barrel length equation developed from BlasterSim data. / Make reduced order model for optimal barrel length given only the most important variables.
+                - Comparison with simplified optimal barrel length theory
             - Comment on some common formulas, give better approximate formulas based on adiabatic process relations or other physical principles calibrated to BlasterSim simulations, and say how to calculate it in BlasterSim.
-            - <https://www.reddit.com/r/Nerf/comments/1k428am/ideal_barrel_length_math/>
-            - <https://www.reddit.com/r/Nerf/comments/186ckcn/formula_for_optimal_barrel_length/>
-            - <http://btrettel.nerfers.com/archives/54>
             - <https://discord.com/channels/825852031239061545/825852033898774543/1461868273858642193>
             - <https://www.reddit.com/r/Nerf/comments/1slrurd/aluminum_barrel_lenght/>
+            - <https://discord.com/channels/825852031239061545/825852073382772758/1300637895681638422>: > The more we've delved into springer optimization, the less blasters seem to follow the [plunger-to-barrel volume ratio] math.
+            - Specific ratios suggested
+                - 1.1
+                    - <https://discord.com/channels/825852031239061545/825852073382772758/1300637992729444458>
+                - 1.12
+                    - <https://discord.com/channels/825852031239061545/1265100314759921758/1265783410727587942>
+                - 1.2
+                    - <https://discord.com/channels/825852031239061545/825852073382772758/1442424176433565747>
+                    - <https://discord.com/channels/825852031239061545/825852073382772758/1300637992729444458>
+                - 1.36
+                    - <https://discord.com/channels/825852031239061545/825852033898774543/1234697754392002580>
+                - 1.4
+                    - <https://discord.com/channels/825852031239061545/825852073382772758/1300637992729444458>
+                - 1.6
+                    - <https://discord.com/channels/825852031239061545/949066985457745992/1351756674649554964>
+                - 1.65
+                    - <https://discord.com/channels/146386512873783296/146680423173455872/1389712818793742486>
+                - 1.7
+                    - <https://discord.com/channels/825852031239061545/1470995899550400724/1472830272411271251>
+                    - <https://discord.com/channels/825852031239061545/825852033898774543/1470784412542042288>
+                    - <https://discord.com/channels/825852031239061545/825852033898774543/1461868614788583641>
+                    - <https://www.reddit.com/r/Nerf/comments/186ckcn/formula_for_optimal_barrel_length/>
+                    - <https://tinyurl.com/y8vowygk>
+                        - <https://www.nerfsg.com/guides>
+                - 1.8
+                    - <https://discord.com/channels/825852031239061545/825852033898774543/1461868273858642193>
+                - 1.85
+                    - <https://www.reddit.com/r/Nerf/comments/186ckcn/formula_for_optimal_barrel_length/kbbw19o/>
+                    - <https://www.reddit.com/r/Nerf/comments/1k428am/ideal_barrel_length_math/>
+                - 2.0
+                    - <https://discord.com/channels/825852031239061545/825852033898774543/1461868614788583641>
+                - 2.5
+                    - <https://discord.com/channels/146386512873783296/146680423173455872/1389692025565220994>
+                    - <https://discord.com/channels/825852031239061545/825852073382772758/1189468070666834011>
+                - 4.0
+                    - <http://btrettel.nerfers.com/archives/54>
     - API
         - `i_cv_mirror = 0` disables mirror CVs; use for constant volume chambers
     - Write Fortran code to output gas data table to put in documentation.
@@ -244,6 +298,10 @@
 
 ***
 
+- performance consistency
+    - <https://discord.com/channels/146386512873783296/146680423173455872/1389715204996333609>
+        - > I can tune for 240 here at my place then go 20miles inland to LUNC event and barely hit 210 because the heat and elevation change……
+        - > On Saturday uncapped here everyone lost 20 fps from heat
 - Check that derivatives are correct in special cases where something is set to zero with no derivatives. Check for "TODO: Not sure the derivatives of this should be zero."
 - tests for `test_const`, `p_eos`, `temp_cv`, and others for `MIRROR_CV_TYPE`
 - Tests for io.f90
@@ -273,10 +331,6 @@
     - When mass or temperature goes negative, suggest that perhaps the effective area is too large.
 - Make subroutine to fit `sys%con(:, :)%a_e`, `sys%con(:, :)%b`, `sys%cv(:)%p_fs`, `sys%cv(:)%p_fd` for all `con_types` and `cv_types`.
 - Test if correct `sys` is output for `run` (old or new)
-- Data to collect from the open literature:
-    - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
-    - Use loss coefficients to estimate effective area?
-    - Make regression for loss coefficient considering contraction ratio and entrance radius of curvature?
 - Couple BlasterSim with some sort of geometric analysis. Optimal flow restriction geometry (considering dead space), optimal notch geometry to minimize weight, etc.
 - Have ability to run multiple cycles and terminate when mass gets low in any particular CV.
 - If I use a constant pressure/temperature CV to model a HPA or CO2 tank, then I'll still need a way to estimate the real gas internal energy and enthalpy. Going all the way with a better equation of state and thermodynamic properties might not be much more complex. I could make each control volume use a different EOS if I want to avoid iterations associated with a different EOS.
@@ -295,10 +349,16 @@
         - Kinetic energy density, muzzle velocity (target, upper limit, lower limit)
         - min/max dart mass
         - dart head decapitation
+            - maximum dart pressure difference to prevent dart bursting
         - pneumatics might want to use less gas mass per shot
         - spring compression
             - <https://discord.com/channels/727038380054937610/1172390267890958366/1466253503151476877>
             - <https://discord.com/channels/825852031239061545/825852073382772758/1517111131230048276>
+            - spring displacement is low enough to prevent permanent deformation (alternative: look into fatigue life of spring assuming no amount of deformation will be okay?)
+        - maximum draw force limit
+        - recoil
+        - amount of gas ejected from the barrel after projectile exit during blowdown phase
+            - This could be useful to improve accuracy.
     - For optimization, have ability to pick discrete values taken from text file.
         - How can UQ be handled with this? Have a second column for uncertainty?
 - Check entropy conservation.
@@ -335,7 +395,7 @@
     - <http://nerfhaven.com/forums/topic/21832-experimental-methods-for-determining-and-predicting-blaster-power/?p=307341>
     - <http://www.danielbeaver.net/storage/projects/nerf/SpringerTesting/>
     - Doesn't provide enough data to make a complete test case.
-- Test `sys_interp`.
+- Test `get_sys_at_x` and `get_sys_at_peak_x_dot`.
     - Comparison with `x_stop`. Is a test needed given the assertion?
     - Test with something that can be solved exactly by RK4. Then `x_dot` can be known exactly.
 - `check_sys`
@@ -418,10 +478,6 @@
     - Software engineering
 - Make flow restriction model consider both $K_\text{L}$ and area reduction.
 - dynamic friction values: <https://discord.com/channels/727038380054937610/1172390267890958366/1444963197755986033>
-- Make reduced order model for optimal barrel length given only the most important variables.
-    - Comparison with simplified optimal barrel length theory
-    - Related: <https://discord.com/channels/825852031239061545/825852033898774543/1461868273858642193>
-        - > You could try to prove the empiric 1.8/1 PT volume to barrel volume ideal ratio
 - old input file ideas
     - `exterior` namelist
     - `terminal` namelist

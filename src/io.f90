@@ -251,7 +251,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     ! `sys%cv(I_PLUNGER)`: plunger tube
     csa_plunger    = (PI/4.0_WP)*(square(d_plunger_u) - square(d_coaxial_inner_u))
     x_dead_plunger = vol_dead_u/(2.0_WP*csa_plunger)
-    call sys%cv(I_PLUNGER)%set(l_draw_u, x_dot, y, p_atm_u, temp_atm_u, "plunger tube", csa_plunger, &
+    call sys%cv(I_PLUNGER)%set(l_draw_u + x_dead_plunger, x_dot, y, p_atm_u, temp_atm_u, "plunger tube", csa_plunger, &
                         1.0_WP/m_plunger_u, p_fs_plunger_u, p_fd_plunger_u, k_u, delta_pre_u, PLUNGER_GAS, I_PLUNGER_ATM, &
                         m_spring=m_spring_u, x_min=x_dead_plunger, cor=cor_u)
     
