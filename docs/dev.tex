@@ -152,6 +152,9 @@ The derived type \texttt{run\_status\_type} is returned by \texttt{run}.
 \texttt{run\_status\_type} contains a return code \texttt{rc} and a time \texttt{t}
 If \texttt{rc} is not \texttt{SUCCESS\_RC}, then \texttt{run\_status\_type} optionally can set arrays \texttt{i\_cv} and \texttt{data} to contain information about particular control volumes to make error and warning messages more meaningful.
 
+\item In io.f90, variable names ending with \texttt{\_u} use the Fortran types that check the units described in \secref{unit-checking}.
+The \texttt{\_u} suffix avoids name conflicts with the variables used in the namelists, which are Fortran \texttt{real}s.
+
 \item In the documentation, put no more than one sentence per line of LaTeX code.
 Breaking up a sentence into clauses may be useful in some contexts as well,
 and breaking up a mathematical expression into multiple LaTeX lines is also often useful.

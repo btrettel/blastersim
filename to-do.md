@@ -1,6 +1,5 @@
 ### v0.3.0
 
-- Add side icon for `d_e` warnings.
 - Separately track plunger and spring kinetic energies.
 - Create `get_sys_at_peak_x_dot`
     - Stop at first deceleration with `travel > l_travel` (so meaning of `l_travel` changes). This way, you don't have to make `l_travel` an optional namelist variable.

@@ -55,9 +55,10 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin B1197791 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
-integer, public, parameter :: X_DOT_DOT_LT_0_RUN_RC         = -3
-integer, public, parameter :: X_LT_X_MIN_RUN_RC             = -2
+!tripwire$ begin 8B519293 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
+integer, public, parameter :: PEAK_X_DOT_STOP_RUN_RC        = -4
+integer, public, parameter :: X_LT_X_MIN_RUN_RC             = -3
+integer, public, parameter :: X_GE_X_STOP_RUN_RC            = -2
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
 integer, public, parameter :: TIMEOUT_RUN_RC                = 1
 integer, public, parameter :: NEGATIVE_CV_M_TOTAL_RUN_RC    = 2
@@ -76,6 +77,7 @@ integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X_RUN_RC = 12
 !integer, public, parameter :: M_BLOW_UP_RUN_RC              = 
 !integer, public, parameter :: E_BLOW_UP_RUN_RC              = 
 !integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 
+real(WP), public, parameter :: MIN_X_PEAK_X_DOT_STOP_RUN_RC  = 1.0e-2_WP ! m
 !tripwire$ end
 
 integer, public, parameter :: MAX_ITERS_TIME_LOOP    = 10**8
@@ -94,28 +96,29 @@ type, public :: cv_type ! control volume
     type(si_energy)            :: e_m    ! energy lost to plunger impact in control volume
     
     ! constants
-    character(len=32)           :: label       ! human-readable label for control volume
-    integer                     :: eos         ! equation of state to use for control volume
-    integer                     :: type        ! type of control volume
-    type(si_area)               :: csa         ! cross-sectional area
-    type(si_inverse_mass)       :: rm_p        ! reciprocal mass of projectile/plunger
-    type(si_pressure)           :: p_fs, p_fd  ! static and dynamic friction pressure
-    type(si_velocity)           :: v_scale_s   ! velocity scale over which part of static friction pressure becomes active
-    type(si_velocity)           :: v_scale_d   ! velocity scale over which dynamic friction pressure becomes active
-    type(si_stiffness)          :: k           ! stiffness of spring attached to plunger
-    type(si_length)             :: delta_pre   ! spring precompression at `x = x_min`
-    type(gas_type), allocatable :: gas(:)      ! gas data
-    integer                     :: i_cv_mirror ! index of control volume to use in pressure difference calculation
+    character(len=32)           :: label           ! human-readable label for control volume
+    integer                     :: eos             ! equation of state to use for control volume
+    integer                     :: type            ! type of control volume
+    type(si_area)               :: csa             ! cross-sectional area
+    type(si_inverse_mass)       :: rm_p            ! reciprocal mass of projectile/plunger
+    type(si_pressure)           :: p_fs, p_fd      ! static and dynamic friction pressure
+    type(si_velocity)           :: v_scale_s       ! velocity scale over which part of static friction pressure becomes active
+    type(si_velocity)           :: v_scale_d       ! velocity scale over which dynamic friction pressure becomes active
+    type(si_stiffness)          :: k               ! stiffness of spring attached to plunger
+    type(si_length)             :: delta_pre       ! spring precompression at `x = x_min`
+    type(gas_type), allocatable :: gas(:)          ! gas data
+    integer                     :: i_cv_mirror     ! index of control volume to use in pressure difference calculation
     ! `i_cv_mirror = 0` disables mirror CVs. Use that for constant volume chambers.
-    type(si_pressure)           :: p_const     ! if `cv%eos = CONST_EOS`, then `cv%p() = p_const`
-    type(si_temperature)        :: temp_const  ! if `cv%eos = CONST_EOS`, then `cv%temp() = temp_const`
-    type(unitless), allocatable :: y_const(:)  ! if `cv%eos = CONST_EOS`, then this mass fraction will be used
-    type(si_length)             :: x_stop      ! `x` location where simulation will stop
-    type(si_length)             :: x_min       ! minimum `x` location that the projectile/plunger can't move past
-    type(si_length)             :: x_ref       ! reference `x` value used to normalize output
-    type(si_mass)               :: m_spring    ! mass of spring
-    type(unitless)              :: cor         ! coefficient of restitution during plunger impact
-    logical                     :: constant_friction ! whether `p_f` will be constant or not
+    type(si_pressure)           :: p_const         ! if `cv%eos = CONST_EOS`, then `cv%p() = p_const`
+    type(si_temperature)        :: temp_const      ! if `cv%eos = CONST_EOS`, then `cv%temp() = temp_const`
+    type(unitless), allocatable :: y_const(:)      ! if `cv%eos = CONST_EOS`, then this mass fraction will be used
+    type(si_length)             :: x_stop          ! `x` location where simulation will stop
+    logical                     :: peak_x_dot_stop ! stop when `x_dot` peaks
+    type(si_length)             :: x_min           ! minimum `x` location that the projectile/plunger can't move past
+    type(si_length)             :: x_ref           ! reference `x` value used to normalize output
+    type(si_mass)               :: m_spring        ! mass of spring
+    type(unitless)              :: cor             ! coefficient of restitution during plunger impact
+    logical                     :: const_friction  ! whether `p_f` will be constant or not
 contains
     procedure :: m_total
     procedure :: e_s
@@ -633,8 +636,8 @@ pure function gamma_cv(cv, y)
 end function gamma_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, delta_pre, gas, &
-                            i_cv_mirror, x_stop, x_min, x_ref, isentropic_filling, p_atm, eos, type, m_spring, cor, &
-                            constant_friction, v_scale_s, v_scale_d)
+                            i_cv_mirror, x_stop, x_min, x_ref, isentropic_filling, peak_x_dot_stop, &
+                            p_atm, eos, type, m_spring, cor, const_friction, v_scale_s, v_scale_d)
     class(cv_type), intent(in out) :: cv
     
     ! time varying
@@ -657,13 +660,13 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     type(si_length), intent(in), optional   :: x_stop   ! `x` location where simulation will stop
     type(si_length), intent(in), optional   :: x_min    ! minimum `x` location that the projectile/plunger can't move past
     type(si_length), intent(in), optional   :: x_ref    ! reference `x` value used to normalize output
-    logical, intent(in), optional           :: isentropic_filling
+    logical, intent(in), optional           :: isentropic_filling, peak_x_dot_stop
     type(si_pressure), intent(in), optional :: p_atm    ! atmospheric pressure (only requried if `isentropic_filling = .true.`
     integer, intent(in), optional           :: eos      ! equation of state to use
     integer, intent(in), optional           :: type     ! type of CV to use
     type(si_mass), intent(in), optional     :: m_spring ! mass of spring
     type(unitless), intent(in), optional    :: cor      ! coefficient of restitution during plunger impact
-    logical, intent(in), optional           :: constant_friction
+    logical, intent(in), optional           :: const_friction
     type(si_velocity), intent(in), optional :: v_scale_s, v_scale_d
     
     integer              :: l, n_d
@@ -722,6 +725,12 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
         isentropic_filling_ = .false.
     end if
     
+    if (present(peak_x_dot_stop)) then
+        cv%peak_x_dot_stop = peak_x_dot_stop
+    else
+        cv%peak_x_dot_stop = .false.
+    end if
+    
     if (present(cor)) then
         cv%cor = cor
         
@@ -731,16 +740,16 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
         call cv%cor%v%init_const(COR_DEFAULT, n_d)
     end if
     
-    if (present(constant_friction)) then
-        cv%constant_friction = constant_friction
+    if (present(const_friction)) then
+        cv%const_friction = const_friction
         
-        if (cv%constant_friction) then
+        if (cv%const_friction) then
             call assert(is_close(p_fs%v%v, p_fd%v%v), &
-                    "cva (set): constant_friction = .true. requires that p_fs = p_fd as otherwise p_f would not be constant", &
+                    "cva (set): const_friction = .true. requires that p_fs = p_fd as otherwise p_f would not be constant", &
                     print_real=[p_fs%v%v, p_fd%v%v])
         end if
     else
-        cv%constant_friction = .false.
+        cv%const_friction = .false.
     end if
     
     if (present(eos)) then
@@ -890,14 +899,15 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     call assert(cv%x%v%v < cv%x_stop%v%v, "cva (set_const): x >= x_stop will cause immediate termination of run", &
                     print_real=[cv%x%v%v, cv%x_stop%v%v])
     
-    cv%label       = label
-    cv%csa         = csa
-    cv%eos         = CONST_EOS
-    cv%gas         = gas
-    cv%i_cv_mirror = i_cv_mirror
-    cv%p_const     = p_const
-    cv%temp_const  = temp_const
-    cv%y_const     = y_const
+    cv%label           = label
+    cv%csa             = csa
+    cv%eos             = CONST_EOS
+    cv%gas             = gas
+    cv%i_cv_mirror     = i_cv_mirror
+    cv%p_const         = p_const
+    cv%temp_const      = temp_const
+    cv%y_const         = y_const
+    cv%peak_x_dot_stop = .false.
     
     call assert(cv%p_const%v%v    > 0.0_WP, "cva (set_const): p_const > 0 violated", print_real=[cv%p_const%v%v])
     call assert(cv%temp_const%v%v > 0.0_WP, "cva (set_const): temp_const > 0 violated", print_real=[cv%temp_const%v%v])
@@ -937,7 +947,7 @@ pure function p_f(cv, p_fe)
     call assert(cv%p_fs%v%v >= 0.0_WP, "cva (p_f): cv%p_fs%v > 0 violated", print_real=[cv%p_fs%v%v])
     call assert(cv%p_fd%v%v >= 0.0_WP, "cva (p_f): cv%p_fd%v > 0 violated", print_real=[cv%p_fd%v%v])
     
-    if (cv%constant_friction) then
+    if (cv%const_friction) then
         p_f = cv%p_fs
     else
         p_f = p_f0(cv, p_fe) + (cv%p_fd - tanh(cv%x_dot/cv%v_scale_s)*p_f0(cv, p_fe))*tanh(cv%x_dot/cv%v_scale_d)
@@ -1654,7 +1664,6 @@ subroutine run(config, sys_start, sys_end, status)
     character(len=CL)     :: error_message
     integer               :: n_d, i, csv_unit, rc_get_sys_at_x
     type(si_time)         :: t, t_old, dt
-    type(run_status_type) :: status_final
     
     n_d = size(sys_start%cv(1)%x%v%d)
     
@@ -1685,21 +1694,41 @@ subroutine run(config, sys_start, sys_end, status)
         
         !print *, t%v%v
         
-        call check_sys(config, sys_new, sys_start, t, status)
-        if (status%rc == X_LT_X_MIN_RUN_RC) then
-            call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_min, &
-                                sys_old, sys_new, t, sys_event, rc_get_sys_at_x)
-            if (rc_get_sys_at_x == SUCCESS_RC) then
-                call get_sys_after_impact(status%i_cv(1), sys_event, sys_new)
-            else
-                status%rc = MAX_ITERS_GET_SYS_AT_X_RUN_RC
-            end if
-        end if
+        call check_sys(config, sys_new, sys_old, sys_start, t, status)
+        
+        event_case: select case (status%rc)
+            case (X_GE_X_STOP_RUN_RC) ! -2
+                ! Use Hénon's trick to ensure that `x == x_stop`.
+                call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_stop, &
+                                        sys_old, sys_new, t, sys_end, rc_get_sys_at_x)
+                
+                if (rc_get_sys_at_x == MAX_ITERS_GET_SYS_AT_X_RUN_RC) then
+                    status%rc = rc_get_sys_at_x
+                    exit event_case
+                end if
+                
+                call check_sys(config, sys_end, sys_old, sys_start, t, status)
+                
+                ! If `check_sys` thinks that the run can continue or that `x >= x_stop`, `run` can terminate
+                if ((status%rc == CONTINUE_RUN_RC) .or. (status%rc == X_GE_X_STOP_RUN_RC)) then
+                    status%rc = SUCCESS_RC
+                end if
+            case (X_LT_X_MIN_RUN_RC) ! -3
+                call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_min, &
+                                    sys_old, sys_new, t, sys_event, rc_get_sys_at_x)
+                
+                if (rc_get_sys_at_x == SUCCESS_RC) then
+                    call get_sys_after_impact(status%i_cv(1), sys_event, sys_new)
+                    status%rc = CONTINUE_RUN_RC
+                else
+                    status%rc = rc_get_sys_at_x
+                end if
+            !case (PEAK_X_DOT_STOP_RUN_RC) ! -4
+        end select event_case
+        
+        if (i >= MAX_ITERS_TIME_LOOP) status%rc = MAX_ITERS_TIME_LOOP_RUN_RC
+        
         if (status%rc >= SUCCESS_RC) exit time_loop
-        if (i >= MAX_ITERS_TIME_LOOP) then
-            status%rc = MAX_ITERS_TIME_LOOP_RUN_RC
-            exit time_loop
-        end if
         
         if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
             call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)
@@ -1708,26 +1737,9 @@ subroutine run(config, sys_start, sys_end, status)
         call move_alloc(from=sys_old,  to=sys_temp)
         call move_alloc(from=sys_new,  to=sys_old)
         call move_alloc(from=sys_temp, to=sys_new)
-        
-        call assert(t%v%v <= T_STOP_DEFAULT, "cva (run): t <= T_STOP_DEFAULT violated")
     end do time_loop
     
-    if (status%rc == SUCCESS_RC) then
-        ! If successful, use Hénon's trick to ensure that `x == x_stop`.
-        call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_stop, &
-                                sys_old, sys_new, t, sys_end, rc_get_sys_at_x)
-        
-        call check_sys(config, sys_end, sys_start, t, status_final)
-        ! This will make sure that the status rc stays the same if everything is okay but `x` is a bit short.
-        if (status_final%rc /= CONTINUE_RUN_RC) then
-            status = status_final
-            if (rc_get_sys_at_x == MAX_ITERS_GET_SYS_AT_X_RUN_RC) then
-                status%rc = rc_get_sys_at_x
-            end if
-        end if
-    else
-        sys_end = sys_new
-    end if
+    sys_end = sys_new
     
     if (config%csv_output) then
         call write_csv_row(csv_unit, sys_end, t, status, NUMBER_ROW_TYPE)
@@ -1738,9 +1750,9 @@ subroutine run(config, sys_start, sys_end, status)
 end subroutine run
 
 !tripwire$ begin CC9C5CC9 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
-pure subroutine check_sys(config, sys, sys_start, t, status)
+pure subroutine check_sys(config, sys, sys_old, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
-    type(cv_system_type), allocatable, intent(in) :: sys, sys_start
+    type(cv_system_type), allocatable, intent(in) :: sys, sys_old, sys_start
     type(si_time), intent(in)                     :: t
     type(run_status_type), intent(out)            :: status
     
@@ -1763,7 +1775,7 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
     do i_cv = 1, n_cv
         ! Check whether the projectile left the barrel.
         if (sys%cv(i_cv)%x >= sys%cv(i_cv)%x_stop) then
-            status%rc = SUCCESS_RC
+            status%rc = X_GE_X_STOP_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
             return
@@ -1775,6 +1787,17 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
             return
+        end if
+        
+        if (sys%cv(i_cv)%peak_x_dot_stop) then
+            ! Check whether projectile has started decellerating.
+            if ((sys_old%cv(i_cv)%x_dot >= sys%cv(i_cv)%x_dot) &
+                    .and. (sys_old%cv(i_cv)%x%v%v > MIN_X_PEAK_X_DOT_STOP_RUN_RC)) then
+                status%rc = PEAK_X_DOT_STOP_RUN_RC
+                allocate(status%i_cv(1))
+                status%i_cv(1) = i_cv
+                return
+            end if
         end if
         
         ! Check whether the plunger position is within the bounds.
