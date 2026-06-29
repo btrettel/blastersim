@@ -55,7 +55,7 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin 8B519293 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
+!tripwire$ begin 10FB5029 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
 integer, public, parameter :: PEAK_X_DOT_STOP_RUN_RC        = -4
 integer, public, parameter :: X_LT_X_MIN_RUN_RC             = -3
 integer, public, parameter :: X_GE_X_STOP_RUN_RC            = -2
@@ -189,7 +189,7 @@ contains
 end type run_config_type
 
 type, public :: run_status_type
-    integer       :: rc
+    integer       :: rc, old_rc
     type(si_time) :: t
     integer, allocatable  :: i_cv(:) ! control volume(s) with associated error
     real(WP), allocatable :: data(:) ! additional error data
@@ -935,7 +935,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     end select
 end subroutine set_const
 
-!tripwire$ begin 7E21FBF5 Update `\secref{friction}` of theory.tex if necessary.
+!tripwire$ begin 947F8C0C Update `\secref{friction}` of theory.tex if necessary.
 pure function p_f(cv, p_fe)
     ! Returns pressure of friction.
     
@@ -1703,7 +1703,8 @@ subroutine run(config, sys_start, sys_end, status)
                                         sys_old, sys_new, t, sys_end, rc_get_sys_at_x)
                 
                 if (rc_get_sys_at_x == MAX_ITERS_GET_SYS_AT_X_RUN_RC) then
-                    status%rc = rc_get_sys_at_x
+                    status%rc     = rc_get_sys_at_x
+                    status%old_rc = X_GE_X_STOP_RUN_RC
                     exit event_case
                 end if
                 
@@ -1711,7 +1712,8 @@ subroutine run(config, sys_start, sys_end, status)
                 
                 ! If `check_sys` thinks that the run can continue or that `x >= x_stop`, `run` can terminate
                 if ((status%rc == CONTINUE_RUN_RC) .or. (status%rc == X_GE_X_STOP_RUN_RC)) then
-                    status%rc = SUCCESS_RC
+                    status%rc     = SUCCESS_RC
+                    status%old_rc = X_GE_X_STOP_RUN_RC
                 end if
             case (X_LT_X_MIN_RUN_RC) ! -3
                 call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_min, &
@@ -1723,7 +1725,11 @@ subroutine run(config, sys_start, sys_end, status)
                 else
                     status%rc = rc_get_sys_at_x
                 end if
-            !case (PEAK_X_DOT_STOP_RUN_RC) ! -4
+            case (PEAK_X_DOT_STOP_RUN_RC) ! -4
+                ! TODO: Use `get_sys_at_peak_x_dot` to get the optimal barrel length more precisely.
+                
+                status%rc     = SUCCESS_RC
+                status%old_rc = PEAK_X_DOT_STOP_RUN_RC
         end select event_case
         
         if (i >= MAX_ITERS_TIME_LOOP) status%rc = MAX_ITERS_TIME_LOOP_RUN_RC
@@ -1749,7 +1755,7 @@ subroutine run(config, sys_start, sys_end, status)
     status%t = t
 end subroutine run
 
-!tripwire$ begin CC9C5CC9 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
+!tripwire$ begin 3C25097E Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
 pure subroutine check_sys(config, sys, sys_old, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_old, sys_start
@@ -1792,7 +1798,7 @@ pure subroutine check_sys(config, sys, sys_old, sys_start, t, status)
         if (sys%cv(i_cv)%peak_x_dot_stop) then
             ! Check whether projectile has started decellerating.
             if ((sys_old%cv(i_cv)%x_dot >= sys%cv(i_cv)%x_dot) &
-                    .and. (sys_old%cv(i_cv)%x%v%v > MIN_X_PEAK_X_DOT_STOP_RUN_RC)) then
+                    .and. (sys_old%cv(i_cv)%x%v%v > (MIN_X_PEAK_X_DOT_STOP_RUN_RC + sys_old%cv(i_cv)%x_ref%v%v))) then
                 status%rc = PEAK_X_DOT_STOP_RUN_RC
                 allocate(status%i_cv(1))
                 status%i_cv(1) = i_cv

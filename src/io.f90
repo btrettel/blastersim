@@ -124,6 +124,10 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
                 // " but must be > 0.0 m. ", rc_read)
     end if
     
+    if (rc_read /= 0) then
+        return
+    end if
+    
     ! create `id`
     
     call path_basename(input_file, id)
@@ -205,6 +209,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     type(unitless)     :: y(1)
     type(si_area)      :: csa_plunger, csa_barrel
     type(si_length)    :: x_dead_plunger
+    logical            :: find_optimal_l_travel
     
     integer, parameter :: I_PLUNGER = 2, I_BARREL_ATM  = 3, I_PLUNGER_ATM = 4
     
@@ -216,6 +221,19 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     !tripwire$ end
     
     include "geninput_springer.f90"
+    
+    ! If `l_travel` is -1.0 (the default value), then find the optimal value of `l_travel`.
+    find_optimal_l_travel = is_close(l_travel, -1.0_WP)
+
+    write(unit=value_string, fmt="(g0)") l_travel
+    if (.not. is_close(l_travel, -1.0_WP)) then
+    call check(l_travel > 0.0_WP, "l_travel in the pneumatic namelist group equals " // trim(value_string) &
+                // " but must be > 0.0 m. ", rc_read)
+    end if
+    
+    if (rc_read /= 0) then
+        return
+    end if
     
     ! create `id`
     
@@ -262,7 +280,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     ! `sys%cv(I_BARREL)`: barrel
     csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
     call create_barrel(vol_dead_u/2.0_WP, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
-                        BARREL_GAS, I_BARREL_ATM, .false., sys%cv(I_BARREL))
+                        BARREL_GAS, I_BARREL_ATM, find_optimal_l_travel, sys%cv(I_BARREL))
     
     ! `sys%cv(I_PLUNGER)`: plunger tube
     csa_plunger    = (PI/4.0_WP)*(square(d_plunger_u) - square(d_coaxial_inner_u))

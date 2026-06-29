@@ -3,6 +3,7 @@ output_file_prefix = "src/geninput_springer"
 namelist_group     = "springer"
 kind_parameter     = "WP"
 write_tex          = .true.
+write_return       = .false.
 /
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -45,14 +46,12 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "l_travel"
 type_definition       = "type(si_length)"
-required              = .true.
+required              = .false.
+print_default_value   = .false.
 tex_unit              = "m"
-tex_description       = "Distance the base of projectile moves before exiting the barrel."
+tex_description       = "Distance the base of projectile moves before exiting the barrel. If \textbfwarning{\texttt{l\_travel} is not present in the input file, the optimal barrel length will be calculated and included in the output.}"
 tex_description_2     = "Sometimes called the barrel length, which could be misleading as the material the barrel is constructed from is often longer."
 tex_variable_name     = "$l_\text{travel}$"
-lower_bound_active    = .true.
-lower_bound           = 0.0
-lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
 /

@@ -2498,7 +2498,7 @@ subroutine test_check_sys(tests)
     ! TODO: `E_F_BLOW_UP_RUN_RC`
 end subroutine test_check_sys
 
-!tripwire$ begin 1CE8A229 Update `\secref{single-cv-exact}` of verval.tex.
+!tripwire$ begin E3F28CD6 Update `\secref{single-cv-exact}` of verval.tex.
 pure function exact_x_dot(sys_0, x)
     use checks, only: assert, is_close
     use cva, only: IDEAL_EOS, CONST_EOS, NORMAL_CV_TYPE, MIRROR_CV_TYPE, cv_system_type
