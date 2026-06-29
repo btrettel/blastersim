@@ -17,7 +17,6 @@
         - Use loss coefficients to estimate effective area?
         - Make regression for loss coefficient considering contraction ratio and entrance radius of curvature?
 - Print useful error message for each error code.
-- Test `cor` in springer inputs.
 - Use new plunger impact exact solution after impact and document it.
 - Estimate reasonable coefficient of restitution from videos.
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1285109487828467774>

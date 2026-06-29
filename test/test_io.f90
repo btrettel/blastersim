@@ -191,6 +191,7 @@ subroutine test_read_springer_namelist_non_default(tests)
         call tests%real_eq(sys%cv(I_PLUNGER)%x%v%v - sys%cv(I_PLUNGER)%x_min%v%v, 20.0e-2_WP, &
                                 "read_springer_namelist, non-default values, l_draw")
         call tests%real_eq(sys%cv(I_PLUNGER)%delta_pre%v%v, 5.0e-2_WP, "read_springer_namelist, non-default values, delta_pre")
+        call tests%real_eq(sys%cv(I_PLUNGER)%cor%v%v, 0.5_WP, "read_springer_namelist, non-default values, cor")
         
         l_travel = sys%cv(I_BARREL)%x_stop - sys%cv(I_BARREL)%x
         call tests%real_eq(l_travel%v%v, 50.0e-2_WP, "read_springer_namelist, non-default values, l_travel")
@@ -270,6 +271,7 @@ subroutine test_read_springer_namelist_default(tests)
         call tests%real_eq(sys%cv(I_PLUNGER)%x%v%v - sys%cv(I_PLUNGER)%x_min%v%v, 20.0e-2_WP, &
                                     "read_springer_namelist, default values, l_draw")
         call tests%real_eq(sys%cv(I_PLUNGER)%delta_pre%v%v, 5.0e-2_WP, "read_springer_namelist, default values, delta_pre")
+        call tests%real_eq(sys%cv(I_PLUNGER)%cor%v%v, 0.0_WP, "read_springer_namelist, default values, cor")
         
         l_travel = sys%cv(I_BARREL)%x_stop - sys%cv(I_BARREL)%x
         call tests%real_eq(l_travel%v%v, 50.0e-2_WP, "read_springer_namelist, default values, d_plunger")
