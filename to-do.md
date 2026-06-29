@@ -2,10 +2,8 @@
 
 - Separately track plunger and spring kinetic energies.
 - Create `get_sys_at_peak_x_dot`
-    - Stop at first deceleration with `travel > l_travel` (so meaning of `l_travel` changes). This way, you don't have to make `l_travel` an optional namelist variable.
-    - `logical :: find_optimal_l_travel`
 - BlasterSim docs "Tutorials" chapter
-    - Find optimal barrel length, simplified method
+    - Find optimal travel length, simplified method
 - Write specific governing equations for pneumatics and springers.
 - Look into `non_overridable`.
 - Add blowdown part of simulation.

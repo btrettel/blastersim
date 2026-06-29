@@ -62,7 +62,7 @@ end block nml_blk
 
 call run(config, sys_start, sys_end, status)
 
-!tripwire$ begin EA980D65 Update `\secref{run-time-checks}` of verval.tex.
+!tripwire$ begin DD887ED0 Update `\secref{run-time-checks}` of verval.tex.
 if (status%rc == SUCCESS_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
     write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
@@ -71,7 +71,7 @@ if (status%rc == SUCCESS_RC) then
         case (PEAK_X_DOT_STOP_RUN_RC)
             write(unit=optimal_barrel_length, fmt="(f0.3)") sys_end%cv(status%i_cv(1))%x%v%v
             if (optimal_barrel_length(1:1) == ".") optimal_barrel_length = "0" // trim(optimal_barrel_length)
-            write(unit=OUTPUT_UNIT, fmt="(3a)") "optimal barrel length: ", trim(optimal_barrel_length), " m"
+            write(unit=OUTPUT_UNIT, fmt="(3a)") "optimal barrel travel length: ", trim(optimal_barrel_length), " m"
     end select
     
     stop EX_OK, quiet=.true.
