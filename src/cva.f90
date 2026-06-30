@@ -1723,7 +1723,6 @@ subroutine run(config, sys_start, sys_end, status)
                 
                 if (rc_get_sys_at_x == SUCCESS_RC) then
                     call get_sys_after_impact(status%i_cv(1), sys_event, sys_new)
-                    exit_time_loop = .true.
                 else
                     status%rc = rc_get_sys_at_x
                 end if
@@ -1735,24 +1734,21 @@ subroutine run(config, sys_start, sys_end, status)
         
         if (i >= MAX_ITERS_TIME_LOOP) status%rc = MAX_ITERS_TIME_LOOP_RUN_RC
         
-        if ((status%rc >= SUCCESS_RC) .or. exit_time_loop) exit time_loop
-        
-        if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
+        if (config%csv_output .and. &
+                ((mod(i, config%csv_frequency) == 0) .or. (status%rc < CONTINUE_RUN_RC))) then
+            ! `status%rc < CONTINUE_RC` condition: Write all non-normal events to the CSV file for logging.
             call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)
         end if
+        
+        if ((status%rc >= SUCCESS_RC) .or. exit_time_loop) exit time_loop
         
         call move_alloc(from=sys_old,  to=sys_temp)
         call move_alloc(from=sys_new,  to=sys_old)
         call move_alloc(from=sys_temp, to=sys_new)
     end do time_loop
     
-    sys_end = sys_new
-    
-    if (config%csv_output) then
-        call write_csv_row(csv_unit, sys_end, t, status, NUMBER_ROW_TYPE)
-        close(unit=csv_unit)
-    end if
-    
+    call move_alloc(from=sys_new, to=sys_end)
+    if (config%csv_output) close(unit=csv_unit)
     status%t = t
 end subroutine run
 

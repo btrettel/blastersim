@@ -66,7 +66,7 @@ contains
 subroutine write_defaults()
     use cva, only: DT_DEFAULT, T_STOP_DEFAULT, COR_DEFAULT, &
                     MASS_TOLERANCE, ENERGY_TOLERANCE, MASS_DERIV_TOLERANCE, ENERGY_DERIV_TOLERANCE, &
-                    MIRROR_X_TOLERANCE, MAX_ITERS_TIME_LOOP, MAX_ITERS_GET_SYS_AT_X
+                    MIRROR_X_TOLERANCE, MAX_ITERS_TIME_LOOP, MAX_ITERS_GET_SYS_AT_X, CSV_FREQUENCY_DEFAULT
     use gasdata, only: P_ATM, TEMP_ATM
     use convert, only: CONVERT_C_TO_K, CONVERT_PA_TO_KPA
     use io, only: write_latex_engineering
@@ -88,6 +88,7 @@ subroutine write_defaults()
     call write_latex_engineering(tex_unit, MIRROR_X_TOLERANCE, "mirrorxtolerance", "f3.1")
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\maxiterstimeloop}{", MAX_ITERS_TIME_LOOP, "}"
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\maxitersgetsysatx}{", MAX_ITERS_GET_SYS_AT_X, "}"
+    write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\csvfrequencydefault}{", CSV_FREQUENCY_DEFAULT, "}"
     close(tex_unit)
 end subroutine write_defaults
 

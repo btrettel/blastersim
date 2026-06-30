@@ -50,6 +50,9 @@ This spreadsheet can be opened in a spreadsheet program like Excel or any other 
 The name of the spreadsheet is determined by file name of the input file.
 The file extension of the input file is removed and the file extension \texttt{csv} is used instead in the CSV output.
 For example, in \secref{springer-example} the file name is springer-example.nml, so the spreadsheet is written to springer-example.csv.
+Every $\csvfrequencydefault$th time step is written to the CSV file rather than every time step.
+Every time step would be too detailed and lead to large CSV files.
+Additionally, all time steps with events that require special treatment from BlasterSim like the plunger hitting the end of the plunger tube in a springer will be written to the CSV file, and the type of event can be determined from the \texttt{rc} column. % TODO: link to where all `rc` values are defined once you list the negative ones
 
 The CSV file contains the following columns:
 \begin{itemize}
@@ -127,6 +130,7 @@ Integer.
 Values 1 and above indicate an error occurred and are discussed in \secref{run-time-checks}.
 A value of -1 means that no errors or events were detected and BlasterSim will continue to the next time step.
 A value of -2 and below indicates that an event that requires special treatment was detected (for example, the projectile leaving the barrel or the plunger impacting the end of the plunger tube), and BlasterSim may or may not terminate the simulation depending on the event.
+% TODO: Document meaning of each negative rc value.
 \end{itemize}
 
 \section{BlasterSim inputs in general}\label{inputs-general}

@@ -1,5 +1,6 @@
 ### v0.3.0
 
+- Try to get back to round numbers for the time step. For instance, if plunger impact makes the impact time 11.937 ms, and the time step is 0.1 ms, make the next time 12.0 ms.
 - Use new plunger impact exact solution after impact and document it.
 - Create `get_sys_at_peak_x_dot`
 - Print useful error message for each error code.
