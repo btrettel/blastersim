@@ -1,9 +1,18 @@
 ### v0.3.0
 
-- Separately track plunger and spring kinetic energies.
+- Use new plunger impact exact solution after impact and document it.
 - Create `get_sys_at_peak_x_dot`
+- Print useful error message for each error code.
+    - Make a system to keep descriptions in the the docs and code consistent: generrors
+
+***
+
+- Compile BlasterSim in Wine for Windows?
+- Exact solution: constant $\dot{m}$ in with plunger/projectile motion (not constant velocity)
+- Separately track plunger and spring kinetic energies.
 - BlasterSim docs "Tutorials" chapter
     - Find optimal travel length, simplified method
+        - Don't use plunger-to-barrel volume ratios to estimate optimal travel length. Sometimes it is claimed that the plunger-to-barrel volume ratio just gives you a rough figure to start at. Unfortunately, the range of optimal plunger-to-barrel volume ratios in practice is wide, so it is of little use as a rough figure to start at. Similarly, in the past, I've suggested using an adiabatic process relationship to estimate optimal barrel length. Unfortunately, a major assumption of that approach was perfect flow such that the plunger/chamber and barrel pressures are equal, which is not achieved in practice. So the adiabatic process relationship approach is not workable.
 - Write specific governing equations for pneumatics and springers.
 - Look into `non_overridable`.
 - Add blowdown part of simulation.
@@ -16,8 +25,6 @@
         - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
         - Use loss coefficients to estimate effective area?
         - Make regression for loss coefficient considering contraction ratio and entrance radius of curvature?
-- Print useful error message for each error code.
-- Use new plunger impact exact solution after impact and document it.
 - Estimate reasonable coefficient of restitution from videos.
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1285109487828467774>
     - <https://www.youtube.com/watch?v=mwP1k-bcjcA>

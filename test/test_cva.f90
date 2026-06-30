@@ -1441,7 +1441,7 @@ subroutine test_conservation_1(tests)
     use convert
     use gasdata, only: DRY_AIR
     use prec, only: PI
-    use cva, only: MIRROR_CV_TYPE, SUCCESS_RC, cv_system_type, run_config_type, run_status_type, &
+    use cva, only: MIRROR_CV_TYPE, X_GE_X_STOP_RUN_RC, cv_system_type, run_config_type, run_status_type, &
                     run
     
     type(test_results_type), intent(in out) :: tests
@@ -1552,9 +1552,9 @@ subroutine test_conservation_1(tests)
     call config%set("test_conservation", 1, csv_output=.true., csv_frequency=100)
     call run(config, sys_start, sys_end, status)
     
-    call tests%integer_eq(status%rc, SUCCESS_RC, "test_conservation, status%rc")
+    call tests%integer_eq(status%rc, X_GE_X_STOP_RUN_RC, "test_conservation, status%rc")
     
-    if (status%rc /= SUCCESS_RC) then
+    if (status%rc /= X_GE_X_STOP_RUN_RC) then
         if (allocated(status%data)) print *, status%data(1)
         if (allocated(status%i_cv)) print *, status%i_cv(1)
     end if
@@ -2686,7 +2686,7 @@ subroutine test_single_cv_exact(tests)
 end subroutine test_single_cv_exact
 !tripwire$ end
 
-!tripwire$ begin FDCE167A Update `\secref{plunger-impact-exact}` of verval.tex.
+!tripwire$ begin 9598C090 Update `\secref{plunger-impact-exact}` of verval.tex.
 pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
     use cva, only: cv_system_type
     use checks, only: assert
@@ -2753,48 +2753,48 @@ pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
                                             rm_p, p_f, p_f, k, delta_pre, [DRY_AIR], 1)
 end function plunger_impact_sys_0
 
-pure function exact_plunger_impact_m(sys_0, t)
+pure function exact_plunger_impact_1_m(sys_0, t)
     use cva, only: cv_system_type
     
     type(cv_system_type), intent(in), allocatable :: sys_0
     type(si_time), intent(in)                     :: t
     
-    type(si_mass) :: exact_plunger_impact_m
+    type(si_mass) :: exact_plunger_impact_1_m
     
-    exact_plunger_impact_m = sys_0%cv(2)%rho() * sys_0%cv(2)%csa * (sys_0%cv(2)%x + sys_0%cv(2)%x_dot*t)
-end function exact_plunger_impact_m
+    exact_plunger_impact_1_m = sys_0%cv(2)%rho() * sys_0%cv(2)%csa * (sys_0%cv(2)%x + sys_0%cv(2)%x_dot*t)
+end function exact_plunger_impact_1_m
 
-pure function exact_plunger_impact_e_g(sys_0, t)
+pure function exact_plunger_impact_1_e_g(sys_0, t)
     use cva, only: cv_system_type
     
     type(cv_system_type), intent(in), allocatable :: sys_0
     type(si_time), intent(in)                     :: t
     
-    type(si_energy) :: exact_plunger_impact_e_g
+    type(si_energy) :: exact_plunger_impact_1_e_g
     
-    exact_plunger_impact_e_g = sys_0%cv(2)%rho() * sys_0%cv(2)%csa * sys_0%cv(2)%u() * (sys_0%cv(2)%x + sys_0%cv(2)%x_dot*t)
-end function exact_plunger_impact_e_g
+    exact_plunger_impact_1_e_g = sys_0%cv(2)%rho() * sys_0%cv(2)%csa * sys_0%cv(2)%u() * (sys_0%cv(2)%x + sys_0%cv(2)%x_dot*t)
+end function exact_plunger_impact_1_e_g
 
-pure function exact_plunger_impact_x(sys_0, t)
+pure function exact_plunger_impact_1_x(sys_0, t)
     use cva, only: cv_system_type
     
     type(cv_system_type), intent(in), allocatable :: sys_0
     type(si_time), intent(in)                     :: t
     
-    type(si_length) :: exact_plunger_impact_x
+    type(si_length) :: exact_plunger_impact_1_x
     
-    exact_plunger_impact_x = sys_0%cv(2)%x + sys_0%cv(2)%x_dot*t
-end function exact_plunger_impact_x
+    exact_plunger_impact_1_x = sys_0%cv(2)%x + sys_0%cv(2)%x_dot*t
+end function exact_plunger_impact_1_x
 
-pure function exact_plunger_impact_x_dot(sys_0)
+pure function exact_plunger_impact_1_x_dot(sys_0)
     use cva, only: cv_system_type
     
     type(cv_system_type), intent(in), allocatable :: sys_0
     
-    type(si_velocity) :: exact_plunger_impact_x_dot
+    type(si_velocity) :: exact_plunger_impact_1_x_dot
     
-    exact_plunger_impact_x_dot = sys_0%cv(2)%x_dot
-end function exact_plunger_impact_x_dot
+    exact_plunger_impact_1_x_dot = sys_0%cv(2)%x_dot
+end function exact_plunger_impact_1_x_dot
 
 subroutine exact_plunger_impact_1_de(n, ne, ne_d)
     use fmad, only: ad
@@ -2843,10 +2843,10 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
     
     call assert(status%rc == TIMEOUT_RUN_RC, "test_plunger_impact_1, status%rc")
     
-    m_exact     = exact_plunger_impact_m(sys_0, t_stop)
-    e_g_exact   = exact_plunger_impact_e_g(sys_0, t_stop)
-    x_exact     = exact_plunger_impact_x(sys_0, t_stop)
-    x_dot_exact = exact_plunger_impact_x_dot(sys_0)
+    m_exact     = exact_plunger_impact_1_m(sys_0, t_stop)
+    e_g_exact   = exact_plunger_impact_1_e_g(sys_0, t_stop)
+    x_exact     = exact_plunger_impact_1_x(sys_0, t_stop)
+    x_dot_exact = exact_plunger_impact_1_x_dot(sys_0)
     
     do i_var = 1, N_VAR
         select case (i_var)
@@ -2933,13 +2933,13 @@ subroutine test_plunger_impact_1(tests)
     t_impact = -x_0/x_dot
     call assert(t_impact%v%v > TEST_PLUNGER_IMPACT_1_T_STOP, &
                     "test_plunger_impact_1, t_impact > TEST_PLUNGER_IMPACT_1_T_STOP violated")
-    m_exact = exact_plunger_impact_m(sys_0, t_impact)
+    m_exact = exact_plunger_impact_1_m(sys_0, t_impact)
     call assert(is_close(m_exact%v%v, 0.0_WP), &
                     "test_plunger_impact_1, m_exact(t_impact) == 0 violated")
     
     call t_stop%v%init_const(TEST_PLUNGER_IMPACT_1_T_STOP, N_D)
     dt = t_stop / real(N, WP)
-    e_g_exact = exact_plunger_impact_e_g(sys_0, t_stop)
+    e_g_exact = exact_plunger_impact_1_e_g(sys_0, t_stop)
     
     open(newunit=tex_unit, action="write", status="replace", position="rewind", file="test_plunger_impact_1.tex", delim="quote")
     write(unit=tex_unit, fmt="(a)") "% auto-generated"

@@ -189,7 +189,7 @@ contains
 end type run_config_type
 
 type, public :: run_status_type
-    integer       :: rc, old_rc
+    integer       :: rc
     type(si_time) :: t
     integer, allocatable  :: i_cv(:) ! control volume(s) with associated error
     real(WP), allocatable :: data(:) ! additional error data
@@ -1664,6 +1664,7 @@ subroutine run(config, sys_start, sys_end, status)
     character(len=CL)     :: error_message
     integer               :: n_d, i, csv_unit, rc_get_sys_at_x
     type(si_time)         :: t, t_old, dt
+    logical               :: exit_time_loop
     
     n_d = size(sys_start%cv(1)%x%v%d)
     
@@ -1686,6 +1687,7 @@ subroutine run(config, sys_start, sys_end, status)
     end if
     
     dt = config%dt
+    exit_time_loop = .false.
     time_loop: do
         call calculate_next_time_step(sys_old, t, dt, sys_new)
         t_old = t
@@ -1702,18 +1704,18 @@ subroutine run(config, sys_start, sys_end, status)
                 call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_stop, &
                                         sys_old, sys_new, t, sys_end, rc_get_sys_at_x)
                 
-                if (rc_get_sys_at_x == MAX_ITERS_GET_SYS_AT_X_RUN_RC) then
-                    status%rc     = rc_get_sys_at_x
-                    status%old_rc = X_GE_X_STOP_RUN_RC
-                    exit event_case
-                end if
-                
-                call check_sys(config, sys_end, sys_old, sys_start, t, status)
-                
-                ! If `check_sys` thinks that the run can continue or that `x >= x_stop`, `run` can terminate
-                if ((status%rc == CONTINUE_RUN_RC) .or. (status%rc == X_GE_X_STOP_RUN_RC)) then
-                    status%rc     = SUCCESS_RC
-                    status%old_rc = X_GE_X_STOP_RUN_RC
+                if (rc_get_sys_at_x == SUCCESS_RC) then
+                    exit_time_loop = .true.
+                    
+                    call check_sys(config, sys_end, sys_old, sys_start, t, status)
+                    
+                    ! If `check_sys` thinks that the run can continue here, `run` can terminate.
+                    if (status%rc == CONTINUE_RUN_RC) then
+                        status%rc = X_GE_X_STOP_RUN_RC
+                        exit_time_loop = .true.
+                    end if
+                else
+                    status%rc = rc_get_sys_at_x
                 end if
             case (X_LT_X_MIN_RUN_RC) ! -3
                 call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_min, &
@@ -1721,20 +1723,19 @@ subroutine run(config, sys_start, sys_end, status)
                 
                 if (rc_get_sys_at_x == SUCCESS_RC) then
                     call get_sys_after_impact(status%i_cv(1), sys_event, sys_new)
-                    status%rc = CONTINUE_RUN_RC
+                    exit_time_loop = .true.
                 else
                     status%rc = rc_get_sys_at_x
                 end if
             case (PEAK_X_DOT_STOP_RUN_RC) ! -4
                 ! TODO: Use `get_sys_at_peak_x_dot` to get the optimal barrel length more precisely.
                 
-                status%rc     = SUCCESS_RC
-                status%old_rc = PEAK_X_DOT_STOP_RUN_RC
+                exit_time_loop = .true.
         end select event_case
         
         if (i >= MAX_ITERS_TIME_LOOP) status%rc = MAX_ITERS_TIME_LOOP_RUN_RC
         
-        if (status%rc >= SUCCESS_RC) exit time_loop
+        if ((status%rc >= SUCCESS_RC) .or. exit_time_loop) exit time_loop
         
         if ((config%csv_output) .and. (mod(i, config%csv_frequency) == 0)) then
             call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)

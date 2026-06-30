@@ -91,7 +91,7 @@ end subroutine test_read_pneumatic_namelist_non_default
 
 subroutine test_read_pneumatic_namelist_default(tests)
     use prec, only: CL, PI
-    use cva, only: DT_DEFAULT, cv_system_type, run_config_type
+    use cva, only: DT_DEFAULT, X_GE_X_STOP_RUN_RC, cv_system_type, run_config_type
     use port, only: path_join
     use io, only: I_BARREL, read_pneumatic_namelist
     use gasdata, only: P_ATM, TEMP_ATM
@@ -145,7 +145,7 @@ subroutine test_read_pneumatic_namelist_default(tests)
         call tests%real_eq(sys%cv(I_BARREL_ATM)%p_const%v%v, P_ATM, "read_pneumatic_namelist, default values, p_atm")
         call tests%real_eq(sys%cv(I_BARREL_ATM)%temp_const%v%v, TEMP_ATM, "read_pneumatic_namelist, default values, temp_atm")
         call tests%real_eq(actual_v_muzzle%v%v, 0.0_WP, "read_pneumatic_namelist, default values, actual_v_muzzle")
-        call tests%integer_eq(actual_rc, 0, "read_pneumatic_namelist, default values, actual_rc")
+        call tests%integer_eq(actual_rc, X_GE_X_STOP_RUN_RC, "read_pneumatic_namelist, default values, actual_rc")
     end if
 end subroutine test_read_pneumatic_namelist_default
 
@@ -230,7 +230,7 @@ end subroutine test_read_springer_namelist_non_default
 
 subroutine test_read_springer_namelist_default(tests)
     use prec, only: CL, PI
-    use cva, only: DT_DEFAULT, cv_system_type, run_config_type
+    use cva, only: DT_DEFAULT, X_GE_X_STOP_RUN_RC, cv_system_type, run_config_type
     use port, only: path_join
     use io, only: I_BARREL, read_springer_namelist
     use gasdata, only: P_ATM, TEMP_ATM
@@ -301,7 +301,7 @@ subroutine test_read_springer_namelist_default(tests)
         call tests%real_eq(sys%cv(I_BARREL_ATM)%temp_const%v%v, TEMP_ATM, &
                                     "read_springer_namelist, default values, temp_atm (2)")
         call tests%real_eq(actual_v_muzzle%v%v, 00.0_WP, "read_springer_namelist, default values, actual_v_muzzle")
-        call tests%integer_eq(actual_rc, 0, "read_springer_namelist, default values, actual_rc")
+        call tests%integer_eq(actual_rc, X_GE_X_STOP_RUN_RC, "read_springer_namelist, default values, actual_rc")
     end if
 end subroutine test_read_springer_namelist_default
 

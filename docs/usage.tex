@@ -124,9 +124,9 @@ This should remain approximately constant and is present for debugging purposes.
 \end{itemize}
 \item \texttt{rc}: Return code of \texttt{run} subroutine.
 Integer.
-A value of -1 and below means that BlasterSim will continue to the next time step.
-A value of 0 means that BlasterSim completed the simulation successfully.
-Values above 0 indicate an error occurred and are discussed in \secref{run-time-checks}.
+Values 1 and above indicate an error occurred and are discussed in \secref{run-time-checks}.
+A value of -1 means that no errors or events were detected and BlasterSim will continue to the next time step.
+A value of -2 and below indicates that an event that requires special treatment was detected (for example, the projectile leaving the barrel or the plunger impacting the end of the plunger tube), and BlasterSim may or may not terminate the simulation depending on the event.
 \end{itemize}
 
 \section{BlasterSim inputs in general}\label{inputs-general}
