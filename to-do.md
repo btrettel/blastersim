@@ -1,10 +1,11 @@
 ### v0.3.0
 
-- Try to get back to round numbers for the time step. For instance, if plunger impact makes the impact time 11.937 ms, and the time step is 0.1 ms, make the next time 12.0 ms.
-- Use new plunger impact exact solution after impact and document it.
-- Create `get_sys_at_peak_x_dot`
+- run return code => run status code or time iteration status code
+- Check to see how consistently your use of the word time step is. Do you use it to refer to `dt` or a particular time in the simulation?
+- Use new plunger impact exact solution after impact and document it.`
 - Print useful error message for each error code.
     - Make a system to keep descriptions in the the docs and code consistent: generrors
+- Test CSV file.
 
 ***
 
@@ -299,6 +300,7 @@
 - Try multiple CV exact solution. One constant pressure chamber, one barrel?
 - nmlfuzz using geninput data
 - Make how much dead space is in the plunger/chamber and barrel user-selectable? It should have little effect, though. Might make an interesting "property test" of sorts to see how much effect it has in reality.
+- Try to get back to round numbers for the time step. For instance, if plunger impact makes the impact time 11.937 ms, and the time step is 0.1 ms, make the next time 12.0 ms.
 
 ***
 

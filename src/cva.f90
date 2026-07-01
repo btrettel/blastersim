@@ -56,7 +56,6 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 integer, public, parameter :: SUCCESS_RC = 0
 
 !tripwire$ begin 10FB5029 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
-integer, public, parameter :: PEAK_X_DOT_STOP_RUN_RC        = -4
 integer, public, parameter :: X_LT_X_MIN_RUN_RC             = -3
 integer, public, parameter :: X_GE_X_STOP_RUN_RC            = -2
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
@@ -77,7 +76,6 @@ integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X_RUN_RC = 12
 !integer, public, parameter :: M_BLOW_UP_RUN_RC              = 
 !integer, public, parameter :: E_BLOW_UP_RUN_RC              = 
 !integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 
-real(WP), public, parameter :: MIN_X_PEAK_X_DOT_STOP_RUN_RC  = 1.0e-2_WP ! m
 !tripwire$ end
 
 integer, public, parameter :: MAX_ITERS_TIME_LOOP    = 10**8
@@ -113,7 +111,6 @@ type, public :: cv_type ! control volume
     type(si_temperature)        :: temp_const      ! if `cv%eos = CONST_EOS`, then `cv%temp() = temp_const`
     type(unitless), allocatable :: y_const(:)      ! if `cv%eos = CONST_EOS`, then this mass fraction will be used
     type(si_length)             :: x_stop          ! `x` location where simulation will stop
-    logical                     :: peak_x_dot_stop ! stop when `x_dot` peaks
     type(si_length)             :: x_min           ! minimum `x` location that the projectile/plunger can't move past
     type(si_length)             :: x_ref           ! reference `x` value used to normalize output
     type(si_mass)               :: m_spring        ! mass of spring
@@ -636,7 +633,7 @@ pure function gamma_cv(cv, y)
 end function gamma_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, delta_pre, gas, &
-                            i_cv_mirror, x_stop, x_min, x_ref, isentropic_filling, peak_x_dot_stop, &
+                            i_cv_mirror, x_stop, x_min, x_ref, isentropic_filling, &
                             p_atm, eos, type, m_spring, cor, const_friction, v_scale_s, v_scale_d)
     class(cv_type), intent(in out) :: cv
     
@@ -660,7 +657,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     type(si_length), intent(in), optional   :: x_stop   ! `x` location where simulation will stop
     type(si_length), intent(in), optional   :: x_min    ! minimum `x` location that the projectile/plunger can't move past
     type(si_length), intent(in), optional   :: x_ref    ! reference `x` value used to normalize output
-    logical, intent(in), optional           :: isentropic_filling, peak_x_dot_stop
+    logical, intent(in), optional           :: isentropic_filling
     type(si_pressure), intent(in), optional :: p_atm    ! atmospheric pressure (only requried if `isentropic_filling = .true.`
     integer, intent(in), optional           :: eos      ! equation of state to use
     integer, intent(in), optional           :: type     ! type of CV to use
@@ -723,12 +720,6 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
         isentropic_filling_ = isentropic_filling
     else
         isentropic_filling_ = .false.
-    end if
-    
-    if (present(peak_x_dot_stop)) then
-        cv%peak_x_dot_stop = peak_x_dot_stop
-    else
-        cv%peak_x_dot_stop = .false.
     end if
     
     if (present(cor)) then
@@ -899,15 +890,14 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     call assert(cv%x%v%v < cv%x_stop%v%v, "cva (set_const): x >= x_stop will cause immediate termination of run", &
                     print_real=[cv%x%v%v, cv%x_stop%v%v])
     
-    cv%label           = label
-    cv%csa             = csa
-    cv%eos             = CONST_EOS
-    cv%gas             = gas
-    cv%i_cv_mirror     = i_cv_mirror
-    cv%p_const         = p_const
-    cv%temp_const      = temp_const
-    cv%y_const         = y_const
-    cv%peak_x_dot_stop = .false.
+    cv%label       = label
+    cv%csa         = csa
+    cv%eos         = CONST_EOS
+    cv%gas         = gas
+    cv%i_cv_mirror = i_cv_mirror
+    cv%p_const     = p_const
+    cv%temp_const  = temp_const
+    cv%y_const     = y_const
     
     call assert(cv%p_const%v%v    > 0.0_WP, "cva (set_const): p_const > 0 violated", print_real=[cv%p_const%v%v])
     call assert(cv%temp_const%v%v > 0.0_WP, "cva (set_const): temp_const > 0 violated", print_real=[cv%temp_const%v%v])
@@ -1696,7 +1686,7 @@ subroutine run(config, sys_start, sys_end, status)
         
         !print *, t%v%v
         
-        call check_sys(config, sys_new, sys_old, sys_start, t, status)
+        call check_sys(config, sys_new, sys_start, t, status)
         
         event_case: select case (status%rc)
             case (X_GE_X_STOP_RUN_RC) ! -2
@@ -1707,7 +1697,7 @@ subroutine run(config, sys_start, sys_end, status)
                 if (rc_get_sys_at_x == SUCCESS_RC) then
                     exit_time_loop = .true.
                     
-                    call check_sys(config, sys_end, sys_old, sys_start, t, status)
+                    call check_sys(config, sys_end, sys_start, t, status)
                     
                     ! If `check_sys` thinks that the run can continue here, `run` can terminate.
                     if (status%rc == CONTINUE_RUN_RC) then
@@ -1726,10 +1716,6 @@ subroutine run(config, sys_start, sys_end, status)
                 else
                     status%rc = rc_get_sys_at_x
                 end if
-            case (PEAK_X_DOT_STOP_RUN_RC) ! -4
-                ! TODO: Use `get_sys_at_peak_x_dot` to get the optimal barrel length more precisely.
-                
-                exit_time_loop = .true.
         end select event_case
         
         if (i >= MAX_ITERS_TIME_LOOP) status%rc = MAX_ITERS_TIME_LOOP_RUN_RC
@@ -1753,9 +1739,9 @@ subroutine run(config, sys_start, sys_end, status)
 end subroutine run
 
 !tripwire$ begin 3C25097E Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
-pure subroutine check_sys(config, sys, sys_old, sys_start, t, status)
+pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
-    type(cv_system_type), allocatable, intent(in) :: sys, sys_old, sys_start
+    type(cv_system_type), allocatable, intent(in) :: sys, sys_start
     type(si_time), intent(in)                     :: t
     type(run_status_type), intent(out)            :: status
     
@@ -1790,17 +1776,6 @@ pure subroutine check_sys(config, sys, sys_old, sys_start, t, status)
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
             return
-        end if
-        
-        if (sys%cv(i_cv)%peak_x_dot_stop) then
-            ! Check whether projectile has started decellerating.
-            if ((sys_old%cv(i_cv)%x_dot >= sys%cv(i_cv)%x_dot) &
-                    .and. (sys_old%cv(i_cv)%x%v%v > (MIN_X_PEAK_X_DOT_STOP_RUN_RC + sys_old%cv(i_cv)%x_ref%v%v))) then
-                status%rc = PEAK_X_DOT_STOP_RUN_RC
-                allocate(status%i_cv(1))
-                status%i_cv(1) = i_cv
-                return
-            end if
         end if
         
         ! Check whether the plunger position is within the bounds.

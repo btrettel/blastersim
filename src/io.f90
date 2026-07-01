@@ -39,10 +39,9 @@ subroutine write_latex_engineering(tex_unit, x, macro_name, m_fmt)
                                                                         m, " \cdot 10^{", n, "}}"
 end subroutine write_latex_engineering
 
-subroutine create_barrel(vol_dead_barrel, csa_barrel, p_atm, temp_atm, m_p, p_fs, p_fd, l_travel, gas, i_cv_mirror, &
-                            find_optimal_l_travel, cv)
+subroutine create_barrel(vol_dead_barrel, csa_barrel, p_atm, temp_atm, m_p, p_fs, p_fd, l_travel, gas, i_cv_mirror, cv)
     use gasdata, only: gas_type
-    use cva, only: cv_type, X_STOP_DEFAULT
+    use cva, only: cv_type
     
     type(si_volume), intent(in)      :: vol_dead_barrel ! dead volume in barrel
     type(si_area), intent(in)        :: csa_barrel      ! cross-sectional area
@@ -53,7 +52,6 @@ subroutine create_barrel(vol_dead_barrel, csa_barrel, p_atm, temp_atm, m_p, p_fs
     type(si_length), intent(in)      :: l_travel        ! projectile travel
     type(gas_type), intent(in)       :: gas(:)          ! gas data
     integer, intent(in)              :: i_cv_mirror     ! index of control volume to use in pressure difference calculation
-    logical, intent(in)              :: find_optimal_l_travel
     type(cv_type), intent(out)       :: cv
     
     type(si_length)    :: x_dead, x_stop, x_pre
@@ -69,14 +67,10 @@ subroutine create_barrel(vol_dead_barrel, csa_barrel, p_atm, temp_atm, m_p, p_fs
     x_dead = vol_dead_barrel/csa_barrel
     call k%v%init_const(0.0_WP, n_d)
     call x_pre%v%init_const(0.0_WP, n_d)
-    if (find_optimal_l_travel) then
-        call x_stop%v%init_const(X_STOP_DEFAULT, n_d)
-    else
-        x_stop = x_dead + l_travel
-    end if
+    x_stop = x_dead + l_travel
     
     call cv%set(x_dead, x_dot, y, p_atm, temp_atm, "barrel", csa_barrel, 1.0_WP/m_p, p_fs, p_fd, k, x_pre, gas, &
-                    i_cv_mirror, x_stop=x_stop, x_ref=x_dead, peak_x_dot_stop=find_optimal_l_travel)
+                    i_cv_mirror, x_stop=x_stop, x_ref=x_dead)
 end subroutine create_barrel
 
 subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_muzzle_, actual_v_muzzle_stdev_, &
@@ -103,7 +97,6 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     type(si_stiffness)    :: k
     type(si_length)       :: delta_pre, x_chamber
     type(si_pressure)     :: p_f_chamber
-    logical               :: find_optimal_l_travel
     
     integer, parameter :: I_CHAMBER = 2, I_BARREL_ATM  = 3
     
@@ -114,15 +107,6 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     !tripwire$ end
     
     include "geninput_pneumatic.f90"
-    
-    ! If `l_travel` is -1.0 (the default value), then find the optimal value of `l_travel`.
-    find_optimal_l_travel = is_close(l_travel, -1.0_WP)
-
-    write(unit=value_string, fmt="(g0)") l_travel
-    if (.not. is_close(l_travel, -1.0_WP)) then
-    call check(l_travel > 0.0_WP, "l_travel in the pneumatic namelist group equals " // trim(value_string) &
-                // " but must be > 0.0 m. ", rc_read)
-    end if
     
     if (rc_read /= 0) then
         return
@@ -168,7 +152,7 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     ! `sys%cv(I_BARREL)`: barrel
     csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
     call create_barrel(vol_dead_u, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
-                        BARREL_GAS, I_BARREL_ATM, find_optimal_l_travel, sys%cv(I_BARREL))
+                        BARREL_GAS, I_BARREL_ATM, sys%cv(I_BARREL))
     
     ! `sys%cv(I_CHAMBER)`: chamber
     csa_chamber = (PI/4.0_WP)*square(d_chamber_u)
@@ -209,7 +193,6 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     type(unitless)     :: y(1)
     type(si_area)      :: csa_plunger, csa_barrel
     type(si_length)    :: x_dead_plunger
-    logical            :: find_optimal_l_travel
     
     integer, parameter :: I_PLUNGER = 2, I_BARREL_ATM  = 3, I_PLUNGER_ATM = 4
     
@@ -221,15 +204,6 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     !tripwire$ end
     
     include "geninput_springer.f90"
-    
-    ! If `l_travel` is -1.0 (the default value), then find the optimal value of `l_travel`.
-    find_optimal_l_travel = is_close(l_travel, -1.0_WP)
-
-    write(unit=value_string, fmt="(g0)") l_travel
-    if (.not. is_close(l_travel, -1.0_WP)) then
-    call check(l_travel > 0.0_WP, "l_travel in the pneumatic namelist group equals " // trim(value_string) &
-                // " but must be > 0.0 m. ", rc_read)
-    end if
     
     if (rc_read /= 0) then
         return
@@ -280,7 +254,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     ! `sys%cv(I_BARREL)`: barrel
     csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
     call create_barrel(vol_dead_u/2.0_WP, csa_barrel, p_atm_u, temp_atm_u, m_proj_u, p_fs_proj_u, p_fd_proj_u, l_travel_u, &
-                        BARREL_GAS, I_BARREL_ATM, find_optimal_l_travel, sys%cv(I_BARREL))
+                        BARREL_GAS, I_BARREL_ATM, sys%cv(I_BARREL))
     
     ! `sys%cv(I_PLUNGER)`: plunger tube
     csa_plunger    = (PI/4.0_WP)*(square(d_plunger_u) - square(d_coaxial_inner_u))
