@@ -12,14 +12,13 @@ use prec, only: CL
 use cli, only: get_input_file_name_from_cli
 use io, only: I_BARREL, read_pneumatic_namelist, read_springer_namelist
 use cva, only: run_config_type, cv_system_type, run_status_type, T_STOP_DEFAULT, &
-                    SUCCESS_RC, TIMEOUT_RUN_RC, PEAK_X_DOT_STOP_RUN_RC, run
+                    SUCCESS_RC, TIMEOUT_RUN_RC, run
 use stopcodes, only: EX_OK, EX_USAGE
 use rev, only: TAG, REVISION_DATE, MODIFIED
 use checks, only: assert
 implicit none
 
 character(len=CL)                 :: input_file, extra, modified_string
-character(len=10)                 :: optimal_barrel_length
 type(run_config_type)             :: config
 type(cv_system_type), allocatable :: sys_start, sys_end
 integer                           :: rc
@@ -66,13 +65,6 @@ call run(config, sys_start, sys_end, status)
 if (status%rc < SUCCESS_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
     write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
-    
-    select case (status%rc)
-        case (PEAK_X_DOT_STOP_RUN_RC)
-            write(unit=optimal_barrel_length, fmt="(f0.3)") sys_end%cv(status%i_cv(1))%x%v%v
-            if (optimal_barrel_length(1:1) == ".") optimal_barrel_length = "0" // trim(optimal_barrel_length)
-            write(unit=OUTPUT_UNIT, fmt="(3a)") "optimal barrel travel length: ", trim(optimal_barrel_length), " m"
-    end select
     
     stop EX_OK, quiet=.true.
 else
