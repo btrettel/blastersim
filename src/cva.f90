@@ -42,7 +42,7 @@ real(WP), public, parameter :: MASS_TOLERANCE         = 1.0e-5_WP  ! unitless
 real(WP), public, parameter :: ENERGY_TOLERANCE       = 1.0e-4_WP  ! unitless
 real(WP), public, parameter :: MASS_DERIV_TOLERANCE   = 1.0e-8_WP  ! unitless
 real(WP), public, parameter :: ENERGY_DERIV_TOLERANCE = 1.0e-5_WP  ! unitless (TODO: decrease later and see what breaks)
-real(WP), public, parameter :: MIRROR_X_TOLERANCE     = 1.0e-12_WP ! unitless
+real(WP), public, parameter :: MIRROR_X_TOLERANCE     = 1.0e-10_WP ! unitless
 
 integer, public, parameter :: IDEAL_EOS = 1 ! ideal gas equation of state
 integer, public, parameter :: CONST_EOS = 2 ! constant pressure, temperature, density
@@ -55,7 +55,7 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin 10FB5029 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
+!tripwire$ begin C863B17C Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
 integer, public, parameter :: X_LT_X_MIN_RUN_RC             = -3
 integer, public, parameter :: X_GE_X_STOP_RUN_RC            = -2
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
@@ -1640,7 +1640,7 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
     end if
 end subroutine set_run_config
 
-subroutine run(config, sys_start, sys_end, status)
+subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     use prec, only: CL
     
@@ -1648,13 +1648,20 @@ subroutine run(config, sys_start, sys_end, status)
     type(cv_system_type), allocatable, intent(in)  :: sys_start
     type(cv_system_type), allocatable, intent(out) :: sys_end
     type(run_status_type), intent(out)             :: status
+    logical, intent(in), optional                  :: stop_at_first_event
     
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp, sys_event
     
     character(len=CL)     :: error_message
     integer               :: n_d, i, csv_unit, rc_get_sys_at_x
     type(si_time)         :: t, t_old, dt
-    logical               :: exit_time_loop
+    logical               :: exit_time_loop, stop_at_first_event_
+    
+    if (present(stop_at_first_event)) then
+        stop_at_first_event_ = stop_at_first_event
+    else
+        stop_at_first_event_ = .false.
+    end if
     
     n_d = size(sys_start%cv(1)%x%v%d)
     
@@ -1726,7 +1733,9 @@ subroutine run(config, sys_start, sys_end, status)
             call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)
         end if
         
-        if ((status%rc >= SUCCESS_RC) .or. exit_time_loop) exit time_loop
+        if ((status%rc >= SUCCESS_RC) &
+                .or. exit_time_loop &
+                .or. (stop_at_first_event_ .and. (status%rc < CONTINUE_RUN_RC))) exit time_loop
         
         call move_alloc(from=sys_old,  to=sys_temp)
         call move_alloc(from=sys_new,  to=sys_old)
@@ -1738,7 +1747,7 @@ subroutine run(config, sys_start, sys_end, status)
     status%t = t
 end subroutine run
 
-!tripwire$ begin 3C25097E Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
+!tripwire$ begin D77579D9 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
 pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_start

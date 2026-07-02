@@ -61,7 +61,7 @@ end block nml_blk
 
 call run(config, sys_start, sys_end, status)
 
-!tripwire$ begin D52B416B Update `\secref{run-time-checks}` of verval.tex.
+!tripwire$ begin 56F2042F Update `\secref{run-time-checks}` of verval.tex.
 if (status%rc < SUCCESS_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
     write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"

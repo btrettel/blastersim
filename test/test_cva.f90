@@ -49,6 +49,8 @@ call test_m_dot_3(tests)
 call test_m_dot_4(tests)
 call test_alpha_m_dot(tests)
 
+call test_check_sys(tests)
+
 call test_calculate_flows(tests)
 call test_conservation_1(tests)
 call test_conservation_2(tests)
@@ -56,8 +58,7 @@ call test_mirror_1(tests)
 call test_mirror_2(tests)
 call test_single_cv_exact(tests)
 call test_plunger_impact_1(tests)
-
-call test_check_sys(tests)
+call test_plunger_impact_2(tests)
 
 call tests%end_tests()
 
@@ -2665,16 +2666,17 @@ end subroutine test_single_cv_exact
 !tripwire$ end
 
 !tripwire$ begin 9598C090 Update `\secref{plunger-impact-exact}` of verval.tex.
-pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
+pure function plunger_impact_sys_0(rho, csa, x_0, x_min, x_dot, temp, cor)
     use cva, only: cv_system_type
     use checks, only: assert
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
     
     type(si_mass_density), intent(in) :: rho
     type(si_area), intent(in)         :: csa
-    type(si_length), intent(in)       :: x_0
+    type(si_length), intent(in)       :: x_0, x_min
     type(si_velocity), intent(in)     :: x_dot
     type(si_temperature), intent(in)  :: temp
+    type(unitless), intent(in)        :: cor
     
     type(cv_system_type), allocatable :: plunger_impact_sys_0
     
@@ -2690,6 +2692,8 @@ pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
     call assert(rho%v%v   > 0.0_WP, "test_cva (plunger_impact_sys_0): rho > 0 violated")
     call assert(csa%v%v   > 0.0_WP, "test_cva (plunger_impact_sys_0): csa > 0 violated")
     call assert(x_0%v%v   > 0.0_WP, "test_cva (plunger_impact_sys_0): x_0 > 0 violated")
+    call assert(x_min%v%v > 0.0_WP, "test_cva (plunger_impact_sys_0): x_min > 0 violated")
+    call assert(x_min     < x_0,    "test_cva (plunger_impact_sys_0): x_min < x_0 violated")
     call assert(x_dot%v%v < 0.0_WP, "test_cva (plunger_impact_sys_0): x_dot < 0 violated")
     call assert(temp%v%v  > 0.0_WP, "test_cva (plunger_impact_sys_0): temp > 0 violated")
     
@@ -2728,7 +2732,7 @@ pure function plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
     call delta_pre%v%init_const(0.0_WP, n_d)
     p = rho * DRY_AIR%r(n_d) * temp
     call plunger_impact_sys_0%cv(2)%set(x_0, x_dot, y, p, temp, "plunger tube", csa, &
-                                            rm_p, p_f, p_f, k, delta_pre, [DRY_AIR], 1)
+                                            rm_p, p_f, p_f, k, delta_pre, [DRY_AIR], 1, x_min=x_min, cor=cor)
 end function plunger_impact_sys_0
 
 pure function exact_plunger_impact_1_m(sys_0, t)
@@ -2793,12 +2797,13 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
     
     type(si_mass_density) :: rho
     type(si_area)         :: csa
-    type(si_length)       :: x_0, x_exact
+    type(si_length)       :: x_0, x_min, x_exact
     type(si_velocity)     :: x_dot, x_dot_exact
     type(si_temperature)  :: temp
     type(si_time)         :: t_stop, dt
     type(si_mass)         :: m_exact
     type(si_energy)       :: e_g_exact
+    type(unitless)        :: cor
     
     allocate(ne(N_VAR))
     allocate(ne_d(N_VAR, N_D))
@@ -2808,10 +2813,12 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
     call rho%v%init_const(2.0_WP*RHO_ATM, N_D)
     call csa%v%init_const(0.5_WP, N_D)
     call x_0%v%init_const(2.0_WP, N_D)
+    call x_min%v%init_const(0.5_WP, N_D)
     call x_dot%v%init_const(-1.0_WP, N_D)
     call temp%v%init_const(3.0_WP*TEMP_ATM, N_D)
+    call cor%v%init_const(0.25_WP, N_D)
     
-    sys_0 = plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
+    sys_0 = plunger_impact_sys_0(rho, csa, x_0, x_min, x_dot, temp, cor)
     
     call t_stop%v%init_const(TEST_PLUNGER_IMPACT_1_T_STOP, N_D)
     dt = t_stop / real(n, WP)
@@ -2881,15 +2888,16 @@ subroutine test_plunger_impact_1(tests)
     type(ad), allocatable :: ne(:)
     real(WP), allocatable :: ne_d(:, :)
     integer               :: tex_unit
-    type(si_time)         :: t_impact, t_stop, dt
+    type(si_time)         :: t_impact_no_x_min, t_stop, dt
     type(si_mass)         :: m_exact
     type(si_energy)       :: e_g_exact
     integer, parameter    :: N = 50, N_D = 0
     type(si_mass_density) :: rho, rho_numerical
     type(si_area)         :: csa
-    type(si_length)       :: x_0
+    type(si_length)       :: x_0, x_min
     type(si_velocity)     :: x_dot
     type(si_temperature)  :: temp
+    type(unitless)        :: cor
     
     call exact_plunger_impact_1_de(N, ne, ne_d)
     
@@ -2901,17 +2909,19 @@ subroutine test_plunger_impact_1(tests)
     call rho%v%init_const(2.0_WP*RHO_ATM, N_D)
     call csa%v%init_const(0.5_WP, N_D)
     call x_0%v%init_const(2.0_WP, N_D)
+    call x_min%v%init_const(0.5_WP, N_D)
     call x_dot%v%init_const(-1.0_WP, N_D)
     call temp%v%init_const(3.0_WP*TEMP_ATM, N_D)
+    call cor%v%init_const(0.25_WP, N_D)
     
-    sys_0 = plunger_impact_sys_0(rho, csa, x_0, x_dot, temp)
+    sys_0 = plunger_impact_sys_0(rho, csa, x_0, x_min, x_dot, temp, cor)
     rho_numerical = sys_0%cv(2)%rho()
     call tests%real_eq(rho_numerical%v%v, rho%v%v, "test_plunger_impact_1, rho")
     
-    t_impact = -x_0/x_dot
-    call assert(t_impact%v%v > TEST_PLUNGER_IMPACT_1_T_STOP, &
-                    "test_plunger_impact_1, t_impact > TEST_PLUNGER_IMPACT_1_T_STOP violated")
-    m_exact = exact_plunger_impact_1_m(sys_0, t_impact)
+    t_impact_no_x_min = -x_0/x_dot
+    call assert(t_impact_no_x_min%v%v > TEST_PLUNGER_IMPACT_1_T_STOP, &
+                    "test_plunger_impact_1, t_impact_no_x_min > TEST_PLUNGER_IMPACT_1_T_STOP violated")
+    m_exact = exact_plunger_impact_1_m(sys_0, t_impact_no_x_min)
     call assert(is_close(m_exact%v%v, 0.0_WP), &
                     "test_plunger_impact_1, m_exact(t_impact) == 0 violated")
     
@@ -2929,6 +2939,54 @@ subroutine test_plunger_impact_1(tests)
     write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\plungerimpactxdoterror}{", ne(4)%v, "}"
     close(tex_unit)
 end subroutine test_plunger_impact_1
+
+subroutine test_plunger_impact_2(tests)
+    use cva, only: X_LT_X_MIN_RUN_RC, cv_system_type, run_config_type, run_status_type, run
+    use gasdata, only: TEMP_ATM, RHO_ATM
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    type(run_config_type)             :: config
+    type(cv_system_type), allocatable :: sys_0, sys_2
+    type(run_status_type)             :: status
+    
+    integer, parameter :: N_D = 0
+    
+    type(si_mass_density) :: rho
+    type(si_area)         :: csa
+    type(si_length)       :: x_0, x_min!, x_exact
+    type(si_velocity)     :: x_dot!, x_dot_exact
+    type(si_temperature)  :: temp
+    type(si_time)         :: t_stop, t_impact
+    type(unitless)        :: cor
+    !type(si_mass)         :: m_exact
+    !type(si_energy)       :: e_g_exact
+    
+    call rho%v%init_const(2.0_WP*RHO_ATM, N_D)
+    call csa%v%init_const(0.5_WP, N_D)
+    call x_0%v%init_const(2.0_WP, N_D)
+    call x_min%v%init_const(0.5_WP, N_D)
+    call x_dot%v%init_const(-1.0_WP, N_D)
+    call temp%v%init_const(3.0_WP*TEMP_ATM, N_D)
+    call cor%v%init_const(0.25_WP, N_D)
+    
+    sys_0 = plunger_impact_sys_0(rho, csa, x_0, x_min, x_dot, temp, cor)
+    
+    call t_stop%v%init_const(10.0_WP, N_D)
+    call config%set("test_plunger_impact_2", N_D, t_stop=t_stop, tolerance_checks=.false., const_dt=.true.)
+    call run(config, sys_0, sys_2, status, stop_at_first_event=.true.)
+    
+    call tests%integer_eq(status%rc, X_LT_X_MIN_RUN_RC, "test_plunger_impact_2, status%rc at impact")
+    if (status%rc /= X_LT_X_MIN_RUN_RC) then
+        if (allocated(status%data)) print *, status%data(1)
+        if (allocated(status%i_cv)) print *, status%i_cv(1)
+    end if
+    
+    t_impact = (x_0 - x_min)/abs(x_dot)
+    call tests%real_eq(status%t%v%v, t_impact%v%v, "test_plunger_impact_2, impact time", abs_tol=1.0e-10_WP)
+    
+    call tests%real_eq(sys_2%cv(2)%x_dot%v%v, 0.25_WP, "test_plunger_impact_2, plunger x_dot immediately after impact")
+end subroutine test_plunger_impact_2
 !tripwire$ end
 
 end program test_cva
