@@ -281,6 +281,13 @@ The amount of energy dissipated in the impact, $\Delta e_{\text{m},i}$ is tracke
 
 Tracking the total amount of energy dissipated in impact can be useful to improve blaster longevity.
 
+The location where plunger impact occurs is specified with $x_{\text{min},i}$ internally in BlasterSim, with $x_{\text{min},i} > 0$.
+By making $x_{\text{min},i} > 0$, BlasterSim avoids a problem where as $x_i$ goes to zero, $m_{k,i}$ and $E_i$ also have to go to zero.
+That synchronization is difficult to enforce numerically without additional complications.
+The synchronization issue can be avoided by simply making $x_{\text{min},i} > 0$.
+In reality, all things have some dead volume, and where the plunger tube control volume ends and the barrel begins is arbitrary.
+In early versions of BlasterSim, all dead volume in springers was placed into the barrel, but $x_{\text{min},i}$ for the barrel and plunger tube are picked so that half the dead volume is in each.
+
 If the coefficient of restitution is zero so that the plunger velocity after impact is zero, BlasterSim applies an approximation for the moment.
 The plunger will become immobile after impact.
 This approximation is a simple way to prevent simulation progress from stalling.

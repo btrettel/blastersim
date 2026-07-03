@@ -2665,7 +2665,7 @@ subroutine test_single_cv_exact(tests)
 end subroutine test_single_cv_exact
 !tripwire$ end
 
-!tripwire$ begin 9598C090 Update `\secref{plunger-impact-exact}` of verval.tex.
+!tripwire$ begin BD08B233 Update `\secref{plunger-impact-exact}` of verval.tex.
 pure function plunger_impact_sys_0(rho, csa, x_0, x_min, x_dot, temp, cor)
     use cva, only: cv_system_type
     use checks, only: assert
@@ -2943,6 +2943,7 @@ end subroutine test_plunger_impact_1
 subroutine test_plunger_impact_2(tests)
     use cva, only: X_LT_X_MIN_RUN_RC, cv_system_type, run_config_type, run_status_type, run
     use gasdata, only: TEMP_ATM, RHO_ATM
+    use io, only: write_latex_engineering
     
     type(test_results_type), intent(in out) :: tests
     
@@ -2952,6 +2953,7 @@ subroutine test_plunger_impact_2(tests)
     
     integer, parameter :: N_D = 0
     
+    integer               :: tex_unit
     type(si_mass_density) :: rho
     type(si_area)         :: csa
     type(si_length)       :: x_0, x_min!, x_exact
@@ -2986,6 +2988,12 @@ subroutine test_plunger_impact_2(tests)
     call tests%real_eq(status%t%v%v, t_impact%v%v, "test_plunger_impact_2, impact time", abs_tol=1.0e-10_WP)
     
     call tests%real_eq(sys_2%cv(2)%x_dot%v%v, 0.25_WP, "test_plunger_impact_2, plunger x_dot immediately after impact")
+    
+    open(newunit=tex_unit, action="write", status="replace", position="rewind", file="test_plunger_impact_2.tex", delim="quote")
+    write(unit=tex_unit, fmt="(a)") "% auto-generated"
+    call write_latex_engineering(tex_unit, abs(status%t%v%v - t_impact%v%v), "plungerimpacttimpacterror", "f5.3")
+    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\plungerimpactvelocityerror}{", abs(sys_2%cv(2)%x_dot%v%v - 0.25_WP), "}"
+    close(tex_unit)
 end subroutine test_plunger_impact_2
 !tripwire$ end
 

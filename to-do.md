@@ -1,10 +1,9 @@
 ### v0.3.0
 
 - Use new plunger impact exact solution after impact.
-    - Document test at impact time.
     - Document test after impact time.
 - To unittest.f90, add member function to return whether the last test passed. Use this to print additional diagnostics if certain tests fail.
-- run return code => run status code or time iteration status code
+- Document all `run` `rc` codes including negative.
 - Check to see how consistently your use of the word time step is. Do you use it to refer to `dt` or a particular time in the simulation?
 - Print useful error message for each error code.
     - Make a system to keep descriptions in the the docs and code consistent: generrors
@@ -355,7 +354,7 @@
         - plunger impact energy
         - to prevent projectile damage: maximum acceleration or maximum projectile pressure difference
         - Make BlasterSim have a generic constraint that can handle any output. `output_constraint` namelist group?
-        - Kinetic energy density, muzzle velocity (target, upper limit, lower limit)
+        - Kinetic energy density, muzzle velocity (target, upper limit, lower limit), kinetic energy (might be a legal requirement)
         - min/max dart mass
         - dart head decapitation
             - maximum dart pressure difference to prevent dart bursting
