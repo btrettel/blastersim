@@ -2665,17 +2665,17 @@ subroutine test_single_cv_exact(tests)
 end subroutine test_single_cv_exact
 !tripwire$ end
 
-!tripwire$ begin BD08B233 Update `\secref{plunger-impact-exact}` of verval.tex.
-pure function plunger_impact_sys_0(rho, csa, x_0, x_min, x_dot, temp, cor)
+!tripwire$ begin 8B17668A Update `\secref{plunger-impact-exact}` of verval.tex.
+pure function plunger_impact_sys_0(rho_1, csa, x_0, x_min, x_dot_1, temp_1, cor)
     use cva, only: cv_system_type
     use checks, only: assert
     use gasdata, only: P_ATM_ => P_ATM, TEMP_ATM_ => TEMP_ATM, DRY_AIR
     
-    type(si_mass_density), intent(in) :: rho
+    type(si_mass_density), intent(in) :: rho_1
     type(si_area), intent(in)         :: csa
     type(si_length), intent(in)       :: x_0, x_min
-    type(si_velocity), intent(in)     :: x_dot
-    type(si_temperature), intent(in)  :: temp
+    type(si_velocity), intent(in)     :: x_dot_1
+    type(si_temperature), intent(in)  :: temp_1
     type(unitless), intent(in)        :: cor
     
     type(cv_system_type), allocatable :: plunger_impact_sys_0
@@ -2689,15 +2689,15 @@ pure function plunger_impact_sys_0(rho, csa, x_0, x_min, x_dot, temp, cor)
     type(si_stiffness)    :: k
     type(si_length)       :: delta_pre
     
-    call assert(rho%v%v   > 0.0_WP, "test_cva (plunger_impact_sys_0): rho > 0 violated")
-    call assert(csa%v%v   > 0.0_WP, "test_cva (plunger_impact_sys_0): csa > 0 violated")
-    call assert(x_0%v%v   > 0.0_WP, "test_cva (plunger_impact_sys_0): x_0 > 0 violated")
-    call assert(x_min%v%v > 0.0_WP, "test_cva (plunger_impact_sys_0): x_min > 0 violated")
-    call assert(x_min     < x_0,    "test_cva (plunger_impact_sys_0): x_min < x_0 violated")
-    call assert(x_dot%v%v < 0.0_WP, "test_cva (plunger_impact_sys_0): x_dot < 0 violated")
-    call assert(temp%v%v  > 0.0_WP, "test_cva (plunger_impact_sys_0): temp > 0 violated")
+    call assert(rho_1%v%v   > 0.0_WP, "test_cva (plunger_impact_sys_0): rho > 0 violated")
+    call assert(csa%v%v     > 0.0_WP, "test_cva (plunger_impact_sys_0): csa > 0 violated")
+    call assert(x_0%v%v     > 0.0_WP, "test_cva (plunger_impact_sys_0): x_0 > 0 violated")
+    call assert(x_min%v%v   > 0.0_WP, "test_cva (plunger_impact_sys_0): x_min > 0 violated")
+    call assert(x_min       < x_0,    "test_cva (plunger_impact_sys_0): x_min < x_0 violated")
+    call assert(x_dot_1%v%v < 0.0_WP, "test_cva (plunger_impact_sys_0): x_dot_1 < 0 violated")
+    call assert(temp_1%v%v  > 0.0_WP, "test_cva (plunger_impact_sys_0): temp_1 > 0 violated")
     
-    n_d = size(rho%v%d)
+    n_d = size(rho_1%v%d)
     
     call p_atm%v%init_const(P_ATM_, n_d)
     call temp_atm%v%init_const(TEMP_ATM_, n_d)
@@ -2717,7 +2717,7 @@ pure function plunger_impact_sys_0(rho, csa, x_0, x_min, x_dot, temp, cor)
     call plunger_impact_sys_0%con(2, 1)%t_opening%v%init_const(0.0_WP, n_d)
     call plunger_impact_sys_0%con(2, 1)%alpha_0%v%init_const(1.0_WP, n_d)
     call plunger_impact_sys_0%con(2, 1)%alpha_dot_0%v%init_const(0.0_WP, n_d)
-    plunger_impact_sys_0%con(2, 1)%m_dot_0 = -rho*csa*x_dot
+    plunger_impact_sys_0%con(2, 1)%m_dot_0 = -rho_1*csa*x_dot_1
     
     ! same for every CV
     call y(1)%v%init_const(1.0_WP, n_d)
@@ -2730,8 +2730,8 @@ pure function plunger_impact_sys_0(rho, csa, x_0, x_min, x_dot, temp, cor)
     call p_f%v%init_const(0.0_WP, n_d)
     call k%v%init_const(0.0_WP, n_d)
     call delta_pre%v%init_const(0.0_WP, n_d)
-    p = rho * DRY_AIR%r(n_d) * temp
-    call plunger_impact_sys_0%cv(2)%set(x_0, x_dot, y, p, temp, "plunger tube", csa, &
+    p = rho_1 * DRY_AIR%r(n_d) * temp_1
+    call plunger_impact_sys_0%cv(2)%set(x_0, x_dot_1, y, p, temp_1, "plunger tube", csa, &
                                             rm_p, p_f, p_f, k, delta_pre, [DRY_AIR], 1, x_min=x_min, cor=cor)
 end function plunger_impact_sys_0
 
@@ -2888,8 +2888,7 @@ subroutine test_plunger_impact_1(tests)
     type(ad), allocatable :: ne(:)
     real(WP), allocatable :: ne_d(:, :)
     integer               :: tex_unit
-    type(si_time)         :: t_impact_no_x_min, t_stop, dt
-    type(si_mass)         :: m_exact
+    type(si_time)         :: t_impact, t_stop
     type(si_energy)       :: e_g_exact
     integer, parameter    :: N = 50, N_D = 0
     type(si_mass_density) :: rho, rho_numerical
@@ -2918,25 +2917,21 @@ subroutine test_plunger_impact_1(tests)
     rho_numerical = sys_0%cv(2)%rho()
     call tests%real_eq(rho_numerical%v%v, rho%v%v, "test_plunger_impact_1, rho")
     
-    t_impact_no_x_min = -x_0/x_dot
-    call assert(t_impact_no_x_min%v%v > TEST_PLUNGER_IMPACT_1_T_STOP, &
-                    "test_plunger_impact_1, t_impact_no_x_min > TEST_PLUNGER_IMPACT_1_T_STOP violated")
-    m_exact = exact_plunger_impact_1_m(sys_0, t_impact_no_x_min)
-    call assert(is_close(m_exact%v%v, 0.0_WP), &
-                    "test_plunger_impact_1, m_exact(t_impact) == 0 violated")
+    t_impact = (x_min - x_0)/x_dot
+    call assert(t_impact%v%v > TEST_PLUNGER_IMPACT_1_T_STOP, &
+                    "test_plunger_impact_1, t_impact > TEST_PLUNGER_IMPACT_1_T_STOP violated")
     
     call t_stop%v%init_const(TEST_PLUNGER_IMPACT_1_T_STOP, N_D)
-    dt = t_stop / real(N, WP)
     e_g_exact = exact_plunger_impact_1_e_g(sys_0, t_stop)
     
     open(newunit=tex_unit, action="write", status="replace", position="rewind", file="test_plunger_impact_1.tex", delim="quote")
     write(unit=tex_unit, fmt="(a)") "% auto-generated"
     write(unit=tex_unit, fmt="(a, f4.2, a)") "\newcommand*{\plungerimpacttone}{", t_stop%v%v, "}"
-    call write_latex_engineering(tex_unit, ne(1)%v, "plungerimpactmerror", "f5.3")
-    write(unit=tex_unit, fmt="(a, f5.3, a)") "\newcommand*{\plungerimpactegerror}{", ne(2)%v, "}"
-    call write_latex_engineering(tex_unit, e_g_exact%v%v, "plungerimpacteg", "f5.3")
-    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\plungerimpactxerror}{", ne(3)%v, "}"
-    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\plungerimpactxdoterror}{", ne(4)%v, "}"
+    call write_latex_engineering(tex_unit, ne(1)%v, "plungerimpactmerrorone", "f5.3")
+    write(unit=tex_unit, fmt="(a, f5.3, a)") "\newcommand*{\plungerimpactegerrorone}{", ne(2)%v, "}"
+    call write_latex_engineering(tex_unit, e_g_exact%v%v, "plungerimpactegone", "f5.3")
+    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\plungerimpactxerrorone}{", ne(3)%v, "}"
+    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\plungerimpactxdoterrorone}{", ne(4)%v, "}"
     close(tex_unit)
 end subroutine test_plunger_impact_1
 

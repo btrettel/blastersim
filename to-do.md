@@ -1,10 +1,7 @@
 ### v0.3.0
 
-- Use new plunger impact exact solution after impact.
-    - Document test after impact time.
-- To unittest.f90, add member function to return whether the last test passed. Use this to print additional diagnostics if certain tests fail.
 - Document all `run` `rc` codes including negative.
-- Check to see how consistently your use of the word time step is. Do you use it to refer to `dt` or a particular time in the simulation?
+- Check to see how consistently your use of the word time step is. Do you use it to refer to `dt` or a particular time in the simulation? Perhaps write "time step size" instead of "time step" as appropriate.
 - Print useful error message for each error code.
     - Make a system to keep descriptions in the the docs and code consistent: generrors
 - Test CSV file.
