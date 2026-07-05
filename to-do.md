@@ -1,5 +1,49 @@
 ### v0.3.0
 
+- Document theory completely
+    - Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
+        - <https://news.ycombinator.com/item?id=48554595>
+        - <https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions>
+            - <https://news.ycombinator.com/item?id=48592087>
+    - Document flow connection model
+    - Document `e_f` governing equation.
+    - Add functional dependencies of $p_{\text{f},i}$ to the $\dv{\dot{x}_i}{t}$ equation in the docs.
+- document more coding conventions
+    - `i` and `j` are typically used for CVs, `k` is typically used for gas species
+    - `i_cv_mirror = 0` disables mirror CVs; use for constant volume chambers
+- Documentation for making a BlasterSim release
+    - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`
+    - ```
+    make clean
+    git tag -a v0.2.1 -m "version 0.2.1"
+    make BUILD=release blastersim
+    make clean
+    make docs/blastersim.pdf docs/index.html
+    [...]
+    ```
+    - How to build Windows executable
+        - Download source release from <http://trettel.us/blastersim/releases/>
+        - Extract zip file.
+        - Build with `jom blastersim.exe`.
+        - Move executable to the root of drive E, which is disk.img on the host system.
+        - Copy BlasterSim back from disk image: `mcopy -i disk.img ::/blastersim.exe /home/ben/ramdisk/blastersim.exe`
+- docs: refer to figure for every variable in springer figure like `delta_pre`
+- docs: l_spring = l_pre + delta_pre, l_tube = l_compressed + l_head + l_draw
+- Document how variable names are converted from LaTeX and code, as a general rule.
+- Have a conversion table for LaTeX and code variable names.
+- Put springer and pneumatic governing equations in usage chapter
+- Thanks appendix
+    - Andrew Trettel for macOS binary
+    - Radioactive for data
+- docs: Discuss use of derived types defined in cva.f90.
+- `make dist`
+- `make web`
+- `make deploy`
+    - `make web`
+    - `make blastersim-*-source.zip`
+    - `make blastersim-*-linux-x86-64.zip`
+    - upload online
+- Check .bib file for `eoa` as that shouldn't appear in the final .bib files
 - Document all `run` `rc` codes including negative.
 - Check to see how consistently your use of the word time step is. Do you use it to refer to `dt` or a particular time in the simulation? Perhaps write "time step size" instead of "time step" as appropriate.
 - Print useful error message for each error code.
@@ -12,11 +56,13 @@
 - Exact solution: constant $\dot{m}$ in with plunger/projectile motion (not constant velocity)
 - Separately track plunger and spring kinetic energies.
 - BlasterSim docs "Tutorials" chapter
-    - Find optimal travel length, simplified method
+    - <https://onegoodtutorial.org/>
+    - Find optimal travel length
         - Don't use plunger-to-barrel volume ratios to estimate optimal travel length. Sometimes it is claimed that the plunger-to-barrel volume ratio just gives you a rough figure to start at. Unfortunately, the range of optimal plunger-to-barrel volume ratios in practice is wide, so it is of little use as a rough figure to start at. Similarly, in the past, I've suggested using an adiabatic process relationship to estimate optimal barrel length. Unfortunately, a major assumption of that approach was perfect flow such that the plunger/chamber and barrel pressures are equal, which is not achieved in practice. So the adiabatic process relationship approach is not workable.
 - Write specific governing equations for pneumatics and springers.
 - Look into `non_overridable`.
 - Add blowdown part of simulation.
+    - Get flow rate out of barrel.
 - Track both impact energy before projectile exit and total impact energy including blow down period.
 - Make BlasterSim more predictive by including a regression for flow through contractions. Then you won't need `d_e`.
     - For optimization, on `d_e`, set upper limit from regression equation, lower limit to zero. You can add flow restrictions to get less. This could be useful to reduce impact energy.
@@ -30,7 +76,6 @@
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1285109487828467774>
     - <https://www.youtube.com/watch?v=mwP1k-bcjcA>
 - Maybe: `MAX_ITERS_TIME_LOOP_RUN_RC`: Check if there was plunger impact and if the coefficient of restitution is small. If so, suggest making the coefficient of restitution larger or zero.
-- Document `e_f` governing equation.
 - Make exact solution with `e_f` and motion in both directions.
 - Why does `e_f` go negative in plungers? Is it due to the continuous friction equation? Should I switch to a discontinuous friction equation?
     - A discontinuous friction equation would allow me to set `x_min=x_dead` for the barrel.
@@ -48,11 +93,6 @@
         - > Plunger bounce has always seemed like a major factor in traditional springers in my testing.
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1475663102073766055>
 - Test `get_sys_at_x`. Adding `call move_alloc(from=sys_im1, to=sys_i)` fixed a bug that presumably could explain why the `x` values returned by `get_sys_at_x` seemed a bit off before.
-- Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
-    - <https://news.ycombinator.com/item?id=48554595>
-    - <https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions>
-        - <https://news.ycombinator.com/item?id=48592087>
-- note in documentation on coding conventions that i and j are typically used for CVs, k is typically used for gas species
 - Add pressure effects on `d_e`. Make `d_e` an array so that it can be coefficients on a polynomial?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
@@ -60,24 +100,6 @@
     - `CUSTOM_MODE = 0`, `PNEUMATIC_MODE = 1`, `SPRINGER_MODE = 2`
     - Use to determine which energy efficiency formula to use.
 - Make `p_s` larger to prevent the slight backwards motion more?
-- Documentation for making a BlasterSim release
-    - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`
-    - ```
-    make clean
-    git tag -a v0.2.1 -m "version 0.2.1"
-    make BUILD=release blastersim
-    make clean
-    make docs/blastersim.pdf docs/index.html
-    [...]
-    ```
-    - How to build Windows executable
-        - Download source release from <http://trettel.us/blastersim/releases/>
-        - Extract zip file.
-        - Build with `jom blastersim.exe`.
-        - Move executable to the root of drive E, which is disk.img on the host system.
-        - Copy BlasterSim back from disk image: `mcopy -i disk.img ::/blastersim.exe /home/ben/ramdisk/blastersim.exe`
-- Check .bib file for `eoa` as that shouldn't appear in the final .bib files
-- Document flow connection model
 - BlasterSim output
     - muzzle velocity
     - muzzle energy
@@ -87,9 +109,6 @@
     - efficiency (depends on mode)
         - energy breakdown table
     - dwell time
-- docs: Tutorials section
-    - <https://onegoodtutorial.org/>
-- Add functional dependencies of $p_{\text{f},i}$ to the $\dv{\dot{x}_i}{t}$ equation in the docs.
 - Nonlinear spring model.
     - Split spring force and energy into spring.f90? Might also want to move EOSes into eos.f90.
     - <https://discord.com/channels/999821037036388422/999821037518725205/1262864305393631234>
@@ -100,11 +119,6 @@
     - Look into force models for elastic tubing and other non-linear springs
 - <https://academia.stackexchange.com/questions/14010/how-do-you-cite-a-github-repository>
 - Set time per CSV row output in input file, which will be converted to `csv_frequency`.
-- docs: refer to figure for every variable in springer figure like `delta_pre`
-- docs: l_spring = l_pre + delta_pre, l_tube = l_compressed + l_head + l_draw
-- CSV: Change `e` to `e_g` for gas energy?
-- Document how variable names are converted from LaTeX and code, as a general rule.
-- Have a conversion table for LaTeX and code variable names.
 - docs:
     - Process test output and put the results in the documentation.
         - LaTeX documentation
@@ -115,11 +129,7 @@
     - Also refer to code in docs and link to GitHub.
     - Look at Zotero "BibTeX quality report" lines
         - Export to BibLaTeX for even more checks?
-    - Put springer and pneumatic governing equations in usage chapter
     - Test building docs on Windows.
-    - Thanks appendix
-        - Andrew Trettel for macOS binary
-        - Radioactive for data
     - Add index to docs.
         - <https://www.overleaf.com/learn/latex/Indices>
         - <https://en.wikibooks.org/wiki/LaTeX/Indexing>
@@ -132,17 +142,7 @@
         - TODO: Atean
         - Jelle's dart masses: <https://tinyurl.com/foamprojectileweight>
             - <https://discord.com/channels/146386512873783296/146387185724162050/1085001956919103508>
-- Optimal barrel length mode where the barrel length is not specified and BlasterSim stops where acceleration is zero.
-    - It would be important to stop the backwards motion before adding this, otherwise BlasterSim will stop at the wrong time. Or I could pick the optimal barrel length after a certain time or after a certain travel distance.
-- `make dist`
-- `make web`
-- `make deploy`
-    - `make web`
-    - `make blastersim-*-source.zip`
-    - `make blastersim-*-linux-x86-64.zip`
-    - upload online
 - Make Python script generate an animation of a springer based on BlasterSim output.
-- docs: Discuss use of derived types defined in cva.f90.
 
 ***
 
@@ -223,7 +223,6 @@
     - Put all the drawings and equations on paper first.
     - drawings of pneumatic and springer guns with lengths labeled
     - explanation of governing equations
-    - list of all inputs
     - FAQ:
         - TODO: Collect comments making these points.
         - Accuracy of the simulation
@@ -278,10 +277,7 @@
                     - <https://discord.com/channels/825852031239061545/825852073382772758/1189468070666834011>
                 - 4.0
                     - <http://btrettel.nerfers.com/archives/54>
-    - API
-        - `i_cv_mirror = 0` disables mirror CVs; use for constant volume chambers
     - Write Fortran code to output gas data table to put in documentation.
-        - Can I use similar code generation to get other important values from the code?
 - Create subroutines in io.f90 to create different types of CVs. Use these in the tests.
 - Print some derived results initially.
     - Plunger volume
@@ -293,7 +289,7 @@
 - Upload Windows BlasterSim to malware scanner to check.
     - <https://www.virustotal.com/gui/home> (run by Google)
 - Check that Windows BlasterSim works in Wine to make sure it doesn't require extra libraries.
-- Time step estimate?
+- Time step size estimate?
     - <https://www.spudfiles.com/viewtopic.php?p=391877#p391877>: > So I try to pick a time step intelligently. I first make a very crude guesstimate of muzzle energy. That gives me a (crude estimate of) muzzle velocity. I then assume constant acceleration and determine how long it would take a projectile to clear the muzzle.
     - Minimum of multiple time scales?
 - Try multiple CV exact solution. One constant pressure chamber, one barrel?
