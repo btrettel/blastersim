@@ -1,5 +1,7 @@
 ### v0.3.0
 
+- Add preface section describing side icons
+- Add optional icon to some sections like Roache V&V book. Mark equations in usage section as optional.
 - Document theory completely
     - Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
         - <https://news.ycombinator.com/item?id=48554595>
@@ -49,6 +51,30 @@
 - Print useful error message for each error code.
     - Make a system to keep descriptions in the the docs and code consistent: generrors
 - Test CSV file.
+- Make BlasterSim more predictive by including a regression for flow through contractions. Then you won't need `d_e`.
+    - For optimization, on `d_e`, set upper limit from regression equation, lower limit to zero. You can add flow restrictions to get less. This could be useful to reduce impact energy.
+        - For optimization of plunger tube diameter, it would be easier to constraint the ratio of the plunger tube diameter to barrel diameter to be large so that `d_e` becomes independent of that ratio.
+    - docs: Note that $c_\text{c}$ (coefficient of contraction) and $c_\text{v}$ need to be considered separately. Energy losses could make $c_\text{v}$ appreciably lower than 1. I guess the loss coefficient effectively calculates $c_\text{v}$ if the area ($c_\text{c}$) is known. Energy losses in BlasterSim's formulation would factor mostly in to the enthalpy through the flow restriction, however, as BlasterSim assumes gas kinetic energy is negligible.
+    - Data to collect from the open literature:
+        - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
+        - Use loss coefficients to estimate effective area?
+        - Make regression for loss coefficient considering contraction ratio and entrance radius of curvature?
+    - docs
+        - Assumptions to list in m_dot section:
+            - no energy loss in flow restriction
+        - Assumptions for implicit `d_e` model for springers:
+            - incompressible flow (if using an incompressible flow correlation)
+            - coefficient of velocity is 1
+            - Re (how defined?) > 1e4
+            - quasi-steady flow
+    - nurick_orifice_1976 p. 686
+        - Adding corner radius effects.
+    - nurick_flow_2011 p. 15
+    - benedict_fundamentals_1980 p. 386
+        - p. 388: compressible flows differ from incompressible
+    - benedict_flow_1966
+- Use better low Reynolds number model for the flow restriction than what Beater uses.
+    - borutzky_orifice_2002 or grose_orifice_1983?
 
 ***
 
@@ -64,14 +90,6 @@
 - Add blowdown part of simulation.
     - Get flow rate out of barrel.
 - Track both impact energy before projectile exit and total impact energy including blow down period.
-- Make BlasterSim more predictive by including a regression for flow through contractions. Then you won't need `d_e`.
-    - For optimization, on `d_e`, set upper limit from regression equation, lower limit to zero. You can add flow restrictions to get less. This could be useful to reduce impact energy.
-        - For optimization of plunger tube diameter, it would be easier to constraint the ratio of the plunger tube diameter to barrel diameter to be large so that `d_e` becomes independent of that ratio.
-    - docs: Note that $c_\text{c}$ (coefficient of contraction) and $c_\text{v}$ need to be considered separately. Energy losses could make $c_\text{v}$ appreciably lower than 1. I guess the loss coefficient effectively calculates $c_\text{v}$ if the area ($c_\text{c}$) is known. Energy losses in BlasterSim's formulation would factor mostly in to the enthalpy through the flow restriction, however, as BlasterSim assumes gas kinetic energy is negligible.
-    - Data to collect from the open literature:
-        - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
-        - Use loss coefficients to estimate effective area?
-        - Make regression for loss coefficient considering contraction ratio and entrance radius of curvature?
 - Estimate reasonable coefficient of restitution from videos.
     - <https://discord.com/channels/727038380054937610/1172390267890958366/1285109487828467774>
     - <https://www.youtube.com/watch?v=mwP1k-bcjcA>
@@ -299,6 +317,7 @@
 
 ***
 
+- tank discharge validation case: dutton_experiments_1997
 - performance consistency
     - <https://discord.com/channels/146386512873783296/146680423173455872/1389715204996333609>
         - > I can tune for 240 here at my place then go 20miles inland to LUNC event and barely hit 210 because the heat and elevation change……
