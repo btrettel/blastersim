@@ -93,7 +93,7 @@ end subroutine predicted_v_muzzle_vs_observed
 
 subroutine run_pneumatic_get_mv(input_file, predicted_v_muzzle, rc_predicted, actual_v_muzzle, actual_v_muzzle_stdev, &
                                 actual_v_muzzle_n, actual_rc)
-    use cva, only: run_config_type, cv_system_type, run_status_type, run
+    use cva, only: run_config_type, cv_system_type, run_status_type, run, SUCCESS_RC
     use io, only: I_BARREL, read_pneumatic_namelist
     
     character(len=*), intent(in)   :: input_file
@@ -112,7 +112,7 @@ subroutine run_pneumatic_get_mv(input_file, predicted_v_muzzle, rc_predicted, ac
                                     actual_rc_=actual_rc)
     call run(config, sys_start, sys_end, status)
     
-    if (status%rc == 0) then
+    if (status%rc < SUCCESS_RC) then
         predicted_v_muzzle = sys_end%cv(I_BARREL)%x_dot
     else
         call predicted_v_muzzle%v%init_const(0.0_WP, size(sys_end%cv(I_BARREL)%x_dot%v%d))
@@ -162,7 +162,7 @@ subroutine pneumatic_validation(tests)
             abs_tol = t_half_alpha*actual_v_muzzle_stdev(i_data)%v%v/sqrt(real(actual_v_muzzle_n(i_data), WP))
         end if
         call tests%integer_eq(rc_predicted, actual_rc, trim(INPUT_FILES(i_data)) // ", status%rc")
-        if (actual_rc == 0) call tests%real_eq(predicted_v_muzzle(i_data)%v%v, actual_v_muzzle(i_data)%v%v, &
+        if (rc_predicted == actual_rc) call tests%real_eq(predicted_v_muzzle(i_data)%v%v, actual_v_muzzle(i_data)%v%v, &
                                 trim(INPUT_FILES(i_data)) // ", muzzle velocity (validation)", &
                                 abs_tol=abs_tol)
     end do

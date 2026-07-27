@@ -52,6 +52,7 @@
     - Make a system to keep descriptions in the the docs and code consistent: generrors
 - Test CSV file.
 - Make BlasterSim more predictive by including a regression for flow through contractions. Then you won't need `d_e`.
+    - Adding a sudden contraction flow model would be good for model validation as you would eliminate parameters requiring calibration. Then if BlasterSim doesn't fit the data for a sudden contraction springer, you will have to look elsewhere for the source of the inaccuracy. Though it could be possible that there are other sources of head loss in a springer not accounted for in the sudden contraction model.
     - For optimization, on `d_e`, set upper limit from regression equation, lower limit to zero. You can add flow restrictions to get less. This could be useful to reduce impact energy.
         - For optimization of plunger tube diameter, it would be easier to constraint the ratio of the plunger tube diameter to barrel diameter to be large so that `d_e` becomes independent of that ratio.
     - docs: Note that $c_\text{c}$ (coefficient of contraction) and $c_\text{v}$ need to be considered separately. Energy losses could make $c_\text{v}$ appreciably lower than 1. I guess the loss coefficient effectively calculates $c_\text{v}$ if the area ($c_\text{c}$) is known. Energy losses in BlasterSim's formulation would factor mostly in to the enthalpy through the flow restriction, however, as BlasterSim assumes gas kinetic energy is negligible.
@@ -114,6 +115,8 @@
 - Add pressure effects on `d_e`. Make `d_e` an array so that it can be coefficients on a polynomial?
 - Add leaks around the projectile.
     - $\Delta_\text{leak} = \tfrac{\pi}{4} (2 d_\text{barrel} \Delta_\text{leak} - \Delta_\text{leak}^2)$
+    - take into account thermal expansion for uncertainty analysis
+    - might be possible to use exact solution for flow in an annulus
 - `sys%mode` member variable
     - `CUSTOM_MODE = 0`, `PNEUMATIC_MODE = 1`, `SPRINGER_MODE = 2`
     - Use to determine which energy efficiency formula to use.
@@ -158,8 +161,24 @@
     - Redirect from btrettel.nerfers.com to BlasterSim docs.
     - Add data sources to user's guide.
         - TODO: Atean
-        - Jelle's dart masses: <https://tinyurl.com/foamprojectileweight>
-            - <https://discord.com/channels/146386512873783296/146387185724162050/1085001956919103508>
+        - darts:
+            - Jelle's dart masses: <https://tinyurl.com/foamprojectileweight>
+                - <https://discord.com/channels/146386512873783296/146387185724162050/1085001956919103508>
+            - Radioactive (not yet posted?):
+                - <https://discord.com/channels/825852031239061545/825852073382772758/1527407615431413893>
+                - <https://discord.com/channels/825852031239061545/825852033898774543/1501059224913055886>
+        - springs
+            - <https://discord.com/channels/825852031239061545/825852033898774543/1501059239765082222>
+        - foams
+            - <https://discord.com/channels/825852031239061545/1462571693628461157/1485304455670005760>
+            - EVA
+                - <https://www.reddit.com/r/Nerf/comments/2390p8/question_does_anyone_know_what_type_of_foam_the/cguvawc/>
+            - EPE/polyethylene (same as Nerf darts?)
+                - <https://discord.com/channels/999821037036388422/1233404880484569189/1252690893559955618>
+                - <https://arplankdirect.com/technical-data/>
+                    - > Technical Document: EPE Coefficient of Linear Thermal Expansion (CLTE)
+                    - <https://arplankdirect.com/wp-content/uploads/2021/04/techdoc-CLTE-EPE.pdf>
+            - EPP
 - Make Python script generate an animation of a springer based on BlasterSim output.
 
 ***
@@ -208,6 +227,7 @@
     - Related: How can I handle dead volume in the dart?
         - This just increases the dead volume for the barrel.
         - Could have normal dead volume and a separate dead volume for the projectile.
+    - But: <https://discord.com/channels/999821037036388422/999821037518725207/1530726065977430139>: > yeah, I used to think it flared out to seal ¶ but I'm pretty confident now that it does not
 - Check that $\dot{x}_0$ derivative is now good with exact solution.
 - Test `m_spring` in `d_xdot_d_t` and `m_p_ke`.
 - transonic corrections in the barrel (corner_theory_1950 eq. 123)
@@ -252,6 +272,7 @@
             - <https://www.reddit.com/r/Nerf/comments/1ordwlk/optimising_for_fps_designing_springer_blasters/nnpwewz/>
             - <https://www.reddit.com/r/Nerf/comments/dmgxeb/science_and_math_of_nerf_formulae_and_how_to/f50mx2c/>
             - <https://discord.com/channels/146386512873783296/146680423173455872/1389713797173743788>
+            - <https://www.reddit.com/r/Nerf/comments/1uwgldg/im_philip_a_nerf_engineer_who_worked_on_rebel_ops/oxiwegg/?context=3>
         - Simulation isn't worthwhile because it takes less time to figure things out experimentally. Not true from my perspective. In practice, the alternative to simulation has been speculation. People spend a huge amount of time working on things that a simulation could show is not plausible. That's a waste of time. If anything, simulation saves time by reducing the amount of experiments that need to be done. Simulation and experimentation are complementary.
         - How do I calculate optimal barrel length?
             - Make optimal barrel length equation developed from BlasterSim data. / Make reduced order model for optimal barrel length given only the most important variables.
@@ -338,6 +359,10 @@
         - <https://discord.com/channels/825852031239061545/1011329333949907105/1318103337568174121>
         - The inconsistency could be from the dart material or other materials and not the gas.
         - <https://discord.com/channels/1196986370573467668/1247341528561487892/1322273804029923358>: > The weirdest shit happens in the northeast from temperature and humidity fluctuations
+        - <https://www.reddit.com/r/Nerf/comments/1uzj4hs/what_is_the_ideal_barrel_id_pfa/>
+- temperature effects
+    - coefficient of thermal expansion of the dart and barrel
+    - <https://discord.com/channels/146386512873783296/146387185724162050/1220192566079914086>
 - Property test to compare BlasterSim derivatives against numerical derivatives of BlasterSim input.
     - test_fmad.f90: `test_num_deriv`
 - Readd `smooth_min` assertions including new one from Wikipedia including some extra gap for floating point error
