@@ -1,7 +1,10 @@
 ### v0.3.0
 
+- pre-commit hook
 - Add preface section describing side icons
 - Add optional icon to some sections like Roache V&V book. Mark equations in usage section as optional.
+- Go through docs starting at the beginning and complete unfinished parts.
+- Check docs for `TODO`.
 - Document theory completely
     - Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
         - <https://news.ycombinator.com/item?id=48554595>
@@ -51,10 +54,57 @@
 - Print useful error message for each error code.
     - Make a system to keep descriptions in the the docs and code consistent: generrors
 - Test CSV file.
+
+***
+
+- .out file:
+    - Human and computer readable? JSON? But I want units.
+        - one line per number
+        - human readable warnings
+    - plunger volume
+    - barrel volume
+    - plunger-to-barrel volume ratio
+    - efficiency
+    - max spring draw force
+- `spring` namelist group that overrides default `k` in the `springer` namelist group.
+    - How can I convert spring length to number of coils?
+        - Use half the number of extra coils for each side.
+    - If there are no other namelist groups, this will print out the spring stiffness and mass.
+    - How can I detect that `k` has been redundantly set? See if `k` differs before and after reading the `springer` namelist.
+    - Spring calculators to get ideas from:
+        - <https://1drv.ms/x/c/1ea51e245f88ff30/IQA5O4Ivc_ONTpiZhDX0Rj4bAd-EnLfTdUk8wc-T0W4STMo?e=9F0Op0>
+        - <https://spring-design-by-noodles.streamlit.app/>
+            - <https://github.com/i-love-noodles/spring-design-dashboard/>
+        - <https://www.reddit.com/r/nerfhomemades/comments/1vc4gnm/making_custom_springs_at_home_guide/>
+    - wahl_mechanical_1963 p. 56
+        - $G$: shear modulus of wire material
+            - Temperature variation: p. 43
+        - $d$: wire diameter
+        - $n$: number of active coils
+            - convert from spring length
+        - $D$: coil diameter
+            - have option to alternatively set outer and inner diameters?
+        - $\rho_\text{s}$: spring material mass density
+        - two inputs to specify spring end types: end_1, end_2
+    - mohazzabi_spring_1989 eq. 30: More accurate linear spring calculation.
+        - TODO: Get spring stress in this approximation. Or just use Wahl's correction?
+        - option to enable common lower-order approximation
+    - Outputs: spring mass $m_\text{s}$, spring stiffness $k$
+    - volume of helix for spring mass
+        - erisman_optimum_1961 eq. 1: considers inactive coils
+        - kobelev_shape_2005 eq. 2.5, kobelev_fundamentals_2024 eq. 1.21: "Plain", only active coils considered.
+            - kobelev_fundamentals_2024 eq. 2.54
+        - Compare mass estimated with this to what Radioactive provided.
+    - Warnings
+        - wire diameter must be much smaller than coil diameter (large spring index)
+            - I could use Wahl's curvature correction factor to estimate when spring index is too small for normal spring stiffness model.
+            - Are there other assumptions inherent to the linear spring model that can be checked?
+        - if initial draw length more than fully compresses the spring
+- Set up git hook for BlasterSim
 - Make BlasterSim more predictive by including a regression for flow through contractions. Then you won't need `d_e`.
     - Adding a sudden contraction flow model would be good for model validation as you would eliminate parameters requiring calibration. Then if BlasterSim doesn't fit the data for a sudden contraction springer, you will have to look elsewhere for the source of the inaccuracy. Though it could be possible that there are other sources of head loss in a springer not accounted for in the sudden contraction model.
     - For optimization, on `d_e`, set upper limit from regression equation, lower limit to zero. You can add flow restrictions to get less. This could be useful to reduce impact energy.
-        - For optimization of plunger tube diameter, it would be easier to constraint the ratio of the plunger tube diameter to barrel diameter to be large so that `d_e` becomes independent of that ratio.
+        - For optimization of plunger tube diameter, it would be easier to constrain the ratio of the plunger tube diameter to barrel diameter to be large so that `d_e` becomes independent of that ratio.
     - docs: Note that $c_\text{c}$ (coefficient of contraction) and $c_\text{v}$ need to be considered separately. Energy losses could make $c_\text{v}$ appreciably lower than 1. I guess the loss coefficient effectively calculates $c_\text{v}$ if the area ($c_\text{c}$) is known. Energy losses in BlasterSim's formulation would factor mostly in to the enthalpy through the flow restriction, however, as BlasterSim assumes gas kinetic energy is negligible.
     - Data to collect from the open literature:
         - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
@@ -76,9 +126,6 @@
     - benedict_flow_1966
 - Use better low Reynolds number model for the flow restriction than what Beater uses.
     - borutzky_orifice_2002 or grose_orifice_1983?
-
-***
-
 - Compile BlasterSim in Wine for Windows?
 - Exact solution: constant $\dot{m}$ in with plunger/projectile motion (not constant velocity)
 - Separately track plunger and spring kinetic energies.
@@ -273,6 +320,8 @@
             - <https://www.reddit.com/r/Nerf/comments/dmgxeb/science_and_math_of_nerf_formulae_and_how_to/f50mx2c/>
             - <https://discord.com/channels/146386512873783296/146680423173455872/1389713797173743788>
             - <https://www.reddit.com/r/Nerf/comments/1uwgldg/im_philip_a_nerf_engineer_who_worked_on_rebel_ops/oxiwegg/?context=3>
+            - <https://www.reddit.com/r/Nerf/comments/1cbqmpg/is_there_a_way_to_calculate_fps_based_on_plunger/>
+            - <https://www.reddit.com/r/Nerf/comments/1bqeawa/fps_expected/>
         - Simulation isn't worthwhile because it takes less time to figure things out experimentally. Not true from my perspective. In practice, the alternative to simulation has been speculation. People spend a huge amount of time working on things that a simulation could show is not plausible. That's a waste of time. If anything, simulation saves time by reducing the amount of experiments that need to be done. Simulation and experimentation are complementary.
         - How do I calculate optimal barrel length?
             - Make optimal barrel length equation developed from BlasterSim data. / Make reduced order model for optimal barrel length given only the most important variables.
@@ -389,21 +438,30 @@
         - need parallel RNG
     - Constraints
         - plunger impact energy
+            - <https://www.reddit.com/r/Nerf/comments/1vvn0l4/breacher_plunger_tube_cracks/>
         - to prevent projectile damage: maximum acceleration or maximum projectile pressure difference
         - Make BlasterSim have a generic constraint that can handle any output. `output_constraint` namelist group?
         - Kinetic energy density, muzzle velocity (target, upper limit, lower limit), kinetic energy (might be a legal requirement)
+            - <https://www.reddit.com/r/Nerf/comments/1vlmrt9/something_interesting_ive_found_regarding_uk/>
+            - <https://www.allthedarts.co.uk/updates/regulations>
         - min/max dart mass
         - dart head decapitation
             - maximum dart pressure difference to prevent dart bursting
+            - <https://www.reddit.com/r/Nerf/comments/1vna9ys/decapitated_darts_tips/>: temperature increasing can weaken the glue
         - pneumatics might want to use less gas mass per shot
         - spring compression
             - <https://discord.com/channels/727038380054937610/1172390267890958366/1466253503151476877>
             - <https://discord.com/channels/825852031239061545/825852073382772758/1517111131230048276>
-            - spring displacement is low enough to prevent permanent deformation (alternative: look into fatigue life of spring assuming no amount of deformation will be okay?)
+            - spring displacement is low enough to prevent permanent deformation/settling (alternative: look into fatigue life of spring assuming no amount of deformation will be okay?)
+                - <https://discord.com/channels/825852031239061545/825852033898774543/1540066532527444078>
+            - spring stress
+            - spring buckling
         - maximum draw force limit
         - recoil
         - amount of gas ejected from the barrel after projectile exit during blowdown phase
             - This could be useful to improve accuracy.
+        - draw length that is comfortable
+            - <https://discord.com/channels/825852031239061545/825852073382772758/1542382607055065158>
     - For optimization, have ability to pick discrete values taken from text file.
         - How can UQ be handled with this? Have a second column for uncertainty?
 - Check entropy conservation.

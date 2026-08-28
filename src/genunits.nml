@@ -76,7 +76,7 @@ e = 0.0, 1.0, -2.0, 0.0, 0.0
 /
 
 &seed_unit
-! example: `$p_i$`
+! example: `$p_i$`, `$\tau$`, `$G$`
 label = "si_pressure"
 !   m     kg   s     K    mol
 e = -1.0, 1.0, -2.0, 0.0, 0.0

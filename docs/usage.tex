@@ -192,7 +192,6 @@ In the example namelist input file in this section, this would correspond to the
 \end{itemize}
 
 \section{Pneumatic mode}\label{pneumatic}
-% TODO
 
 BlasterSim creates 3 control volumes for a pneumatic gun:
 \begin{enumerate}
@@ -201,6 +200,9 @@ BlasterSim creates 3 control volumes for a pneumatic gun:
 \item Control volume 3: atmospheric side of the barrel
 \end{enumerate}
 
+% TODO: Pneumatic figure like \figref{springer time zero}
+% TODO: Pneumatic figure like \figref{springer control volumes}
+% TODO: Adjust text below for parallelism with springer mode section
 The dead volume is contained only in the barrel in the pneumatic mode.
 
 \subsection{\texttt{pneumatic} namelist group variables}\label{pneumatic-namelist}
@@ -216,7 +218,6 @@ If there is a corresponding typeset variable, the notation for that variable is 
 \lstinputlisting{pneumatic-example.nml}
 
 \section{Springer mode}\label{springer}
-% TODO
 
 BlasterSim creates 3 control volumes for a springer:
 \begin{enumerate}
@@ -226,9 +227,9 @@ BlasterSim creates 3 control volumes for a springer:
 \item Control volume 4: atmospheric side of the plunger tube
 \end{enumerate}
 
-The dead volume is evenly split between the barrel and plunger tube in the springer mode.
-
-As shown in \figref{springer time zero}, BlasterSim geometrically models the plunger tube and barrel are treated as cylindrical.
+As shown in \figref{springer time zero}, the dead volume is evenly split between the barrel and plunger tube in the springer mode.
+This avoids numerical problems from the plunger volume going to zero as the plunger approaches its minimum volume.
+BlasterSim geometrically models the plunger tube and barrel are treated as cylindrical.
 However, BlasterSim does not assume a sudden contraction exists between the plunger tube and barrel as shown by the figure.
 That part of the figure is for illustration only.
 The connection between the plunger tube and barrel can take any form.

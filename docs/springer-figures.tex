@@ -4,8 +4,9 @@
 \dplunger     = 3;
 \lplungertube = 5;
 \dbarrel      = 1;
-\lbarrel      = 6;
-\ldead        = 1.5;
+\lbarrel      = 5.5;
+\ldead        = 2.0;
+\plungermin   = 0.75;
 \ylowbarrel   = (\dplunger - \dbarrel)/2; 
 \yhighbarrel  = \ylowbarrel + \dbarrel;
 \xbarrelend   = \lplungertube + \ldead + \lbarrel;
@@ -24,10 +25,13 @@
 \lfullspring = 7;
 \ylbarrel = \ycenter + (\dplunger + \dbarrel)/4;
 \xdead = \lplungertube + \ldead/2;
-\xplungerheadunprimed = \lplungertube - \lplungerhead;
+\xplungerheadunprimed = \lplungertube - \lplungerhead - \plungermin;
 \yxz = \ycenter - (\dplunger + \dbarrel)/4;
 \xdbarrel  = \xbarrelend - 1;
-\xdplunger = \xplungerheadend + 1.0;
+\xdplunger = \xplungerheadend + 0.75;
+\xmin = \lplungertube - \plungermin;
+\xmintext = \lplungertube - \plungermin/2;
+\ymin = (\ycenter + \ylowbarrel)/2;
 }
 
 \begin{figure}
@@ -36,6 +40,9 @@
 \draw[thick] (\xbarrelend, \yhighbarrel) -- (\lplungertube, \yhighbarrel) -- (\lplungertube, \dplunger) -- (0, \dplunger) -- (0, 0)         -- (\lplungertube, 0) -- (\lplungertube, \ylowbarrel) -- (\xbarrelend, \ylowbarrel);
 
 \draw[thick,dashed] (\lplungertube, \ylowbarrel) -- (\lplungertube, \yhighbarrel);
+
+\draw[thick,dashed] (\xmin, 0) -- (\xmin, \dplunger);
+\node[draw=white, rotate=90] at (\xmintext, \ycenter) {$V_\text{dead}/2$};
 
 \fill[fill=gray,draw=black,thick] (\xproj, \ylowbarrel) rectangle ++(\lproj, \dbarrel) node[pos=0.5] {\small\color{white}projectile};
 
@@ -47,7 +54,7 @@
 \draw[<->,thick,fill=white] (\xbarrelstart, \ylbarrel) -- node[above] {$l_\text{travel}$} (\xbarrelend, \ylbarrel); % `fill=white` added to make the text fully visible in LaTeXML
 \draw[thick,dashed] (\xbarrelend, \yhighbarrel) -- (\xbarrelend, \dplunger);
 
-\node[draw=white] at (\xdead, \ycenter) {$V_\text{dead}$}; % `draw=white` added to make the text fully visible in LaTeXML
+\node[draw=white] at (\xdead, \ycenter) {$V_\text{dead}/2$}; % `draw=white` added to make the text fully visible in LaTeXML
 
 \draw[<->,thick] (\xplungerheadend, \halfyfullspringabove) -- node[below] {$y$} (\lplungertube, \halfyfullspringabove);
 \draw[thick,dashed] (\lplungertube, \yfullspringabove) -- (\lplungertube, 0);
@@ -73,6 +80,8 @@
 \tikzstyle{spring_full}=[thick,decorate,decoration={coil,amplitude=20,segment length=30pt}]
 \draw[thick] (\xbarrelend, \yhighbarrel) -- (\lplungertube, \yhighbarrel) -- (\lplungertube, \dplunger) -- (0, \dplunger) -- (0, 0)         -- (\lplungertube, 0) -- (\lplungertube, \ylowbarrel) -- (\xbarrelend, \ylowbarrel);
 
+\draw[thick,dashed] (\lplungertube, \ylowbarrel) -- (\lplungertube, \yhighbarrel);
+
 \fill[fill=gray,draw=black,thick] (\xplungerheadunprimed, 0) rectangle ++(\lplungerhead, \dplunger);
 
 \draw[spring_unprimed] (0, \ycenter) -- (\xplungerheadunprimed, \ycenter);
@@ -82,10 +91,12 @@
 \draw[thick,dashed] (0, \yfullspringbelowbelow) -- (0, 0);
 \draw[thick,dashed] (\lfullspring, \yfullspringbelowbelow) -- (\lfullspring, 0);
 
-\draw[<->,thick] (\lfullspring, \halfyfullspringabove) -- node[above] {$\Delta_\text{pre}$} (\xplungerheadunprimed, \halfyfullspringabove);
+\draw[<->,thick] (\lfullspring, \halfyfullspringabove) -- node[above, pos=0.4] {$\Delta_\text{pre}$} (\xplungerheadunprimed, \halfyfullspringabove);
 \draw[thick,dashed] (\xplungerheadunprimed, \yfullspringabove) -- (\xplungerheadunprimed, 0);
+
+\draw[<->,thick] (\xmin, \ymin) -- node[anchor=west, rotate=90] {$y_\text{min}$} (\lplungertube, \ymin);
 \end{tikzpicture}
-\caption{Unprimed ($y = 0$) model spring blaster as represented in BlasterSim to show spring precompression.\label{fig:springer unprimed}}
+\caption{Unprimed ($y = y_\text{min}$) model spring blaster as represented in BlasterSim to show spring precompression.\label{fig:springer unprimed}}
 \end{figure}
 
 \begin{figure}
