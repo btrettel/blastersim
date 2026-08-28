@@ -1,5 +1,8 @@
 ### v0.3.0
 
+- Accounting for `x_min` in various places.
+    - Test `e_s`, `d_x_dot_d_t_normal`, and `d_e_f_d_t` with `x_min /= 0.0_WP`.
+    - Are there any other places where `x_min` needs to be accounted for?
 - pre-commit hook
 - Add preface section describing side icons
 - Add optional icon to some sections like Roache V&V book. Mark equations in usage section as optional.

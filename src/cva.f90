@@ -221,7 +221,7 @@ pure function e_s(cv)
     if (cv%type == MIRROR_CV_TYPE) then
         call e_s%v%init_const(0.0_WP, size(cv%x_dot%v%d))
     else
-        e_s = 0.5_WP*cv%k*square(cv%x + cv%delta_pre)
+        e_s = 0.5_WP*cv%k*square(cv%x - cv%x_min + cv%delta_pre)
     end if
 end function e_s
 
@@ -1100,7 +1100,7 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
     rm_p_eff = sys%cv(i_cv)%rm_p_eff()
     
     d_x_dot_d_t_normal = sys%cv(i_cv)%csa*rm_p_eff*(sys%cv(i_cv)%p() - p_mirror - sys%cv(i_cv)%p_f(p_fe)) &
-                            - sys%cv(i_cv)%k*rm_p_eff*(sys%cv(i_cv)%x + sys%cv(i_cv)%delta_pre)
+                            - sys%cv(i_cv)%k*rm_p_eff*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_min + sys%cv(i_cv)%delta_pre)
 end function d_x_dot_d_t_normal
 
 pure function rm_p_eff_cv(cv)
@@ -1224,7 +1224,8 @@ pure function d_e_f_d_t(sys, i_cv)
                 call p_mirror%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
             end if
             
-            p_fe = sys%cv(i_cv)%p() - p_mirror - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x + sys%cv(i_cv)%delta_pre)
+            p_fe = sys%cv(i_cv)%p() - p_mirror - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa) &
+                                                    *(sys%cv(i_cv)%x - sys%cv(i_cv)%x_min + sys%cv(i_cv)%delta_pre)
             
             d_e_f_d_t = sys%cv(i_cv)%p_f(p_fe) * sys%cv(i_cv)%csa * sys%cv(i_cv)%x_dot
             
