@@ -37,6 +37,7 @@ call test_set_normal_2(tests)
 call test_set_normal_3(tests)
 call test_set_const(tests)
 call test_rates(tests)
+call test_d_x_dot_d_t_zero(tests)
 call test_u_h_cv(tests)
 call test_gamma_cv(tests)
 call test_nonzero_x_min(tests)
@@ -944,6 +945,53 @@ subroutine test_rates(tests)
     d_e_f_d_t_ = d_e_f_d_t(sys, 2)
     call tests%real_eq(d_e_f_d_t_%v%v, 4.0_WP*10.0_WP*1.0e5_WP, "d_e_f_d_t")
 end subroutine test_rates
+
+subroutine test_d_x_dot_d_t_zero(tests)
+    use gasdata, only: DRY_AIR
+    use cva, only: cv_system_type, d_x_dot_d_t
+    use checks, only: assert
+    
+    type(test_results_type), intent(in out) :: tests
+
+    type(cv_system_type) :: sys
+    
+    type(si_length)           :: x
+    type(si_velocity)         :: x_dot, v_scale
+    type(unitless)            :: y(1)
+    type(si_pressure)         :: p, p_fs, p_fd, p_atm, p_fe
+    type(si_temperature)      :: temp
+    type(si_area)             :: csa
+    type(si_inverse_mass)     :: rm_p
+    type(si_stiffness)        :: k
+    type(si_length)           :: delta_pre
+    type(si_acceleration)     :: d_x_dot_d_t_
+    
+    call x%v%init_const(1.5_WP, 0)
+    call x_dot%v%init_const(0.0_WP, 0)
+    call y(1)%v%init_const(1.0_WP, 0)
+    call p%v%init_const(1.1e5_WP, 0)
+    call temp%v%init_const(300.0_WP, 0)
+    call csa%v%init_const(4.0_WP, 0)
+    call rm_p%v%init_const(1.0_WP/2.0_WP, 0)
+    call p_fs%v%init_const(2.0e5_WP, 0)
+    call p_fd%v%init_const(1.0e5_WP, 0)
+    call p_atm%v%init_const(1.0e5_WP, 0)
+    call k%v%init_const(1.0e3_WP, 0)
+    call delta_pre%v%init_const(-0.5_WP, 0)
+    call v_scale%v%init_const(0.1_WP, 0)
+    
+    allocate(sys%cv(2))
+    
+    call sys%cv(1)%set_const("test_d_x_dot_d_t_zero CV 1 (constant pressure)", csa, p_atm, temp, [DRY_AIR], y, 2)
+    call sys%cv(2)%set(x, x_dot, y, p, temp, "test_d_x_dot_d_t_zero CV 2", csa, rm_p, p_fs, p_fd, k, delta_pre, [DRY_AIR], 1, &
+                        v_scale_s=v_scale, v_scale_d=v_scale)
+    
+    p_fe = sys%cv(2)%p_fe(p)
+    call assert(p_fe < p_fs, "test_cva (test_d_x_dot_d_t_zero): p_fe < p_fs violated")
+    
+    d_x_dot_d_t_ = d_x_dot_d_t(sys, 2)
+    call tests%real_eq(d_x_dot_d_t_%v%v, 0.0_WP, "d_x_dot_d_t == 0 when it should be")
+end subroutine test_d_x_dot_d_t_zero
 
 subroutine test_u_h_cv(tests)
     use gasdata, only: N2, H2O

@@ -1,11 +1,6 @@
 ### v0.3.0
 
-- Make `p_fe` a function and add it to `d_x_dot_d_t_normal` and `d_e_f_d_t`.
-    - Test `p_fe`:
-        - `p_fe` at particular values.
-        - Check that `d_x_dot_d_t` is zero when `p_f` equals `p_fe`.
 - Accounting for `x_min` in various places.
-    - Test `p_fe` with `x_min /= 0.0_WP`.
     - Are there any other places where `x_min` needs to be accounted for?
 - pre-commit hook
 - Add preface section describing side icons
