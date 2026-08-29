@@ -39,6 +39,7 @@ call test_set_const(tests)
 call test_rates(tests)
 call test_u_h_cv(tests)
 call test_gamma_cv(tests)
+call test_nonzero_x_min(tests)
 
 call test_smooth_min(tests)
 call test_f_m_dot(tests)
@@ -301,6 +302,62 @@ subroutine test_gamma_cv(tests)
     gamma_expected = (0.52154_WP + 0.846_WP) / (0.31239_WP + 0.657_WP)
     call tests%real_eq(gamma_cv%v%v, gamma_expected, "cv%gamma for mixture (2)", abs_tol=1.0e-4_WP)
 end subroutine test_gamma_cv
+
+subroutine test_nonzero_x_min(tests)
+    ! Test `e_s`, `d_x_dot_d_t`, and (later) `p_fe` with `x_min /= 0.0_WP`.
+    
+    use cva, only: cv_system_type, d_x_dot_d_t
+    use gasdata, only: DRY_AIR
+    use prec, only: PI
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    type(cv_system_type)  :: sys
+    integer               :: n_d
+    type(si_length)       :: x, x_min, delta_pre, d
+    type(si_velocity)     :: x_dot
+    type(unitless)        :: y(1)
+    type(si_pressure)     :: p, p_fs, p_fd
+    type(si_temperature)  :: temp
+    type(si_area)         :: csa
+    type(si_mass)         :: m_p
+    type(si_stiffness)    :: k
+    type(si_energy)       :: e_s
+    type(si_acceleration) :: d_x_dot_d_t_, d_x_dot_d_t_expected
+    
+    n_d = 0
+    
+    allocate(sys%cv(2))
+    allocate(sys%con(2, 2))
+    
+    call x%v%init_const(10.0e-2_WP, n_d)
+    call x_min%v%init_const(2.0e-2_WP, n_d)
+    call delta_pre%v%init_const(1.0e-2_WP, n_d)
+    call d%v%init_const(3.0e-2_WP, n_d)
+    call x_dot%v%init_const(-2.0_WP, n_d)
+    call y(1)%v%init_const(1.0_WP, n_d)
+    call p%v%init_const(5.0e5_WP, n_d)
+    call p_fs%v%init_const(0.0_WP, n_d)
+    call p_fd%v%init_const(0.0_WP, n_d)
+    call temp%v%init_const(300.0_WP, n_d)
+    csa = (PI/4.0_WP)*square(d)
+    call m_p%v%init_const(30.0e-3_WP, n_d)
+    call k%v%init_const(700.0_WP, n_d)
+    
+    call sys%cv(1)%set_const("atmosphere", csa, p, temp, [DRY_AIR], y, 2)
+    call sys%cv(2)%set(x, x_dot, y, p, temp, "chamber", csa, 1.0_WP/m_p, p_fs, p_fd, k, delta_pre, [DRY_AIR], 1, x_min=x_min)
+    
+    ! `e_s(cv)`
+    e_s = sys%cv(2)%e_s()
+    call tests%real_eq(e_s%v%v, 0.5_WP*700.0_WP*((10.0e-2_WP - 2.0e-2_WP + 1.0e-2_WP)**2), "test_nonzero_x_min, e_s")
+    
+    ! TODO: `d_x_dot_d_t(sys, i_cv)`
+    d_x_dot_d_t_ = d_x_dot_d_t(sys, 2)
+    d_x_dot_d_t_expected = -(k/m_p)*(x - x_min + delta_pre)
+    call tests%real_eq(d_x_dot_d_t_%v%v, d_x_dot_d_t_expected%v%v, "test_nonzero_x_min, d_x_dot_d_t")
+    
+    ! TODO: `p_fe`
+end subroutine test_nonzero_x_min
 
 subroutine test_p_c(tests)
     ! Based on moran_fundamentals_2008 example 11.10, pp. 615--617.
