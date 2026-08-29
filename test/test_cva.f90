@@ -304,7 +304,7 @@ subroutine test_gamma_cv(tests)
 end subroutine test_gamma_cv
 
 subroutine test_nonzero_x_min(tests)
-    ! Test `e_s`, `d_x_dot_d_t`, and (later) `p_fe` with `x_min /= 0.0_WP`.
+    ! Test `e_s`, `d_x_dot_d_t`, and `p_fe` with `x_min /= 0.0_WP`.
     
     use cva, only: cv_system_type, d_x_dot_d_t
     use gasdata, only: DRY_AIR
@@ -317,7 +317,7 @@ subroutine test_nonzero_x_min(tests)
     type(si_length)       :: x, x_min, delta_pre, d
     type(si_velocity)     :: x_dot
     type(unitless)        :: y(1)
-    type(si_pressure)     :: p, p_fs, p_fd
+    type(si_pressure)     :: p, p_fs, p_fd, p_fe, p_fe_expected
     type(si_temperature)  :: temp
     type(si_area)         :: csa
     type(si_mass)         :: m_p
@@ -351,12 +351,15 @@ subroutine test_nonzero_x_min(tests)
     e_s = sys%cv(2)%e_s()
     call tests%real_eq(e_s%v%v, 0.5_WP*700.0_WP*((10.0e-2_WP - 2.0e-2_WP + 1.0e-2_WP)**2), "test_nonzero_x_min, e_s")
     
-    ! TODO: `d_x_dot_d_t(sys, i_cv)`
+    ! `d_x_dot_d_t(sys, i_cv)`
     d_x_dot_d_t_ = d_x_dot_d_t(sys, 2)
     d_x_dot_d_t_expected = -(k/m_p)*(x - x_min + delta_pre)
     call tests%real_eq(d_x_dot_d_t_%v%v, d_x_dot_d_t_expected%v%v, "test_nonzero_x_min, d_x_dot_d_t")
     
-    ! TODO: `p_fe`
+    ! `p_fe`
+    p_fe = sys%cv(2)%p_fe(p)
+    p_fe_expected = -(k/csa)*(x - x_min + delta_pre)
+    call tests%real_eq(p_fe_expected%v%v, p_fe_expected%v%v, "test_nonzero_x_min, p_fe")
 end subroutine test_nonzero_x_min
 
 subroutine test_p_c(tests)
@@ -876,7 +879,7 @@ subroutine test_rates(tests)
     type(si_length)           :: x
     type(si_velocity)         :: x_dot, d_x_d_t_, v_scale
     type(unitless)            :: y(1)
-    type(si_pressure)         :: p, p_fs, p_fd, p_atm
+    type(si_pressure)         :: p, p_fs, p_fd, p_atm, p_fe, p_fe_expected
     type(si_temperature)      :: temp
     type(si_area)             :: csa
     type(si_inverse_mass)     :: rm_p
@@ -911,6 +914,10 @@ subroutine test_rates(tests)
     
     d_x_dot_d_t_ = d_x_dot_d_t(sys, 2)
     call tests%real_eq(d_x_dot_d_t_%v%v, 1.5e6_WP, "d_x_dot_d_t")
+    
+    p_fe = sys%cv(2)%p_fe(p)
+    p_fe_expected = p - p_atm -(k/csa)*(x + delta_pre)
+    call tests%real_eq(p_fe_expected%v%v, p_fe_expected%v%v, "p_fe")
     
     call m_dots(1, 1)%v%init_const(0.0_WP, 0)
     call m_dots(1, 2)%v%init_const(2.0_WP, 0)

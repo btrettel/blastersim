@@ -138,6 +138,7 @@ contains
     procedure :: set_const
     procedure :: p_f
     procedure :: p_f0
+    procedure :: p_fe
 end type cv_type
 
 type :: cv_delta_type
@@ -925,12 +926,12 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     end select
 end subroutine set_const
 
-!tripwire$ begin 947F8C0C Update `\secref{friction}` of theory.tex if necessary.
-pure function p_f(cv, p_fe)
+!tripwire$ begin 8284DE8C Update `\secref{friction}` of theory.tex if necessary.
+pure function p_f(cv, p_fe_)
     ! Returns pressure of friction.
     
     class(cv_type), intent(in)    :: cv
-    type(si_pressure), intent(in) :: p_fe ! equilibrium pressure
+    type(si_pressure), intent(in) :: p_fe_ ! equilibrium pressure
     
     type(si_pressure) :: p_f
     
@@ -940,7 +941,7 @@ pure function p_f(cv, p_fe)
     if (cv%const_friction) then
         p_f = cv%p_fs
     else
-        p_f = p_f0(cv, p_fe) + (cv%p_fd - tanh(cv%x_dot/cv%v_scale_s)*p_f0(cv, p_fe))*tanh(cv%x_dot/cv%v_scale_d)
+        p_f = p_f0(cv, p_fe_) + (cv%p_fd - tanh(cv%x_dot/cv%v_scale_s)*p_f0(cv, p_fe_))*tanh(cv%x_dot/cv%v_scale_d)
     end if
     
     ! See 2026-03-16 handwritten notes.
@@ -951,12 +952,23 @@ pure function p_f(cv, p_fe)
 !                    print_real=[p_f%v%v, cv%p_fs%v%v, cv%p_fd%v%v, cv%x_dot%v%v])
 end function p_f
 
-pure function p_f0(cv, p_fe)
+pure function p_fe(cv, p_mirror)
+    ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
+    
+    class(cv_type), intent(in)    :: cv
+    type(si_pressure), intent(in) :: p_mirror
+    
+    type(si_pressure) :: p_fe
+    
+    p_fe = cv%p() - p_mirror - (cv%k/cv%csa)*(cv%x - cv%x_min + cv%delta_pre)
+end function p_fe
+
+pure function p_f0(cv, p_fe_)
     ! Returns actual static pressure of friction.
     ! `p_fs` is the *maximum* static pressure of friction.
     
     class(cv_type), intent(in)    :: cv
-    type(si_pressure), intent(in) :: p_fe ! equilibrium pressure
+    type(si_pressure), intent(in) :: p_fe_ ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
     
     type(si_pressure) :: p_f0, p_s
     
@@ -965,14 +977,14 @@ pure function p_f0(cv, p_fe)
     p_s = 0.1_WP*cv%p_fs ! TODO: make a function of `dt`
     call assert(p_s <= cv%p_fs, "cva (p_f0): p_s <= p_fs violated", print_real=[p_s%v%v, cv%p_fs%v%v])
     
-    if (p_fe < -p_s) then
-        p_f0 = -p_f0_high(p_fe, cv%p_fs, p_s)
+    if (p_fe_ < -p_s) then
+        p_f0 = -p_f0_high(p_fe_, cv%p_fs, p_s)
         
         call assert(p_f0 <= -p_s, "cva (p_f0), first branch: p_f0 <= -p_s violated", print_real=[p_f0%v%v, p_s%v%v])
-    else if (p_fe <= p_s) then
-        p_f0 = p_fe
+    else if (p_fe_ <= p_s) then
+        p_f0 = p_fe_
     else
-        p_f0 = p_f0_high(p_fe, cv%p_fs, p_s)
+        p_f0 = p_f0_high(p_fe_, cv%p_fs, p_s)
         
         call assert(p_f0 >= p_s, "cva (p_f0), third branch: p_f0 >= p_s violated", print_real=[p_f0%v%v, p_s%v%v])
     end if
@@ -982,20 +994,20 @@ pure function p_f0(cv, p_fe)
     
     contains
     
-    pure function p_f0_high(p_fe, p_fs, p_s)
-        type(si_pressure), intent(in) :: p_fe, p_fs, p_s
+    pure function p_f0_high(p_fe_, p_fs, p_s)
+        type(si_pressure), intent(in) :: p_fe_, p_fs, p_s
         type(si_pressure) :: p_f0_high
         
         if (is_close(p_fs%v%v, 0.0_WP)) then
             p_f0_high = p_fs
         else
-            p_f0_high = p_fs * tanh((abs(p_fe) - p_s)/(p_fs - p_s) + atanh(p_s/p_fs))
+            p_f0_high = p_fs * tanh((abs(p_fe_) - p_s)/(p_fs - p_s) + atanh(p_s/p_fs))
         end if
     end function p_f0_high
 end function p_f0
 !tripwire$ end
 
-!tripwire$ begin E36C5EAB Update `\secref{known-issues}`, `\secref{equations-of-motion}`, `\secref{plunger-impact}` if necessary.
+!tripwire$ begin 0F411E40 Update `\secref{known-issues}`, `\secref{equations-of-motion}`, `\secref{plunger-impact}` if necessary.
 pure function d_x_d_t(sys, i_cv)
     type(cv_system_type), intent(in) :: sys
     integer, intent(in)              :: i_cv
@@ -1074,7 +1086,7 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
     
     type(si_acceleration) :: d_x_dot_d_t_normal
     
-    type(si_pressure)     :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
+    type(si_pressure)     :: p_fe_ ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
     type(si_pressure)     :: p_mirror
     type(si_inverse_mass) :: rm_p_eff ! effective inverse mass of projectile/plunger
     
@@ -1094,12 +1106,11 @@ pure function d_x_dot_d_t_normal(sys, i_cv)
         call p_mirror%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
     end if
     
-    p_fe = sys%cv(i_cv)%p() - p_mirror &
-                - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa)*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_min + sys%cv(i_cv)%delta_pre)
+    p_fe_ = sys%cv(i_cv)%p_fe(p_mirror)
     
     rm_p_eff = sys%cv(i_cv)%rm_p_eff()
     
-    d_x_dot_d_t_normal = sys%cv(i_cv)%csa*rm_p_eff*(sys%cv(i_cv)%p() - p_mirror - sys%cv(i_cv)%p_f(p_fe)) &
+    d_x_dot_d_t_normal = sys%cv(i_cv)%csa*rm_p_eff*(sys%cv(i_cv)%p() - p_mirror - sys%cv(i_cv)%p_f(p_fe_)) &
                             - sys%cv(i_cv)%k*rm_p_eff*(sys%cv(i_cv)%x - sys%cv(i_cv)%x_min + sys%cv(i_cv)%delta_pre)
 end function d_x_dot_d_t_normal
 
@@ -1198,7 +1209,7 @@ pure function d_e_f_d_t(sys, i_cv)
     
     type(si_energy_flow_rate) :: d_e_f_d_t
     
-    type(si_pressure) :: p_fe ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
+    type(si_pressure) :: p_fe_ ! friction pressure at equilibrium ($\partial \dot{x}/\partial t = 0$)
     type(si_pressure) :: p_mirror
     
     call assert(sys%cv(i_cv)%i_cv_mirror >= 0, "cva (d_e_f_d_t): i_cv_mirror must be a positive integer or zero", &
@@ -1224,10 +1235,9 @@ pure function d_e_f_d_t(sys, i_cv)
                 call p_mirror%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
             end if
             
-            p_fe = sys%cv(i_cv)%p() - p_mirror - (sys%cv(i_cv)%k/sys%cv(i_cv)%csa) &
-                                                    *(sys%cv(i_cv)%x - sys%cv(i_cv)%x_min + sys%cv(i_cv)%delta_pre)
+            p_fe_ = sys%cv(i_cv)%p_fe(p_mirror)
             
-            d_e_f_d_t = sys%cv(i_cv)%p_f(p_fe) * sys%cv(i_cv)%csa * sys%cv(i_cv)%x_dot
+            d_e_f_d_t = sys%cv(i_cv)%p_f(p_fe_) * sys%cv(i_cv)%csa * sys%cv(i_cv)%x_dot
             
             ! TODO: Reenable this assertion after figuring out why `e_f` decreases in some cases.
 !            call assert(d_e_f_d_t%v%v >= 0.0_WP, "cva (d_e_f_d_t): e_f should not decrease", &

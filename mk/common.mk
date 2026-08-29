@@ -12,7 +12,7 @@
 .SUFFIXES: .f90 .$(OBJEXT)
 
 .PHONY: check
-check: $(TESTNML) tests.html
+check: $(TESTNML) tests.html tripwire
 	@echo =====================
 	@echo = All tests passed. =
 	@echo =====================
