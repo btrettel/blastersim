@@ -128,7 +128,7 @@ This equation may seem overly complicated, but is the simplest polynomial equati
     \alpha_{i \rightarrow j}(0)                                            &= \alpha_{0,i \rightarrow j} &\text{(set initial valve opening fraction)} \\
     {\dv{\alpha_{i \rightarrow j}}{t}}(0)                                  &= \dot{\alpha}_{0,i \rightarrow j} &\text{(set initial valve opening rate)} \\
     \alpha_{i \rightarrow j}(t_{\text{opening},i \rightarrow j})           &= 1 &\text{(valve is fully open at}~t_{\text{opening},i \rightarrow j}~\text{)} \\ % chktex 1 chktex 9
-    {\dv{\alpha_{i \rightarrow j}}{t}}(t_{\text{opening},i \rightarrow j}) &= 0 &\text{(needed for automatic differentiation)}
+    {\dv{\alpha_{i \rightarrow j}}{t}}(t_{\text{opening},i \rightarrow j}) &= 0 &\text{(needed for automatic differentiation)} \label{eq:derivative matching}
 \end{align}
 
 When the valve is fully open, $\alpha_{i \rightarrow j}$ no longer changes with time, so its derivative is zero.
@@ -320,16 +320,21 @@ The time step is typically constant (the default time step is $\dtdefault$~s), e
 In those cases, the time step is adjusted to closely determine the time of the event using a secant method variation of H\'{e}non's trick~\cite{henon_numerical_1982}.
 
 \subsection{Automatic differentiation}\label{autodiff}
-% TODO
 
-% justify derivative matching mentioned in \secref{valve-opening-model}, smooth alternatives to conventional things like friction model
+Forward-mode automatic differentiation is available internally in BlasterSim using a library I developed previously~\cite{trettel_btrettelflt_2026}.
+However, features dependent on automatic differentiation such as uncertainty quantification are not yet implemented.
 
-~\cite{trettel_btrettelflt_2026}
+Certain modeling decisions were made due to the use of automatic differentiation.
+Automatic differentiation would require detecting every discontinuity that occurs (as is done with the plunger impact; see \secref{plunger-impact}), so to reduce the amount of event detection needed, it is useful to use smooth submodels when possible.
+\begin{itemize}
+\item \Eqref{derivative matching} in \secref{valve-opening-model} was chosen so that there is no jump in the derivatives when the valve is fully open. % chktex 2
+\item The smooth friction model described in \secref{friction} was motivated in part by a desire to remove discontinuities.
+\end{itemize}
 
 %\subsection{Uncertainty quantification}\label{uncertainty-quantification}
 % TODO
 % putko_approach_2001
-% TODO: Update `\secref{road-map}` when adding.
+% TODO: Update `\secref{road-map}` and `\secref{autodiff}` when adding.
 
 %\subsection{Optimization}\label{optimization}
 % TODO
