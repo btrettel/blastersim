@@ -4,6 +4,7 @@ SPELL_DEPS = docs$(DIR_SEP)usage.tex \
 docs$(DIR_SEP)theory.tex \
 docs$(DIR_SEP)verval.tex \
 docs$(DIR_SEP)dev.tex \
+docs$(DIR_SEP)pneumatic-figures.tex \
 docs$(DIR_SEP)springer-figures.tex \
 docs$(DIR_SEP)control-volume-figure.tex \
 docs$(DIR_SEP)single-cv-exact-figure.tex \

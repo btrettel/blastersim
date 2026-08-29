@@ -9,7 +9,8 @@
 \input{control-volume-figure.tex}
 
 Internally, BlasterSim simulate blasters using control volumes with arbitrary flow connections between control volumes.
-This allows BlasterSim to simulates spring and pneumatic blasters with the same core simulation code. This also allows simulating more atypical blasters without major code changes.
+This allows BlasterSim to simulates spring and pneumatic blasters with the same core simulation code.
+This also allows simulating more atypical blasters without major code changes.
 
 An isolated control volume numbered $i$ is shown in \figref{control volume}.
 A single flow connection to the control volume numbered $j$ is shown with
@@ -44,6 +45,10 @@ Note that this convention is not followed in the typeset math when it is convent
 This capitalization convention is not followed in BlasterSim's source code.
 See \secref{conventions} for a discussion of the capitalization convention followed in the source code.
 Because each variable in BlasterSim's source code is given a unit (see \secref{unit-checking}), whether a quantity is extensive or intensive can be determined from the units for that quantity, if unclear.
+
+In the inputs, as diameters are provided, BlasterSim assumes that each control volume is cylindrical.
+However, internally, BlasterSim uses only control volume cross-sectional area, not diameter.
+BlasterSim internally makes no assumptions about the shape of each control volume, so BlasterSim can be extended to other control volume shapes in the future if desired, or an equivalent diameter with the intended cross-sectional area can be used in the meantime.
 
 \subsection{Conservation laws}\label{conservation-laws}
 % TODO
@@ -309,10 +314,10 @@ It is likely that coefficients of restitution that are too small may have simila
 \section{Numerical methods}\label{numerical-methods}
 
 \subsection{Time integration}\label{time-integration}
-% TODO
 
-~\cite[p.~1081]{kreyszig_advanced_1993}
-~\cite{henon_numerical_1982}
+A simple 4th order Runge-Kutta scheme~\cite[p.~1081]{kreyszig_advanced_1993} is used for time integration.
+The time step is typically constant (the default time step is $\dtdefault$~s), except when an event like a plunger impact or projectile leaving the barrel is detected.
+In those cases, the time step is adjusted to closely determine the time of the event using a secant method variation of H\'{e}non's trick~\cite{henon_numerical_1982}.
 
 \subsection{Automatic differentiation}\label{autodiff}
 % TODO

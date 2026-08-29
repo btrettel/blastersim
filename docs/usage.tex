@@ -200,10 +200,10 @@ BlasterSim creates 3 control volumes for a pneumatic gun:
 \item Control volume 3: atmospheric side of the barrel
 \end{enumerate}
 
-% TODO: Pneumatic figure like \figref{springer time zero}
-% TODO: Pneumatic figure like \figref{springer control volumes}
-% TODO: Adjust text below for parallelism with springer mode section
-The dead volume is contained only in the barrel in the pneumatic mode.
+As shown in \figref{springer arbitrary time}, the dead volume is contained only in the barrel in the pneumatic mode.
+BlasterSim treats the barrel as cylindrical in the cross-sectional area calculation only.
+
+\input{pneumatic-figures.tex}
 
 \subsection{\texttt{pneumatic} namelist group variables}\label{pneumatic-namelist}
 
@@ -227,9 +227,9 @@ BlasterSim creates 3 control volumes for a springer:
 \item Control volume 4: atmospheric side of the plunger tube
 \end{enumerate}
 
-As shown in \figref{springer time zero}, the dead volume is evenly split between the barrel and plunger tube in the springer mode.
+As shown in \figref{springer arbitrary time}, the dead volume is evenly split between the barrel and plunger tube in the springer mode.
 This avoids numerical problems from the plunger volume going to zero as the plunger approaches its minimum volume.
-BlasterSim geometrically models the plunger tube and barrel are treated as cylindrical.
+BlasterSim treats the plunger tube and barrel as cylindrical in the cross-sectional area calculation only.
 However, BlasterSim does not assume a sudden contraction exists between the plunger tube and barrel as shown by the figure.
 That part of the figure is for illustration only.
 The connection between the plunger tube and barrel can take any form.
@@ -253,7 +253,7 @@ If there is a corresponding typeset variable, the notation for that variable is 
 The following factors are not considered in BlasterSim at the moment:
 \begin{itemize}
 \item The projectile outer diameter is assumed to be the same as the barrel inner diameter.
-Loose projectiles with less cross-sectional area and also leaks are not handled.
+Loose projectiles with less cross-sectional area and leaks are not handled.
 \item Projectile length is not a factor in BlasterSim's model.
 Projectile length would impact projectile friction, however, projectile friction is modeled purely empirically.
 Presumably the friction pressure would increase in roughly linear proportion to the projectile length due to the contact area staying the same if the projectile outer diameter is equal to the barrel inner diameter.
@@ -262,14 +262,12 @@ This can not be modeled in BlasterSim's springer mode at the moment.
 I figure it would be easier for someone to add vent holes or improve the flow otherwise if the back side of the plunger pulling a vacuum is believed to be an issue, so there is no clear reason to model this.
 \end{itemize}
 
+Some factors planned to be added in the future are discussed in \secref{road-map}.
+
 \section{Known issues}\label{known-issues}
 
 The following issues are known to affect BlasterSim:
 \begin{itemize}
-\item For springers, a smaller time step (\texttt{dt}) is often required as the plunger approaches the end of the plunger tube.
-Plunger impact is more likely at higher flow rates (larger values of \texttt{d\_e}).
-Adaptive time stepping should fix this problem in the future.
-\item Plunger impact with the end of the plunger tube is not handled yet as discussed in \secref{plunger-impact}.
 \item Some known issues related to the input file reading are listed at the end of \secref{inputs-general}.
 \end{itemize}
 
