@@ -51,9 +51,6 @@ However, internally, BlasterSim uses only control volume cross-sectional area, n
 BlasterSim internally makes no assumptions about the shape of each control volume, so BlasterSim can be extended to other control volume shapes in the future if desired, or an equivalent diameter with the intended cross-sectional area can be used in the meantime.
 
 \subsection{Conservation laws}\label{conservation-laws}
-% TODO
-% mass conservation
-% energy conservation
 
 BlasterSim internally tracks control volume mass and energy.
 The mass conservation equation for species $k$ applied to a control volume $i$ is~\citep[eq.~4.2, p.~147]{moran_fundamentals_2008}:
@@ -80,6 +77,10 @@ $p_i$ is the pressure in control volume $i$,
 $A_i$ is the cross-sectional area of control volume $i$ (barrel or plunger),
 $\dot{x}_i$ is the velocity of the projectile/plunger in control volume $i$, and
 $h_i$ is the specific enthalpy of the gas in control volume $i$.
+
+In the term $\dot{m}_{j \rightarrow i} h_j$, the use of specific enthalpy of the gas in another control volume ($h_j$) comes from modeling the flow restriction as a ``throttling device'' which has negligible internal volume (removing the unsteady term), no internal work or heat transfer, and negligible gas kinetic and gravitational potential energy~\citep[p.~177]{moran_fundamentals_2008}.
+For a throttling device, the specific enthalpy of the gas entering the flow restriction ($h_j$) equals the specific enthalpy of the gas leaving the flow restriction, so the total enthalpy rate going from control volume $j$ to control volume $i$ is $\dot{m}_{j \rightarrow i} h_j$.
+The same logic applies for the $\dot{m}_{i \rightarrow j} h_i$ term.
 
 Some simplifying assumptions are made in~\eqref{energy conservation} that might be relaxed in the future.
 The gas is assumed to have no kinetic energy, so $E_{\text{g},i}$ contains only thermal energy and the kinetic energy flux term is set to zero.
@@ -142,14 +143,33 @@ For a particular control volume with a given array of mass fractions $y_{k,i}$, 
     h_i(T_i) &= \sum_k y_{k,i} \, h_{k,i}(T_i).\label{eq:specific enthalpy}
 \end{align}
 
-% MAYBE LATER: mixture R (I think this is only used for the initial conditions to find $\rho$)
+% MAYBE LATER: mixture R (used for the initial conditions to find $\rho$ and in $\dot{m}$)
 
 \subsection{Connection flow model}\label{connection-flow-model}
+% See 2025-10-19 handwritten notes.
 % TODO
 
-\citet[ch.~5]{beater_pneumatic_2007}
+Flow connections between control volumes in BlasterSim are called ``flow restrictions'' and include valves in the pneumatic case or any flow path with significant flow resistance.
+BlasterSim uses a variation of the \citet[ch.~5]{beater_pneumatic_2007} compressible flow rate model modified to be smooth to support automatic differentiation (see \secref{autodiff}).
 
-% TODO: inlet condition, throttling process, ideal gas implies T_in = T_out
+The mass flow rate from control volume $i$ to control volume $j$ is modeled as
+\begin{align}
+    \dot{m}_{i \rightarrow j} &= \alpha_{i \rightarrow j} \dot{m}_{0,i \rightarrow j} \notag \\
+                                    &\qquad+ \alpha_{i \rightarrow j} A_{\text{e}, i \rightarrow j} \left(p_i - g_{\dot{m}}\left(\frac{p_j}{p_i}\right) p_j\right)
+                                    \sqrt{\frac{1 - b_{i \rightarrow j}}{R_i T_i}} \notag \\
+                                    &\qquad\qquad \cdot \sqrt{1 - f_{\dot{m}}\left(\frac{p_j}{p_i}, b_{i \rightarrow j}\right)},
+\end{align}
+where
+$\alpha_{i \rightarrow j}$ is a term to account for valves opening (see \secref{valve-opening-model}),
+$\dot{m}_{0}$ is a term used for testing only so that a specified mass flow rate can be used,
+$A_{\text{e}, i \rightarrow j}$ is the effective area of the flow restriction,
+$p_i$ and $p_j$ are the pressures of control volumes $i$ and $j$, respectively,
+$g_{\dot{m}}$ and $f_{\dot{m}}$ are functions defined below,
+$b_{i \rightarrow j}$ is the critical pressure ratio of the flow restriction,
+$R_i$ is the gas constant for the gas mixture in control volume $i$, and
+$T_i$ is the temperature in control volume $i$.
+
+% TODO: complete this
 
 \subsection{Valve opening model}\label{valve-opening-model}
 
@@ -159,7 +179,7 @@ $\alpha_{i \rightarrow j}$ is the valve opening fraction, which is how open the 
 $\alpha_{i \rightarrow j} = 0$ is fully closed $\dot{m}_{i \rightarrow j} = 0$ and $\alpha_{i \rightarrow j} = 1$ is fully open.
 The specific equation BlasterSim uses is
 \begin{align}
-    \alpha_{i \rightarrow j} = \alpha_{0,i \rightarrow j}
+    \alpha_{i \rightarrow j}(t) = \alpha_{0,i \rightarrow j}
     &+ \dot{\alpha}_{0,i \rightarrow j} \, \left(\frac{t}{t_{\text{opening},i \rightarrow j}}\right) \nonumber \\
     &+ (3 - 3 \alpha_{0,i \rightarrow j} - 2 \dot{\alpha}_{0,i \rightarrow j}) \, {\left(\frac{t}{t_{\text{opening},i \rightarrow j}}\right)}^2 \nonumber \\
     &- (2 - 2 \alpha_{0,i \rightarrow j} - \dot{\alpha}_{0,i \rightarrow j}) \, {\left(\frac{t}{t_{\text{opening},i \rightarrow j}}\right)}^3,
@@ -391,6 +411,7 @@ However, features dependent on automatic differentiation such as uncertainty qua
 Certain modeling decisions were made due to the use of automatic differentiation.
 Automatic differentiation would require detecting every discontinuity that occurs (as is done with the plunger impact; see \secref{plunger-impact}), so to reduce the amount of event detection needed, it is useful to use smooth submodels when possible.
 \begin{itemize}
+\item The flow rate model described in \secref{connection-flow-model} was modified from \citet[ch.~5]{beater_pneumatic_2007} specifically to be smoothed.
 \item \Eqref{derivative matching} in \secref{valve-opening-model} was chosen so that there is no jump in the derivatives when the valve is fully open. % chktex 2
 \item The smooth friction model described in \secref{friction} was motivated in part by a desire to remove discontinuities.
 \end{itemize}

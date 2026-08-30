@@ -1,5 +1,6 @@
 ### v0.3.0
 
+- "flow restriction" ==> "flow connection" for consistency with cva.f90.
 - Accounting for `x_min` in various places.
     - Are there any other places where `x_min` needs to be accounted for?
 - pre-commit hook
