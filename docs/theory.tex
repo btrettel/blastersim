@@ -77,25 +77,46 @@ BlasterSim internally makes no assumptions about the shape of each control volum
 \subsection{Equations of state}\label{equations-of-state}
 % TODO
 
+BlasterSim has two equations of state at present:
+\begin{itemize}
+\item Ideal gas equation of state.
+\item Constant specified pressure, temperature, and mass density equation of state.
+\end{itemize}
+
 \begin{equation}
     p_i = \frac{m_i \, R_i \, T_i}{A_i \, x_i}\label{eq:ideal gas eos}
 \end{equation}
 
 \subsection{Thermodynamic properties}\label{thermo}
-% TODO
 
-% TODO: R from \gamma
-% TODO: c_v from R
-% TODO: c_p from R
-% TODO: mixture R, u, and h
+The specific heats $c_{\text{v},k}$ and $c_{\text{p},k}$ are assumed to be constant for each gas species.
+For each gas species, BlasterSim has the molar mass $M_k$, and the critical pressure $p_{\text{c},k}$, and the ratio of specific heats $\gamma_k$, the specific internal energy $u_{0,k}$, and specific enthalpy $h_{0,k}$ at reference temperature $T_0 = \tempref$~K.
+The critical pressure is used only to check the validity of the ideal gas equation of state and report an error if the ideal gas assumption is invalid.
 
+The gas constant $R_k$ is found from the molar mass $M_k$ and universal gas constant $\overline{R}$ via~\citep[p.~119]{moran_fundamentals_2008}:
 \begin{equation}
-    u_{k,i}(T) = u_{0,k} + c_{\text{v},k} \, (T_i - T_{0,k})\label{eq:internal energy}
+    R_k = \frac{\overline{R}}{M_k}.
 \end{equation}
 
-\begin{equation}
-    h_{k,i}(T) = h_{0,k} + c_{\text{p},k} \, (T_i - T_{0,k})\label{eq:enthalpy}
-\end{equation}
+From there, the specific heats at constant volume and constant pressure for species $k$ can be found via~\citep[p.~119]{moran_fundamentals_2008}:
+\begin{align}
+    c_{\text{v},k} &= \frac{R_k}{\gamma_k - 1}, \\
+    c_{\text{p},k} &= \frac{\gamma_k\,R_k}{\gamma_k - 1}.
+\end{align}
+
+From there, the specific internal energy and specific enthalpy for a particular gas species $k$ is found (via the constant specific heat assumption) through
+\begin{align}
+    u_{k,i}(T) &= u_{0,k} + c_{\text{v},k} \, (T_i - T_{0,k}),\label{eq:species specific internal energy} \\
+    h_{k,i}(T) &= h_{0,k} + c_{\text{p},k} \, (T_i - T_{0,k}).\label{eq:species specific enthalpy}
+\end{align}
+
+For a particular control volume with a given array of mass fractions $y_{k,i}$, the specific internal energy and specific enthalpy are found from the sums
+\begin{align}
+    u_i(T) &= \sum_k y_{k,i} u_{k,i}(T),\label{eq:specific internal energy} \\
+    h_i(T) &= \sum_k y_{k,i} h_{k,i}(T).\label{eq:specific enthalpy}
+\end{align}
+
+% MAYBE LATER: mixture R (I think this is only used for the initial conditions to find $\rho$)
 
 \subsection{Connection flow model}\label{connection-flow-model}
 % TODO
@@ -159,27 +180,41 @@ This simple valve opening model is most accurate for manually operated valves.
 More detailed modeling of pilot-operated valves could make determining the valve opening time unnecessary, but this alternative valve opening model has not yet been added to BlasterSim.
 
 \subsection{Projectile and plunger equations of motion}\label{equations-of-motion}
-% TODO
 
-\begin{align}
-    \dv{x_i}{t}       &= \dot{x}_i \\
-    \dv{\dot{x}_i}{t} &=
-    \frac{A_i}{m_{\text{eff},i}} \left(p_i - p_{\text{mirror},i} - p_{\text{f},i}\right)
-    - \frac{k_i}{m_{\text{eff},i}} \left(x_i - x_{\text{min},i} + \Delta_{\text{pre},i}\right) \label{eq:Newton's second law}
-\end{align}
-% TODO: Define $x_{\text{min},i}$
+The position $x_i$ of the projectile/plunger moves according to its velocity $\dot{x}_i$:
+\begin{equation}
+    \dv{x_i}{t} = \dot{x}_i.
+\end{equation}
 
-When a spring is present, the effective mass of the plunger factors in the spring mass.
+Newton's second law applied to the projectile/plunger obtains its acceleration:
+\begin{equation}
+    m_{\text{eff},i} \dv{\dot{x}_i}{t} =
+    A_i \left(p_i - p_{\text{mirror},i} - p_{\text{f},i}\right)
+    - k_i \left(x_i - x_{\text{min},i} + \Delta_{\text{pre},i}\right), \label{eq:Newton's second law}
+\end{equation}
+where
+$m_{\text{eff},i}$ is the effective mass of the projectile/plunger in control volume $i$ (defined below in this section, and set to be infinitely large for fixed volume control volumes so that the volume stays constant),
+$A_i$ is the cross-sectional area of control volume $i$ (barrel or plunger),
+$p_i$ is the pressure in control volume $i$,
+$p_{\text{mirror},i}$ is the pressure in the control volume on the opposite side of the projectile/plunger of control volume $i$,
+$p_{\text{f},i}$ is the pressure of friction (defined in \secref{friction}),
+$k_i$ is the spring stiffness of the plunger in control volume $i$ (zero in control volumes where no spring is present like the barrel),
+$x_{\text{min},i}$ is the minimum location the projectile/plunger can take in control volume $i$ (see \secref{plunger-impact} for what happens when the projectile/plunger reaches this location), and
+$\Delta_{\text{pre},i}$ is the precompression of the spring in control volume $i$ (zero if no spring is present).
+
+Note that to ease understanding of the CSV output, the variable $x_i$ in~\eqref{Newton's second law} in BlasterSim internally is different from \texttt{x} as printed by BlasterSim in the CSV output.
+See \secref{csv} for details.
+
+When a spring is present, the effective mass $m_{\text{eff},i}$ of the plunger factors in the spring mass.
 The spring is not moving at a uniform velocity as one end is stationary, so it would be incorrect to add all the spring mass to the effective mass.
 The effective mass equation used is
 \begin{equation}
     m_{\text{eff},i} = m_{\text{p},i} + C_\text{ms} m_{\text{s},i}\label{eq:effective mass}
 \end{equation}
-where $C_\text{ms} = \tfrac{1}{3}$ as suggested by \citet{ruby_equivalent_2000} for a stiff spring.
-
-Note that the variable $x_i$ in~\eqref{Newton's second law} internally in BlasterSim differs from \texttt{x} as printed by BlasterSim in the CSV output.
-To ease understanding for users of BlasterSim, \texttt{x} in the CSV output is defined as the distance between the projectile/plunger location and the minimum $x$ location like the end of the plunger tube.
-Mathematically, $\texttt{x} = x_i - x_{\text{min},i}$.
+where
+$m_{\text{p},i}$ is the mass of the plunger in control volume $i$,
+$m_{\text{s},i}$ is the mass of the spring in control volume $i$, and
+$C_\text{ms} = \tfrac{1}{3}$ as suggested by \citet{ruby_equivalent_2000} for a stiff spring.
 
 \subsection{Projectile and plunger friction model}\label{friction}
 

@@ -44,10 +44,12 @@ real(WP), public, parameter :: MASS_DERIV_TOLERANCE   = 1.0e-8_WP  ! unitless
 real(WP), public, parameter :: ENERGY_DERIV_TOLERANCE = 1.0e-5_WP  ! unitless (TODO: decrease later and see what breaks)
 real(WP), public, parameter :: MIRROR_X_TOLERANCE     = 1.0e-10_WP ! unitless
 
+!tripwire$ begin 8B025EC5 Update \secref{thermo}.
 integer, public, parameter :: IDEAL_EOS = 1 ! ideal gas equation of state
 integer, public, parameter :: CONST_EOS = 2 ! constant pressure, temperature, density
 integer, public, parameter :: RK_EOS    = 3 ! Redlich–Kwong equation of state (not yet implemented)
 integer, public, parameter :: MAX_EOS   = 2
+!tripwire$ end
 
 integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
@@ -248,7 +250,7 @@ pure function e_total(cv)
     e_total = cv%e_g + cv%e_f + cv%e_m + cv%e_s() + cv%e_k()
 end function e_total
 
-!tripwire$ begin 27C28AF4 Update `\secref{equations-of-state}` of theory.tex if necessary.
+!tripwire$ begin F6504810 Update `\secref{equations-of-state}` of theory.tex if necessary.
 pure function p_cv(cv)
     ! Calculate pressure using the equation of state.
     
@@ -285,7 +287,7 @@ end function p_cv
 pure function rho_eos(cv, p, temp, y)
     ! Calculate density using the equation of state.
     ! In the future, if an EOS more complex than the ideal gas law is used, it might make sense to calculate `rho_eos` from `p_eos`
-    ! with the Newton method.
+    ! with the secant method.
     
     use gasdata, only: R_BAR
     

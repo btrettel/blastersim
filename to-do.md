@@ -16,7 +16,6 @@
     - Document `e_f` governing equation.
     - Add functional dependencies of $p_{\text{f},i}$ to the $\dv{\dot{x}_i}{t}$ equation in the docs.
 - document more coding conventions
-    - `i` and `j` are typically used for CVs, `k` is typically used for gas species
     - `i_cv_mirror = 0` disables mirror CVs; use for constant volume chambers
 - Documentation for making a BlasterSim release
     - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`
@@ -38,7 +37,7 @@
 - docs: l_spring = l_pre + delta_pre, l_tube = l_compressed + l_head + l_draw
 - Document how variable names are converted from LaTeX and code, as a general rule.
 - Have a conversion table for LaTeX and code variable names.
-- Put springer and pneumatic governing equations in usage chapter
+- Maybe: Put springer and pneumatic governing equations in usage chapter. This might confuse people more than help.
 - Thanks appendix
     - Andrew Trettel for macOS binary
     - Radioactive for data

@@ -9,6 +9,7 @@ Pull requests must meet the following requirements:
 \item The scope of the change must be small enough for me to easily review.
 \item All commit messages must be descriptive.
 Use \href{https://www.conventionalcommits.org/en/v1.0.0/}{Conventional Commits} prefixes.
+For bug fixes, if possible, refer to the issue ID number or commit introducing the bug with \texttt{Fixes: \#[issue ID]} or \texttt{Fixes: [commit hash] ("[commit message first line]")}. % chktex 18
 \item Do not squash your commits before sending a pull request.
 That can make \texttt{git bisect} work poorly.
 \item Contributed code must pass all existing tests.

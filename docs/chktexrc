@@ -14,6 +14,7 @@ UserWarn
     dart # write projectile unless specifically referring to foam dart blasters
     "barrel diameter" # write barrel inner diameter
     "projectile diameter" # write projectile outer diameter
+    "cross sectional" # write cross-sectional
 ]
 
 UserWarnRegex
