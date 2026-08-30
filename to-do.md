@@ -15,9 +15,7 @@
     - Document flow connection model
     - Document `e_f` governing equation.
     - Add functional dependencies of $p_{\text{f},i}$ to the $\dv{\dot{x}_i}{t}$ equation in the docs.
-- document more coding conventions
-    - `i_cv_mirror = 0` disables mirror CVs; use for constant volume chambers
-    - plungers typically have negative velocity, projectiles have positive velocity
+    - Check for consistency: "control volume index" vs "control volume $i$"
 - Documentation for making a BlasterSim release
     - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`
     - ```

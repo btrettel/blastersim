@@ -156,6 +156,15 @@ If \texttt{rc} is not \texttt{SUCCESS\_RC}, then \texttt{run\_status\_type} opti
 \item In io.f90, variable names ending with \texttt{\_u} use the Fortran types that check the units described in \secref{unit-checking}.
 The \texttt{\_u} suffix avoids name conflicts with the variables used in the namelists, which are Fortran \texttt{real}s.
 
+\item All control volumes in BlasterSim are internally represented as drawn in \secref{notation}.
+This general control volume view has consistent notation for all control volumes.
+A consequence of this is that plunger velocities will be negative as the plunger volume decreases, not positive as some might expect.
+Projectile velocities are positive as the projectile moves towards the barrel exit, as expected.
+
+\item In cva.f90, in the \texttt{cv\_type} derived type, there is a member variable named \texttt{i\_cv\_mirror}
+For control volumes with a projectile/plunger, \texttt{i\_cv\_mirror} is set to the control volume index for the control volume on the other side of the projectile/plunger.
+For constant volume chambers where there is no projectile/plunger, set \texttt{i\_cv\_mirror} to zero to disable the mirror control volume feature.
+
 \item In the documentation, put no more than one sentence per line of LaTeX code.
 Breaking up a sentence into clauses may be useful in some contexts as well,
 and breaking up a mathematical expression into multiple LaTeX lines is also often useful.

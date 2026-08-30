@@ -234,6 +234,9 @@ However, BlasterSim does not assume a sudden contraction exists between the plun
 That part of the figure is for illustration only.
 The connection between the plunger tube and barrel can take any form.
 
+Due to the control volume conventions in BlasterSim (see \secref{notation} and \secref{conventions}), \textbfwarning{plunger velocities will be negative as the plunger volume decreases}, not positive as some would expect.
+Projectile velocities are positive as the projectile moves towards the barrel exit, as expected.
+
 \input{springer-figures.tex}
 
 \subsection{\texttt{springer} namelist group variables}\label{springer-namelist}
