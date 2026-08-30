@@ -15,6 +15,9 @@ UserWarn
     "barrel diameter" # write barrel inner diameter
     "projectile diameter" # write projectile outer diameter
     "cross sectional" # write cross-sectional
+    grey # write gray (more frequent in American English)
+    "internal ballistics" # write interior ballistics
+    "external ballistics" # write exterior ballistics
 ]
 
 UserWarnRegex

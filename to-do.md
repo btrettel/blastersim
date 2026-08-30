@@ -17,6 +17,7 @@
     - Add functional dependencies of $p_{\text{f},i}$ to the $\dv{\dot{x}_i}{t}$ equation in the docs.
 - document more coding conventions
     - `i_cv_mirror = 0` disables mirror CVs; use for constant volume chambers
+    - plungers typically have negative velocity, projectiles have positive velocity
 - Documentation for making a BlasterSim release
     - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`
     - ```
@@ -55,6 +56,7 @@
 - Print useful error message for each error code.
     - Make a system to keep descriptions in the the docs and code consistent: generrors
 - Test CSV file.
+- "Pass through" feature for geninput so that a default value can come from a previous namelist's calculation. Detect if the value is overwritten in the second namelist if it comes from the first namelist as that's probably not desired.
 
 ***
 
