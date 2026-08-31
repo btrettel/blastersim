@@ -1,8 +1,5 @@
 ### v0.3.0
 
-- "flow restriction" ==> "flow connection" for consistency with cva.f90.
-- Accounting for `x_min` in various places.
-    - Are there any other places where `x_min` needs to be accounted for?
 - pre-commit hook
 - Add preface section describing side icons
 - Add optional icon to some sections like Roache V&V book. Mark equations in usage section as optional.
@@ -13,10 +10,10 @@
         - <https://news.ycombinator.com/item?id=48554595>
         - <https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions>
             - <https://news.ycombinator.com/item?id=48592087>
-    - Document flow connection model
     - Document `e_f` governing equation.
     - Add functional dependencies of $p_{\text{f},i}$ to the $\dv{\dot{x}_i}{t}$ equation in the docs.
     - Check for consistency: "control volume index" vs "control volume $i$"
+    - Is that there is no outflow if $p_i < p_j$ documented?
 - Documentation for making a BlasterSim release
     - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`
     - ```
@@ -112,6 +109,7 @@
         - sudden contraction data for $A_\text{e}$ and $b$ would be useful for springers
         - Use loss coefficients to estimate effective area?
         - Make regression for loss coefficient considering contraction ratio and entrance radius of curvature?
+    - Make `a_e` and `b` different for reverse flow in the springer case.
     - docs
         - Assumptions to list in m_dot section:
             - no energy loss in flow restriction
@@ -126,6 +124,7 @@
     - benedict_fundamentals_1980 p. 386
         - p. 388: compressible flows differ from incompressible
     - benedict_flow_1966
+    - beater_pneumatic_2007 eq. 5.7: $b$, but not quite for sudden contraction
 - Use better low Reynolds number model for the flow restriction than what Beater uses.
     - borutzky_orifice_2002 or grose_orifice_1983?
 - Compile BlasterSim in Wine for Windows?
@@ -524,7 +523,6 @@
 - Check /home/ben/svn/old/ballistics/text/ for more ideas.
 - Add spring $k$ calculator
     - Then you could optimize the length of the spring to cut to.
-- Make `a_e` and `b` different for reverse flow in the springer case.
 - Allow for negative precompression. This would require changing the spring force law. The spring typically would not apply a restoring force (opposite direction) as it's not firmly attached to the plunger.
 - Try hevea, tex4ht, and pandoc for HTML version of the docs.
     - [HEVEA](https://hevea.inria.fr/)
@@ -608,7 +606,7 @@
 
 Questions to think about:
 
-- Why doesn't `u_cv` just get `u` from `e`?
+- Why doesn't `u_cv` just get `u` from `e_g`?
 - Does plunger impact before the dart exits the barrel cause inaccuracy?
 - Problems maybe with the friction model:
     - Why is the derivative of total energy with respect to initial `x_dot` unstable in `test_one_cv`?

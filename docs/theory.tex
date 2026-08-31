@@ -145,18 +145,20 @@ For a particular control volume with a given array of mass fractions $y_{k,i}$, 
 
 % MAYBE LATER: mixture R (used for the initial conditions to find $\rho$ and in $\dot{m}$)
 
-\subsection{Connection flow model}\label{connection-flow-model}
+\subsection{Flow connection mass flow rate model}\label{mass-flow-rate}
 % See 2025-10-19 handwritten notes.
 % TODO
 
-Flow connections between control volumes in BlasterSim are called ``flow restrictions'' and include valves in the pneumatic case or any flow path with significant flow resistance.
-BlasterSim uses a variation of the \citet[ch.~5]{beater_pneumatic_2007} compressible flow rate model modified to be smooth to support automatic differentiation (see \secref{autodiff}).
+Control volumes can be connected so that mass can flow between them through flow restrictions.
+Flow restrictions include valves in the pneumatic case or any flow path with significant flow resistance.
+(If the flow resistance between two control volumes is negligible, it would make more sense to merge those control volumes into one.)
+BlasterSim uses a variation of the \citet[eq.~5.4, p.~46]{beater_pneumatic_2007} compressible flow rate model modified to be smooth to support automatic differentiation (see \secref{autodiff}).
 
 The mass flow rate from control volume $i$ to control volume $j$ is modeled as
 \begin{align}
     \dot{m}_{i \rightarrow j} &= \alpha_{i \rightarrow j} \dot{m}_{0,i \rightarrow j} \notag \\
                                     &\qquad+ \alpha_{i \rightarrow j} A_{\text{e}, i \rightarrow j} \left(p_i - g_{\dot{m}}\left(\frac{p_j}{p_i}\right) p_j\right)
-                                    \sqrt{\frac{1 - b_{i \rightarrow j}}{R_i T_i}} \notag \\
+                                    \sqrt{\frac{1 - b_{i \rightarrow j}}{R_i \, T_i}} \notag \\
                                     &\qquad\qquad \cdot \sqrt{1 - f_{\dot{m}}\left(\frac{p_j}{p_i}, b_{i \rightarrow j}\right)},
 \end{align}
 where
@@ -169,7 +171,40 @@ $b_{i \rightarrow j}$ is the critical pressure ratio of the flow restriction,
 $R_i$ is the gas constant for the gas mixture in control volume $i$, and
 $T_i$ is the temperature in control volume $i$.
 
-% TODO: complete this
+For $g_{\dot{m}}$ and $f_{\dot{m}}$, let's define $p_\text{r} = p_j/p_i$ and $p_\text{rl} = 0.999$, where $p_\text{r} > p_\text{rl}$ is arbitrarily chosen to be where laminar flow occurs following the simplified laminar flow model of \citet[p.~46]{beater_pneumatic_2007}.
+
+% `$g_{\dot{m}}$`: See 2025-10-26 handwritten notes.
+The purpose of $g_{\dot{m}}$ is to gradually and continuously turn on a term that is needed for $p_\text{r}$ near 1 to properly model laminar flow and also avoid unphysically high sensitivities to the pressure.
+The function $g_{\dot{m}}$ is
+\begin{equation}
+    g_{\dot{m}}(p_\text{r}) =
+    \begin{cases}
+        0,                                                                   & p_\text{r} \leq p_\text{rl},    \\
+        2 {\left(\frac{1 - p_\text{r}}{1 - p_\text{rl}}\right)}^3 
+            - 3 {\left(\frac{1 - p_\text{r}}{1 - p_\text{rl}}\right)}^2 + 1, & p_\text{r} > p_\text{rl}.
+    \end{cases}
+\end{equation}
+
+The derivative of the $p_\text{r} > p_\text{rl}$ branch of $g_{\dot{m}}$ with respect to $p_\text{r}$ is zero at $p_\text{r} = p_\text{rl}$ so that the following function is continuous and continuously differentiable as it switched between the $p_\text{r} \leq p_\text{rl}$ and $p_\text{r} > p_\text{rl}$ branches.
+
+% `$f_{\dot{m}}$`: See 2025-10-19 handwritten notes, with the `\smin` part crossed out, though its intention is clear from the code.
+$f_{\dot{m}}$ is intended to both account for laminar flow ($p_\text{r} > p_\text{rl}$) and choked flow ($p_\text{r} < b_{i \rightarrow j}$).
+First, a smooth minimum function must be defined~\citep{quilez_smooth_2013}:
+\begin{equation}
+    \smin(x, y) = -k \, \ln{\bigl(\exp(-x/k) + \exp(-y/k)\bigr)},
+\end{equation}
+where $k = 0.01$, chosen arbitrarily.
+This is used as a continuous version of the conventional minimum function $\min(x, y)$.
+
+Then $f_{\dot{m}}$ is
+\begin{equation}
+    f_{\dot{m}}(p_\text{r}, b) = {\left(\frac{\smin(p_\text{r}, p_\text{rl}) - b}{1 - b}\right)}^2
+                                    \cdot \frac{1}{2} \left(1 + \tanh\left(\frac{p_\text{r} - b}{p_\text{s}}\right)\right),
+\end{equation}
+where $p_\text{s} = 0.01$, chosen arbitrarily to determine how quickly to switch between subsonic and choked flow.
+
+% The `\smin` part might seem unnecessarily comparing the laminar and subsonic parts of beater_pneumatic_2007 eq. 5.4.
+% However, note that the $k_1$ term (eq. 5.5) in the laminar part includes the 0.999 part.
 
 \subsection{Valve opening model}\label{valve-opening-model}
 
@@ -281,9 +316,9 @@ The actual dynamic friction pressure is $\sgn(\dot{x}_i) \cdot p_{\text{fd},i}$,
 The effective friction pressure $p_{\text{f},i}$ then will switch between static and dynamic friction depending on the velocity:
 \begin{equation}
     p_{\text{f},i} =
-    \begin{cases} 
-        p_{\text{f0},i},                       & \text{if}~\dot{x}_i = 0~\text{(static)},    \\
-        \sgn(\dot{x}_i) \cdot p_{\text{fd},i}, & \text{if}~\dot{x}_i \neq 0~\text{(dynamic)}.
+    \begin{cases}
+        p_{\text{f0},i},                       & \dot{x}_i = 0~\text{(static)},    \\
+        \sgn(\dot{x}_i) \cdot p_{\text{fd},i}, & \dot{x}_i \neq 0~\text{(dynamic)}.
     \end{cases}\label{eq:effective friction pressure cases}
 \end{equation}
 
@@ -324,8 +359,8 @@ A piecewise function is implemented in cva.f90 as \texttt{p\_f0} so that the act
 \begin{equation}
     p_{\text{f0},i} =
     \begin{cases} 
-        p_{\text{fe},i},                                         & \text{if}~|p_{\text{fe},i}| \leq p_\text{s}, \\
-        \sgn(p_{\text{fe},i}) \cdot p_{\text{f0},i,\text{high}}, & \text{if}~|p_{\text{fe},i}| >    p_\text{s},
+        p_{\text{fe},i},                                         & |p_{\text{fe},i}| \leq p_\text{s}, \\
+        \sgn(p_{\text{fe},i}) \cdot p_{\text{f0},i,\text{high}}, & |p_{\text{fe},i}| >    p_\text{s},
     \end{cases}\label{eq:smoothed static friction min}
 \end{equation}
 where $p_\text{s}$ is chosen to be a somewhat arbitrary fraction of $p_{\text{fs},i}$ and
@@ -411,7 +446,7 @@ However, features dependent on automatic differentiation such as uncertainty qua
 Certain modeling decisions were made due to the use of automatic differentiation.
 Automatic differentiation would require detecting every discontinuity that occurs (as is done with the plunger impact; see \secref{plunger-impact}), so to reduce the amount of event detection needed, it is useful to use smooth submodels when possible.
 \begin{itemize}
-\item The flow rate model described in \secref{connection-flow-model} was modified from \citet[ch.~5]{beater_pneumatic_2007} specifically to be smoothed.
+\item The flow rate model described in \secref{mass-flow-rate} was modified from \citet[ch.~5]{beater_pneumatic_2007} specifically to be smoothed.
 \item \Eqref{derivative matching} in \secref{valve-opening-model} was chosen so that there is no jump in the derivatives when the valve is fully open. % chktex 2
 \item The smooth friction model described in \secref{friction} was motivated in part by a desire to remove discontinuities.
 \end{itemize}

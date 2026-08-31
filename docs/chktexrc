@@ -18,6 +18,7 @@ UserWarn
     grey # write gray (more frequent in American English)
     "internal ballistics" # write interior ballistics
     "external ballistics" # write exterior ballistics
+    # "flow connection" # write flow restriction
 ]
 
 UserWarnRegex
