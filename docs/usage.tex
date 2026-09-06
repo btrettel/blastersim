@@ -139,8 +139,8 @@ BlasterSim uses Fortran namelist format input files.
 Namelist files are broken into groups and variables.
 A group starts with the \texttt{\&} symbol, then the name of the group, and contains one or more variables which themselves are the actual input data.
 A group ends with the \texttt{/} symbol.
-For example, in the example namelist input file below, see that \texttt{group1} group contains the variables \texttt{a}, \texttt{b}, and \texttt{c}.
-\texttt{a} is an integer, \texttt{b} is a floating point number (decimal number), and \texttt{c} is a string (which must be quoted).
+For example, in the example namelist input file below, see that \texttt{group1} group contains the variables \texttt{a}, \texttt{b}, \texttt{c}, and \texttt{d}.
+\texttt{a} is an integer, \texttt{b} is a floating point number (decimal number), \texttt{c} is a string (which must be quoted), and \texttt{d} is a Boolean (\texttt{.true.} or \texttt{.false.}, like a switch).
 A namelist file can contain multiple groups.
 The example below has two groups, \texttt{group1} and \texttt{group2}.
 Comments can be added with the \texttt{!} symbol.
@@ -151,13 +151,15 @@ Comments can take up an entire line as in the \texttt{group1} namelist below, or
 a = 0
 b = -1.01
 c = "string1"
+d = .true.
 ! comment
 /
 
 &group2
-x = 1
-y = 2.05 ! comment
-z = "string2"
+w = 1
+x = 2.05 ! comment
+y = "string2"
+z = .false.
 /
 \end{lstlisting}
 

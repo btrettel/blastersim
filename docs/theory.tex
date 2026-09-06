@@ -119,7 +119,7 @@ The constant specified pressure equation of state is used for the atmosphere, wh
 The specific heats $c_{\text{v},k}$ and $c_{\text{p},k}$ are assumed to be constant for each gas species.
 For each gas species, BlasterSim has the molar mass $M_k$, the ratio of specific heats $\gamma_k$, the specific internal energy $u_{0,k}$, and specific enthalpy $h_{0,k}$ at reference temperature $T_0 = \tempref$~K.
 
-The gas constant $R_k$ is found from the molar mass $M_k$ and universal gas constant $\overline{R}$ via~\citep[p.~119]{moran_fundamentals_2008}:
+The species gas constant $R_k$ is found from the molar mass $M_k$ and universal gas constant $\overline{R}$ via~\citep[p.~119]{moran_fundamentals_2008}:
 \begin{equation}
     R_k = \frac{\overline{R}}{M_k}.
 \end{equation}
@@ -143,11 +143,9 @@ For a particular control volume with a given array of mass fractions $y_{k,i}$, 
     h_i(T_i) &= \sum_k y_{k,i} \, h_{k,i}(T_i).\label{eq:specific enthalpy}
 \end{align}
 
-% MAYBE LATER: mixture R (used for the initial conditions to find $\rho$ and in $\dot{m}$)
+% TODO: mixture R (used for $\rho$, $p$, and $\dot{m}$)
 
 \subsection{Flow connection mass flow rate model}\label{mass-flow-rate}
-% See 2025-10-19 handwritten notes.
-% TODO
 
 Control volumes can be connected so that mass can flow between them through flow restrictions.
 Flow restrictions include valves in the pneumatic case or any flow path with significant flow resistance.
@@ -191,7 +189,7 @@ The derivative of the $p_\text{r} > p_\text{rl}$ branch of $g_{\dot{m}}$ with re
 $f_{\dot{m}}$ is intended to both account for laminar flow ($p_\text{r} > p_\text{rl}$) and choked flow ($p_\text{r} < b_{i \rightarrow j}$).
 First, a smooth minimum function must be defined~\citep{quilez_smooth_2013}:
 \begin{equation}
-    \smin(x, y) = -k \, \ln{\bigl(\exp(-x/k) + \exp(-y/k)\bigr)},
+    \smin(x, y) = -k \, \ln{\bigl(\exp(-x/k) + \exp(-y/k)\bigr)}, % TODO: Why does this display extra parentheses in LaTeXML?
 \end{equation}
 where $k = 0.01$, chosen arbitrarily.
 This is used as a continuous version of the conventional minimum function $\min(x, y)$.
@@ -421,9 +419,9 @@ BlasterSim at the moment does not additionally apply an extra force to prevent t
 Consequently, to prevent the plunger tube from moving, it is made immobile in this situation.
 In the future, if desirable, BlasterSim could apply a force when the plunger is at the end of the plunger tube to keep the plunger stationary.
 The difference with the force is that it might be possible for the force to be overcome by the pressure inside the plunger, making the plunger start moving again.
-Making the plunger immobile prevents that motion, but is a reasonable approximation for springers.
+Making the plunger immobile prevents that real motion, but is a reasonable approximation for springers.
 It would not be a reasonable approximation when simulating the full cycle of a HPA blaster using an air cylinder.
-It is likely that coefficients of restitution that are too small may have similar stalling problems that this approximation will not handle properly.
+It is likely that coefficients of restitution that are too small may have similar stalling problems.
 
 %\section{Exterior ballistics}\label{exterior-ballistics}
 % TODO later
@@ -446,7 +444,7 @@ However, features dependent on automatic differentiation such as uncertainty qua
 Certain modeling decisions were made due to the use of automatic differentiation.
 Automatic differentiation would require detecting every discontinuity that occurs (as is done with the plunger impact; see \secref{plunger-impact}), so to reduce the amount of event detection needed, it is useful to use smooth submodels when possible.
 \begin{itemize}
-\item The flow rate model described in \secref{mass-flow-rate} was modified from \citet[ch.~5]{beater_pneumatic_2007} specifically to be smoothed.
+\item The flow rate model described in \secref{mass-flow-rate} was modified from \citet[eq.~5.4, p.~46]{beater_pneumatic_2007} to be smooth.
 \item \Eqref{derivative matching} in \secref{valve-opening-model} was chosen so that there is no jump in the derivatives when the valve is fully open. % chktex 2
 \item The smooth friction model described in \secref{friction} was motivated in part by a desire to remove discontinuities.
 \end{itemize}

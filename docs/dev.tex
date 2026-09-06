@@ -7,6 +7,9 @@ Contributors can file issues and pull requests on GitHub at \url{https://github.
 Pull requests must meet the following requirements:
 \begin{itemize}
 \item The scope of the change must be small enough for me to easily review.
+Keep the size of pull requests below about 400 new/changed lines, ideally less than 100 new/changed lines.
+Split large changes into multiple pull requests.
+If this is not possible, contact Ben Trettel before filing a pull request.
 \item All commit messages must be descriptive.
 Use \href{https://www.conventionalcommits.org/en/v1.0.0/}{Conventional Commits} prefixes.
 For bug fixes, if possible, refer to the issue ID number or commit introducing the bug with \texttt{Fixes: \#[issue ID]} or \texttt{Fixes: [commit hash] ("[commit message first line]")}. % chktex 18
@@ -17,6 +20,8 @@ Contributed code with new functionality must add and pass new tests for the new 
 Existing tests can be run with \texttt{make check} on Linux and macOS and \texttt{jom check} on Windows as discussed in \secref{verval}.
 The tests themselves are in the test directory and are Fortran code.
 Contributors should examine existing tests to understand the testing system.
+\item Add \href{assertions}{https://blog.regehr.org/archives/1091} as appropriate to new code.
+% TODO: I aim for an assertion density of at least X% (X assertions per source/non-comment line of code).
 \item New features must be documented.
 See the docs directory for this documentation's source code in LaTeX.
 \end{itemize}
@@ -28,11 +33,17 @@ Temporary feature branches are used as necessary.
 Contributing validation data would be particularly welcome.
 To contribute validation data, recreate the experimental conditions in BlasterSim and file an issue with the BlasterSim inputs, file a pull request, or contact Ben Trettel directly.
 
-A brief note on generative AI\@:
-To date, all BlasterSim code is written by a human.
-AI was used in BlasterSim's development only as a research and learning tool, not to write code.
-I am willing to accept LLM-written code that meets the pull request requirements listed above, and one additional requirement:
-The prompts used to generate the code will need to be provided in the pull request.
+A note on generative AI\@:
+To date, all BlasterSim code and documentation are written by a human.
+AI was used in BlasterSim's development only as a research and learning tool, not to write code or documentation.
+I am willing to accept LLM-written code and documentation that meets the pull request requirements listed above, with two additional requirements:
+\begin{itemize}
+\item The prompts used to generate the code will need to be provided in the pull request.
+This allows me to get a better sense of what was focused on so I can focus my own checking in the most productive spots.
+\item The new/modified parts of the documentation must not be in a LLM writing style or be rated as likely coming from a LLM from any of the LLM writing detectors like Pangram.
+I personally find ``Claudish'' to be annoying and difficult to read.
+This is also a trust issue, as many people do not trust writing by LLMs.
+\end{itemize}
 
 \section{Compiling BlasterSim}\label{compiling}
 
