@@ -57,7 +57,7 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin C863B17C Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
+!tripwire$ begin F85932C0 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
 integer, public, parameter :: X_LT_X_MIN_RUN_RC             = -3
 integer, public, parameter :: X_GE_X_STOP_RUN_RC            = -2
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
@@ -73,6 +73,7 @@ integer, public, parameter :: MIRROR_X_TOLERANCE_RUN_RC     = 9
 integer, public, parameter :: NEGATIVE_CV_X_RUN_RC          = 10
 integer, public, parameter :: MAX_ITERS_TIME_LOOP_RUN_RC    = 11
 integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X_RUN_RC = 12
+integer, public, parameter :: RK_STAGE_NEGATIVE_MASS_RC     = 13
 !integer, public, parameter :: X_BLOW_UP_RUN_RC              = 
 !integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 
 !integer, public, parameter :: M_BLOW_UP_RUN_RC              = 
@@ -1267,7 +1268,7 @@ pure subroutine assert_mass(cv, procedure_name)
     
     do k = 1, size(cv%m_k)
         call assert(cv%m_k(k)%v%v >= 0.0_WP, "cva (" // trim(procedure_name) // "): cv%m >= 0 violated", &
-                        print_real=[cv%m_k(k)%v%v], print_integer=[k])
+                        print_real=[cv%m_k(k)%v%v], print_integer=[k, size(cv%m_k)])
     end do
     
     m_total = cv%m_total()
@@ -1480,18 +1481,17 @@ pure function e_total_sys(sys)
     end do
 end function e_total_sys
 
-pure subroutine calculate_next_time_step(sys_old, t, dt, sys_new)
+pure subroutine calculate_next_time_step(sys_old, t, dt, sys_new, rc)
     ! Advances by one time step.
     
     type(cv_system_type), allocatable, intent(in)  :: sys_old
     type(si_time), intent(in)                      :: t, dt
     type(cv_system_type), allocatable, intent(out) :: sys_new
+    integer, intent(out)                           :: rc
     
     type(cv_delta_type), allocatable :: cv_delta_0(:), cv_delta_1(:), cv_delta_2(:), cv_delta_3(:), cv_delta_4(:)
     
     integer :: i_cv, n_cv, k, n_gas, n_d
-    
-    ! TODO: `e_i`, energy lost to plunger impact in control volume
     
     n_cv  = size(sys_old%cv)
     n_gas = size(sys_old%cv(1)%m_k)
@@ -1511,16 +1511,20 @@ pure subroutine calculate_next_time_step(sys_old, t, dt, sys_new)
             call cv_delta_0(i_cv)%m_k(k)%v%init_const(0.0_WP, n_d)
         end do
     end do
-    call rk_stage(t, dt, 1.0_WP, sys_old, cv_delta_0, cv_delta_1)
+    call rk_stage(t, dt, 1.0_WP, sys_old, cv_delta_0, cv_delta_1, rc)
+    if (rc /= SUCCESS_RC) return
     
     ! stage 2
-    call rk_stage(t, dt, 0.5_WP, sys_old, cv_delta_1, cv_delta_2)
+    call rk_stage(t, dt, 0.5_WP, sys_old, cv_delta_1, cv_delta_2, rc)
+    if (rc /= SUCCESS_RC) return
     
     ! stage 3
-    call rk_stage(t, dt, 0.5_WP, sys_old, cv_delta_2, cv_delta_3)
+    call rk_stage(t, dt, 0.5_WP, sys_old, cv_delta_2, cv_delta_3, rc)
+    if (rc /= SUCCESS_RC) return
     
     ! stage 4
-    call rk_stage(t, dt, 1.0_WP, sys_old, cv_delta_3, cv_delta_4)
+    call rk_stage(t, dt, 1.0_WP, sys_old, cv_delta_3, cv_delta_4, rc)
+    if (rc /= SUCCESS_RC) return
     
     ! Put it all together.
     sys_new = sys_old
@@ -1557,13 +1561,14 @@ pure subroutine calculate_next_time_step(sys_old, t, dt, sys_new)
     end do
 end subroutine calculate_next_time_step
 
-pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out)
+pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out, rc)
     type(si_time), intent(in)                      :: t_old ! time of previous time step
     type(si_time), intent(in)                      :: dt    ! time step
     real(WP), intent(in)                           :: a
     type(cv_system_type), allocatable, intent(in)  :: sys_old
     type(cv_delta_type), allocatable, intent(in)   :: cv_delta_in(:)
     type(cv_delta_type), allocatable, intent(out)  :: cv_delta_out(:)
+    integer, intent(out)                           :: rc
     
     type(cv_system_type), allocatable      :: sys
     type(si_mass_flow_rate), allocatable   :: m_dot(:, :)
@@ -1578,8 +1583,6 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out)
         allocate(cv_delta_out(i_cv)%m_k(n_gas))
     end do
     
-    ! TODO: `e_i`, energy lost to plunger impact in control volume
-    
     sys = sys_old
     do i_cv = 1, n_cv
         sys%cv(i_cv)%x     = sys_old%cv(i_cv)%x     + a*cv_delta_in(i_cv)%x
@@ -1588,6 +1591,13 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out)
         sys%cv(i_cv)%e_f   = sys_old%cv(i_cv)%e_f   + a*cv_delta_in(i_cv)%e_f
         do k = 1, n_gas
             sys%cv(i_cv)%m_k(k) = sys_old%cv(i_cv)%m_k(k) + a*cv_delta_in(i_cv)%m_k(k)
+            
+            if (sys%cv(i_cv)%m_k(k)%v%v < 0.0_WP) then
+                ! This seems to be triggered if the mass flow rate is too high for the chosen time step.
+                
+                rc = RK_STAGE_NEGATIVE_MASS_RC
+                return
+            end if
         end do
     end do
     call sys%calculate_flows(t_old + a*dt, m_dot, h_dot)
@@ -1600,6 +1610,8 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out)
             cv_delta_out(i_cv)%m_k(k) = dt*d_m_k_d_t(sys, m_dot, k, i_cv)
         end do
     end do
+    
+    rc = SUCCESS_RC
 end subroutine rk_stage
 
 subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt, tolerance_checks, const_dt)
@@ -1666,7 +1678,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp, sys_event
     
     character(len=CL)     :: error_message
-    integer               :: n_d, i, csv_unit, rc_get_sys_at_x
+    integer               :: n_d, i, csv_unit, rc_get_sys_at_x, rc_time_step
     type(si_time)         :: t, t_old, dt
     logical               :: exit_time_loop, stop_at_first_event_
     
@@ -1699,7 +1711,11 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     dt = config%dt
     exit_time_loop = .false.
     time_loop: do
-        call calculate_next_time_step(sys_old, t, dt, sys_new)
+        call calculate_next_time_step(sys_old, t, dt, sys_new, rc_time_step)
+        if (rc_time_step /= SUCCESS_RC) then
+            status%rc = rc_time_step
+            exit time_loop
+        end if
         t_old = t
         t     = t + dt
         i     = i + 1
@@ -2004,7 +2020,7 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     type(cv_system_type), allocatable, intent(out) :: sys_event
     integer, intent(out)                           :: rc
     
-    integer       :: i
+    integer       :: i, rc_time_step
     type(si_time) :: dt_i, dt_im1, dt_im2
     real(WP)      :: x_tol
     type(cv_system_type), allocatable :: sys_i, sys_im1, sys_im2, sys_temp
@@ -2044,7 +2060,11 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
         call assert(dt_i <= dt, "cva (get_sys_at_x): dt_i can not be greater than dt", &
                         print_real=[dt_i%v%v], print_integer=[i])
         
-        call calculate_next_time_step(sys_old, t_old + dt_i, dt_i, sys_i)
+        call calculate_next_time_step(sys_old, t_old + dt_i, dt_i, sys_i, rc_time_step)
+        if (rc_time_step /= SUCCESS_RC) then
+            rc = rc_time_step
+            exit
+        end if
         
         call assert(sys_i%cv(i_cv_x_event)%x >= min_x, &
                         "cva (get_sys_at_x): x_i >= min_x violated", &

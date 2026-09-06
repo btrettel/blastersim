@@ -36,6 +36,9 @@ This indicates that BlasterSim was getting stuck at some point.
 Looking at the CSV output should indicate where BlasterSim was getting stuck for debugging.
 \item[return code 12:] Whether the maximum number of iterations ($\maxitersgetsysatx$) was reached when interpolating to a particular projectile/plunger location.
 This indicates that BlasterSim was unable to properly handle an event like projectile exit or a plunger impacting the end of the plunger tube.
+\item[return code 13:] Whether any species in a control volume had negative mass in a Runge-Kutta stage.
+This tends to occur when the equivalent diameter of the flow restriction is too large.
+Alternatively, the time step may be too large, however, the equivalent diameter should be checked first as the default time step should be acceptable in the vast majority of situations.
 \end{description}
 
 The thresholds used for some of these checks are somewhat arbitrary and are based on what conservatively seems to never cause problems in practice.
