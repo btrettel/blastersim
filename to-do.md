@@ -1,5 +1,13 @@
 ### v0.3.0
 
+- property unit testing
+- Use linters including fortitude.
+- Increase assertion density.
+- Disclaimer: User takes responsibility for accuracy, no liability
+- Empirical data chapter
+    - $b$ regression in Beater book
+    - spring $G$ for various materials
+    - KED data
 - pre-commit hook
 - Add preface section describing side icons
 - Add optional icon to some sections like Roache V&V book. Mark equations in usage section as optional.
@@ -11,9 +19,12 @@
         - <https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions>
             - <https://news.ycombinator.com/item?id=48592087>
     - Document `e_f` governing equation.
+    - Document mixture $R$.
     - Add functional dependencies of $p_{\text{f},i}$ to the $\dv{\dot{x}_i}{t}$ equation in the docs.
     - Check for consistency: "control volume index" vs "control volume $i$"
     - Is that there is no outflow if $p_i < p_j$ documented?
+    - Note that temperature can be found from specific internal energy or specific enthalpy as this is done for the ideal gas law.
+    - Describe steps taken in order, like where temperature is calculated.
 - Documentation for making a BlasterSim release
     - Set tag, for example: `git tag -a v0.2.0 -m "version 0.2.0"`
     - ```
@@ -260,7 +271,6 @@
 - `check_sys`
     - Try "Lipschitz constant estimate" suggested by Gemini.
     - Message for check_sys error: `CRITICAL_ERROR_MESSAGE = "Please report this input file to the GitHub. https://github.com/btrettel/blastersim/issues"`
-- Use linters including fortitude.
 - Test CSV output with Python.
 - Make characterization tests for stdout and CSV output for springer-example.csv and pneumatic-example.csv.
 - Check your saved papers for springer and pneumatic experimental data
@@ -382,7 +392,6 @@
     - <https://www.spudfiles.com/viewtopic.php?p=391877#p391877>: > So I try to pick a time step intelligently. I first make a very crude guesstimate of muzzle energy. That gives me a (crude estimate of) muzzle velocity. I then assume constant acceleration and determine how long it would take a projectile to clear the muzzle.
     - Minimum of multiple time scales?
 - Try multiple CV exact solution. One constant pressure chamber, one barrel?
-- nmlfuzz using geninput data
 - Make how much dead space is in the plunger/chamber and barrel user-selectable? It should have little effect, though. Might make an interesting "property test" of sorts to see how much effect it has in reality.
 - Try to get back to round numbers for the time step. For instance, if plunger impact makes the impact time 11.937 ms, and the time step is 0.1 ms, make the next time 12.0 ms.
 

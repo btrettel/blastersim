@@ -58,6 +58,9 @@ subroutine test_read_pneumatic_namelist_non_default(tests)
     call tests%integer_eq(rc, 0, "read_pneumatic_namelist, non-default values, rc")
     
     if (rc == 0) then
+        call tests%real_eq(config%dt%v%v, 2.0e-7_WP, "read_pneumatic_namelist, non-default values, dt")
+        call tests%logical_false(config%csv_output, "read_pneumatic_namelist, non-default values, csv_output")
+        
         d_barrel = sqrt((4.0_WP/PI)*sys%cv(I_BARREL)%csa)
         call tests%real_eq(d_barrel%v%v, 13.0e-3_WP, "read_pneumatic_namelist, non-default values, d_barrel")
         
@@ -79,7 +82,6 @@ subroutine test_read_pneumatic_namelist_non_default(tests)
         
         call tests%character_eq(config%id, "pneumatic-non-default", "read_pneumatic_namelist, non-default values, id")
         
-        call tests%real_eq(config%dt%v%v, 2.0e-7_WP, "read_pneumatic_namelist, non-default values, dt")
         call tests%real_eq(sys%con(I_CHAMBER, I_BARREL)%b%v%v, 0.6_WP, "read_pneumatic_namelist, non-default values, b")
         call tests%real_eq(sys%cv(I_BARREL_ATM)%p_const%v%v, 102000.0_WP, "read_pneumatic_namelist, non-default values, p_atm")
         call tests%real_eq(sys%cv(I_BARREL_ATM)%temp_const%v%v, 295.0_WP, &
@@ -119,6 +121,9 @@ subroutine test_read_pneumatic_namelist_default(tests)
     call tests%integer_eq(rc, 0, "read_pneumatic_namelist, default values, rc")
     
     if (rc == 0) then
+        call tests%real_eq(config%dt%v%v, DT_DEFAULT, "read_pneumatic_namelist, default values, dt")
+        call tests%logical_true(config%csv_output, "read_pneumatic_namelist, default values, csv_output")
+        
         d_barrel = sqrt((4.0_WP/PI)*sys%cv(I_BARREL)%csa)
         call tests%real_eq(d_barrel%v%v, 13.0e-3_WP, "read_pneumatic_namelist, default values, d_barrel")
         
@@ -140,7 +145,6 @@ subroutine test_read_pneumatic_namelist_default(tests)
         
         call tests%character_eq(config%id, "pneumatic-default", "read_pneumatic_namelist, default values, id")
         
-        call tests%real_eq(config%dt%v%v, DT_DEFAULT, "read_pneumatic_namelist, default values, dt")
         call tests%real_eq(sys%con(I_CHAMBER, I_BARREL)%b%v%v, 0.5_WP, "read_pneumatic_namelist, default values, b")
         call tests%real_eq(sys%cv(I_BARREL_ATM)%p_const%v%v, P_ATM, "read_pneumatic_namelist, default values, p_atm")
         call tests%real_eq(sys%cv(I_BARREL_ATM)%temp_const%v%v, TEMP_ATM, "read_pneumatic_namelist, default values, temp_atm")
@@ -178,6 +182,9 @@ subroutine test_read_springer_namelist_non_default(tests)
     call tests%integer_eq(rc, 0, "read_springer_namelist, non-default values, rc")
     
     if (rc == 0) then
+        call tests%real_eq(config%dt%v%v, 1.0e-7_WP, "read_springer_namelist, non-default values, dt")
+        call tests%logical_false(config%csv_output, "read_springer_namelist, non-default values, csv_output")
+        
         d_barrel = sqrt((4.0_WP/PI)*sys%cv(I_BARREL)%csa)
         call tests%real_eq(d_barrel%v%v, 13.0e-3_WP, "read_springer_namelist, non-default values, d_barrel")
         
@@ -213,7 +220,6 @@ subroutine test_read_springer_namelist_non_default(tests)
         
         call tests%character_eq(config%id, "springer-non-default", "read_springer_namelist, non-default values, id")
         
-        call tests%real_eq(config%dt%v%v, 1.0e-7_WP, "read_springer_namelist, non-default values, dt")
         call tests%real_eq(sys%con(I_PLUNGER, I_BARREL)%b%v%v, 0.528_WP, "read_springer_namelist, non-default values, b")
         call tests%real_eq(sys%cv(I_PLUNGER_ATM)%p_const%v%v, 100000.0_WP, &
                                     "read_springer_namelist, non-default values, p_atm (1)")
@@ -258,6 +264,9 @@ subroutine test_read_springer_namelist_default(tests)
     call tests%integer_eq(rc, 0, "read_springer_namelist, default values, rc")
     
     if (rc == 0) then
+        call tests%real_eq(config%dt%v%v, DT_DEFAULT, "read_springer_namelist, default values, dt")
+        call tests%logical_true(config%csv_output, "read_springer_namelist, default values, csv_output")
+        
         d_barrel = sqrt((4.0_WP/PI)*sys%cv(I_BARREL)%csa)
         call tests%real_eq(d_barrel%v%v, 13.0e-3_WP, "read_springer_namelist, default values, d_barrel")
         
@@ -292,7 +301,6 @@ subroutine test_read_springer_namelist_default(tests)
         
         call tests%character_eq(config%id, "springer-default", "read_springer_namelist, default values, id")
         
-        call tests%real_eq(config%dt%v%v, DT_DEFAULT, "read_springer_namelist, default values, dt")
         call tests%real_eq(sys%con(I_PLUNGER, I_BARREL)%b%v%v, 0.5_WP, "read_springer_namelist, default values, b")
         call tests%real_eq(sys%cv(I_PLUNGER_ATM)%p_const%v%v, P_ATM, "read_springer_namelist, default values, p_atm (1)")
         call tests%real_eq(sys%cv(I_BARREL_ATM)%p_const%v%v, P_ATM, "read_springer_namelist, default values, p_atm (2)")

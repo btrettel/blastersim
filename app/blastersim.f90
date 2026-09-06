@@ -73,12 +73,12 @@ else
         case (TIMEOUT_RUN_RC)
             write(unit=ERROR_UNIT, fmt="(a, f3.1, a)") "Projectile did not leave barrel after ", &
                                                             T_STOP_DEFAULT, " seconds."
+            stop EX_USAGE, quiet=.true.
         case default
             write(unit=ERROR_UNIT, fmt="(a)") "Refer to BlasterSim User's Guide for meaning of return code."
             write(unit=ERROR_UNIT, fmt="(a)") "<http://trettel.us/blastersim/docs/verification.html#run-time-checks>"
+            stop EX_SOFTWARE, quiet=.true.
     end select
-    
-    stop EX_USAGE, quiet=.true.
 end if
 !tripwire$ end
 

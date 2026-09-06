@@ -1,9 +1,11 @@
 &geninput_config
-output_file_prefix = "src/geninput_pneumatic"
-namelist_group     = "pneumatic"
-kind_parameter     = "WP"
-write_tex          = .true.
-write_return       = .false.
+output_file_prefix    = "src/geninput_pneumatic"
+namelist_group        = "pneumatic"
+kind_parameter        = "WP"
+write_tex             = .true.
+write_return          = .false.
+executable            = "./blastersim"
+acceptable_exit_codes = 0, 64
 /
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -29,6 +31,16 @@ bound_fmt             = "f4.2"
 /
 
 &input_variable
+variable_name         = "csv_output"
+type_definition       = "logical"
+required              = .false.
+tex_description       = "Whether CSV output is enabled or disabled."
+default_value         = ".true."
+fuzz_range            = 0.0, 0.0
+fuzz                  = .true. ! needed to fuzz with a range of 0
+/
+
+&input_variable
 variable_name         = "d_barrel"
 type_definition       = "type(si_length)"
 required              = .true.
@@ -41,6 +53,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
+fuzz_range            = 1.0e-3, 20.0e-3
 /
 
 &input_variable
@@ -56,6 +69,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
+fuzz_range            = 1.0e-2, 200.0e-2
 /
 
 &input_variable
@@ -71,6 +85,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
+fuzz_range            = 1.0e-6, 100.0e-6
 /
 
 &input_variable
@@ -117,6 +132,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
+fuzz_range            = 1.0e-3, 50.0e-3
 /
 
 &input_variable
@@ -149,6 +165,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .false.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
+fuzz_range            = 0.0, 10000.0
 /
 
 &input_variable
@@ -164,6 +181,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .false.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
+fuzz_range            = 0.0, 10000.0
 /
 
 &input_variable
@@ -179,6 +197,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
+fuzz_range            = 0.25, 500.0
 /
 
 &input_variable
@@ -296,6 +315,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
+fuzz_range            = 1.0e-2, 20.0e-2
 /
 
 &input_variable
@@ -311,6 +331,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
+fuzz_range            = 1.0e-6, 1000.0e-6
 /
 
 &input_variable
@@ -326,4 +347,5 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
+fuzz_range            = 100.0, 500.0
 /

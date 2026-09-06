@@ -1623,8 +1623,8 @@ subroutine test_conservation_1(tests)
     
     call sys_start%cv(1)%set_const("atmosphere for chamber", csa_3, p_atm, temp_atm, [DRY_AIR], y, 3, x_dot=-x_dot)
     
-    call tests%integer_eq(sys_start%cv(1)%type, MIRROR_CV_TYPE, "test_conservation, sys_start%cv(1)%type")
-    call tests%integer_eq(sys_start%cv(1)%i_cv_mirror, 3, "test_conservation, sys_start%cv(1)%i_cv_mirror")
+    call tests%integer_eq(sys_start%cv(1)%type, MIRROR_CV_TYPE, "test_conservation_1, sys_start%cv(1)%type")
+    call tests%integer_eq(sys_start%cv(1)%i_cv_mirror, 3, "test_conservation_1, sys_start%cv(1)%i_cv_mirror")
     
     ! 2: atmosphere for barrel
     call p_atm%v%init_const(1.0e5_WP, n_d)
@@ -1633,8 +1633,8 @@ subroutine test_conservation_1(tests)
     
     call sys_start%cv(2)%set_const("atmosphere for barrel", csa_4, p_atm, temp_atm, [DRY_AIR], y, 4)
     
-    call tests%integer_eq(sys_start%cv(2)%type, MIRROR_CV_TYPE, "test_conservation, sys_start%cv(2)%type")
-    call tests%integer_eq(sys_start%cv(2)%i_cv_mirror, 4, "test_conservation, sys_start%cv(2)%i_cv_mirror")
+    call tests%integer_eq(sys_start%cv(2)%type, MIRROR_CV_TYPE, "test_conservation_1, sys_start%cv(2)%type")
+    call tests%integer_eq(sys_start%cv(2)%i_cv_mirror, 4, "test_conservation_1, sys_start%cv(2)%i_cv_mirror")
     
     ! 3: chamber
     call x_3%v%init_const(10.0e-2_WP, n_d)
@@ -1667,7 +1667,7 @@ subroutine test_conservation_1(tests)
     call config%set("test_conservation", 1, csv_output=.true., csv_frequency=100)
     call run(config, sys_start, sys_end, status)
     
-    call tests%integer_eq(status%rc, X_GE_X_STOP_RUN_RC, "test_conservation, status%rc")
+    call tests%integer_eq(status%rc, X_GE_X_STOP_RUN_RC, "test_conservation_1, status%rc")
     
     if (status%rc /= X_GE_X_STOP_RUN_RC) then
         if (allocated(status%data)) print *, status%data(1)
@@ -1675,49 +1675,49 @@ subroutine test_conservation_1(tests)
     end if
     
     e_s_3_start = sys_start%cv(3)%e_s()
-    call tests%real_eq(e_s_3_start%v%v, 0.5_WP*(700.0_WP)*(9.0e-2_WP)**2, "test_conservation, e_s_3_start")
+    call tests%real_eq(e_s_3_start%v%v, 0.5_WP*(700.0_WP)*(9.0e-2_WP)**2, "test_conservation_1, e_s_3_start")
     
     e_k_3_start = sys_start%cv(3)%e_k()
-    call tests%real_eq(e_k_3_start%v%v, 0.5_WP*(30.0e-3_WP)*(2.0_WP)**2, "test_conservation, e_k_3_start")
+    call tests%real_eq(e_k_3_start%v%v, 0.5_WP*(30.0e-3_WP)*(2.0_WP)**2, "test_conservation_1, e_k_3_start")
     
     e_start_3 = sys_start%cv(3)%e_total()
     call tests%real_eq(e_start_3%v%v, sys_start%cv(3)%e_g%v%v + e_s_3_start%v%v + e_k_3_start%v%v, &
-                            "test_conservation, sys_start%cv(3)%e_total()")
+                            "test_conservation_1, sys_start%cv(3)%e_total()")
     
     m_start = sys_start%m_total()
     m_end   = sys_end%m_total()
-    call tests%real_eq(m_start%v%v, m_end%v%v, "test_conservation, m_start == m_end")
-    call tests%real_gt(m_start%v%d(1), 0.0_WP, "test_conservation, m_start derivative is positive")
-    call tests%real_eq(m_start%v%d(1) - m_end%v%d(1), 0.0_WP, "test_conservation, delta m derivative is zero", abs_tol=1.0e-22_WP)
+    call tests%real_eq(m_start%v%v, m_end%v%v, "test_conservation_1, m_start == m_end")
+    call tests%real_gt(m_start%v%d(1), 0.0_WP, "test_conservation_1, m_start derivative is positive")
+    call tests%real_eq(m_start%v%d(1) - m_end%v%d(1), 0.0_WP, "test_conservation_1, delta m derivative is zero", abs_tol=1.0e-22_WP)
     
     e_start = sys_start%e_total()
     e_end   = sys_end%e_total()
-    call tests%real_eq(e_start%v%v, e_end%v%v, "test_conservation, e_start == e_end", abs_tol=1.0e-3_WP)
-    call tests%real_gt(e_start%v%d(1), 0.0_WP, "test_conservation, e_start derivative is positive")
-    call tests%real_eq(e_start%v%d(1) - e_end%v%d(1), 0.0_WP, "test_conservation, delta e derivative is zero", abs_tol=1.0e-5_WP)
+    call tests%real_eq(e_start%v%v, e_end%v%v, "test_conservation_1, e_start == e_end", abs_tol=1.0e-3_WP)
+    call tests%real_gt(e_start%v%d(1), 0.0_WP, "test_conservation_1, e_start derivative is positive")
+    call tests%real_eq(e_start%v%d(1) - e_end%v%d(1), 0.0_WP, "test_conservation_1, delta e derivative is zero", abs_tol=1.0e-5_WP)
     
     e_chamber_atm = sys_end%cv(1)%e_total()
-    call tests%character_eq(sys_end%cv(1)%label, "atmosphere for chamber", "test_conservation, chamber atmosphere label")
-    call tests%real_lt(e_chamber_atm%v%v, 0.0_WP, "test_conservation, chamber atmosphere energy sign")
+    call tests%character_eq(sys_end%cv(1)%label, "atmosphere for chamber", "test_conservation_1, chamber atmosphere label")
+    call tests%real_lt(e_chamber_atm%v%v, 0.0_WP, "test_conservation_1, chamber atmosphere energy sign")
     call tests%real_gt(abs(sys_end%cv(1)%x_dot%v%v), 0.0_WP, &
-                        "test_conservation, chamber atmosphere plunger velocity is non-zero")
+                        "test_conservation_1, chamber atmosphere plunger velocity is non-zero")
     call tests%real_eq(sys_end%cv(1)%x_dot%v%v, -sys_end%cv(3)%x_dot%v%v, &
-                        "test_conservation, chamber atmosphere velocity matches plunger velocity")
+                        "test_conservation_1, chamber atmosphere velocity matches plunger velocity")
     call tests%real_eq(e_chamber_atm%v%v, sys_end%cv(1)%e_g%v%v, &
-                            "test_conservation, chamber atmosphere energy is internal energy")
+                            "test_conservation_1, chamber atmosphere energy is internal energy")
     
     e_barrel_atm = sys_end%cv(2)%e_total()
-    call tests%character_eq(sys_end%cv(2)%label, "atmosphere for barrel", "test_conservation, barrel atmosphere label")
-    call tests%real_gt(e_barrel_atm%v%v, 0.0_WP, "test_conservation, barrel atmosphere energy sign")
+    call tests%character_eq(sys_end%cv(2)%label, "atmosphere for barrel", "test_conservation_1, barrel atmosphere label")
+    call tests%real_gt(e_barrel_atm%v%v, 0.0_WP, "test_conservation_1, barrel atmosphere energy sign")
     call tests%real_gt(abs(sys_end%cv(2)%x_dot%v%v), 0.0_WP, &
-                        "test_conservation, barrel atmosphere projectile/plunger velocity is non-zero")
+                        "test_conservation_1, barrel atmosphere projectile/plunger velocity is non-zero")
     call tests%real_eq(sys_end%cv(2)%x_dot%v%v, -sys_end%cv(4)%x_dot%v%v, &
-                        "test_conservation, barrel atmosphere velocity matches projectile velocity")
+                        "test_conservation_1, barrel atmosphere velocity matches projectile velocity")
     call tests%real_eq(e_barrel_atm%v%v, sys_end%cv(2)%e_g%v%v, &
-                            "test_conservation, barrel atmosphere energy is internal energy")
+                            "test_conservation_1, barrel atmosphere energy is internal energy")
     
-    call tests%real_gt(sys_end%cv(3)%e_f%v%v, 0.0_WP, "test_conservation, chamber friction loss is non-zero")
-    call tests%real_gt(sys_end%cv(4)%e_f%v%v, 0.0_WP, "test_conservation, barrel friction loss is non-zero")
+    call tests%real_gt(sys_end%cv(3)%e_f%v%v, 0.0_WP, "test_conservation_1, chamber friction loss is non-zero")
+    call tests%real_gt(sys_end%cv(4)%e_f%v%v, 0.0_WP, "test_conservation_1, barrel friction loss is non-zero")
 end subroutine test_conservation_1
 
 subroutine test_conservation_2(tests)
