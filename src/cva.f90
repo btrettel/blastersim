@@ -57,7 +57,7 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin F85932C0 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
+!tripwire$ begin 1B86A075 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
 integer, public, parameter :: X_LT_X_MIN_RUN_RC             = -3
 integer, public, parameter :: X_GE_X_STOP_RUN_RC            = -2
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
@@ -74,6 +74,7 @@ integer, public, parameter :: NEGATIVE_CV_X_RUN_RC          = 10
 integer, public, parameter :: MAX_ITERS_TIME_LOOP_RUN_RC    = 11
 integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X_RUN_RC = 12
 integer, public, parameter :: RK_STAGE_NEGATIVE_MASS_RC     = 13
+integer, public, parameter :: RK_STAGE_NEGATIVE_ENERGY_RC   = 14
 !integer, public, parameter :: X_BLOW_UP_RUN_RC              = 
 !integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 
 !integer, public, parameter :: M_BLOW_UP_RUN_RC              = 
@@ -1589,12 +1590,16 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out, rc)
         sys%cv(i_cv)%x_dot = sys_old%cv(i_cv)%x_dot + a*cv_delta_in(i_cv)%x_dot
         sys%cv(i_cv)%e_g   = sys_old%cv(i_cv)%e_g   + a*cv_delta_in(i_cv)%e_g
         sys%cv(i_cv)%e_f   = sys_old%cv(i_cv)%e_f   + a*cv_delta_in(i_cv)%e_f
+        
+        if (sys%cv(i_cv)%e_g%v%v < 0.0_WP) then
+            rc = RK_STAGE_NEGATIVE_ENERGY_RC
+            return
+        end if
+        
         do k = 1, n_gas
             sys%cv(i_cv)%m_k(k) = sys_old%cv(i_cv)%m_k(k) + a*cv_delta_in(i_cv)%m_k(k)
             
             if (sys%cv(i_cv)%m_k(k)%v%v < 0.0_WP) then
-                ! This seems to be triggered if the mass flow rate is too high for the chosen time step.
-                
                 rc = RK_STAGE_NEGATIVE_MASS_RC
                 return
             end if

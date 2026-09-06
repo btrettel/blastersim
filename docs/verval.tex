@@ -39,6 +39,8 @@ This indicates that BlasterSim was unable to properly handle an event like proje
 \item[return code 13:] Whether any species in a control volume had negative mass in a Runge-Kutta stage.
 This tends to occur when the equivalent diameter of the flow restriction is too large.
 Alternatively, the time step may be too large, however, the equivalent diameter should be checked first as the default time step should be acceptable in the vast majority of situations.
+\item[return code 14:] Whether any control volume had negative energy in a Runge-Kutta stage.
+This is similar to return code 13 and can be fixed in the same ways.
 \end{description}
 
 The thresholds used for some of these checks are somewhat arbitrary and are based on what conservatively seems to never cause problems in practice.
