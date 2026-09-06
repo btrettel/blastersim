@@ -61,7 +61,7 @@ end block nml_blk
 
 call run(config, sys_start, sys_end, status)
 
-!tripwire$ begin CABF53DD Update `\secref{run-time-checks}` of verval.tex.
+!tripwire$ begin 1042292F Update `\secref{run-time-checks}` of verval.tex.
 if (status%rc < SUCCESS_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
     write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
@@ -76,11 +76,11 @@ else
             stop EX_USAGE, quiet=.true.
         case (RK_STAGE_NEGATIVE_MASS_RC)
             write(unit=ERROR_UNIT, fmt="(2a)") "Negative mass of a gas species detected during a Runge-Kutta stage. ", &
-                    "Check whether d_e is too large, or possibly if dt is too small."
+                    "Check whether d_e is too large, or possibly if dt is too large."
             stop EX_USAGE, quiet=.true.
         case (RK_STAGE_NEGATIVE_ENERGY_RC)
             write(unit=ERROR_UNIT, fmt="(2a)") "Negative energy of a control volume detected during a Runge-Kutta stage. ", &
-                    "Check whether d_e is too large, or possibly if dt is too small."
+                    "Check whether d_e is too large, or possibly if dt is too large."
             stop EX_USAGE, quiet=.true.
         case default
             write(unit=ERROR_UNIT, fmt="(a)") "Internal BlasterSim error, possibly a bug."

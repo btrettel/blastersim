@@ -1591,7 +1591,7 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out, rc)
         sys%cv(i_cv)%e_g   = sys_old%cv(i_cv)%e_g   + a*cv_delta_in(i_cv)%e_g
         sys%cv(i_cv)%e_f   = sys_old%cv(i_cv)%e_f   + a*cv_delta_in(i_cv)%e_f
         
-        if (sys%cv(i_cv)%e_g%v%v < 0.0_WP) then
+        if ((sys%cv(i_cv)%e_g%v%v < 0.0_WP) .and. (sys%cv(i_cv)%eos /= CONST_EOS)) then
             rc = RK_STAGE_NEGATIVE_ENERGY_RC
             return
         end if
