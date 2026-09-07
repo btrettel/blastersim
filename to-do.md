@@ -1,6 +1,5 @@
 ### v0.3.0
 
-- Reject `d_e > d_barrel` in io.f90 as probably physically impossible.
 - geninput: required variables can't have a default value
 - Turn Radioactive springer cases into tests to make sure that they get the same return codes at the very least.
 - Make optimized debug version of BlasterSim for fuzz testing.

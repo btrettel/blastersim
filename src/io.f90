@@ -108,6 +108,8 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     
     include "geninput_pneumatic.f90"
     
+    call check(d_e_u <= d_barrel_u, "d_e being larger than d_barrel is physically impossible.", rc_read)
+    
     if (rc_read /= 0) then
         return
     end if
@@ -204,6 +206,8 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     !tripwire$ end
     
     include "geninput_springer.f90"
+    
+    call check(d_e_u <= d_barrel_u, "d_e being larger than d_barrel is physically impossible.", rc_read)
     
     if (rc_read /= 0) then
         return
