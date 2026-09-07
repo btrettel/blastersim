@@ -1,5 +1,8 @@
 ### v0.3.0
 
+- Order-of-accuracy test for `e_f`.
+- Switch chamber and dead volume to mL.
+- Switch `d_*` and `l_*` to mm.
 - geninput: required variables can't have a default value
 - Turn Radioactive springer cases into tests to make sure that they get the same return codes at the very least.
 - Make optimized debug version of BlasterSim for fuzz testing.
@@ -15,6 +18,7 @@
 - Add optional icon to some sections like Roache V&V book. Mark equations in usage section as optional.
 - Check docs and code for `TODO`.
 - Document theory completely
+    - Document `e_f`. An absolute value on $\dot{x}$ is not used because $p_\text{f}$ changes sign.
     - Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
         - <https://news.ycombinator.com/item?id=48554595>
         - <https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions>
@@ -64,6 +68,12 @@
 - Print useful error message for each error code.
     - Make a system to keep descriptions in the the docs and code consistent: generrors
 - Test CSV file.
+- Add adaptive time step? This should improve robustness.
+    - Update "Time integration" section of the docs to note this.
+    - Add tripwire to code for "Time integration" section of the docs.
+    - Consider a minimum time step to allow integration to continue no matter what. What's the smallest time scale I expect to appear here?
+    - Base adaptive time stepping on mass or energy balance? If stricter tolerance is exceeded, reduce time step automatically.
+    - Make `MASS_TOLERANCE_RUN_RC` and others in that `case` use the `EX_SOFTWARE` exit code after this change.
 
 ***
 
@@ -603,10 +613,6 @@
     - FOSM for robust optimization
     - Model fitting with uncertainties.
 - Make `csv_frequency` based on time, not number of time steps.
-- Add adaptive time step?
-    - Update "Time integration" section of the docs to note this.
-    - Add tripwire to code for "Time integration" section of the docs.
-    - Consider a minimum time step to allow integration to continue no matter what. What's the smallest time scale I expect to appear here?
 - Use type system to enforce thermodynamic constraints in some way?
 - Switch to unit conversion functions like CEA: <https://github.com/nasa/cea/blob/main/source/units.f90>
     - I want to use these in initialization expressions, but only intrinsic functions are allowed. So this doesn't work.

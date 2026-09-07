@@ -1246,6 +1246,8 @@ pure function d_e_f_d_t(sys, i_cv)
             ! TODO: Reenable this assertion after figuring out why `e_f` decreases in some cases.
 !            call assert(d_e_f_d_t%v%v >= 0.0_WP, "cva (d_e_f_d_t): e_f should not decrease", &
 !                            print_real=[d_e_f_d_t%v%v])
+            ! I'd guess that the signs of `p_f` and `x_dot` don't necessarily cancel out initially.
+            ! The model should be modified to enforce that if that's an issue.
         case (MIRROR_CV_TYPE)
             call d_e_f_d_t%v%init_const(0.0_WP, size(sys%cv(i_cv)%csa%v%d))
             call assert(is_close(sys%cv(i_cv)%e_f%v%v, 0.0_WP), "cva (d_e_f_d_t): e_f must be zero for MIRROR_CV_TYPE", &

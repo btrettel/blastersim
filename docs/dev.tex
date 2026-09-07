@@ -176,6 +176,9 @@ Projectile velocities are positive as the projectile moves towards the barrel ex
 For control volumes with a projectile/plunger, \texttt{i\_cv\_mirror} is set to the control volume index for the control volume on the other side of the projectile/plunger.
 For constant volume chambers where there is no projectile/plunger, set \texttt{i\_cv\_mirror} to zero to disable the mirror control volume feature.
 
+\item In blastersim.f90, when errors occur, terminate BlasterSim with exit code \texttt{EX\_USAGE} when the problem is probably caused by user input, and terminate BlasterSim with exit code \texttt{EX\_SOFTWARE} when the problem is probably caused by a bug in BlasterSim.
+This distinction will help when doing fuzz testing of BlasterSim so that the fuzz tester can distinguish between bugs and bad inputs.
+
 \item In the documentation, put no more than one sentence per line of LaTeX code.
 Breaking up a sentence into clauses may be useful in some contexts as well,
 and breaking up a mathematical expression into multiple LaTeX lines is also often useful.
