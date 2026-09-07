@@ -1,5 +1,6 @@
 ### v0.3.0
 
+- Test `adapt_dt`.
 - Order-of-accuracy test for `e_f`.
 - Switch chamber and dead volume to mL.
 - Switch `d_*` and `l_*` to mm.

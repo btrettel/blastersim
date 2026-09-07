@@ -129,9 +129,20 @@ This should remain approximately constant and is present for debugging purposes.
 \item \texttt{rc}: Return code of \texttt{run} subroutine.
 Integer.
 Values 1 and above indicate an error occurred and are discussed in \secref{run-time-checks}.
-A value of -1 means that no errors or events were detected and BlasterSim will continue to the next time step.
 A value of -2 and below indicates that an event that requires special treatment was detected (for example, the projectile leaving the barrel or the plunger impacting the end of the plunger tube), and BlasterSim may or may not terminate the simulation depending on the event.
-% TODO: Document meaning of each negative rc value.
+\begin{description}
+    \item[return code -1:] No errors or events were detected.
+    BlasterSim will continue to the next time step.
+    \item[return code -2:] A control volume's projectile/plunger has reached its termination position.
+    For example, this could be triggered if a projectile leaves the barrel.
+    BlasterSim will terminate.
+    \item[return code -3:] A plunger has impacted the end of the plunger tube.
+    BlasterSim will continue to the next time step.
+    \item[return code -4:] The time step was multiplied by $\backofffactor$ due to a mass or energy conservation tolerance being violated.
+    See \secref{time-integration}.
+    BlasterSim will continue to the next time step.
+    \textbfwarning{If another event or error occurred during this time step, that return code will override this return code.}
+\end{description}
 \end{itemize}
 
 \section{BlasterSim inputs in general}\label{inputs-general}

@@ -57,7 +57,8 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin 1B86A075 Update \secref{run-time-checks} and `actual_rc` in geninput_*.nml.
+!tripwire$ begin 24EDE6E5 Update \secref{run-time-checks}, \secref{csv} and `actual_rc` in geninput_*.nml.
+integer, public, parameter :: DT_CHANGED_RUN_RC             = -4
 integer, public, parameter :: X_LT_X_MIN_RUN_RC             = -3
 integer, public, parameter :: X_GE_X_STOP_RUN_RC            = -2
 integer, public, parameter :: CONTINUE_RUN_RC               = -1
@@ -1767,6 +1768,8 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
         
         if (i >= MAX_ITERS_TIME_LOOP) status%rc = MAX_ITERS_TIME_LOOP_RUN_RC
         
+        if (.not. config%const_dt) call adapt_dt(sys_old, sys_new, dt, status%rc)
+        
         if (config%csv_output .and. &
                 ((mod(i, config%csv_frequency) == 0) .or. (status%rc < CONTINUE_RUN_RC))) then
             ! `status%rc < CONTINUE_RC` condition: Write all non-normal events to the CSV file for logging.
@@ -1776,8 +1779,6 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
         if ((status%rc >= SUCCESS_RC) &
                 .or. exit_time_loop &
                 .or. (stop_at_first_event_ .and. (status%rc < CONTINUE_RUN_RC))) exit time_loop
-        
-        if (.not. config%const_dt) call adapt_dt(sys_old, sys_new, dt)
         
         call move_alloc(from=sys_old,  to=sys_temp)
         call move_alloc(from=sys_new,  to=sys_old)
@@ -2358,12 +2359,13 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
 end subroutine write_csv_row
 !tripwire$ end
 
-!tripwire$ begin 7DCD7351 Update \secref{time-integration}.
-pure subroutine adapt_dt(sys_old, sys_new, dt)
+!tripwire$ begin 10744586 Update \secref{time-integration}.
+pure subroutine adapt_dt(sys_old, sys_new, dt, rc)
     ! Adaptive time stepping based on conservation metrics and exponential backoff.
     
     type(cv_system_type), allocatable, intent(in) :: sys_old, sys_new
     type(si_time), intent(in out)                 :: dt
+    integer, intent(in out)                       :: rc
     
     type(unitless)  :: rel_delta
     type(si_mass)   :: m_old
@@ -2374,6 +2376,7 @@ pure subroutine adapt_dt(sys_old, sys_new, dt)
     rel_delta = abs(sys_new%m_total() - m_old) / m_old
     if (rel_delta%v%v > BACKOFF_MASS_TOLERANCE) then
         dt = BACKOFF_FACTOR*dt
+        if (rc == CONTINUE_RUN_RC) rc = DT_CHANGED_RUN_RC
         return
     end if
     
@@ -2382,6 +2385,7 @@ pure subroutine adapt_dt(sys_old, sys_new, dt)
     rel_delta = abs(sys_new%e_total() - e_old) / e_old
     if (rel_delta%v%v > BACKOFF_ENERGY_TOLERANCE) then
         dt = BACKOFF_FACTOR*dt
+        if (rc == CONTINUE_RUN_RC) rc = DT_CHANGED_RUN_RC
         return
     end if
     

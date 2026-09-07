@@ -1,5 +1,6 @@
 ## 0.3.0
 
+- Adaptive time stepping was added.
 - Certain error messages now include instructions for the user to fix the error.
 - Dead space in springers is now split between the plunger tube and barrel to eliminate numerical issues as the plunger approaches the end of the plunger tube.
 - Plunger impact and bounce are handled.
