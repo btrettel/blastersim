@@ -1,6 +1,7 @@
 &pneumatic
-dt = 2.0e-7 ! s
-csv_output = .false.
+dt            = 2.0e-7 ! s
+csv_output    = .false.
+csv_frequency = 1
 
 ! atmosphere
 p_atm    = 102.0 ! kPa (absolute)

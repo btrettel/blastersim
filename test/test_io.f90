@@ -60,6 +60,7 @@ subroutine test_read_pneumatic_namelist_non_default(tests)
     if (rc == 0) then
         call tests%real_eq(config%dt%v%v, 2.0e-7_WP, "read_pneumatic_namelist, non-default values, dt")
         call tests%logical_false(config%csv_output, "read_pneumatic_namelist, non-default values, csv_output")
+        call tests%integer_eq(config%csv_frequency, 1, "read_pneumatic_namelist, non-default values, csv_frequency")
         
         d_barrel = sqrt((4.0_WP/PI)*sys%cv(I_BARREL)%csa)
         call tests%real_eq(d_barrel%v%v, 13.0e-3_WP, "read_pneumatic_namelist, non-default values, d_barrel")
@@ -93,7 +94,7 @@ end subroutine test_read_pneumatic_namelist_non_default
 
 subroutine test_read_pneumatic_namelist_default(tests)
     use prec, only: CL, PI
-    use cva, only: DT_DEFAULT, X_GE_X_STOP_RUN_RC, cv_system_type, run_config_type
+    use cva, only: DT_DEFAULT, CSV_FREQUENCY_DEFAULT, X_GE_X_STOP_RUN_RC, cv_system_type, run_config_type
     use port, only: path_join
     use io, only: I_BARREL, read_pneumatic_namelist
     use gasdata, only: P_ATM, TEMP_ATM
@@ -123,6 +124,8 @@ subroutine test_read_pneumatic_namelist_default(tests)
     if (rc == 0) then
         call tests%real_eq(config%dt%v%v, DT_DEFAULT, "read_pneumatic_namelist, default values, dt")
         call tests%logical_true(config%csv_output, "read_pneumatic_namelist, default values, csv_output")
+        call tests%integer_eq(config%csv_frequency, CSV_FREQUENCY_DEFAULT, &
+                                "read_pneumatic_namelist, default values, csv_frequency")
         
         d_barrel = sqrt((4.0_WP/PI)*sys%cv(I_BARREL)%csa)
         call tests%real_eq(d_barrel%v%v, 13.0e-3_WP, "read_pneumatic_namelist, default values, d_barrel")
@@ -184,6 +187,7 @@ subroutine test_read_springer_namelist_non_default(tests)
     if (rc == 0) then
         call tests%real_eq(config%dt%v%v, 1.0e-7_WP, "read_springer_namelist, non-default values, dt")
         call tests%logical_false(config%csv_output, "read_springer_namelist, non-default values, csv_output")
+        call tests%integer_eq(config%csv_frequency, 1, "read_springer_namelist, non-default values, csv_frequency")
         
         d_barrel = sqrt((4.0_WP/PI)*sys%cv(I_BARREL)%csa)
         call tests%real_eq(d_barrel%v%v, 13.0e-3_WP, "read_springer_namelist, non-default values, d_barrel")
@@ -236,7 +240,7 @@ end subroutine test_read_springer_namelist_non_default
 
 subroutine test_read_springer_namelist_default(tests)
     use prec, only: CL, PI
-    use cva, only: DT_DEFAULT, X_GE_X_STOP_RUN_RC, cv_system_type, run_config_type
+    use cva, only: DT_DEFAULT, CSV_FREQUENCY_DEFAULT, X_GE_X_STOP_RUN_RC, cv_system_type, run_config_type
     use port, only: path_join
     use io, only: I_BARREL, read_springer_namelist
     use gasdata, only: P_ATM, TEMP_ATM
@@ -266,6 +270,8 @@ subroutine test_read_springer_namelist_default(tests)
     if (rc == 0) then
         call tests%real_eq(config%dt%v%v, DT_DEFAULT, "read_springer_namelist, default values, dt")
         call tests%logical_true(config%csv_output, "read_springer_namelist, default values, csv_output")
+        call tests%integer_eq(config%csv_frequency, CSV_FREQUENCY_DEFAULT, &
+                                "read_springer_namelist, default values, csv_frequency")
         
         d_barrel = sqrt((4.0_WP/PI)*sys%cv(I_BARREL)%csa)
         call tests%real_eq(d_barrel%v%v, 13.0e-3_WP, "read_springer_namelist, default values, d_barrel")

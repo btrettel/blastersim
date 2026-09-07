@@ -76,7 +76,7 @@ end subroutine create_barrel
 subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_muzzle_, actual_v_muzzle_stdev_, &
                                     actual_v_muzzle_n_, actual_rc_)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
-    use cva, only: cv_system_type, run_config_type, DT_DEFAULT
+    use cva, only: cv_system_type, run_config_type, DT_DEFAULT, CSV_FREQUENCY_DEFAULT
     use port, only: path_basename
     use gasdata, only: P_ATM_KPA, TEMP_ATM_ => TEMP_ATM, DRY_AIR, gas_type
     use checks, only: is_close, check
@@ -164,7 +164,7 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     ! `sys%cv(I_BARREL_ATM)`: atmosphere
     call sys%cv(I_BARREL_ATM)%set_const("atmosphere", csa_barrel, p_atm_u, temp_atm_u, ATM_GAS, y, I_BARREL)
     
-    call config%set(id, csv_output=csv_output, dt=dt_u, n_d=0)
+    call config%set(id, csv_output=csv_output, csv_frequency=csv_frequency, dt=dt_u, n_d=0)
     
     if (present(actual_v_muzzle_))       actual_v_muzzle_       = actual_v_muzzle_u
     if (present(actual_v_muzzle_stdev_)) actual_v_muzzle_stdev_ = actual_v_muzzle_stdev_u
@@ -175,7 +175,7 @@ end subroutine read_pneumatic_namelist
 subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muzzle_, actual_v_muzzle_stdev_, &
                                     actual_v_muzzle_n_, actual_rc_)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
-    use cva, only: cv_system_type, run_config_type, DT_DEFAULT, COR_DEFAULT
+    use cva, only: cv_system_type, run_config_type, DT_DEFAULT, CSV_FREQUENCY_DEFAULT, COR_DEFAULT
     use port, only: path_basename
     use gasdata, only: P_ATM_KPA, TEMP_ATM_ => TEMP_ATM, DRY_AIR, gas_type
     use checks, only: is_close, check
@@ -271,7 +271,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     call sys%cv(I_PLUNGER_ATM)%set_const("atmosphere for plunger", csa_plunger, p_atm_u, temp_atm_u, PLUNGER_ATM_GAS, &
                                             y, I_PLUNGER)
     
-    call config%set(id, csv_output=csv_output, dt=dt_u, n_d=0)
+    call config%set(id, csv_output=csv_output, csv_frequency=csv_frequency, dt=dt_u, n_d=0)
     
     if (present(actual_v_muzzle_))       actual_v_muzzle_       = actual_v_muzzle_u
     if (present(actual_v_muzzle_stdev_)) actual_v_muzzle_stdev_ = actual_v_muzzle_stdev_u

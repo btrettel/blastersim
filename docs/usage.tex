@@ -50,8 +50,9 @@ This spreadsheet can be opened in a spreadsheet program like Excel or any other 
 The name of the spreadsheet is determined by file name of the input file.
 The file extension of the input file is removed and the file extension \texttt{csv} is used instead in the CSV output.
 For example, in \secref{springer-example} the file name is springer-example.nml, so the spreadsheet is written to springer-example.csv.
-Every $\csvfrequencydefault$th time step is written to the CSV file rather than every time step.
+By default, every $\csvfrequencydefault$th time step is written to the CSV file rather than every time step.
 Every time step would be too detailed and lead to large CSV files.
+How often the CSV file is written to can be changed with the \texttt{csv\_frequency} variable in the inputs.
 Additionally, all time steps with events that require special treatment from BlasterSim like the plunger hitting the end of the plunger tube in a springer will be written to the CSV file, and the type of event can be determined from the \texttt{rc} column. % TODO: link to where all `rc` values are defined once you list the negative ones
 
 The CSV file contains the following columns:

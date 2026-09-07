@@ -1,6 +1,7 @@
 &springer
-dt = 1.0e-7 ! s
-csv_output = .false.
+dt            = 1.0e-7 ! s
+csv_output    = .false.
+csv_frequency = 1
 
 ! barrel
 d_barrel  = 13.0e-3 ! m

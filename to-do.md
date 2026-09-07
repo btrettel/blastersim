@@ -1,6 +1,9 @@
 ### v0.3.0
 
-- property unit testing
+- Reject `d_e > d_barrel` in io.f90 as probably physically impossible.
+- geninput: required variables can't have a default value
+- Turn Radioactive springer cases into tests to make sure that they get the same return codes at the very least.
+- Make optimized debug version of BlasterSim for fuzz testing.
 - Use linters including fortitude.
 - Increase assertion density.
 - Disclaimer: User takes responsibility for accuracy, no liability
@@ -11,8 +14,7 @@
 - pre-commit hook
 - Add preface section describing side icons
 - Add optional icon to some sections like Roache V&V book. Mark equations in usage section as optional.
-- Go through docs starting at the beginning and complete unfinished parts.
-- Check docs for `TODO`.
+- Check docs and code for `TODO`.
 - Document theory completely
     - Document why certain governing equations were chosen in BlasterSim. The `m_k`/`e_g` formulation allows the same governing equations to be used for constant P/T and normal CVs. Allows for tracking leaks and energy in constant P/T CVs, etc. Synchronization and division by zero issues are avoided with volume never going to zero. Might be better for conservation.
         - <https://news.ycombinator.com/item?id=48554595>
@@ -46,7 +48,7 @@
 - Document how variable names are converted from LaTeX and code, as a general rule.
 - Have a conversion table for LaTeX and code variable names.
 - Maybe: Put springer and pneumatic governing equations in usage chapter. This might confuse people more than help.
-- Thanks appendix
+- Thanks/acknowledgements appendix
     - Andrew Trettel for macOS binary
     - Radioactive for data
 - docs: Discuss use of derived types defined in cva.f90.
@@ -63,10 +65,10 @@
 - Print useful error message for each error code.
     - Make a system to keep descriptions in the the docs and code consistent: generrors
 - Test CSV file.
-- "Pass through" feature for geninput so that a default value can come from a previous namelist's calculation. Detect if the value is overwritten in the second namelist if it comes from the first namelist as that's probably not desired.
 
 ***
 
+- "Pass through" feature for geninput so that a default value can come from a previous namelist's calculation. Detect if the value is overwritten in the second namelist if it comes from the first namelist as that's probably not desired.
 - .out file:
     - Human and computer readable? JSON? But I want units.
         - one line per number
@@ -278,7 +280,7 @@
         - compton_internal_2007 (need rotational KE)
 - Add LLM logs to repo?
 - For consistency, make macros for LaTeX variable names?
-- Add control volume for back side of plunger for springers.
+- Add non-atmospheric control volume for back side of plunger for springers.
 - Dart friction model taking into account pressure inside of the dart.
     - <https://discord.com/channels/825852031239061545/1462571693628461157/1485097150386798753>
     - See 2026-03-21 and 2026-03-22 handwritten notes (particularly the top of 2026-03-22 p. 1 as that has the equation to use boxed).

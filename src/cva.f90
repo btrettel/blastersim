@@ -1638,8 +1638,6 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
     end if
     
     if (present(csv_frequency)) then
-        call assert(csv_output, "cva (set_run_config): Why set csv_frequency if csv_output=.false.?", &
-                        print_logical=[csv_output])
         config%csv_frequency = csv_frequency
     else
         config%csv_frequency = CSV_FREQUENCY_DEFAULT

@@ -41,6 +41,18 @@ fuzz                  = .true. ! needed to fuzz with a range of 0
 /
 
 &input_variable
+variable_name         = "csv_frequency"
+type_definition       = "integer"
+required              = .false.
+tex_description       = "How many time steps pass before writing a time step to the CSV file."
+tex_description_2     = "Default value is $\csvfrequencydefault$."
+default_value         = "CSV_FREQUENCY_DEFAULT"
+lower_bound           = 0.0
+lower_bound_not_equal = .false.
+print_default_value   = .false.
+/
+
+&input_variable
 variable_name         = "d_barrel"
 type_definition       = "type(si_length)"
 required              = .true.
@@ -85,7 +97,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 10.0e-6, 100.0e-6
+fuzz_range            = 1.0e-6, 100.0e-6
 /
 
 &input_variable
