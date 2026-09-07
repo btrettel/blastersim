@@ -431,8 +431,12 @@ It is likely that coefficients of restitution that are too small may have simila
 \subsection{Time integration}\label{time-integration}
 
 A simple 4th order Runge-Kutta scheme~\cite[p.~1081]{kreyszig_advanced_1993} is used for time integration.
-In the interior ballistics calculations, the time step is typically constant (the default time step is $\dtdefault$~s), except when an event like a plunger impact or projectile leaving the barrel is detected.
-In those cases, the time step is adjusted to closely determine the time of the event using a secant method variation of H\'{e}non's trick~\cite{henon_numerical_1982}.
+In the interior ballistics calculations, the time step ($\Delta t$/\texttt{dt}) is typically constant (the default is $\dtdefault$~s), except in certain circumstances:
+\begin{itemize}
+\item When an event like a plunger impact or projectile leaving the barrel is detected.
+In these cases, the time step is adjusted to closely determine the time of the event using a secant method variation of H\'{e}non's trick~\cite{henon_numerical_1982}.
+\item When between two time steps, the total system mass deviates by more than $\backoffmasstolerance\%$ or the total system energy deviates by more than $\backoffenergytolerance\%$, the time step is multiplied by $\backofffactor$ to try to maintain strong conservation.
+\end{itemize}
 
 % TODO: Discuss exterior ballistics time integration.
 

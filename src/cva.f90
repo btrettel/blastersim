@@ -36,7 +36,7 @@ integer, public, parameter  :: CSV_FREQUENCY_DEFAULT    = 10        ! time steps
 real(WP), public, parameter :: T_STOP_DEFAULT           = 0.1_WP    ! s
 real(WP), public, parameter :: DT_DEFAULT               = 1.0e-5_WP ! s
 logical, public, parameter  :: TOLERANCE_CHECKS_DEFAULT = .true.    ! tolerance checks are enabled by default
-logical, public, parameter  :: CONST_DT_DEFAULT         = .true.    ! variable `dt` not implemented yet
+logical, public, parameter  :: CONST_DT_DEFAULT         = .false.
 
 real(WP), public, parameter :: MASS_TOLERANCE         = 1.0e-5_WP  ! unitless
 real(WP), public, parameter :: ENERGY_TOLERANCE       = 1.0e-4_WP  ! unitless
@@ -87,6 +87,12 @@ integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X = 50
 
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
+
+!tripwire$ begin D5092627 Update \secref{time-integration}.
+real(WP), public, parameter :: BACKOFF_FACTOR           = 0.5_WP
+real(WP), public, parameter :: BACKOFF_MASS_TOLERANCE   = 1.0e-8_WP
+real(WP), public, parameter :: BACKOFF_ENERGY_TOLERANCE = 1.0e-8_WP
+!tripwire$ end
 
 type, public :: cv_type ! control volume
     ! time varying
@@ -1771,6 +1777,8 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
                 .or. exit_time_loop &
                 .or. (stop_at_first_event_ .and. (status%rc < CONTINUE_RUN_RC))) exit time_loop
         
+        if (.not. config%const_dt) call adapt_dt(sys_old, sys_new, dt)
+        
         call move_alloc(from=sys_old,  to=sys_temp)
         call move_alloc(from=sys_new,  to=sys_old)
         call move_alloc(from=sys_temp, to=sys_new)
@@ -2348,6 +2356,37 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
             error stop "cva (write_csv_row, rc): invalid row_type"
     end select
 end subroutine write_csv_row
+!tripwire$ end
+
+!tripwire$ begin 7DCD7351 Update \secref{time-integration}.
+pure subroutine adapt_dt(sys_old, sys_new, dt)
+    ! Adaptive time stepping based on conservation metrics and exponential backoff.
+    
+    type(cv_system_type), allocatable, intent(in) :: sys_old, sys_new
+    type(si_time), intent(in out)                 :: dt
+    
+    type(unitless)  :: rel_delta
+    type(si_mass)   :: m_old
+    type(si_energy) :: e_old
+    
+    m_old = sys_old%m_total()
+    call assert(m_old%v%v > 0.0_WP, "cva (adapt_dt): m_old must be greater than zero", print_real=[m_old%v%v])
+    rel_delta = abs(sys_new%m_total() - m_old) / m_old
+    if (rel_delta%v%v > BACKOFF_MASS_TOLERANCE) then
+        dt = BACKOFF_FACTOR*dt
+        return
+    end if
+    
+    e_old = sys_old%e_total()
+    call assert(e_old%v%v > 0.0_WP, "cva (adapt_dt): e_old must be greater than zero", print_real=[e_old%v%v])
+    rel_delta = abs(sys_new%e_total() - e_old) / e_old
+    if (rel_delta%v%v > BACKOFF_ENERGY_TOLERANCE) then
+        dt = BACKOFF_FACTOR*dt
+        return
+    end if
+    
+    ! TODO: derivatives
+end subroutine adapt_dt
 !tripwire$ end
 
 end module cva

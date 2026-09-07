@@ -68,12 +68,6 @@
 - Print useful error message for each error code.
     - Make a system to keep descriptions in the the docs and code consistent: generrors
 - Test CSV file.
-- Add adaptive time step? This should improve robustness.
-    - Update "Time integration" section of the docs to note this.
-    - Add tripwire to code for "Time integration" section of the docs.
-    - Consider a minimum time step to allow integration to continue no matter what. What's the smallest time scale I expect to appear here?
-    - Base adaptive time stepping on mass or energy balance? If stricter tolerance is exceeded, reduce time step automatically.
-    - Make `MASS_TOLERANCE_RUN_RC` and others in that `case` use the `EX_SOFTWARE` exit code after this change.
 
 ***
 

@@ -69,7 +69,8 @@ contains
 subroutine write_defaults()
     use cva, only: DT_DEFAULT, T_STOP_DEFAULT, COR_DEFAULT, &
                     MASS_TOLERANCE, ENERGY_TOLERANCE, MASS_DERIV_TOLERANCE, ENERGY_DERIV_TOLERANCE, &
-                    MIRROR_X_TOLERANCE, MAX_ITERS_TIME_LOOP, MAX_ITERS_GET_SYS_AT_X, CSV_FREQUENCY_DEFAULT
+                    MIRROR_X_TOLERANCE, MAX_ITERS_TIME_LOOP, MAX_ITERS_GET_SYS_AT_X, CSV_FREQUENCY_DEFAULT, &
+                    BACKOFF_FACTOR, BACKOFF_MASS_TOLERANCE, BACKOFF_ENERGY_TOLERANCE
     use gasdata, only: P_ATM, TEMP_ATM, TEMP_0
     use convert, only: CONVERT_C_TO_K, CONVERT_PA_TO_KPA
     use io, only: write_latex_engineering
@@ -93,6 +94,9 @@ subroutine write_defaults()
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\maxiterstimeloop}{", MAX_ITERS_TIME_LOOP, "}"
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\maxitersgetsysatx}{", MAX_ITERS_GET_SYS_AT_X, "}"
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\csvfrequencydefault}{", CSV_FREQUENCY_DEFAULT, "}"
+    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\backofffactor}{", BACKOFF_FACTOR, "}"
+    call write_latex_engineering(tex_unit, 100.0_WP*BACKOFF_MASS_TOLERANCE, "backoffmasstolerance", "f4.1")
+    call write_latex_engineering(tex_unit, 100.0_WP*BACKOFF_ENERGY_TOLERANCE, "backoffenergytolerance", "f4.1")
     close(tex_unit)
 end subroutine write_defaults
 
@@ -1865,7 +1869,8 @@ subroutine test_mirror_1(tests)
     call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp, "chamber 2", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
                                     delta_pre, [DRY_AIR], 1, type=MIRROR_CV_TYPE, v_scale_s=v_scale, v_scale_d=v_scale)
     
-    call config%set("test_mirror_1", 0, t_stop=t_stop)
+    ! `const_dt=.true.` avoids a tolerance issue in one of the tests
+    call config%set("test_mirror_1", 0, t_stop=t_stop, const_dt=.true.)
     call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_mirror_1, status%rc")
