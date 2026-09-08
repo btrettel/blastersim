@@ -65,7 +65,7 @@ end block nml_blk
 
 call run(config, sys_start, sys_end, status)
 
-!tripwire$ begin 4DA5CFBA Update `\secref{run-time-checks}` of verval.tex.
+!tripwire$ begin 9EDE37E1 Update `\secref{run-time-checks}` of verval.tex.
 if (status%rc < SUCCESS_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
     write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
@@ -87,9 +87,9 @@ else
         case (MASS_TOLERANCE_RUN_RC, ENERGY_TOLERANCE_RUN_RC, MASS_DERIV_TOLERANCE_RUN_RC, &
                     ENERGY_DERIV_TOLERANCE_RUN_RC)
             write(unit=ERROR_UNIT, fmt="(2a)") "Mass or energy tolerance exceeded. ", &
-                                                "This is a bug that should be reported."
+                                                "Decrease dt by a factor of 10 and report a bug if that doesn't help."
             call refer_to_docs()
-            stop EX_SOFTWARE, quiet=.true.
+            stop EX_USAGE, quiet=.true.
         case (IDEAL_EOS_RUN_RC)
             write(unit=ERROR_UNIT, fmt="(a)") "Critical pressure exceeded. The ideal gas law is inaccurate here. ", &
                     "BlasterSim can not handle pressures this high at the moment."

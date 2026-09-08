@@ -343,7 +343,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 1.0e-3, 500.0e-3
+fuzz_range            = 1.0, 500.0
 /
 
 &input_variable

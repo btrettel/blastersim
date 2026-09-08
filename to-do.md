@@ -1,5 +1,8 @@
 ### v0.3.0
 
+- Save problems found via fuzz testing to use as regression tests.
+- docs: Differentiate between time step as in `dt` and time step as a particular location in time.
+- `adapt_dt`: Try smaller time step when velocity is low due to switching between dynamic and static friction? Friction switching being a problem might not actually be the issue as in the case that was failing, the pressures of friction are similar between static and dynamic.
 - Test `adapt_dt`.
 - Order-of-accuracy test for `e_f`.
 - Switch chamber and dead volume to mL.
