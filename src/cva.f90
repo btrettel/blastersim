@@ -2110,7 +2110,7 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     t = t_old + dt_i
 end subroutine get_sys_at_x
 
-!tripwire$ begin 6CB60BAD Update `\secref{plunger-impact}` of theory.tex.
+!tripwire$ begin 4FFEC573 Update `\secref{plunger-impact}` of theory.tex.
 pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
     ! Set `sys_before_impact` to the instant immediately after plunger impact.
     ! `sys_before_impact` is right before plunger impact occurs (plunger velocity has no changed yet).
@@ -2120,6 +2120,7 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
     type(cv_system_type), allocatable, intent(out) :: sys_after_impact
     
     integer :: i_cv_mirror
+    type(si_inverse_mass) :: rm_p_eff
     
     call assert(sys_before_impact%cv(i_cv)%cor%v%v >= 0.0_WP, "cva (get_sys_after_impact): cor >= 0 violated")
     call assert(sys_before_impact%cv(i_cv)%cor%v%v <= 1.0_WP, "cva (get_sys_after_impact): cor <= 1 violated")
@@ -2132,11 +2133,11 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
         sys_after_impact%cv(i_cv_mirror)%x_dot = -sys_after_impact%cv(i_cv)%x_dot
     end if
     
-    if (.not. is_close(sys_after_impact%cv(i_cv)%rm_p%v%v, 0.0_WP)) then
+    rm_p_eff = sys_after_impact%cv(i_cv)%rm_p_eff()
+    if (.not. is_close(rm_p_eff%v%v, 0.0_WP)) then
         sys_after_impact%cv(i_cv)%e_m = sys_before_impact%cv(i_cv)%e_m &
-                                            + (0.5_WP/sys_after_impact%cv(i_cv)%rm_p_eff()) &
-                                                *(square(sys_before_impact%cv(i_cv)%x_dot) &
-                                                    - square(sys_after_impact%cv(i_cv)%x_dot))
+                                            + (0.5_WP/rm_p_eff)*(square(sys_before_impact%cv(i_cv)%x_dot) &
+                                                                    - square(sys_after_impact%cv(i_cv)%x_dot))
         
         ! This is a fair bit of a hack.
         ! If the coefficient of restitution is zero, the plunger head right after impact is at `x_min`.
@@ -2145,7 +2146,8 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
         ! Preventing all plunger motion by making the effective mass infinite is one way around this.
         ! TODO: It would be better to add a force active only if `is_close(cv%x%v%v, cv%x_min%v%v)` to keep the plunger stationary.
         ! Then if the pressure in the CV overcomes the counteracting force, the plunger can start moving again.
-        if (is_close(sys_after_impact%cv(i_cv)%x_dot%v%v, 0.0_WP)) then
+        ! The `abs_tol` is needed to prevent stalling and is even more of a hack.
+        if (is_close(sys_after_impact%cv(i_cv)%x_dot%v%v, 0.0_WP, abs_tol=1.0e-15_WP)) then
             call sys_after_impact%cv(i_cv)%rm_p%v%init_const(0.0_WP, size(sys_after_impact%cv(i_cv)%rm_p%v%d))
         end if
     end if
