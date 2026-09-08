@@ -89,10 +89,11 @@ integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X = 50
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
 
-!tripwire$ begin D5092627 Update \secref{time-integration}.
-real(WP), public, parameter :: BACKOFF_FACTOR           = 0.5_WP
-real(WP), public, parameter :: BACKOFF_MASS_TOLERANCE   = 1.0e-8_WP
-real(WP), public, parameter :: BACKOFF_ENERGY_TOLERANCE = 1.0e-8_WP
+!tripwire$ begin 64C5C07A Update \secref{time-integration}.
+real(WP), public, parameter :: DT_BACKOFF_FACTOR           = 0.5_WP
+real(WP), public, parameter :: DT_BACKOFF_MASS_TOLERANCE   = 1.0e-8_WP
+real(WP), public, parameter :: DT_BACKOFF_ENERGY_TOLERANCE = 1.0e-8_WP
+real(WP), public, parameter :: DT_IMPACT_FACTOR            = 0.9_WP
 !tripwire$ end
 
 type, public :: cv_type ! control volume
@@ -2051,6 +2052,7 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     sys_im2 = sys_old
     sys_im1 = sys_new
     
+    !print *, "start", x_event%v%v, sys_old%cv(i_cv_x_event)%x_dot%v%v
     rc = MAX_ITERS_GET_SYS_AT_X_RUN_RC
     do i = 1, MAX_ITERS_GET_SYS_AT_X
         ! This is one of the stopping criteria recommended by Wikipedia.
@@ -2059,7 +2061,12 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
         ! Note that the derivatives do not factor into this stopping criteria, as a value is what is being interpolated to.
         if (abs(sys_im1%cv(i_cv_x_event)%x%v%v - sys_im2%cv(i_cv_x_event)%x%v%v) < x_tol) then
             rc = SUCCESS_RC
-            call move_alloc(from=sys_im1, to=sys_i)
+            if (i > 1) then
+                call move_alloc(from=sys_im1, to=sys_i)
+            else
+                dt_i = dt_im2
+                call move_alloc(from=sys_im2, to=sys_i)
+            end if
             exit 
         end if
         
@@ -2067,7 +2074,7 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
         dt_i = dt_im1 - (dt_im1 - dt_im2) * (sys_im1%cv(i_cv_x_event)%x - x_event) &
                     / (sys_im1%cv(i_cv_x_event)%x - sys_im2%cv(i_cv_x_event)%x)
         
-        !print *, dt_i%v%v, dt_im1%v%v, dt_im2%v%v
+        !print *, dt_i%v%v
         
         call assert(dt_i%v%v >= 0.0_WP, "cva (get_sys_at_x): dt_i can not be negative", &
                         print_real=[dt_i%v%v], print_integer=[i])
@@ -2097,11 +2104,19 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
         call move_alloc(from=sys_i,    to=sys_im1)
         call move_alloc(from=sys_temp, to=sys_i)
     end do
+    !print *, "done", rc, sys_i%cv(i_cv_x_event)%cor%v%v
     
     call assert(allocated(sys_i), "cva (get_sys_at_x): sys_i should be allocated here", &
                     print_integer=[rc])
     
-    sys_event = sys_i
+    ! This will prevent BlasterSim from stalling and eventually hitting an assertion error when round off error makes `dt_i < 0.0`.
+    ! How can I make this apply only for plungers? Look at `cor` so that I know it's supposed to rebound?
+    ! That's what I'm doing right now, but I might have a better idea later.
+    if (is_close(dt_i%v%v, 0.0_WP) .and. (sys_i%cv(i_cv_x_event)%cor%v%v > COR_DEFAULT)) then
+        call sys_i%cv(i_cv_x_event)%rm_p%v%init_const(0.0_WP, size(sys_i%cv(i_cv_x_event)%rm_p%v%d))
+    end if
+    
+    call move_alloc(from=sys_i, to=sys_event)
     call assert(is_close(sys_event%cv(i_cv_x_event)%x%v%v, x_event%v%v, &
                             abs_tol=max(100.0_WP*x_tol, 1.0e-6_WP)), &
                     "cva (get_sys_at_x): x_end is not close to x_event", &
@@ -2361,7 +2376,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
 end subroutine write_csv_row
 !tripwire$ end
 
-!tripwire$ begin 10744586 Update \secref{time-integration}.
+!tripwire$ begin 58D3D342 Update \secref{time-integration}.
 pure subroutine adapt_dt(sys_old, sys_new, dt, rc)
     ! Adaptive time stepping based on conservation metrics and exponential backoff.
     
@@ -2373,11 +2388,16 @@ pure subroutine adapt_dt(sys_old, sys_new, dt, rc)
     type(si_mass)   :: m_old
     type(si_energy) :: e_old
     
+    if (rc == X_LT_X_MIN_RUN_RC) then
+        dt = DT_IMPACT_FACTOR*dt
+        return
+    end if
+    
     m_old = sys_old%m_total()
     call assert(m_old%v%v > 0.0_WP, "cva (adapt_dt): m_old must be greater than zero", print_real=[m_old%v%v])
     rel_delta = abs(sys_new%m_total() - m_old) / m_old
-    if (rel_delta%v%v > BACKOFF_MASS_TOLERANCE) then
-        dt = BACKOFF_FACTOR*dt
+    if (rel_delta%v%v > DT_BACKOFF_MASS_TOLERANCE) then
+        dt = DT_BACKOFF_FACTOR*dt
         if (rc == CONTINUE_RUN_RC) rc = DT_CHANGED_RUN_RC
         return
     end if
@@ -2385,8 +2405,8 @@ pure subroutine adapt_dt(sys_old, sys_new, dt, rc)
     e_old = sys_old%e_total()
     call assert(e_old%v%v > 0.0_WP, "cva (adapt_dt): e_old must be greater than zero", print_real=[e_old%v%v])
     rel_delta = abs(sys_new%e_total() - e_old) / e_old
-    if (rel_delta%v%v > BACKOFF_ENERGY_TOLERANCE) then
-        dt = BACKOFF_FACTOR*dt
+    if (rel_delta%v%v > DT_BACKOFF_ENERGY_TOLERANCE) then
+        dt = DT_BACKOFF_FACTOR*dt
         if (rc == CONTINUE_RUN_RC) rc = DT_CHANGED_RUN_RC
         return
     end if

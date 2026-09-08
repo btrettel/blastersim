@@ -70,7 +70,7 @@ subroutine write_defaults()
     use cva, only: DT_DEFAULT, T_STOP_DEFAULT, COR_DEFAULT, &
                     MASS_TOLERANCE, ENERGY_TOLERANCE, MASS_DERIV_TOLERANCE, ENERGY_DERIV_TOLERANCE, &
                     MIRROR_X_TOLERANCE, MAX_ITERS_TIME_LOOP, MAX_ITERS_GET_SYS_AT_X, CSV_FREQUENCY_DEFAULT, &
-                    BACKOFF_FACTOR, BACKOFF_MASS_TOLERANCE, BACKOFF_ENERGY_TOLERANCE
+                    DT_BACKOFF_FACTOR, DT_BACKOFF_MASS_TOLERANCE, DT_BACKOFF_ENERGY_TOLERANCE, DT_IMPACT_FACTOR
     use gasdata, only: P_ATM, TEMP_ATM, TEMP_0
     use convert, only: CONVERT_C_TO_K, CONVERT_PA_TO_KPA
     use io, only: write_latex_engineering
@@ -94,9 +94,10 @@ subroutine write_defaults()
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\maxiterstimeloop}{", MAX_ITERS_TIME_LOOP, "}"
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\maxitersgetsysatx}{", MAX_ITERS_GET_SYS_AT_X, "}"
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\csvfrequencydefault}{", CSV_FREQUENCY_DEFAULT, "}"
-    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\backofffactor}{", BACKOFF_FACTOR, "}"
-    call write_latex_engineering(tex_unit, 100.0_WP*BACKOFF_MASS_TOLERANCE, "backoffmasstolerance", "f4.1")
-    call write_latex_engineering(tex_unit, 100.0_WP*BACKOFF_ENERGY_TOLERANCE, "backoffenergytolerance", "f4.1")
+    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\dtbackofffactor}{", DT_BACKOFF_FACTOR, "}"
+    call write_latex_engineering(tex_unit, 100.0_WP*DT_BACKOFF_MASS_TOLERANCE, "dtbackoffmasstolerance", "f4.1")
+    call write_latex_engineering(tex_unit, 100.0_WP*DT_BACKOFF_ENERGY_TOLERANCE, "dtbackoffenergytolerance", "f4.1")
+    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\dtimpactfactor}{", DT_IMPACT_FACTOR, "}"
     close(tex_unit)
 end subroutine write_defaults
 

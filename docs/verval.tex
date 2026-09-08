@@ -48,10 +48,20 @@ The thresholds used for some of these checks are somewhat arbitrary and are base
 For a discussion of return codes -1 and below, see \secref{csv} on the CSV output variable \texttt{rc}.
 These return codes indicate no errors were detected.
 
-\subsection{Debugging run-time assertions}
+\subsection{Debugging run-time assertions}\label{assertions}
 
 BlasterSim contains hundreds of run-time assertions which perform deeper internal consistency checks.
 These additional checks are disabled in the released versions of BlasterSim for speed but are enabled during all developer testing runs for debugging purposes.
+
+\subsection{Fuzz testing}\label{fuzz-testing}
+
+BlasterSim is periodically tested with randomly generated input files, which is called fuzz testing.
+Fuzz testing has mostly improved BlasterSim's robustness and had no impact on the correctness of the result.
+Before fuzz testing, BlasterSim would crash on certain inputs either due to mass or energy going negative in a control volume, the energy conservation tolerance being violated, or an invalid floating point operation, for example.
+These errors were mostly solved by adding stricter input validation to catch physically impossible inputs (that the fuzz tester itself can not know are physically impossible), better internal error detection and reporting, adding adaptive time stepping in response to mass and energy conservation errors reaching a certain threshold, and improving the numerical stability of floating point operations.
+These robustness improvements will be useful when design optimization is added as an optimizer is similar to a fuzz tester in that it will try many strange inputs, and BlasterSim not crashing is necessary for the process to continue.
+
+% TODO: BlasterSim input files which failed during fuzz testing are kept and periodically rerun to ensure that the problem identified is fixed.
 
 \subsection{Compile-time unit checking}\label{unit-checking}
 
@@ -85,7 +95,6 @@ BlasterSim input and output may use other units, but the genunits types themselv
 
 The test suite mentioned at the start of \secref{verval} has \totaltests\, the vast majority of which are verification tests checking that various functions and subroutines of BlasterSim produce the expected results.
 This section details some of the more important verification tests.
-At the moment, the tests listed here are incomplete.
 
 \subsubsection{Comparison with single control volume exact solution}\label{single-cv-exact}
 

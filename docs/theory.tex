@@ -435,7 +435,10 @@ In the interior ballistics calculations, the time step ($\Delta t$/\texttt{dt}) 
 \begin{itemize}
 \item When an event like a plunger impact or projectile leaving the barrel is detected.
 In these cases, the time step is adjusted to closely determine the time of the event using a secant method variation of H\'{e}non's trick~\cite{henon_numerical_1982}.
-\item When between two time steps, the total system mass deviates by more than $\backoffmasstolerance\%$ or the total system energy deviates by more than $\backoffenergytolerance\%$, the time step is multiplied by $\backofffactor$ to try to maintain strong conservation (exponential backoff).
+\item When between two time steps, the total system mass deviates by more than $\dtbackoffmasstolerance\%$ or the total system energy deviates by more than $\dtbackoffenergytolerance\%$, the time step is multiplied by $\dtbackofffactor$ to try to maintain strong conservation (exponential backoff).
+This adaptivity is not enough in some instances, so it may sometimes be necessary for the user to reduce the time step.
+\item When plunger impact occurs, the time step is multiplied by $\dtimpactfactor$ as the plunger dynamics after impact may be faster.
+This is particularly true after multiple plunger impacts, which can happen in some cases.
 \end{itemize}
 
 % TODO: Discuss exterior ballistics time integration.
@@ -462,7 +465,7 @@ Automatic differentiation would require detecting every discontinuity that occur
 % TODO
 % luke_essentials_2013
 % Constraints: deb_efficient_2000 (also discuss modification of this)
-% TODO: Update `\secref{road-map}` when adding.
+% TODO: Update `\secref{road-map}` and `\secref{fuzz-testing}` when adding.
 
 % TODO: Also discuss robust optimization
 % putko_approach_2001

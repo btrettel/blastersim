@@ -1,17 +1,28 @@
 ### v0.3.0
 
-- Save problems found via fuzz testing to use as regression tests.
-- docs: Differentiate between time step as in `dt` and time step as a particular location in time.
-- `adapt_dt`: Try smaller time step when velocity is low due to switching between dynamic and static friction? Friction switching being a problem might not actually be the issue as in the case that was failing, the pressures of friction are similar between static and dynamic.
-- Test `adapt_dt`.
-- Order-of-accuracy test for `e_f`.
+- Move all return codes to one section in the usage chapter.
+    - Change blastersim.f90 to refer to that section of the usage chapter.
+- Increase assertion density.
+- Make fuzz testing detect unrealistically large muzzle velocities.
+    - The easiest way to do this might be to make BlasterSim return an error for unrealistically large muzzle velocities.
+        - Check against maximum possible muzzle velocity from Corner.
+- Make optimized debug version of BlasterSim for fuzz testing.
 - Switch chamber and dead volume to mL.
 - Switch `d_*` and `l_*` to mm.
+- Make testing system that runs BlasterSim input files and only checks the return codes. (Return codes are more specific than exit codes.)
+    - Save problems found via fuzz testing to use as regression tests.
+    - Turn Radioactive springer cases into tests to make sure that they get the same return codes at the very least.
+
+***
+
+- Secant method in `get_sys_at_x`: Use optimal 3 point stencil from ash_optimal_1981 eq. 2 to minimize error.
+    - See FLT's test_fmad.f90 `test_num_deriv` subroutine.
+- docs: Differentiate between time step as in `dt` and time step as a particular location in time.
+- `adapt_dt`: Try smaller time step when velocity is low due to switching between dynamic and static friction? Friction switching being a problem might not actually be the issue as in the case that was failing, the pressures of friction are similar between static and dynamic. This shouldn't apply to projectiles/plungers with infinite mass.
+- Test `adapt_dt`.
+- Order-of-accuracy test for `e_f`.
 - geninput: required variables can't have a default value
-- Turn Radioactive springer cases into tests to make sure that they get the same return codes at the very least.
-- Make optimized debug version of BlasterSim for fuzz testing.
 - Use linters including fortitude.
-- Increase assertion density.
 - Disclaimer: User takes responsibility for accuracy, no liability
 - Empirical data chapter
     - $b$ regression in Beater book
@@ -473,6 +484,7 @@
             - <https://discord.com/channels/825852031239061545/825852073382772758/1517111131230048276>
             - spring displacement is low enough to prevent permanent deformation/settling (alternative: look into fatigue life of spring assuming no amount of deformation will be okay?)
                 - <https://discord.com/channels/825852031239061545/825852033898774543/1540066532527444078>
+                - <https://news.ycombinator.com/item?id=49596781>
             - spring stress
             - spring buckling
         - maximum draw force limit

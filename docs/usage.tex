@@ -138,7 +138,7 @@ A value of -2 and below indicates that an event that requires special treatment 
     BlasterSim will terminate.
     \item[return code -3:] A plunger has impacted the end of the plunger tube.
     BlasterSim will continue to the next time step.
-    \item[return code -4:] The time step was multiplied by $\backofffactor$ due to a mass or energy conservation tolerance being violated.
+    \item[return code -4:] The time step was multiplied by $\dtbackofffactor$ due to a mass or energy conservation tolerance being violated.
     See \secref{time-integration}.
     BlasterSim will continue to the next time step.
     \textbfwarning{If another event or error occurred during this time step, that return code will override this return code.}
