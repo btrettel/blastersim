@@ -1,6 +1,5 @@
 ### v0.3.0
 
-- Switch `d_*` and `l_*` to mm.
 - Increase assertion density.
 - Make optimized debug version of BlasterSim for fuzz testing.
 - Make testing system that runs BlasterSim input files and only checks the return codes. (Return codes are more specific than exit codes.)

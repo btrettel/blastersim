@@ -55,8 +55,9 @@ print_default_value   = .false.
 &input_variable
 variable_name         = "d_barrel"
 type_definition       = "type(si_length)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "m"
+tex_unit              = "mm"
 tex_description       = "Inner diameter of the barrel."
 tex_description_2     = "Note that the projectile outer diameter is assumed to be the same as the barrel inner diameter for the moment. Also, for projectiles on the outside of the barrel, this value should be the inner diameter of the projectile, not the inner diameter of the barrel."
 tex_variable_name     = "$d_\text{barrel}$"
@@ -65,14 +66,15 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 1.0e-3, 20.0e-3
+fuzz_range            = 1.0, 20.0
 /
 
 &input_variable
 variable_name         = "l_travel"
 type_definition       = "type(si_length)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "m"
+tex_unit              = "mm"
 tex_description       = "Distance the base of projectile moves before exiting the barrel."
 tex_description_2     = "\@\textbfwarning{Sometimes called the barrel length, which could be misleading as the material the barrel is constructed from is often longer.}"
 tex_variable_name     = "$l_\text{travel}$"
@@ -81,7 +83,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 1.0e-2, 200.0e-2
+fuzz_range            = 10.0, 2000.0
 /
 
 &input_variable
@@ -134,8 +136,9 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "d_e"
 type_definition       = "type(si_length)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "m"
+tex_unit              = "mm"
 tex_description       = "Effective diameter of the flow restriction."
 tex_description_2     = "This includes the vena contracta and energy losses due to turbulence, so \textbfwarning{the effective area is smaller than the actual area available and could be much smaller than the actual area available}. Also, because energy losses due to turbulence are a factor, the effective diameter may not correspond to any actual flow area and only means that the flow restriction acts like an orifice of the effective diameter. This is converted to an effective area internally assuming the area is circular."
 ! For a modern Nerf springer with a pusher, likely the effective diameter is smaller than the actual pusher diameter.
@@ -145,7 +148,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 1.0e-3, 20.0e-3
+fuzz_range            = 1.0, 20.0
 /
 
 &input_variable
@@ -266,8 +269,9 @@ default_value         = "-2"
 ! &input_variable
 ! variable_name         = "delta_leak"
 ! type_definition       = "type(si_length)"
+! scaling_factor        = 1.0e-3
 ! required              = .false.
-! tex_unit              = "m"
+! tex_unit              = "mm"
 ! tex_description       = "Effective gap around the projectile of the leaks in the barrel."
 ! tex_description_2     = "Setting this to zero disables leaks in the barrel."
 ! tex_variable_name     = "$\Delta_\text{leak}$"
@@ -304,8 +308,9 @@ default_value         = "-2"
 &input_variable
 variable_name         = "d_plunger"
 type_definition       = "type(si_length)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "m"
+tex_unit              = "mm"
 tex_description       = "Inner diameter of the plunger tube, which is the outer diameter of the plunger."
 tex_variable_name     = "$d_\text{plunger}$"
 lower_bound_active    = .true.
@@ -313,14 +318,15 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 1.0e-3, 50.0e-3
+fuzz_range            = 1.0, 50.0
 /
 
 &input_variable
 variable_name         = "d_coaxial_inner"
 type_definition       = "type(si_length)"
+scaling_factor        = 1.0e-3
 required              = .false.
-tex_unit              = "m"
+tex_unit              = "mm"
 tex_description       = "For coaxial springers with annular plunger tubes, this is the inner diameter of the plunger, which is the outer diameter of the barrel tube. For conventional springers, this is zero, which eliminates the coaxial setup and is the default."
 tex_variable_name     = "$d_\text{coaxial,inner}$"
 lower_bound_active    = .true.
@@ -349,8 +355,9 @@ fuzz_range            = 1.0, 500.0
 &input_variable
 variable_name         = "l_draw"
 type_definition       = "type(si_length)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "m"
+tex_unit              = "mm"
 tex_description       = "Plunger draw length."
 tex_variable_name     = "$l_\text{draw}$"
 lower_bound_active    = .true.
@@ -358,14 +365,15 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 1.0e-2, 50.0e-2
+fuzz_range            = 10.0, 500.0
 /
 
 &input_variable
 variable_name         = "delta_pre"
 type_definition       = "type(si_length)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "m"
+tex_unit              = "mm"
 tex_description       = "Precompression of the spring. In other words, the amount the spring is compressed at zero draw length."
 tex_description_2     = "Note that some define a precompression length which is the length of the spring at zero draw length rather than the amount the spring is compressed. The \texttt{delta}/$\Delta$ notation was chosen to emphasize that BlasterSim uses the amount the spring is compressed. See \figref{springer unprimed} for a graphical definition of $\Delta_\text{pre}$."
 tex_variable_name     = "$\Delta_\text{pre}$"
@@ -374,7 +382,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .false.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 0.0, 10.0e-2
+fuzz_range            = 0.0, 100.0
 /
 
 &input_variable

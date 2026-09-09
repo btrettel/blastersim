@@ -1,23 +1,23 @@
 &pneumatic
 ! barrel
-d_barrel  = 13.0e-3 ! m
-l_travel  = 40.0e-2 ! m
-m_proj    = 1.0     ! g
-vol_dead  = 10.0    ! mL
-p_fs_proj = 0.0     ! kPa
-p_fd_proj = 0.0     ! kPa
+d_barrel  = 13.0  ! mm
+l_travel  = 400.0 ! mm
+m_proj    = 1.0   ! g
+vol_dead  = 10.0  ! mL
+p_fs_proj = 0.0   ! kPa
+p_fd_proj = 0.0   ! kPa
 
 ! chamber
-p_chamber   = 500.0   ! kPa
-vol_chamber = 20.0    ! mL
-d_chamber   = 12.5e-3 ! m
+p_chamber   = 500.0 ! kPa
+vol_chamber = 20.0  ! mL
+d_chamber   = 12.5  ! mm
 
 ! atmosphere
 !p_atm    = 101.0 ! kPa (optional, absolute, commented out)
 !temp_atm = 300.0 ! K (optional, commented out)
 
 ! flow restriction
-d_e       = 3.0e-3 ! m
-!b         = 0.5   ! unitless (optional, commented out)
-t_opening = 10.0   ! ms (optional)
+d_e       = 3.0  ! mm
+!b         = 0.5 ! unitless (optional, commented out)
+t_opening = 10.0 ! ms (optional)
 /

@@ -55,8 +55,9 @@ print_default_value   = .false.
 &input_variable
 variable_name         = "d_barrel"
 type_definition       = "type(si_length)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "m"
+tex_unit              = "mm"
 tex_description       = "Inner diameter of the barrel."
 tex_description_2     = "Note that the projectile outer diameter is assumed to be the same as the barrel inner diameter for the moment. Also, for projectiles on the outside of the barrel, this value should be the inner diameter of the projectile, not the inner diameter of the barrel."
 tex_variable_name     = "$d_\text{barrel}$"
@@ -65,14 +66,15 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 1.0e-3, 20.0e-3
+fuzz_range            = 1.0, 20.0
 /
 
 &input_variable
 variable_name         = "l_travel"
 type_definition       = "type(si_length)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "m"
+tex_unit              = "mm"
 tex_description       = "Distance the base of projectile moves before exiting the barrel."
 tex_description_2     = "\@\textbfwarning{Sometimes called the barrel length, which could be misleading as the material the barrel is constructed from is often longer.}"
 tex_variable_name     = "$l_\text{travel}$"
@@ -81,7 +83,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 1.0e-2, 200.0e-2
+fuzz_range            = 10.0, 2000.0
 /
 
 &input_variable
@@ -134,8 +136,9 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "d_e"
 type_definition       = "type(si_length)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "m"
+tex_unit              = "mm"
 tex_description       = "Effective diameter of the valve."
 tex_description_2     = "This includes the vena contracta and energy losses due to turbulence, so \textbfwarning{the effective area is smaller than the actual area available and could be much smaller than the actual area available}. Also, because energy losses due to turbulence are a factor, the effective diameter may not correspond to any actual flow area and only means that the flow restriction acts like an orifice of the effective diameter. This is converted to an effective area internally assuming the area is circular."
 tex_variable_name     = "$d_\text{e}$"
@@ -144,7 +147,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 1.0e-3, 50.0e-3
+fuzz_range            = 1.0, 50.0
 /
 
 &input_variable
@@ -265,8 +268,9 @@ default_value         = "-2"
 ! &input_variable
 ! variable_name         = "delta_leak"
 ! type_definition       = "type(si_length)"
+! scaling_factor        = 1.0e-3
 ! required              = .false.
-! tex_unit              = "m"
+! tex_unit              = "mm"
 ! tex_description       = "Effective gap around the projectile of the leaks in the barrel."
 ! tex_description_2     = "Setting this to zero disables leaks in the barrel."
 ! tex_variable_name     = "$\Delta_\text{leak}$"
@@ -317,8 +321,9 @@ bound_fmt             = "f3.1"
 &input_variable
 variable_name         = "d_chamber"
 type_definition       = "type(si_length)"
+scaling_factor        = 1.0e-3
 required              = .true.
-tex_unit              = "m"
+tex_unit              = "mm"
 tex_description       = "Inner diameter of the chamber."
 tex_description_2     = "The hydraulic diameter ($d_\text{h} = 4\,A/P$ where $A$ is cross-sectional area and $P$ is perimeter) can be used if the chamber is non-cylindrical but still elongated."
 tex_variable_name     = "$d_\text{chamber}$"
@@ -327,7 +332,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 1.0e-2, 20.0e-2
+fuzz_range            = 10.0, 200.0
 /
 
 &input_variable

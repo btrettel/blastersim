@@ -30,34 +30,34 @@
 
 &springer
 ! barrel
-d_barrel  = 19.7358e-3 ! m (assumed same diameter as [1])
-l_travel  = 494.5e-3   ! m [5]
-m_proj    = 2.65       ! g [1]
-p_fs_proj = 11.8       ! kPa [8]
-p_fd_proj = 0.0        ! kPa (guessed as it seems to be low friction)
+d_barrel  = 19.7358 ! mm (assumed same diameter as [1])
+l_travel  = 494.5   ! mm [5]
+m_proj    = 2.65    ! g [1]
+p_fs_proj = 11.8    ! kPa [8]
+p_fd_proj = 0.0     ! kPa (guessed as it seems to be low friction)
 
 ! Dead space: > 13.5763mm inner diameter, 203.2mm long
 vol_dead = 29.415514 ! mL [1]
 
 ! plunger tube
-d_plunger    = 43.6e-3 ! m [1]
-m_plunger    = 20.68   ! g [9] (weight including lubricant)
-p_fs_plunger = 0.14    ! kPa [9] (rounded to 2 sig. figs. as it's very approximate)
-p_fd_plunger = 0.0     ! kPa (guessed as it seems to be low friction)
+d_plunger    = 43.6  ! mm [1]
+m_plunger    = 20.68 ! g [9] (weight including lubricant)
+p_fs_plunger = 0.14  ! kPa [9] (rounded to 2 sig. figs. as it's very approximate)
+p_fd_plunger = 0.0   ! kPa (guessed as it seems to be low friction)
 
 ! spring (K17)
 k        = 299.46689 ! N/m (1.71 lbf/in) [4]
-l_draw   = 140.2e-3  ! m [3] (corrected from [1])
+l_draw   = 140.2     ! mm [3] (corrected from [1])
 m_spring = 66.13     ! g [4]
 
 ! l_spring = 266.7 mm (10.5 in) [3]
 ! l_pre    = 190.8 mm [3]
 ! delta_pre = l_spring - l_pre
-delta_pre = 75.9e-3 ! m
+delta_pre = 75.9 ! mm
 
 ! flow restriction
-d_e = 6.80e-3 ! m (calibrated for K11 average)
-!d_e = 13.5763e-3 ! m (full flow area)
+d_e = 6.80 ! mm (calibrated for K11 average)
+!d_e = 13.5763 ! mm (full flow area)
 b   = 0.5    ! unitless (guessed)
 
 ! atmosphere

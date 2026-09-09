@@ -4,22 +4,22 @@ csv_output    = .false.
 csv_frequency = 1
 
 ! barrel
-d_barrel  = 13.0e-3 ! m
-l_travel  = 50.0e-2 ! m
-m_proj    = 1.1     ! g
-p_fs_proj = 5.0     ! kPa
-p_fd_proj = 2.0     ! kPa
-vol_dead  = 20.0    ! mL
+d_barrel  = 13.0  ! mm
+l_travel  = 500.0 ! mm
+m_proj    = 1.1   ! g
+p_fs_proj = 5.0   ! kPa
+p_fd_proj = 2.0   ! kPa
+vol_dead  = 20.0  ! mL
 
 ! plunger tube
-d_plunger    = 30.0e-3 ! m
-k            = 500.0   ! N/m
-l_draw       = 20.0e-2 ! m
-delta_pre    = 5.0e-2  ! m
-m_plunger    = 30.0    ! g
-m_spring     = 10.0    ! g
-p_fs_plunger = 4.0     ! kPa
-p_fd_plunger = 1.0     ! kPa
+d_plunger    = 30.0  ! mm
+k            = 500.0 ! N/m
+l_draw       = 200.0 ! mm
+delta_pre    = 50.0  ! mm
+m_plunger    = 30.0  ! g
+m_spring     = 10.0  ! g
+p_fs_plunger = 4.0   ! kPa
+p_fd_plunger = 1.0   ! kPa
 cor          = 0.5
 
 ! atmosphere
@@ -27,8 +27,8 @@ p_atm    = 100.0 ! kPa (optional, absolute)
 temp_atm = 310.0 ! K (optional)
 
 ! flow restriction
-d_e = 5.0e-3 ! m
-b   = 0.528  ! unitless (optional)
+d_e = 5.0   ! mm
+b   = 0.528 ! unitless (optional)
 
 ! Experimental result
 actual_v_muzzle = 60.0 ! m/s (optional)

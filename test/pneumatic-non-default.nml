@@ -8,18 +8,18 @@ p_atm    = 102.0 ! kPa (absolute)
 temp_atm = 295.0 ! K
 
 ! chamber
-p_chamber   = 500.0   ! kPa
-vol_chamber = 20.0    ! mL
-d_chamber   = 12.5e-3 ! m
+p_chamber   = 500.0 ! kPa
+vol_chamber = 20.0  ! mL
+d_chamber   = 12.5  ! mm
 
 ! flow restriction
-d_e       = 3.0e-3 ! m
-b         = 0.6    ! unitless
-t_opening = 10.0   ! ms
+d_e       = 3.0     ! mm
+b         = 0.6     ! unitless
+t_opening = 10.0    ! ms
 
 ! barrel
-d_barrel  = 13.0e-3 ! m
-l_travel  = 40.0e-2 ! m
+d_barrel  = 13.0    ! mm
+l_travel  = 400.0   ! mm
 m_proj    = 1.0     ! g
 vol_dead  = 10.0    ! mL
 p_fs_proj = 7.0     ! kPa
