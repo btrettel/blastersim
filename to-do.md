@@ -12,6 +12,7 @@
 - Make testing system that runs BlasterSim input files and only checks the return codes. (Return codes are more specific than exit codes.)
     - Save problems found via fuzz testing to use as regression tests.
     - Turn Radioactive springer cases into tests to make sure that they get the same return codes at the very least.
+- Use an optimizer to find the best values of the exponential backoff algorithm for the time step. Minimize time with a configuration that can solve all validation, example, and regression testing input files you have? Penalize oscillations in the time step?
 
 ***
 

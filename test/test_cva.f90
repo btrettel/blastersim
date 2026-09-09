@@ -71,7 +71,7 @@ subroutine write_defaults()
                     MASS_TOLERANCE, ENERGY_TOLERANCE, MASS_DERIV_TOLERANCE, ENERGY_DERIV_TOLERANCE, &
                     MIRROR_X_TOLERANCE, MAX_ITERS_TIME_LOOP, MAX_ITERS_GET_SYS_AT_X, CSV_FREQUENCY_DEFAULT, &
                     DT_BACKOFF_CONSERVATION, DT_BACKOFF_MASS_TOLERANCE, DT_BACKOFF_ENERGY_TOLERANCE, &
-                    DT_BACKOFF_IMPACT, DT_RECOVERY_ITERATIONS, PRINT_FREQUENCY
+                    DT_BACKOFF_IMPACT, DT_RECOVERY_ITERATIONS, DT_RECOVERY, PRINT_FREQUENCY
     use gasdata, only: P_ATM, TEMP_ATM, TEMP_0
     use convert, only: CONVERT_C_TO_K, CONVERT_PA_TO_KPA
     use io, only: write_latex_engineering
@@ -100,6 +100,7 @@ subroutine write_defaults()
     call write_latex_engineering(tex_unit, 100.0_WP*DT_BACKOFF_ENERGY_TOLERANCE, "dtbackoffenergytolerance", "f4.1")
     write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\dtbackoffimpact}{", DT_BACKOFF_IMPACT, "}"
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\dtrecoveryiterations}{", DT_RECOVERY_ITERATIONS, "}"
+    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\dtrecovery}{", DT_RECOVERY, "}"
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\printfrequency}{", PRINT_FREQUENCY, "}"
     close(tex_unit)
 end subroutine write_defaults

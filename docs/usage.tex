@@ -150,7 +150,7 @@ A value of -2 and below indicates that an event that requires special treatment 
     \item[return code -4:] The time step was multiplied by $\dtbackoffconservation$ due to a mass or energy conservation tolerance being violated.
     See \secref{time-integration}.
     BlasterSim will continue to the next time step.
-    \item[return code -5:] The time step was divided by $\dtbackoffconservation$ (making it larger) as it has been $\dtrecoveryiterations$ time steps since the time step was last changed and perhaps a larger time step is now acceptable.
+    \item[return code -5:] The time step was multiplied by $\dtrecovery$ as it has been $\dtrecoveryiterations$ time steps since the time step was last changed and perhaps a larger time step is now acceptable.
     See \secref{time-integration}.
     BlasterSim will continue to the next time step.
     \textbfwarning{If another event or error occurred during this time step, that return code will override this return code.}

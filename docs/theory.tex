@@ -440,7 +440,7 @@ Subsequent time steps are unchanged.
 This adaptivity is not enough in some instances, so it may sometimes be necessary for the user to reduce the time step.
 \item When plunger impact occurs, the time step is multiplied by $\dtbackoffimpact$ as the plunger dynamics after impact may be faster.
 This is particularly true after multiple plunger impacts, which can happen in some cases.
-\item If the time step is unchanged due to conservation or plunger impact for $\dtrecoveryiterations$ time iterations, then the time step is divided by $\dtbackoffimpact$ to increase its value.
+\item If the time step is unchanged due to conservation or plunger impact for $\dtrecoveryiterations$ time iterations, then the time step is multiplied by $\dtrecovery$.
 Every subsequent $\dtrecoveryiterations$ time iterations without increases to the time step have the same increase.
 The time step will not increase above the time step set for the simulation.
 \end{itemize}

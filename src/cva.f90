@@ -90,12 +90,13 @@ integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X = 50
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
 
-!tripwire$ begin EBBA5FD1 Update \secref{time-integration}.
+!tripwire$ begin DEE2943D Update \secref{time-integration} and \secref{csv}.
 real(WP), public, parameter :: DT_BACKOFF_CONSERVATION     = 0.5_WP
 real(WP), public, parameter :: DT_BACKOFF_MASS_TOLERANCE   = 1.0e-8_WP
 real(WP), public, parameter :: DT_BACKOFF_ENERGY_TOLERANCE = 1.0e-8_WP
 real(WP), public, parameter :: DT_BACKOFF_IMPACT           = 0.95_WP
 integer, public, parameter  :: DT_RECOVERY_ITERATIONS      = 1000
+real(WP), public, parameter :: DT_RECOVERY                 = 2.0_WP
 !tripwire$ end
 
 integer, public, parameter :: PRINT_FREQUENCY = 10000
@@ -2401,7 +2402,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
 end subroutine write_csv_row
 !tripwire$ end
 
-!tripwire$ begin 9311A9B6 Update \secref{time-integration}.
+!tripwire$ begin E6D7EFE0 Update \secref{time-integration} and \secref{csv}.
 pure subroutine adapt_dt(i, config_dt, sys_old, sys_new, dt, i_last_dt_change, rc)
     ! Adaptive time stepping based on conservation metrics and exponential backoff.
     
@@ -2443,9 +2444,9 @@ pure subroutine adapt_dt(i, config_dt, sys_old, sys_new, dt, i_last_dt_change, r
     
     ! TODO: derivatives
     
-    if ((i > (i_last_dt_change + DT_RECOVERY_ITERATIONS)) &
+    if ((i >= (i_last_dt_change + DT_RECOVERY_ITERATIONS)) &
                 .and. (.not. is_close(dt%v%v, config_dt%v%v))) then
-        dt = max(config_dt, dt/max(DT_BACKOFF_IMPACT, DT_BACKOFF_MASS_TOLERANCE))
+        dt = min(config_dt, DT_RECOVERY*dt)
         if (rc == CONTINUE_RUN_RC) rc = DT_CHANGED_RECOVERY_RUN_RC
         i_last_dt_change = i
     end if
