@@ -43,6 +43,13 @@ If BlasterSim is placed in your current directory, you can run BlasterSim with a
 Using the example input file in \secref{springer-example} returns the following:
 \lstinputlisting[breaklines=true]{blastersim-out-2.txt}
 
+BlasterSim will print out simulation progress and events to standard output.
+The \texttt{i=0} line shows the current iteration number (\texttt{i}), simulation time (\texttt{t}), and \textbfwarning{next} time step value (\texttt{dt}).
+Every $\printfrequency$ iterations, a line showing the iteration number, simulation time, and next time step value is printed.
+Most simulations will not reach $\printfrequency$ iterations, so it is normal to not see this message.
+The message exists to show that BlasterSim is making progress on the simulation.
+When an event like plunger impact or time step adjustment occurs, BlasterSim will print the iteration number, simulation time, next time step value, and a brief message describing the event.
+
 \section{Time trace output to CSV file}\label{csv}
 
 After BlasterSim completes, a CSV spreadsheet with detailed data the simulation is written.
@@ -138,7 +145,12 @@ A value of -2 and below indicates that an event that requires special treatment 
     BlasterSim will terminate.
     \item[return code -3:] A plunger has impacted the end of the plunger tube.
     BlasterSim will continue to the next time step.
-    \item[return code -4:] The time step was multiplied by $\dtbackofffactor$ due to a mass or energy conservation tolerance being violated.
+    The time step is multiplied by $\dtbackoffimpact$.
+    See \secref{time-integration}.
+    \item[return code -4:] The time step was multiplied by $\dtbackoffconservation$ due to a mass or energy conservation tolerance being violated.
+    See \secref{time-integration}.
+    BlasterSim will continue to the next time step.
+    \item[return code -5:] The time step was divided by $\dtbackoffconservation$ (making it larger) as it has been $\dtrecoveryiterations$ time steps since the time step was last changed and perhaps a larger time step is now acceptable.
     See \secref{time-integration}.
     BlasterSim will continue to the next time step.
     \textbfwarning{If another event or error occurred during this time step, that return code will override this return code.}
@@ -209,13 +221,14 @@ In the example namelist input file in this section, this would correspond to the
 
 BlasterSim creates 3 control volumes for a pneumatic gun:
 \begin{enumerate}
-\item Control volume 1: barrel
-\item Control volume 2: pressure chamber
-\item Control volume 3: atmospheric side of the barrel
+\item barrel
+\item pressure chamber
+\item atmospheric side of the barrel
 \end{enumerate}
 
 As shown in \figref{springer arbitrary time}, the dead volume is contained only in the barrel in the pneumatic mode.
 BlasterSim treats the barrel as cylindrical in the cross-sectional area calculation only.
+Internally, the dead volume $V_\text{dead}$ is converted to the projectile starting position $x_0$.
 
 \input{pneumatic-figures.tex}
 
@@ -235,10 +248,10 @@ If there is a corresponding typeset variable, the notation for that variable is 
 
 BlasterSim creates 3 control volumes for a springer:
 \begin{enumerate}
-\item Control volume 1: barrel
-\item Control volume 2: plunger tube
-\item Control volume 3: atmospheric side of the barrel
-\item Control volume 4: atmospheric side of the plunger tube
+\item barrel
+\item plunger tube
+\item atmospheric side of the barrel
+\item atmospheric side of the plunger tube
 \end{enumerate}
 
 As shown in \figref{springer arbitrary time}, the dead volume is evenly split between the barrel and plunger tube in the springer mode.

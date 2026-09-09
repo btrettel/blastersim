@@ -46,9 +46,9 @@ This capitalization convention is not followed in BlasterSim's source code.
 See \secref{conventions} for a discussion of the capitalization convention followed in the source code.
 Because each variable in BlasterSim's source code is given a unit (see \secref{unit-checking}), whether a quantity is extensive or intensive can be determined from the units for that quantity, if unclear.
 
-In the inputs, as diameters are provided, BlasterSim assumes that each control volume is cylindrical.
-However, internally, BlasterSim uses only control volume cross-sectional area, not diameter.
-BlasterSim internally makes no assumptions about the shape of each control volume, so BlasterSim can be extended to other control volume shapes in the future if desired, or an equivalent diameter with the intended cross-sectional area can be used in the meantime.
+In the inputs, as diameters are provided, BlasterSim assumes that each control volume is cylindrical with a circular or annular cross-section.
+However, internally, BlasterSim uses only control volume cross-sectional area, not a diameter.
+BlasterSim internally makes no assumptions about the shape of the cross-section of each control volume, so BlasterSim can be extended to other control volume shapes in the future if desired, or an equivalent diameter with the intended cross-sectional area can be used in the meantime.
 
 \subsection{Conservation laws}\label{conservation-laws}
 
@@ -320,7 +320,7 @@ The effective friction pressure $p_{\text{f},i}$ then will switch between static
     \end{cases}\label{eq:effective friction pressure cases}
 \end{equation}
 
-\textbf{BlasterSim does not use this model} because it is not smooth.
+\textbfwarning{BlasterSim does not use this model} because it is not smooth.
 Smooth functions are useful for automatic differentiation (see~\secref{autodiff}) and beneficial for numerical stability.
 Also, the use of strict floating point equality in the $\dot{x}_i = 0$ branch can lead to numerical reproducibility issues.
 BlasterSim uses a smoothed version of this model which avoids these problems.
@@ -434,11 +434,15 @@ A simple 4th order Runge-Kutta scheme~\cite[p.~1081]{kreyszig_advanced_1993} is 
 In the interior ballistics calculations, the time step ($\Delta t$/\texttt{dt}) is typically constant (the default is $\dtdefault$~s), except in certain circumstances:
 \begin{itemize}
 \item When an event like a plunger impact or projectile leaving the barrel is detected.
-In these cases, the time step is adjusted to closely determine the time of the event using a secant method variation of H\'{e}non's trick~\cite{henon_numerical_1982}.
-\item When between two time steps, the total system mass deviates by more than $\dtbackoffmasstolerance\%$ or the total system energy deviates by more than $\dtbackoffenergytolerance\%$, the time step is multiplied by $\dtbackofffactor$ to try to maintain strong conservation (exponential backoff).
+In these cases, the next time step is adjusted to closely determine the time of the event using a secant method variation of H\'{e}non's trick~\cite{henon_numerical_1982}.
+Subsequent time steps are unchanged.
+\item When between two time steps, the total system mass deviates by more than $\dtbackoffmasstolerance\%$ or the total system energy deviates by more than $\dtbackoffenergytolerance\%$, the time step is multiplied by $\dtbackoffconservation$ to try to maintain strong conservation (exponential backoff).
 This adaptivity is not enough in some instances, so it may sometimes be necessary for the user to reduce the time step.
-\item When plunger impact occurs, the time step is multiplied by $\dtimpactfactor$ as the plunger dynamics after impact may be faster.
+\item When plunger impact occurs, the time step is multiplied by $\dtbackoffimpact$ as the plunger dynamics after impact may be faster.
 This is particularly true after multiple plunger impacts, which can happen in some cases.
+\item If the time step is unchanged due to conservation or plunger impact for $\dtrecoveryiterations$ time iterations, then the time step is divided by $\dtbackoffimpact$ to increase its value.
+Every subsequent $\dtrecoveryiterations$ time iterations without increases to the time step have the same increase.
+The time step will not increase above the time step set for the simulation.
 \end{itemize}
 
 % TODO: Discuss exterior ballistics time integration.

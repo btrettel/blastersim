@@ -65,7 +65,7 @@ end block nml_blk
 
 call run(config, sys_start, sys_end, status)
 
-!tripwire$ begin 9EDE37E1 Update `\secref{run-time-checks}` of verval.tex.
+!tripwire$ begin 8E6189A7 Update `\secref{run-time-checks}` of verval.tex.
 if (status%rc < SUCCESS_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
     write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
@@ -106,8 +106,8 @@ else
             call refer_to_docs()
             stop EX_SOFTWARE, quiet=.true.
         case (MAX_ITERS_TIME_LOOP_RUN_RC, MAX_ITERS_GET_SYS_AT_X_RUN_RC)
-            write(unit=ERROR_UNIT, fmt="(2a)") "Maximum number of iterations exceeded. ", &
-                                                "This is a bug that should be reported."
+            write(unit=ERROR_UNIT, fmt="(2a)") "Maximum number of iterations reached. ", &
+                                                "This might be a bug or possibly the projectile will not leave the barrel."
             call refer_to_docs()
             stop EX_SOFTWARE, quiet=.true.
         case (RK_STAGE_NEGATIVE_MASS_RC, RK_STAGE_NEGATIVE_ENERGY_RC)

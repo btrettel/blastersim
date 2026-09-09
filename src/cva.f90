@@ -57,25 +57,26 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin 24EDE6E5 Update \secref{run-time-checks}, \secref{csv} and `actual_rc` in geninput_*.nml.
-integer, public, parameter :: DT_CHANGED_RUN_RC             = -4
-integer, public, parameter :: X_LT_X_MIN_RUN_RC             = -3
-integer, public, parameter :: X_GE_X_STOP_RUN_RC            = -2
-integer, public, parameter :: CONTINUE_RUN_RC               = -1
-integer, public, parameter :: TIMEOUT_RUN_RC                = 1
-integer, public, parameter :: NEGATIVE_CV_M_TOTAL_RUN_RC    = 2
-integer, public, parameter :: NEGATIVE_CV_TEMP_RUN_RC       = 3
-integer, public, parameter :: MASS_TOLERANCE_RUN_RC         = 4
-integer, public, parameter :: ENERGY_TOLERANCE_RUN_RC       = 5
-integer, public, parameter :: MASS_DERIV_TOLERANCE_RUN_RC   = 6
-integer, public, parameter :: ENERGY_DERIV_TOLERANCE_RUN_RC = 7
-integer, public, parameter :: IDEAL_EOS_RUN_RC              = 8
-integer, public, parameter :: MIRROR_X_TOLERANCE_RUN_RC     = 9
-integer, public, parameter :: NEGATIVE_CV_X_RUN_RC          = 10
-integer, public, parameter :: MAX_ITERS_TIME_LOOP_RUN_RC    = 11
-integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X_RUN_RC = 12
-integer, public, parameter :: RK_STAGE_NEGATIVE_MASS_RC     = 13
-integer, public, parameter :: RK_STAGE_NEGATIVE_ENERGY_RC   = 14
+!tripwire$ begin A2CE05BB Update \secref{run-time-checks}, \secref{csv} and `actual_rc` in geninput_*.nml.
+integer, public, parameter :: DT_CHANGED_RECOVERY_RUN_RC     = -5
+integer, public, parameter :: DT_CHANGED_CONSERVATION_RUN_RC = -4
+integer, public, parameter :: X_LT_X_MIN_RUN_RC              = -3
+integer, public, parameter :: X_GE_X_STOP_RUN_RC             = -2
+integer, public, parameter :: CONTINUE_RUN_RC                = -1
+integer, public, parameter :: TIMEOUT_RUN_RC                 = 1
+integer, public, parameter :: NEGATIVE_CV_M_TOTAL_RUN_RC     = 2
+integer, public, parameter :: NEGATIVE_CV_TEMP_RUN_RC        = 3
+integer, public, parameter :: MASS_TOLERANCE_RUN_RC          = 4
+integer, public, parameter :: ENERGY_TOLERANCE_RUN_RC        = 5
+integer, public, parameter :: MASS_DERIV_TOLERANCE_RUN_RC    = 6
+integer, public, parameter :: ENERGY_DERIV_TOLERANCE_RUN_RC  = 7
+integer, public, parameter :: IDEAL_EOS_RUN_RC               = 8
+integer, public, parameter :: MIRROR_X_TOLERANCE_RUN_RC      = 9
+integer, public, parameter :: NEGATIVE_CV_X_RUN_RC           = 10
+integer, public, parameter :: MAX_ITERS_TIME_LOOP_RUN_RC     = 11
+integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X_RUN_RC  = 12
+integer, public, parameter :: RK_STAGE_NEGATIVE_MASS_RC      = 13
+integer, public, parameter :: RK_STAGE_NEGATIVE_ENERGY_RC    = 14
 !integer, public, parameter :: X_BLOW_UP_RUN_RC              = 
 !integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 
 !integer, public, parameter :: M_BLOW_UP_RUN_RC              = 
@@ -89,12 +90,15 @@ integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X = 50
 integer, public, parameter :: HEADER_ROW_TYPE = 1
 integer, public, parameter :: NUMBER_ROW_TYPE = 2
 
-!tripwire$ begin 64C5C07A Update \secref{time-integration}.
-real(WP), public, parameter :: DT_BACKOFF_FACTOR           = 0.5_WP
+!tripwire$ begin EBBA5FD1 Update \secref{time-integration}.
+real(WP), public, parameter :: DT_BACKOFF_CONSERVATION     = 0.5_WP
 real(WP), public, parameter :: DT_BACKOFF_MASS_TOLERANCE   = 1.0e-8_WP
 real(WP), public, parameter :: DT_BACKOFF_ENERGY_TOLERANCE = 1.0e-8_WP
-real(WP), public, parameter :: DT_IMPACT_FACTOR            = 0.9_WP
+real(WP), public, parameter :: DT_BACKOFF_IMPACT           = 0.95_WP
+integer, public, parameter  :: DT_RECOVERY_ITERATIONS      = 1000
 !tripwire$ end
+
+integer, public, parameter :: PRINT_FREQUENCY = 10000
 
 type, public :: cv_type ! control volume
     ! time varying
@@ -1681,6 +1685,7 @@ end subroutine set_run_config
 subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
     use prec, only: CL
+    use convert, only: CONVERT_S_TO_MS
     
     type(run_config_type), intent(in)              :: config
     type(cv_system_type), allocatable, intent(in)  :: sys_start
@@ -1691,7 +1696,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp, sys_event
     
     character(len=CL)     :: error_message
-    integer               :: n_d, i, csv_unit, rc_get_sys_at_x, rc_time_step
+    integer               :: n_d, i, csv_unit, rc_get_sys_at_x, rc_time_step, i_last_dt_change
     type(si_time)         :: t, t_old, dt
     logical               :: exit_time_loop, stop_at_first_event_
     
@@ -1706,6 +1711,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     sys_old = sys_start
     call t%v%init_const(0.0_WP, n_d)
     i = 0
+    i_last_dt_change = -huge(1)
     
     if (config%csv_output) then
         open(newunit=csv_unit, action="write", status="replace", position="rewind", &
@@ -1723,6 +1729,8 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     
     dt = config%dt
     exit_time_loop = .false.
+    if (.not. config%const_dt) write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", &
+                                    CONVERT_S_TO_MS*t%v%v, " ms dt=", CONVERT_S_TO_MS*dt%v%v, " ms"
     time_loop: do
         call calculate_next_time_step(sys_old, t, dt, sys_new, rc_time_step)
         if (rc_time_step /= SUCCESS_RC) then
@@ -1769,13 +1777,30 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
         
         if (i >= MAX_ITERS_TIME_LOOP) status%rc = MAX_ITERS_TIME_LOOP_RUN_RC
         
-        if (.not. config%const_dt) call adapt_dt(sys_old, sys_new, dt, status%rc)
+        if (.not. config%const_dt) call adapt_dt(i, config%dt, sys_old, sys_new, dt, i_last_dt_change, status%rc)
         
         if (config%csv_output .and. &
                 ((mod(i, config%csv_frequency) == 0) .or. (status%rc < CONTINUE_RUN_RC))) then
             ! `status%rc < CONTINUE_RC` condition: Write all non-normal events to the CSV file for logging.
             call write_csv_row(csv_unit, sys_new, t, status, NUMBER_ROW_TYPE)
         end if
+        
+        ! This is after `event_case` as `DT_CHANGED_CONSERVATION_RUN_RC` isn't set until after `event_case`.
+        select case (status%rc)
+            case (X_LT_X_MIN_RUN_RC)
+                write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", CONVERT_S_TO_MS*t%v%v, " ms dt=", &
+                        CONVERT_S_TO_MS*dt%v%v, " ms: plunger impact, dt decreased"
+            case (DT_CHANGED_CONSERVATION_RUN_RC)
+                write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", CONVERT_S_TO_MS*t%v%v, " ms dt=", &
+                        CONVERT_S_TO_MS*dt%v%v, " ms: dt decreased due to conservation error"
+            case (DT_CHANGED_RECOVERY_RUN_RC)
+                write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", CONVERT_S_TO_MS*t%v%v, " ms dt=", &
+                        CONVERT_S_TO_MS*dt%v%v, " ms: dt increased"
+            case default
+                if ((mod(i, PRINT_FREQUENCY) == 0) .and. (.not. config%const_dt)) &
+                        write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", &
+                                    CONVERT_S_TO_MS*t%v%v, " ms dt=", CONVERT_S_TO_MS*dt%v%v, " ms"
+        end select
         
         if ((status%rc >= SUCCESS_RC) &
                 .or. exit_time_loop &
@@ -2376,20 +2401,23 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
 end subroutine write_csv_row
 !tripwire$ end
 
-!tripwire$ begin 58D3D342 Update \secref{time-integration}.
-pure subroutine adapt_dt(sys_old, sys_new, dt, rc)
+!tripwire$ begin 9311A9B6 Update \secref{time-integration}.
+pure subroutine adapt_dt(i, config_dt, sys_old, sys_new, dt, i_last_dt_change, rc)
     ! Adaptive time stepping based on conservation metrics and exponential backoff.
     
+    integer, intent(in)                           :: i
+    type(si_time), intent(in)                     :: config_dt
     type(cv_system_type), allocatable, intent(in) :: sys_old, sys_new
     type(si_time), intent(in out)                 :: dt
-    integer, intent(in out)                       :: rc
+    integer, intent(in out)                       :: i_last_dt_change, rc
     
     type(unitless)  :: rel_delta
     type(si_mass)   :: m_old
     type(si_energy) :: e_old
     
     if (rc == X_LT_X_MIN_RUN_RC) then
-        dt = DT_IMPACT_FACTOR*dt
+        dt = DT_BACKOFF_IMPACT*dt
+        i_last_dt_change = i
         return
     end if
     
@@ -2397,8 +2425,9 @@ pure subroutine adapt_dt(sys_old, sys_new, dt, rc)
     call assert(m_old%v%v > 0.0_WP, "cva (adapt_dt): m_old must be greater than zero", print_real=[m_old%v%v])
     rel_delta = abs(sys_new%m_total() - m_old) / m_old
     if (rel_delta%v%v > DT_BACKOFF_MASS_TOLERANCE) then
-        dt = DT_BACKOFF_FACTOR*dt
-        if (rc == CONTINUE_RUN_RC) rc = DT_CHANGED_RUN_RC
+        dt = DT_BACKOFF_CONSERVATION*dt
+        if (rc == CONTINUE_RUN_RC) rc = DT_CHANGED_CONSERVATION_RUN_RC
+        i_last_dt_change = i
         return
     end if
     
@@ -2406,12 +2435,20 @@ pure subroutine adapt_dt(sys_old, sys_new, dt, rc)
     call assert(e_old%v%v > 0.0_WP, "cva (adapt_dt): e_old must be greater than zero", print_real=[e_old%v%v])
     rel_delta = abs(sys_new%e_total() - e_old) / e_old
     if (rel_delta%v%v > DT_BACKOFF_ENERGY_TOLERANCE) then
-        dt = DT_BACKOFF_FACTOR*dt
-        if (rc == CONTINUE_RUN_RC) rc = DT_CHANGED_RUN_RC
+        dt = DT_BACKOFF_CONSERVATION*dt
+        if (rc == CONTINUE_RUN_RC) rc = DT_CHANGED_CONSERVATION_RUN_RC
+        i_last_dt_change = i
         return
     end if
     
     ! TODO: derivatives
+    
+    if ((i > (i_last_dt_change + DT_RECOVERY_ITERATIONS)) &
+                .and. (.not. is_close(dt%v%v, config_dt%v%v))) then
+        dt = max(config_dt, dt/max(DT_BACKOFF_IMPACT, DT_BACKOFF_MASS_TOLERANCE))
+        if (rc == CONTINUE_RUN_RC) rc = DT_CHANGED_RECOVERY_RUN_RC
+        i_last_dt_change = i
+    end if
 end subroutine adapt_dt
 !tripwire$ end
 

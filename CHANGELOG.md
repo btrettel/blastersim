@@ -1,5 +1,6 @@
 ## 0.3.0
 
+- Simulation progress and events are now printed on standard output for the user to better understand how the simulation is progressing.
 - Made BlasterSim more robust to floating point error in plunger impact.
 - Adaptive time stepping was added.
 - Certain error messages now include instructions for the user to fix the error.
