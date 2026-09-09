@@ -6,6 +6,7 @@
 - Make fuzz testing detect unrealistically large muzzle velocities.
     - The easiest way to do this might be to make BlasterSim return an error for unrealistically large muzzle velocities.
         - Check against maximum possible muzzle velocity from Corner.
+        - How can this be done for springers?
 - Make optimized debug version of BlasterSim for fuzz testing.
 - Switch chamber and dead volume to mL.
 - Switch `d_*` and `l_*` to mm.
@@ -18,7 +19,7 @@
 
 - Secant method in `get_sys_at_x`: Use optimal 3 point stencil from ash_optimal_1981 eq. 2 to minimize error.
     - See FLT's test_fmad.f90 `test_num_deriv` subroutine.
-- docs: Differentiate between time step as in `dt` and time step as a particular location in time.
+- docs: Differentiate between time step as in `dt` and time step as a particular location in time. Time iteration to refer to a particular point in time?
 - `adapt_dt`: Try smaller time step when velocity is low due to switching between dynamic and static friction? Friction switching being a problem might not actually be the issue as in the case that was failing, the pressures of friction are similar between static and dynamic. This shouldn't apply to projectiles/plungers with infinite mass.
 - Test `adapt_dt`.
 - Order-of-accuracy test for `e_f`.

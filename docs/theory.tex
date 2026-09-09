@@ -408,20 +408,22 @@ The synchronization issue can be avoided by simply making $x_{\text{min},i} > 0$
 In reality, all things have some dead volume, and where the plunger tube control volume ends and the barrel begins is arbitrary.
 In early versions of BlasterSim, all dead volume in springers was placed into the barrel, but $x_{\text{min},i}$ for the barrel and plunger tube are picked so that half the dead volume is in each.
 
-If the coefficient of restitution is zero so that the plunger velocity after impact is zero, BlasterSim applies an approximation for the moment.
-The plunger will become immobile after impact.
-This approximation is a simple way to prevent simulation progress from stalling.
-After impact, the plunger tube is located at the end of the plunger tube.
+Having a non-zero coefficient of restitution will lead to an infinite number of bounces with a decreasing time between each bounce.
+The number of bounces in reality is finite, and the decreasing time between bounces can cause similar numerical issues when the time between bounces becomes comparable to the time step.
+A simple and crude way to fix this problem is to set the velocity of the plunger after impact to zero if the magnitude of the velocity before impact is below a threshold.
+The threshold used in BlasterSim at the moment is $\impactstopvelocity$~cm/s.
+
+If the plunger velocity after impact is zero (either due to the coefficient of restitution being zero or the velocity threshold mentioned in the previous paragraph), BlasterSim can stall.
+After impact, the plunger is located at the end of the plunger tube.
 If the coefficient of restitution is zero, then the plunger will initially have zero velocity after impact.
 However, the force on the plunger will push it past the end of the plunger tube in the simulation.
 BlasterSim simply identifies when the plunger moves past the end of the plunger tube and picks a time step to exactly hit the end of the plunger tube.
-BlasterSim at the moment does not additionally apply an extra force to prevent the plunger from moving if it is at the end of the plunger tube, which would be more physically realistic.
-Consequently, to prevent the plunger tube from moving, it is made immobile in this situation.
+The only time step that would not push the plunger past the end of the plunger tube in this case is zero, causing simulation progress to stall because the same problem will happen at the next time iteration.
+BlasterSim at the moment does not apply a force to prevent the plunger from moving if it is at the end of the plunger tube, which would be more physically realistic.
 In the future, if desirable, BlasterSim could apply a force when the plunger is at the end of the plunger tube to keep the plunger stationary.
 The difference with the force is that it might be possible for the force to be overcome by the pressure inside the plunger, making the plunger start moving again.
 Making the plunger immobile prevents that real motion, but is a reasonable approximation for springers.
 It would not be a reasonable approximation when simulating the full cycle of a HPA blaster using an air cylinder.
-It is likely that coefficients of restitution that are too small may have similar stalling problems.
 
 %\section{Exterior ballistics}\label{exterior-ballistics}
 % TODO later

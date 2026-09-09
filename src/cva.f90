@@ -57,7 +57,8 @@ integer, public, parameter :: MAX_CV_TYPE    = 2
 
 integer, public, parameter :: SUCCESS_RC = 0
 
-!tripwire$ begin A2CE05BB Update \secref{run-time-checks}, \secref{csv} and `actual_rc` in geninput_*.nml.
+!tripwire$ begin EE50E646 Update \secref{run-time-checks}, \secref{csv} and `actual_rc` in geninput_*.nml.
+integer, public, parameter :: IMPACT_STOP_RUN_RC             = -6
 integer, public, parameter :: DT_CHANGED_RECOVERY_RUN_RC     = -5
 integer, public, parameter :: DT_CHANGED_CONSERVATION_RUN_RC = -4
 integer, public, parameter :: X_LT_X_MIN_RUN_RC              = -3
@@ -100,6 +101,8 @@ real(WP), public, parameter :: DT_RECOVERY                 = 2.0_WP
 !tripwire$ end
 
 integer, public, parameter :: PRINT_FREQUENCY = 10000
+
+real(WP), public, parameter :: IMPACT_STOP_VELOCITY = 1.0e-2_WP
 
 type, public :: cv_type ! control volume
     ! time varying
@@ -1770,7 +1773,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
                                     sys_old, sys_new, t, sys_event, rc_get_sys_at_x)
                 
                 if (rc_get_sys_at_x == SUCCESS_RC) then
-                    call get_sys_after_impact(status%i_cv(1), sys_event, sys_new)
+                    call get_sys_after_impact(status%i_cv(1), sys_event, sys_new, status%rc)
                 else
                     status%rc = rc_get_sys_at_x
                 end if
@@ -1797,6 +1800,9 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
             case (DT_CHANGED_RECOVERY_RUN_RC)
                 write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", CONVERT_S_TO_MS*t%v%v, " ms dt=", &
                         CONVERT_S_TO_MS*dt%v%v, " ms: dt increased"
+            case (IMPACT_STOP_RUN_RC)
+                write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", CONVERT_S_TO_MS*t%v%v, " ms dt=", &
+                        CONVERT_S_TO_MS*dt%v%v, " ms: final plunger impact, plunger now immobile"
             case default
                 if ((mod(i, PRINT_FREQUENCY) == 0) .and. (.not. config%const_dt)) &
                         write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", &
@@ -2135,13 +2141,6 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     call assert(allocated(sys_i), "cva (get_sys_at_x): sys_i should be allocated here", &
                     print_integer=[rc])
     
-    ! This will prevent BlasterSim from stalling and eventually hitting an assertion error when round off error makes `dt_i < 0.0`.
-    ! How can I make this apply only for plungers? Look at `cor` so that I know it's supposed to rebound?
-    ! That's what I'm doing right now, but I might have a better idea later.
-    if (is_close(dt_i%v%v, 0.0_WP) .and. (sys_i%cv(i_cv_x_event)%cor%v%v > COR_DEFAULT)) then
-        call sys_i%cv(i_cv_x_event)%rm_p%v%init_const(0.0_WP, size(sys_i%cv(i_cv_x_event)%rm_p%v%d))
-    end if
-    
     call move_alloc(from=sys_i, to=sys_event)
     call assert(is_close(sys_event%cv(i_cv_x_event)%x%v%v, x_event%v%v, &
                             abs_tol=max(100.0_WP*x_tol, 1.0e-6_WP)), &
@@ -2151,23 +2150,35 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     t = t_old + dt_i
 end subroutine get_sys_at_x
 
-!tripwire$ begin 4FFEC573 Update `\secref{plunger-impact}` of theory.tex.
-pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
+!tripwire$ begin 785C60B0 Update `\secref{plunger-impact}` of theory.tex.
+pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact, rc)
     ! Set `sys_before_impact` to the instant immediately after plunger impact.
     ! `sys_before_impact` is right before plunger impact occurs (plunger velocity has no changed yet).
     
     integer, intent(in)                            :: i_cv ! control volume where `x_dot` and `e_m` will change
     type(cv_system_type), allocatable, intent(in)  :: sys_before_impact
     type(cv_system_type), allocatable, intent(out) :: sys_after_impact
+    integer, intent(in out)                        :: rc
     
     integer :: i_cv_mirror
     type(si_inverse_mass) :: rm_p_eff
     
-    call assert(sys_before_impact%cv(i_cv)%cor%v%v >= 0.0_WP, "cva (get_sys_after_impact): cor >= 0 violated")
-    call assert(sys_before_impact%cv(i_cv)%cor%v%v <= 1.0_WP, "cva (get_sys_after_impact): cor <= 1 violated")
+    call assert(sys_before_impact%cv(i_cv)%cor%v%v   >= 0.0_WP, "cva (get_sys_after_impact): cor >= 0 violated")
+    call assert(sys_before_impact%cv(i_cv)%cor%v%v   <= 1.0_WP, "cva (get_sys_after_impact): cor <= 1 violated")
+    call assert(sys_before_impact%cv(i_cv)%x_dot%v%v <= 0.0_WP, &
+                    "cva (get_sys_after_impact): the velocity before impact should be negative or zero, " &
+                        // "and is assumed so with the IMPACT_STOP_VELOCITY conditional")
+    call assert(rc == X_LT_X_MIN_RUN_RC, "cva (get_sys_after_impact): wrong rc?")
     
-    sys_after_impact                = sys_before_impact
-    sys_after_impact%cv(i_cv)%x_dot = -sys_before_impact%cv(i_cv)%cor*sys_before_impact%cv(i_cv)%x_dot
+    sys_after_impact = sys_before_impact
+    if (abs(sys_before_impact%cv(i_cv)%x_dot%v%v) < IMPACT_STOP_VELOCITY) then
+        ! There will be an infinite number of bounces for a non-zero `cor`.
+        ! That doesn't happen in reality and can lead to numerical issues once the time is comparable to the time step.
+        ! A simple and crude way to fix this is to set the velocity after impact to zero once it drops below a certain threshold.
+        call sys_after_impact%cv(i_cv)%x_dot%v%init_const(0.0_WP, size(sys_after_impact%cv(i_cv)%x_dot%v%d))
+    else
+        sys_after_impact%cv(i_cv)%x_dot = -sys_before_impact%cv(i_cv)%cor*sys_before_impact%cv(i_cv)%x_dot
+    end if
     
     i_cv_mirror = sys_before_impact%cv(i_cv)%i_cv_mirror
     if (i_cv_mirror >= 1) then
@@ -2181,15 +2192,16 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact)
                                                                     - square(sys_after_impact%cv(i_cv)%x_dot))
         
         ! This is a fair bit of a hack.
-        ! If the coefficient of restitution is zero, the plunger head right after impact is at `x_min`.
+        ! If the velocity after impact is zero (either due to the `cor` being zero or `IMPACT_STOP_VELOCITY`),
+        ! the plunger head right after impact is at `x_min`.
         ! The next time step will move the plunger head past `x_min`.
         ! The only time step size that will prevent that is `dt = 0`! So the simulation stalls.
         ! Preventing all plunger motion by making the effective mass infinite is one way around this.
         ! TODO: It would be better to add a force active only if `is_close(cv%x%v%v, cv%x_min%v%v)` to keep the plunger stationary.
         ! Then if the pressure in the CV overcomes the counteracting force, the plunger can start moving again.
-        ! The `abs_tol` is needed to prevent stalling and is even more of a hack.
-        if (is_close(sys_after_impact%cv(i_cv)%x_dot%v%v, 0.0_WP, abs_tol=1.0e-15_WP)) then
+        if (is_close(sys_after_impact%cv(i_cv)%x_dot%v%v, 0.0_WP)) then
             call sys_after_impact%cv(i_cv)%rm_p%v%init_const(0.0_WP, size(sys_after_impact%cv(i_cv)%rm_p%v%d))
+            rc = IMPACT_STOP_RUN_RC
         end if
     end if
 end subroutine get_sys_after_impact

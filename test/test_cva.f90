@@ -71,7 +71,7 @@ subroutine write_defaults()
                     MASS_TOLERANCE, ENERGY_TOLERANCE, MASS_DERIV_TOLERANCE, ENERGY_DERIV_TOLERANCE, &
                     MIRROR_X_TOLERANCE, MAX_ITERS_TIME_LOOP, MAX_ITERS_GET_SYS_AT_X, CSV_FREQUENCY_DEFAULT, &
                     DT_BACKOFF_CONSERVATION, DT_BACKOFF_MASS_TOLERANCE, DT_BACKOFF_ENERGY_TOLERANCE, &
-                    DT_BACKOFF_IMPACT, DT_RECOVERY_ITERATIONS, DT_RECOVERY, PRINT_FREQUENCY
+                    DT_BACKOFF_IMPACT, DT_RECOVERY_ITERATIONS, DT_RECOVERY, PRINT_FREQUENCY, IMPACT_STOP_VELOCITY
     use gasdata, only: P_ATM, TEMP_ATM, TEMP_0
     use convert, only: CONVERT_C_TO_K, CONVERT_PA_TO_KPA
     use io, only: write_latex_engineering
@@ -102,6 +102,8 @@ subroutine write_defaults()
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\dtrecoveryiterations}{", DT_RECOVERY_ITERATIONS, "}"
     write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\dtrecovery}{", DT_RECOVERY, "}"
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\printfrequency}{", PRINT_FREQUENCY, "}"
+    write(unit=tex_unit, fmt="(a, f3.1, a)") "\newcommand*{\impactstopvelocity}{", &
+                                                CONVERT_M_TO_CM*IMPACT_STOP_VELOCITY, "} % cm/s"
     close(tex_unit)
 end subroutine write_defaults
 

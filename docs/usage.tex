@@ -143,7 +143,7 @@ A value of -2 and below indicates that an event that requires special treatment 
     \item[return code -2:] A control volume's projectile/plunger has reached its termination position.
     For example, this could be triggered if a projectile leaves the barrel.
     BlasterSim will terminate.
-    \item[return code -3:] A plunger has impacted the end of the plunger tube.
+    \item[return code -3:] A plunger has impacted the end of the plunger tube with non-zero plunger velocity after impact.
     BlasterSim will continue to the next time step.
     The time step is multiplied by $\dtbackoffimpact$.
     See \secref{time-integration}.
@@ -154,6 +154,8 @@ A value of -2 and below indicates that an event that requires special treatment 
     See \secref{time-integration}.
     BlasterSim will continue to the next time step.
     \textbfwarning{If another event or error occurred during this time step, that return code will override this return code.}
+    \item[return code -6:] A plunger has impacted the end of the plunger tube with zero plunger velocity after impact.
+    BlasterSim will continue to the next time step.
 \end{description}
 \end{itemize}
 
