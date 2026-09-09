@@ -134,7 +134,7 @@ Note that these Make commands will run some BlasterSim tests to generate some nu
 This will slow down compilation of the documentation
 For speed, once the documentation numbers are generated, these BlasterSim tests will not be run again when compiling the documentation unless BlasterSim's code changes.
 
-\section{BlasterSim source and documentation coding conventions}\label{conventions}
+\section{Coding conventions}\label{conventions}
 
 \begin{itemize}
 \item In cva.f90 and BlasterSim's core simulation procedures otherwise, all variables are in SI units.
@@ -150,8 +150,10 @@ I intend to slowly clean up and add these notes to this documentation.
 Note that this is different from convention used for intensive and extensive quantities in the typeset math in this documentation as discussed in \secref{notation}.
 Because each variable in BlasterSim's source code is given a unit (see \secref{unit-checking}), whether a quantity is extensive or intensive can be determined from the units for that quantity, if unclear.
 
-\item The control volume index for the barrel is \texttt{I\_BARREL}, which is set to 1.
+\item The control volume index for the barrel is \texttt{I\_BARREL}, which is set to $\ibarrel$.
 This convention allows BlasterSim to easily know which control volume is the barrel.
+
+\item The control volume index for the ``source'' (which control volume the propelling gas originates from, whether plunger tube or pressure chamber) is \texttt{I\_SOURCE}, which is set to $\isource$.
 
 \item \texttt{integer} variables named \texttt{rc} are used for return codes.
 0 or negative return codes indicate success, with 0 being normal success and negative numbers having a special context-dependent meaning.

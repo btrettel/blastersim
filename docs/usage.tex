@@ -60,7 +60,7 @@ For example, in \secref{springer-example} the file name is springer-example.nml,
 By default, every $\csvfrequencydefault$th time step is written to the CSV file rather than every time step.
 Every time step would be too detailed and lead to large CSV files.
 How often the CSV file is written to can be changed with the \texttt{csv\_frequency} variable in the inputs.
-Additionally, all time steps with events that require special treatment from BlasterSim like the plunger hitting the end of the plunger tube in a springer will be written to the CSV file, and the type of event can be determined from the \texttt{rc} column. % TODO: link to where all `rc` values are defined once you list the negative ones
+Additionally, all time steps with events that require special treatment from BlasterSim like the plunger hitting the end of the plunger tube in a springer will be written to the CSV file, and the type of event can be determined from the \texttt{rc} column.
 
 The CSV file contains the following columns:
 \begin{itemize}
@@ -135,31 +135,67 @@ This should remain approximately constant and is present for debugging purposes.
 \end{itemize}
 \item \texttt{rc}: Return code of \texttt{run} subroutine.
 Integer.
-Values 1 and above indicate an error occurred and are discussed in \secref{run-time-checks}.
-A value of -2 and below indicates that an event that requires special treatment was detected (for example, the projectile leaving the barrel or the plunger impacting the end of the plunger tube), and BlasterSim may or may not terminate the simulation depending on the event.
-\begin{description}
-    \item[return code -1:] No errors or events were detected.
-    BlasterSim will continue to the next time step.
-    \item[return code -2:] A control volume's projectile/plunger has reached its termination position.
-    For example, this could be triggered if a projectile leaves the barrel.
-    BlasterSim will terminate.
-    \item[return code -3:] A plunger has impacted the end of the plunger tube with non-zero plunger velocity after impact.
-    BlasterSim will continue to the next time step.
-    The time step is multiplied by $\dtbackoffimpact$.
-    See \secref{time-integration}.
-    \item[return code -4:] The time step was multiplied by $\dtbackoffconservation$ due to a mass or energy conservation tolerance being violated.
-    See \secref{time-integration}.
-    BlasterSim will continue to the next time step.
-    \item[return code -5:] The time step was multiplied by $\dtrecovery$ as it has been $\dtrecoveryiterations$ time steps since the time step was last changed and perhaps a larger time step is now acceptable.
-    See \secref{time-integration}.
-    BlasterSim will continue to the next time step.
-    \textbfwarning{If another event or error occurred during this time step, that return code will override this return code.}
-    \item[return code -6:] A plunger has impacted the end of the plunger tube with zero plunger velocity after impact.
-    BlasterSim will continue to the next time step.
-\end{description}
+See \secref{return-codes} for details on the precise meaning of each code.
 \end{itemize}
 
-\section{BlasterSim inputs in general}\label{inputs-general}
+\section{Return codes}\label{return-codes}
+
+Return codes are printed in the CSV file and also printed when BlasterSim terminates with an error.
+Values 1 and above indicate an error occurred.
+
+Error return codes are listed below:
+\begin{description}
+\item[return code 1:] Whether the simulation ran for $\tstopdefault$~seconds without the projectile leaving the barrel, indicating that the projectile likely won't ever leave the barrel.
+\item[return code 2:] Whether a control volume has negative mass.
+\item[return code 3:] Whether a control volume has negative temperature.
+\item[return code 4:] Whether the total system mass deviates from the starting mass by more than $\masstolerance$.
+\item[return code 5:] Whether the total system energy deviates from the starting energy by more than $\energytolerance$.
+\item[return code 6:] If automatic differentiation is used, whether any component of the gradient of the total system mass deviates by more than $\massderivtolerance$ (regardless of the units).
+\item[return code 7:] If automatic differentiation is used, whether any component of the gradient of the total system energy deviates by more than $\energyderivtolerance$ (regardless of the units).
+\item[return code 8:] Whether the ideal gas equation of state has become inaccurate due to the pressure increasing above the critical pressure.
+\item[return code 9:] Whether the coordinates of any plunger become desynchronized between control volumes on either side of the mentioned plunger by more than $\mirrorxtolerance$~m.
+\item[return code 10:] Whether the coordinate of a projectile/plunger goes negative, indicating that the control volume has negative volume and that the projectile/plunger has not only impacted the end but gone through the end.
+\item[return code 11:] Whether the maximum number of time loop iterations ($\maxiterstimeloop$) was reached when time stepping.
+This indicates that BlasterSim was getting stuck at some point.
+Looking at the CSV output should indicate where BlasterSim was getting stuck for debugging.
+\item[return code 12:] Whether the maximum number of iterations ($\maxitersgetsysatx$) was reached when interpolating to a particular projectile/plunger location.
+This indicates that BlasterSim was unable to properly handle an event like projectile exit or a plunger impacting the end of the plunger tube.
+\item[return code 13:] Whether any species in a control volume had negative mass in a Runge-Kutta stage.
+This tends to occur when the equivalent diameter of the flow restriction is too large.
+Alternatively, the time step may be too large, however, the equivalent diameter should be checked first as the default time step should be acceptable in the vast majority of situations.
+\item[return code 14:] Whether any control volume had negative energy in a Runge-Kutta stage.
+This is similar to return code 13 and can be fixed in the same ways.
+\item[return code 15:] Whether the muzzle velocity exceeds what is believed to be physically possible.
+See \citep[p.~364, eq.~74]{corner_theory_1950} and \citep[p.~19, eq.~11-8]{seigel_theory_1965}.
+This check is performed only at the end of the simulation, not after each time step.
+\end{description}
+
+The thresholds used for some of these checks are somewhat arbitrary and are based on what conservatively seems to never cause problems in practice.
+
+The non-error return codes are listed below.
+A value of -2 and below indicates that an event that requires special treatment was detected (for example, the projectile leaving the barrel or the plunger impacting the end of the plunger tube), and BlasterSim may or may not terminate the simulation depending on the event.
+\begin{description}
+\item[return code -1:] No errors or events were detected.
+BlasterSim will continue to the next time step.
+\item[return code -2:] A control volume's projectile/plunger has reached its termination position.
+For example, this could be triggered if a projectile leaves the barrel.
+BlasterSim will terminate.
+\item[return code -3:] A plunger has impacted the end of the plunger tube with non-zero plunger velocity after impact.
+BlasterSim will continue to the next time step.
+The time step is multiplied by $\dtbackoffimpact$.
+See \secref{time-integration}.
+\item[return code -4:] The time step was multiplied by $\dtbackoffconservation$ due to a mass or energy conservation tolerance being violated.
+See \secref{time-integration}.
+BlasterSim will continue to the next time step.
+\item[return code -5:] The time step was multiplied by $\dtrecovery$ as it has been $\dtrecoveryiterations$ time steps since the time step was last changed and perhaps a larger time step is now acceptable.
+See \secref{time-integration}.
+BlasterSim will continue to the next time step.
+\textbfwarning{If another event or error occurred during this time step, that return code will override this return code.}
+\item[return code -6:] A plunger has impacted the end of the plunger tube with zero plunger velocity after impact.
+BlasterSim will continue to the next time step.
+\end{description}
+
+\section{Inputs in general}\label{inputs-general}
 
 BlasterSim uses Fortran namelist format input files.
 Namelist files are broken into groups and variables.

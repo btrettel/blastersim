@@ -22,6 +22,8 @@ src$(DIR_SEP)gasdata.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)conve
 
 src$(DIR_SEP)io.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)cva.$(OBJEXT) src$(DIR_SEP)gasdata.$(OBJEXT) src$(DIR_SEP)port.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)geninput_pneumatic.f90 src$(DIR_SEP)geninput_springer.f90 src$(DIR_SEP)io.f90
 
+src$(DIR_SEP)linear_spring.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)linear_spring.f90
+
 src$(DIR_SEP)ooa.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)fmad.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)unittest.$(OBJEXT) src$(DIR_SEP)ooa.f90
 
 src$(DIR_SEP)port.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)port.f90

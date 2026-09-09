@@ -13,6 +13,7 @@ use checks, only: assert
 implicit none
 
 integer, parameter, public :: I_BARREL = 1
+integer, parameter, public :: I_SOURCE = 2
 
 public :: write_latex_engineering
 public :: create_barrel
@@ -98,7 +99,7 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     type(si_length)       :: delta_pre, x_chamber
     type(si_pressure)     :: p_f_chamber
     
-    integer, parameter :: I_CHAMBER = 2, I_BARREL_ATM  = 3
+    integer, parameter :: I_CHAMBER = I_SOURCE, I_BARREL_ATM  = 3
     
     !tripwire$ begin 56C95A8D Update \secref{notation} of theory.tex.
     type(gas_type), parameter :: BARREL_GAS(*)  = [DRY_AIR], &
@@ -196,7 +197,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     type(si_area)      :: csa_plunger, csa_barrel
     type(si_length)    :: x_dead_plunger
     
-    integer, parameter :: I_PLUNGER = 2, I_BARREL_ATM  = 3, I_PLUNGER_ATM = 4
+    integer, parameter :: I_PLUNGER = I_SOURCE, I_BARREL_ATM  = 3, I_PLUNGER_ATM = 4
     
     !tripwire$ begin 2807623D Update \secref{notation} of theory.tex.
     type(gas_type), parameter :: BARREL_GAS(*)   = [DRY_AIR], &

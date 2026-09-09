@@ -19,6 +19,7 @@ UserWarn
     "internal ballistics" # write interior ballistics
     "external ballistics" # write exterior ballistics
     # "flow connection" # write flow restriction
+    section{BlasterSim # Everything here applies to BlasterSim, so it's not necessary to mention BlasterSim in headings
 ]
 
 UserWarnRegex

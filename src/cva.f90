@@ -55,15 +55,14 @@ integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
 integer, public, parameter :: MAX_CV_TYPE    = 2
 
-integer, public, parameter :: SUCCESS_RC = 0
-
-!tripwire$ begin EE50E646 Update \secref{run-time-checks}, \secref{csv} and `actual_rc` in geninput_*.nml.
+!tripwire$ begin 7DB15B07 Update \secref{return-codes} and `actual_rc` in geninput_*.nml.
 integer, public, parameter :: IMPACT_STOP_RUN_RC             = -6
 integer, public, parameter :: DT_CHANGED_RECOVERY_RUN_RC     = -5
 integer, public, parameter :: DT_CHANGED_CONSERVATION_RUN_RC = -4
 integer, public, parameter :: X_LT_X_MIN_RUN_RC              = -3
 integer, public, parameter :: X_GE_X_STOP_RUN_RC             = -2
 integer, public, parameter :: CONTINUE_RUN_RC                = -1
+integer, public, parameter :: SUCCESS_RC                     = 0 ! used for more than just the `run` subroutine.
 integer, public, parameter :: TIMEOUT_RUN_RC                 = 1
 integer, public, parameter :: NEGATIVE_CV_M_TOTAL_RUN_RC     = 2
 integer, public, parameter :: NEGATIVE_CV_TEMP_RUN_RC        = 3
@@ -78,6 +77,7 @@ integer, public, parameter :: MAX_ITERS_TIME_LOOP_RUN_RC     = 11
 integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X_RUN_RC  = 12
 integer, public, parameter :: RK_STAGE_NEGATIVE_MASS_RC      = 13
 integer, public, parameter :: RK_STAGE_NEGATIVE_ENERGY_RC    = 14
+integer, public, parameter :: MAX_VELOCITY_EXCEEDED_RC       = 15
 !integer, public, parameter :: X_BLOW_UP_RUN_RC              = 
 !integer, public, parameter :: X_DOT_BLOW_UP_RUN_RC          = 
 !integer, public, parameter :: M_BLOW_UP_RUN_RC              = 
@@ -2150,7 +2150,7 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     t = t_old + dt_i
 end subroutine get_sys_at_x
 
-!tripwire$ begin 785C60B0 Update `\secref{plunger-impact}` of theory.tex.
+!tripwire$ begin AC1ABD23 Update `\secref{plunger-impact}` of theory.tex.
 pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact, rc)
     ! Set `sys_before_impact` to the instant immediately after plunger impact.
     ! `sys_before_impact` is right before plunger impact occurs (plunger velocity has no changed yet).
@@ -2163,12 +2163,15 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact, 
     integer :: i_cv_mirror
     type(si_inverse_mass) :: rm_p_eff
     
-    call assert(sys_before_impact%cv(i_cv)%cor%v%v   >= 0.0_WP, "cva (get_sys_after_impact): cor >= 0 violated")
-    call assert(sys_before_impact%cv(i_cv)%cor%v%v   <= 1.0_WP, "cva (get_sys_after_impact): cor <= 1 violated")
+    call assert(sys_before_impact%cv(i_cv)%cor%v%v   >= 0.0_WP, "cva (get_sys_after_impact): cor >= 0 violated", &
+                    print_real=[sys_before_impact%cv(i_cv)%cor%v%v], print_integer=[i_cv])
+    call assert(sys_before_impact%cv(i_cv)%cor%v%v   <= 1.0_WP, "cva (get_sys_after_impact): cor <= 1 violated", &
+                    print_real=[sys_before_impact%cv(i_cv)%cor%v%v], print_integer=[i_cv])
     call assert(sys_before_impact%cv(i_cv)%x_dot%v%v <= 0.0_WP, &
                     "cva (get_sys_after_impact): the velocity before impact should be negative or zero, " &
-                        // "and is assumed so with the IMPACT_STOP_VELOCITY conditional")
-    call assert(rc == X_LT_X_MIN_RUN_RC, "cva (get_sys_after_impact): wrong rc?")
+                        // "and is assumed so with the IMPACT_STOP_VELOCITY conditional", &
+                    print_real=[sys_before_impact%cv(i_cv)%x_dot%v%v], print_integer=[i_cv])
+    call assert(rc == X_LT_X_MIN_RUN_RC, "cva (get_sys_after_impact): wrong rc?", print_integer=[i_cv])
     
     sys_after_impact = sys_before_impact
     if (abs(sys_before_impact%cv(i_cv)%x_dot%v%v) < IMPACT_STOP_VELOCITY) then
@@ -2414,7 +2417,7 @@ subroutine write_csv_row(csv_unit, sys, t, status, row_type)
 end subroutine write_csv_row
 !tripwire$ end
 
-!tripwire$ begin E6D7EFE0 Update \secref{time-integration} and \secref{csv}.
+!tripwire$ begin EE3DDC0D Update \secref{time-integration} and \secref{csv}.
 pure subroutine adapt_dt(i, config_dt, sys_old, sys_new, dt, i_last_dt_change, rc)
     ! Adaptive time stepping based on conservation metrics and exponential backoff.
     
@@ -2428,6 +2431,7 @@ pure subroutine adapt_dt(i, config_dt, sys_old, sys_new, dt, i_last_dt_change, r
     type(si_mass)   :: m_old
     type(si_energy) :: e_old
     
+    ! 2026-09-09: Removing this criteria makes one of the cases found via fuzz testing fail.
     if (rc == X_LT_X_MIN_RUN_RC) then
         dt = DT_BACKOFF_IMPACT*dt
         i_last_dt_change = i

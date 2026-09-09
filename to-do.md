@@ -1,15 +1,9 @@
 ### v0.3.0
 
-- Move all return codes to one section in the usage chapter.
-    - Change blastersim.f90 to refer to that section of the usage chapter.
-- Increase assertion density.
-- Make fuzz testing detect unrealistically large muzzle velocities.
-    - The easiest way to do this might be to make BlasterSim return an error for unrealistically large muzzle velocities.
-        - Check against maximum possible muzzle velocity from Corner.
-        - How can this be done for springers?
-- Make optimized debug version of BlasterSim for fuzz testing.
 - Switch chamber and dead volume to mL.
 - Switch `d_*` and `l_*` to mm.
+- Increase assertion density.
+- Make optimized debug version of BlasterSim for fuzz testing.
 - Make testing system that runs BlasterSim input files and only checks the return codes. (Return codes are more specific than exit codes.)
     - Save problems found via fuzz testing to use as regression tests.
     - Turn Radioactive springer cases into tests to make sure that they get the same return codes at the very least.

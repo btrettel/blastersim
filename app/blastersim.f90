@@ -16,7 +16,7 @@ use cva, only: run_config_type, cv_system_type, run_status_type, T_STOP_DEFAULT,
                     MASS_TOLERANCE_RUN_RC, ENERGY_TOLERANCE_RUN_RC, MASS_DERIV_TOLERANCE_RUN_RC, &
                     ENERGY_DERIV_TOLERANCE_RUN_RC, IDEAL_EOS_RUN_RC, MIRROR_X_TOLERANCE_RUN_RC, &
                     NEGATIVE_CV_X_RUN_RC, MAX_ITERS_TIME_LOOP_RUN_RC, MAX_ITERS_GET_SYS_AT_X_RUN_RC, &
-                    RK_STAGE_NEGATIVE_MASS_RC, RK_STAGE_NEGATIVE_ENERGY_RC
+                    RK_STAGE_NEGATIVE_MASS_RC, RK_STAGE_NEGATIVE_ENERGY_RC, MAX_VELOCITY_EXCEEDED_RC
 use stopcodes, only: EX_OK, EX_USAGE, EX_SOFTWARE
 use rev, only: TAG, REVISION_DATE, MODIFIED
 use checks, only: assert
@@ -65,7 +65,9 @@ end block nml_blk
 
 call run(config, sys_start, sys_end, status)
 
-!tripwire$ begin 8E6189A7 Update `\secref{run-time-checks}` of verval.tex.
+!tripwire$ begin BE34A827 Update `\secref{return-codes}` of usage.tex.
+call post_run_checks(sys_start, sys_end, rc)
+
 if (status%rc < SUCCESS_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
     write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
@@ -115,6 +117,12 @@ else
                     "Check whether d_e is too large, or possibly if dt is too large."
             call refer_to_docs()
             stop EX_USAGE, quiet=.true.
+        case (MAX_VELOCITY_EXCEEDED_RC)
+            write(unit=ERROR_UNIT, fmt="(a)") "Muzzle velocity exceeded what is physically possible. ", &
+                                                "This is a bug that should be reported."
+            write(unit=ERROR_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
+            call refer_to_docs()
+            stop EX_SOFTWARE, quiet=.true.
         case default
             write(unit=ERROR_UNIT, fmt="(a)") "Unknown error. This is a bug that should be reported."
             stop EX_SOFTWARE, quiet=.true.
@@ -126,7 +134,32 @@ contains
 
 subroutine refer_to_docs()
     write(unit=ERROR_UNIT, fmt="(a)") "Refer to BlasterSim User's Guide for possibly more information."
-    write(unit=ERROR_UNIT, fmt="(a)") "<http://trettel.us/blastersim/docs/verification.html#run-time-checks>"
+    write(unit=ERROR_UNIT, fmt="(a)") "<file:///home/ben/git/blastersim/docs/return-codes.html>"
 end subroutine refer_to_docs
+
+pure subroutine post_run_checks(sys_start, sys_end, rc)
+    use units
+    use io, only: I_SOURCE
+    use prec, only: WP
+    
+    type(cv_system_type), allocatable, intent(in) :: sys_start, sys_end
+    integer, intent(in out)                       :: rc
+    
+    type(unitless)    :: y(size(sys_start%cv(1)%m_k))
+    type(si_velocity) :: v_escape
+    
+    ! The reason this check isn't in `check_sys` is that it shouldn't apply to every CV, only the barrel.
+    
+    y = sys_start%cv(I_SOURCE)%y()
+    
+    ! corner_theory_1950 p. 364, eq. 74
+    ! seigel_theory_1965 p. 19, eq. 11-8
+    v_escape = 2.0_WP * sqrt(sys_start%cv(I_SOURCE)%gamma(y) * sys_start%cv(I_SOURCE)%r() * sys_start%cv(I_SOURCE)%temp()) &
+                            / (sys_start%cv(I_SOURCE)%gamma(y) - 1.0_WP)
+    
+    if ((rc < SUCCESS_RC) .and. (sys_end%cv(I_BARREL)%x_dot > v_escape)) then
+        rc = MAX_VELOCITY_EXCEEDED_RC
+    end if
+end subroutine post_run_checks
 
 end program blastersim
