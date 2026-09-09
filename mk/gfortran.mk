@@ -2,8 +2,9 @@
 # `-fsanitize=leak` seems to continue to have false positives as of gfortran 13.
 # `-Wdo-subscript` is misleadingly named and warns for things that are not problems. <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90237>
 # I think I had some false positives before that made me add `-Wno-maybe-uninitialized`, but it seems unnecessary now.
+# 2026-09-09: I removed `-Wconversion-extra` as it complained about some code geninput had generated, and I couldn't think about a good way to fix that.
 
-FFLAGS   = -Wall -Wextra -Werror -pedantic-errors -Wno-do-subscript -std=f2018 -Wconversion -Wconversion-extra -fimplicit-none -fno-unsafe-math-optimizations -finit-real=snan -finit-integer=2147483647 -finit-logical=true -finit-derived -Wimplicit-interface -Wunused -Wcharacter-truncation -Winteger-division -ffree-line-length-132
+FFLAGS   = -Wall -Wextra -Werror -pedantic-errors -Wno-do-subscript -std=f2018 -Wconversion -fimplicit-none -fno-unsafe-math-optimizations -finit-real=snan -finit-integer=2147483647 -finit-logical=true -finit-derived -Wimplicit-interface -Wunused -Wcharacter-truncation -Winteger-division -ffree-line-length-132
 DFLAGS   = -Og -g -fbacktrace -fcheck=all -ffpe-trap=invalid,zero,overflow,underflow,denormal --coverage
 RFLAGS   = -O2 -Wno-uninitialized -fopt-info-missed=$(MISSED) -flto -ffpe-summary=none
 AFLAGS   = 

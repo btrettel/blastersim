@@ -5,7 +5,7 @@ l_travel  = 50.0e-2 ! m
 m_proj    = 1.1     ! g
 p_fs_proj = 5.0     ! kPa
 p_fd_proj = 2.0     ! kPa
-vol_dead  = 20.0e-6 ! m3
+vol_dead  = 20.0    ! mL
 
 ! plunger tube
 d_plunger    = 30.0e-3 ! m

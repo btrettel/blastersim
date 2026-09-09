@@ -1,6 +1,5 @@
 ### v0.3.0
 
-- Switch chamber and dead volume to mL.
 - Switch `d_*` and `l_*` to mm.
 - Increase assertion density.
 - Make optimized debug version of BlasterSim for fuzz testing.

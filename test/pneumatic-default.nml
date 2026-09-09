@@ -1,7 +1,7 @@
 &pneumatic
 ! chamber
 p_chamber   = 500.0   ! kPa
-vol_chamber = 2.0e-5  ! m3
+vol_chamber = 20.0    ! mL
 d_chamber   = 12.5e-3 ! m
 
 ! flow restriction
@@ -11,7 +11,7 @@ d_e       = 3.0e-3 ! m
 d_barrel  = 13.0e-3 ! m
 l_travel  = 40.0e-2 ! m
 m_proj    = 1.0     ! g
-vol_dead  = 1.0e-5  ! m3
+vol_dead  = 10.0    ! mL
 p_fs_proj = 7.0     ! kPa
 p_fd_proj = 3.0     ! kPa
 

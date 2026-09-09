@@ -87,9 +87,9 @@ fuzz_range            = 1.0e-2, 200.0e-2
 &input_variable
 variable_name         = "vol_dead"
 type_definition       = "type(si_volume)"
+scaling_factor        = 1.0e-6
 required              = .true.
-tex_unit              = "m$^3$"
-txt_unit              = "m3"
+tex_unit              = "mL"
 tex_description       = "Dead volume. For pneumatics, this is all the volume from where the valve ends to the base of the projectile."
 tex_variable_name     = "$V_\text{dead}$"
 lower_bound_active    = .true.
@@ -97,7 +97,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 1.0e-6, 100.0e-6
+fuzz_range            = 1.0, 100.0
 /
 
 &input_variable
@@ -333,9 +333,9 @@ fuzz_range            = 1.0e-2, 20.0e-2
 &input_variable
 variable_name         = "vol_chamber"
 type_definition       = "type(si_volume)"
+scaling_factor        = 1.0e-6
 required              = .true.
-tex_unit              = "m$^3$"
-txt_unit              = "m3"
+tex_unit              = "mL"
 tex_description       = "Volume of the chamber."
 tex_variable_name     = "$V_\text{chamber}$"
 lower_bound_active    = .true.
@@ -343,7 +343,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .true.
 default_value         = "-1.0"
 bound_fmt             = "f3.1"
-fuzz_range            = 1.0e-6, 1000.0e-6
+fuzz_range            = 1.0, 1000.0
 /
 
 &input_variable

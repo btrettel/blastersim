@@ -30,7 +30,7 @@ p_fs_proj = 11.8       ! kPa [8]
 p_fd_proj = 0.0        ! kPa (guessed as it seems to be low friction)
 
 ! Dead space: > 13.5763mm inner diameter, 203.2mm long
-vol_dead = 2.9415514e-5 ! m3 [1]
+vol_dead = 29.415514 ! mL [1]
 
 ! plunger tube
 d_plunger    = 43.6e-3 ! m [1]
@@ -49,7 +49,7 @@ m_spring = 89.40     ! g [2]
 delta_pre = 69.55e-3 ! m
 
 ! flow restriction
-d_e = 6.55e-3 ! m (calibrated, 92.27 m/s to match average)
+d_e = 6.80e-3 ! m (calibrated, 92.05 m/s to match average)
 !d_e = 13.5763e-3 ! m (full flow area)
 b   = 0.5    ! unitless (guessed)
 
