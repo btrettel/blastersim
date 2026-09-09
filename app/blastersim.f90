@@ -134,7 +134,7 @@ contains
 
 subroutine refer_to_docs()
     write(unit=ERROR_UNIT, fmt="(a)") "Refer to BlasterSim User's Guide for possibly more information."
-    write(unit=ERROR_UNIT, fmt="(a)") "<file:///home/ben/git/blastersim/docs/return-codes.html>"
+    write(unit=ERROR_UNIT, fmt="(a)") "<http://trettel.us/blastersim/docs/return-codes.html>"
 end subroutine refer_to_docs
 
 pure subroutine post_run_checks(sys_start, sys_end, rc)
