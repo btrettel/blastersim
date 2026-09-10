@@ -412,6 +412,7 @@ Having a non-zero coefficient of restitution will lead to an infinite number of 
 The number of bounces in reality is finite, and the decreasing time between bounces can cause similar numerical issues when the time between bounces becomes comparable to the time step.
 A simple and crude way to fix this problem is to set the velocity of the plunger after impact to zero if the magnitude of the velocity before impact is below a threshold.
 The threshold used in BlasterSim at the moment is $\impactstopvelocity$~cm/s.
+BlasterSim will also set the velocity of the plunger after impact to zero if it detects that the time between plunger impacts has decreased below the time step.
 
 If the plunger velocity after impact is zero (either due to the coefficient of restitution being zero or the velocity threshold mentioned in the previous paragraph), BlasterSim can stall.
 After impact, the plunger is located at the end of the plunger tube.

@@ -1,7 +1,11 @@
 ### v0.3.0
 
-- Increase assertion density.
+- docs: Does `rm_p` of zero imply no kinetic energy? Add to coding conventions.
 - Make optimized debug version of BlasterSim for fuzz testing.
+    - `BUILD=fuzz`
+- In nmlfuzz, detect if requires variables have a range of zero but do not have `fuzz = .true.` set.
+- geninput: required variables can't have a default value
+- Increase assertion density.
 - Make testing system that runs BlasterSim input files and only checks the return codes. (Return codes are more specific than exit codes.)
     - Save problems found via fuzz testing to use as regression tests.
     - Turn Radioactive springer cases into tests to make sure that they get the same return codes at the very least.
@@ -9,13 +13,12 @@
 
 ***
 
+- Get ChkTeX to detect `\\href{[^h]`
 - Secant method in `get_sys_at_x`: Use optimal 3 point stencil from ash_optimal_1981 eq. 2 to minimize error.
     - See FLT's test_fmad.f90 `test_num_deriv` subroutine.
 - docs: Differentiate between time step as in `dt` and time step as a particular location in time. Time iteration to refer to a particular point in time?
-- `adapt_dt`: Try smaller time step when velocity is low due to switching between dynamic and static friction? Friction switching being a problem might not actually be the issue as in the case that was failing, the pressures of friction are similar between static and dynamic. This shouldn't apply to projectiles/plungers with infinite mass.
 - Test `adapt_dt`.
 - Order-of-accuracy test for `e_f`.
-- geninput: required variables can't have a default value
 - Use linters including fortitude.
 - Disclaimer: User takes responsibility for accuracy, no liability
 - Empirical data chapter
@@ -481,6 +484,7 @@
                 - <https://news.ycombinator.com/item?id=49596781>
             - spring stress
             - spring buckling
+                - <https://www.reddit.com/r/nerfhomemades/comments/1w6nd9v/how_do_you_solve_spring_buckling_problem_in/>
         - maximum draw force limit
         - recoil
         - amount of gas ejected from the barrel after projectile exit during blowdown phase

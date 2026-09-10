@@ -55,8 +55,9 @@ integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
 integer, public, parameter :: MAX_CV_TYPE    = 2
 
-!tripwire$ begin 7DB15B07 Update \secref{return-codes} and `actual_rc` in geninput_*.nml.
-integer, public, parameter :: IMPACT_STOP_RUN_RC             = -6
+!tripwire$ begin D22EA909 Update \secref{return-codes} and `actual_rc` in geninput_*.nml.
+integer, public, parameter :: IMPACT_STOP_OTHER_RUN_RC       = -7
+integer, public, parameter :: IMPACT_STOP_VELOCITY_RUN_RC    = -6
 integer, public, parameter :: DT_CHANGED_RECOVERY_RUN_RC     = -5
 integer, public, parameter :: DT_CHANGED_CONSERVATION_RUN_RC = -4
 integer, public, parameter :: X_LT_X_MIN_RUN_RC              = -3
@@ -1700,9 +1701,10 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp, sys_event
     
     character(len=CL)     :: error_message
-    integer               :: n_d, i, csv_unit, rc_get_sys_at_x, rc_time_step, i_last_dt_change
+    integer               :: n_d, i, csv_unit, rc_get_sys_at_x, rc_time_step, i_last_dt_change, i_cv_x_event
     type(si_time)         :: t, t_old, dt
     logical               :: exit_time_loop, stop_at_first_event_
+    type(si_inverse_mass) :: rm_p_eff
     
     if (present(stop_at_first_event)) then
         stop_at_first_event_ = stop_at_first_event
@@ -1769,13 +1771,33 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
                     status%rc = rc_get_sys_at_x
                 end if
             case (X_LT_X_MIN_RUN_RC) ! -3
-                call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_min, &
-                                    sys_old, sys_new, t, sys_event, rc_get_sys_at_x)
-                
-                if (rc_get_sys_at_x == SUCCESS_RC) then
-                    call get_sys_after_impact(status%i_cv(1), sys_event, sys_new, status%rc)
+                i_cv_x_event = status%i_cv(1)
+                if (.not. is_close(sys_old%cv(i_cv_x_event)%x_min%v%v, sys_old%cv(i_cv_x_event)%x%v%v)) then
+                    call get_sys_at_x(t_old, dt, i_cv_x_event, sys_old%cv(i_cv_x_event)%x_min, &
+                                        sys_old, sys_new, t, sys_event, rc_get_sys_at_x)
+                    
+                    if (rc_get_sys_at_x == SUCCESS_RC) then
+                        call get_sys_after_impact(i_cv_x_event, sys_event, sys_new, status%rc)
+                    else
+                        status%rc = rc_get_sys_at_x
+                    end if
                 else
-                    status%rc = rc_get_sys_at_x
+                    ! For this to happen, the time between plunger impacts is now below `dt`.
+                    ! This case will normally stall because the secant method implicitly assumes there is one intersection.
+                    ! It would be easiest to simply refuse to resolve the impacts beyond this point.
+                    ! `t` to `t_old` so that the time iteration is rerun.
+                    ! Set the `cor` to zero so that the plunger stops when the time iteration is rerun.
+                    
+                    status%rc = IMPACT_STOP_OTHER_RUN_RC
+                    t = t_old
+                    sys_new = sys_old
+                    call sys_new%cv(i_cv_x_event)%x_dot%v%init_const(0.0_WP, n_d)
+                    rm_p_eff = sys_new%cv(i_cv_x_event)%rm_p_eff()
+                    if (.not. is_close(rm_p_eff%v%v, 0.0_WP)) then
+                        sys_new%cv(i_cv_x_event)%e_m = sys_new%cv(i_cv_x_event)%e_m &
+                                    + (0.5_WP/rm_p_eff)*square(sys_old%cv(i_cv_x_event)%x_dot)
+                    end if
+                    call sys_new%cv(i_cv_x_event)%rm_p%v%init_const(0.0_WP, n_d)
                 end if
         end select event_case
         
@@ -1800,7 +1822,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
             case (DT_CHANGED_RECOVERY_RUN_RC)
                 write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", CONVERT_S_TO_MS*t%v%v, " ms dt=", &
                         CONVERT_S_TO_MS*dt%v%v, " ms: dt increased"
-            case (IMPACT_STOP_RUN_RC)
+            case (IMPACT_STOP_VELOCITY_RUN_RC, IMPACT_STOP_OTHER_RUN_RC)
                 write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", CONVERT_S_TO_MS*t%v%v, " ms dt=", &
                         CONVERT_S_TO_MS*dt%v%v, " ms: final plunger impact, plunger now immobile"
             case default
@@ -2084,7 +2106,13 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     sys_im2 = sys_old
     sys_im1 = sys_new
     
-    !print *, "start", x_event%v%v, sys_old%cv(i_cv_x_event)%x_dot%v%v
+    call assert(.not. is_close(x_event%v%v, sys_old%cv(i_cv_x_event)%x%v%v), &
+                    "cva (get_sys_at_x): this configuration will stall", &
+                    print_real=[x_event%v%v, sys_old%cv(i_cv_x_event)%x%v%v, &
+                                    sys_new%cv(i_cv_x_event)%x%v%v])
+    
+!    print *, "start", x_event%v%v, sys_old%cv(i_cv_x_event)%x%v%v, sys_old%cv(i_cv_x_event)%x_dot%v%v, &
+!                        (sys_new%cv(i_cv_x_event)%x < x_event)
     rc = MAX_ITERS_GET_SYS_AT_X_RUN_RC
     do i = 1, MAX_ITERS_GET_SYS_AT_X
         ! This is one of the stopping criteria recommended by Wikipedia.
@@ -2119,6 +2147,8 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
             exit
         end if
         
+        !print *, dt_i%v%v, sys_i%cv(i_cv_x_event)%x%v%v, sys_i%cv(i_cv_x_event)%x_dot%v%v
+        
         call assert(sys_i%cv(i_cv_x_event)%x >= min_x, &
                         "cva (get_sys_at_x): x_i >= min_x violated", &
                         print_real=[sys_old%cv(i_cv_x_event)%x%v%v, sys_i%cv(i_cv_x_event)%x%v%v, &
@@ -2150,7 +2180,7 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     t = t_old + dt_i
 end subroutine get_sys_at_x
 
-!tripwire$ begin AC1ABD23 Update `\secref{plunger-impact}` of theory.tex.
+!tripwire$ begin F1BA303E Update `\secref{plunger-impact}` of theory.tex.
 pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact, rc)
     ! Set `sys_before_impact` to the instant immediately after plunger impact.
     ! `sys_before_impact` is right before plunger impact occurs (plunger velocity has no changed yet).
@@ -2167,8 +2197,8 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact, 
                     print_real=[sys_before_impact%cv(i_cv)%cor%v%v], print_integer=[i_cv])
     call assert(sys_before_impact%cv(i_cv)%cor%v%v   <= 1.0_WP, "cva (get_sys_after_impact): cor <= 1 violated", &
                     print_real=[sys_before_impact%cv(i_cv)%cor%v%v], print_integer=[i_cv])
-    call assert(sys_before_impact%cv(i_cv)%x_dot%v%v <= 0.0_WP, &
-                    "cva (get_sys_after_impact): the velocity before impact should be negative or zero, " &
+    call assert(sys_before_impact%cv(i_cv)%x_dot%v%v < 0.0_WP, &
+                    "cva (get_sys_after_impact): the velocity before impact should be negative, " &
                         // "and is assumed so with the IMPACT_STOP_VELOCITY conditional", &
                     print_real=[sys_before_impact%cv(i_cv)%x_dot%v%v], print_integer=[i_cv])
     call assert(rc == X_LT_X_MIN_RUN_RC, "cva (get_sys_after_impact): wrong rc?", print_integer=[i_cv])
@@ -2204,7 +2234,7 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact, 
         ! Then if the pressure in the CV overcomes the counteracting force, the plunger can start moving again.
         if (is_close(sys_after_impact%cv(i_cv)%x_dot%v%v, 0.0_WP)) then
             call sys_after_impact%cv(i_cv)%rm_p%v%init_const(0.0_WP, size(sys_after_impact%cv(i_cv)%rm_p%v%d))
-            rc = IMPACT_STOP_RUN_RC
+            rc = IMPACT_STOP_VELOCITY_RUN_RC
         end if
     end if
 end subroutine get_sys_after_impact

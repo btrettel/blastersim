@@ -191,8 +191,10 @@ BlasterSim will continue to the next time step.
 See \secref{time-integration}.
 BlasterSim will continue to the next time step.
 \textbfwarning{If another event or error occurred during this time step, that return code will override this return code.}
-\item[return code -6:] A plunger has impacted the end of the plunger tube with zero plunger velocity after impact.
+\item[return codes -6 and -7:] A plunger has impacted the end of the plunger tube with zero plunger velocity after impact.
 BlasterSim will continue to the next time step.
+Return code -6 means that the velocity before impact was below the threshold of $\impactstopvelocity$~cm/s where BlasterSim dissipates all remaining plunger kinetic energy to prevent an infinite series of plunger impacts.
+Return code -7 means that the the time between plunger impacts has decreased below the time step, and BlasterSim chooses to not resolve that impact and instead dissipate all remaining plunger kinetic energy.
 \end{description}
 
 \section{Inputs in general}\label{inputs-general}
