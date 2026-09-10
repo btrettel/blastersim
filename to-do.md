@@ -1,5 +1,8 @@
 ### v0.3.0
 
+- Replace `smin` with alternative function that is always equal to or greater than `min`.
+    - Limit `b` to at most `P_RL`?
+    - Make sure that `f_m_dot` is finite with b = 1
 - Switch away from smoothed friction model and use event detection instead.
     - Reenable `(d_e_f_d_t%v%v >= 0.0_WP` and `abs(p_f%v%v)` assertions once this is done.
 - docs: Does `rm_p` of zero imply no kinetic energy? Add to coding conventions.

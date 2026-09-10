@@ -1,0 +1,14 @@
+&pneumatic
+d_barrel = 14.627024477020408 ! mm
+d_chamber = 139.04047081174331 ! mm
+d_e = 13.732885752942084 ! mm
+l_travel = 1785.8976194687644 ! mm
+m_proj = 4.9053531419276339 ! g
+p_chamber = 409.21409944221307 ! kPa
+p_fd_proj = 8636.9724358164967 ! kPa
+p_fs_proj = 676.28521820727894 ! kPa
+vol_chamber = 431.96237890226875 ! mL
+vol_dead = 88.485544983889604 ! mL
+csv_output = .false. ! 
+actual_rc = 1
+/
