@@ -1866,7 +1866,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     status%t = t
 end subroutine run
 
-!tripwire$ begin D77579D9 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
+!tripwire$ begin 04CA5CFB Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
 pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_start
@@ -1899,7 +1899,8 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         end if
         
         ! Check whether `x < x_min`.
-        if (sys%cv(i_cv)%x < sys%cv(i_cv)%x_min) then
+        if ((sys%cv(i_cv)%x < sys%cv(i_cv)%x_min) &
+                .and. (sys%cv(i_cv)%eos /= CONST_EOS)) then
             status%rc = X_LT_X_MIN_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
@@ -1907,7 +1908,8 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         end if
         
         ! Check whether the plunger position is within the bounds.
-        if (sys%cv(i_cv)%x%v%v < 0.0_WP) then
+        if ((sys%cv(i_cv)%x%v%v < 0.0_WP) &
+                .and. (sys%cv(i_cv)%eos /= CONST_EOS)) then
             status%rc = NEGATIVE_CV_X_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
@@ -2201,7 +2203,7 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
     t = t_old + dt_i
 end subroutine get_sys_at_x
 
-!tripwire$ begin F1BA303E Update `\secref{plunger-impact}` of theory.tex.
+!tripwire$ begin CBF61FEA Update `\secref{plunger-impact}` of theory.tex.
 pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact, rc)
     ! Set `sys_before_impact` to the instant immediately after plunger impact.
     ! `sys_before_impact` is right before plunger impact occurs (plunger velocity has no changed yet).
@@ -2214,6 +2216,9 @@ pure subroutine get_sys_after_impact(i_cv, sys_before_impact, sys_after_impact, 
     integer :: i_cv_mirror
     type(si_inverse_mass) :: rm_p_eff
     
+    call assert(sys_before_impact%cv(i_cv)%eos /= CONST_EOS, &
+                    "cva (get_sys_after_impact): CONST_EOS CVs should not be here, CV " &
+                    // trim(sys_before_impact%cv(i_cv)%label))
     call assert(sys_before_impact%cv(i_cv)%cor%v%v   >= 0.0_WP, "cva (get_sys_after_impact): cor >= 0 violated", &
                     print_real=[sys_before_impact%cv(i_cv)%cor%v%v], print_integer=[i_cv])
     call assert(sys_before_impact%cv(i_cv)%cor%v%v   <= 1.0_WP, "cva (get_sys_after_impact): cor <= 1 violated", &
