@@ -67,7 +67,7 @@ call tests%end_tests()
 contains
 
 subroutine write_defaults()
-    use cva, only: DT_DEFAULT, T_STOP_DEFAULT, COR_DEFAULT, &
+    use cva, only: P_RL, DT_DEFAULT, T_STOP_DEFAULT, COR_DEFAULT, &
                     MASS_TOLERANCE, ENERGY_TOLERANCE, MASS_DERIV_TOLERANCE, ENERGY_DERIV_TOLERANCE, &
                     MIRROR_X_TOLERANCE, MAX_ITERS_TIME_LOOP, MAX_ITERS_GET_SYS_AT_X, CSV_FREQUENCY_DEFAULT, &
                     DT_BACKOFF_CONSERVATION, DT_BACKOFF_MASS_TOLERANCE, DT_BACKOFF_ENERGY_TOLERANCE, &
@@ -81,6 +81,7 @@ subroutine write_defaults()
     open(newunit=tex_unit, action="write", status="replace", position="rewind", file="defaults.tex", delim="quote")
     write(unit=tex_unit, fmt="(a)") "% auto-generated"
     call write_latex_engineering(tex_unit, DT_DEFAULT, "dtdefault", "f4.1")
+    write(unit=tex_unit, fmt="(a, f5.3, a)") "\newcommand*{\prl}{", P_RL, "}"
     write(unit=tex_unit, fmt="(a, f8.3, a)") "\newcommand*{\patmdefault}{", P_ATM*CONVERT_PA_TO_KPA, "} % kPa"
     write(unit=tex_unit, fmt="(a, f6.2, a)") "\newcommand*{\tempatmdefaultk}{", TEMP_ATM, "} % K"
     write(unit=tex_unit, fmt="(a, f5.2, a)") "\newcommand*{\tempatmdefaultc}{", TEMP_ATM - CONVERT_C_TO_K, "} % C"

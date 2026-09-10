@@ -4,11 +4,11 @@ BlasterSim simulates pneumatic and spring compressed gas guns with an adiabatic 
 
 BlasterSim is under development and not feature-complete.
 
-[BlasterSim documentation](http://trettel.us/blastersim/docs/) (incomplete)
+[BlasterSim documentation](http://trettel.us/blastersim/docs/)
 
 [BlasterSim releases](http://trettel.us/blastersim/releases/)
 
-[Latest test results](http://trettel.us/blastersim/tests.html)
+[Recent test results](http://trettel.us/blastersim/tests.html)
 
 You can discuss BlasterSim online:
 

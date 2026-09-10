@@ -169,7 +169,7 @@ $b_{i \rightarrow j}$ is the critical pressure ratio of the flow restriction,
 $R_i$ is the gas constant for the gas mixture in control volume $i$, and
 $T_i$ is the temperature in control volume $i$.
 
-For $g_{\dot{m}}$ and $f_{\dot{m}}$, let's define $p_\text{r} = p_j/p_i$ and $p_\text{rl} = 0.999$, where $p_\text{r} > p_\text{rl}$ is arbitrarily chosen to be where laminar flow occurs following the simplified laminar flow model of \citet[p.~46]{beater_pneumatic_2007}.
+For $g_{\dot{m}}$ and $f_{\dot{m}}$, let's define $p_\text{r} = p_j/p_i$ and $p_\text{rl} = \prl$, where $p_\text{r} > p_\text{rl}$ is arbitrarily chosen to be where laminar flow occurs following the simplified laminar flow model of \citet[p.~46]{beater_pneumatic_2007}.
 
 % `$g_{\dot{m}}$`: See 2025-10-26 handwritten notes.
 The purpose of $g_{\dot{m}}$ is to gradually and continuously turn on a term that is needed for $p_\text{r}$ near 1 to properly model laminar flow and also avoid unphysically high sensitivities to the pressure.
@@ -183,7 +183,7 @@ The function $g_{\dot{m}}$ is
     \end{cases}
 \end{equation}
 
-The derivative of the $p_\text{r} > p_\text{rl}$ branch of $g_{\dot{m}}$ with respect to $p_\text{r}$ is zero at $p_\text{r} = p_\text{rl}$ so that the following function is continuous and continuously differentiable as it switched between the $p_\text{r} \leq p_\text{rl}$ and $p_\text{r} > p_\text{rl}$ branches.
+The derivative of the $p_\text{r} > p_\text{rl}$ branch of $g_{\dot{m}}$ with respect to $p_\text{r}$ is zero at $p_\text{r} = p_\text{rl}$ so that the following function is continuous and continuously differentiable as it switches between the $p_\text{r} \leq p_\text{rl}$ and $p_\text{r} > p_\text{rl}$ branches.
 
 % `$f_{\dot{m}}$`: See 2025-10-19 handwritten notes, with the `\smin` part crossed out, though its intention is clear from the code.
 $f_{\dot{m}}$ is intended to both account for laminar flow ($p_\text{r} > p_\text{rl}$) and choked flow ($p_\text{r} < b_{i \rightarrow j}$).

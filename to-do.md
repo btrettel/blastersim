@@ -1,5 +1,11 @@
 ### v0.3.0
 
+- Create a checklist for testing before a new release.
+    - Check assertion density
+    - Fortitude
+    - Compile and run tests with multiple compilers.
+    - Fuzz testing for X hours.
+    - Ask LLM for feedback.
 - Replace `smin` with alternative function that is always equal to or greater than `min`.
     - Limit `b` to at most `P_RL`?
     - Make sure that `f_m_dot` is finite with b = 1
