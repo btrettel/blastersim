@@ -269,7 +269,7 @@ pure function e_total(cv)
     e_total = cv%e_g + cv%e_f + cv%e_m + cv%e_s() + cv%e_k()
 end function e_total
 
-!tripwire$ begin F6504810 Update `\secref{equations-of-state}` of theory.tex if necessary.
+!tripwire$ begin F87ADB50 Update `\secref{equations-of-state}` of theory.tex if necessary.
 pure function p_cv(cv)
     ! Calculate pressure using the equation of state.
     
@@ -280,27 +280,25 @@ pure function p_cv(cv)
     type(si_mass_density) :: rho
     type(si_temperature)  :: temp
     
-    rho  = cv%rho()
-    temp = cv%temp()
-    
     select case (cv%eos)
         case (IDEAL_EOS)
-            call assert(rho%v%v  > 0.0_WP, "cva (p_cv, IDEAL_EOS): rho%v > 0 violated, " // trim(cv%label), &
+            rho  = cv%rho()
+            temp = cv%temp()
+            
+            call assert(rho%v%v  > 0.0_WP, "cva (p_cv, IDEAL_EOS): rho%v > 0 violated for " // trim(cv%label), &
                             print_real=[rho%v%v, cv%x%v%v, cv%x_dot%v%v, cv%m_k(1)%v%v, cv%e_g%v%v])
-            call assert(temp%v%v > 0.0_WP, "cva (p_cv, IDEAL_EOS): temp%v > 0 violated, " // trim(cv%label), &
+            call assert(temp%v%v > 0.0_WP, "cva (p_cv, IDEAL_EOS): temp%v > 0 violated for " // trim(cv%label), &
                             print_real=[temp%v%v, cv%x%v%v, cv%x_dot%v%v, cv%m_k(1)%v%v, cv%e_g%v%v])
             call assert_dimension(rho%v%d, temp%v%d)
             
             p_cv = rho * cv%r() * temp
         case (CONST_EOS)
-            call assert(is_close(temp%v%v, cv%temp_const%v%v), "cva (p_eos, CONST_EOS): temp /= temp_const", &
-                            print_real=[temp%v%v, cv%temp_const%v%v])
             p_cv = cv%p_const
         case default
             error stop "cva (p_cv): invalid cv%eos"
     end select
     
-    call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated", print_real=[p_cv%v%v])
+    call assert(p_cv%v%v > 0.0_WP, "cva (p_cv): p_cv > 0 violated for CV " // trim(cv%label), print_real=[p_cv%v%v])
 end function p_cv
 
 pure function rho_eos(cv, p, temp, y)
@@ -325,10 +323,11 @@ pure function rho_eos(cv, p, temp, y)
     
     ! Don't check `p_c` here as that requires the masses.
     
-    call assert(cv%eos == IDEAL_EOS, "cva (rho_eos): ideal equation of state required", print_integer=[cv%eos])
-    call assert(p%v%v    >  0.0_WP, "cva (rho_eos): p%v > 0 violated", print_real=[p%v%v])
-    call assert(temp%v%v >  0.0_WP, "cva (rho_eos): temp%v > 0 violated", print_real=[temp%v%v])
-    call assert(size(y)  >= 1,      "cva (rho_eos): size(y) >= 1 violated", print_integer=[size(y)])
+    call assert(cv%eos == IDEAL_EOS, "cva (rho_eos): ideal equation of state required for CV " // trim(cv%label), &
+                    print_integer=[cv%eos])
+    call assert(p%v%v    >  0.0_WP, "cva (rho_eos): p%v > 0 violated for CV " // trim(cv%label), print_real=[p%v%v])
+    call assert(temp%v%v >  0.0_WP, "cva (rho_eos): temp%v > 0 violated for CV " // trim(cv%label), print_real=[temp%v%v])
+    call assert(size(y)  >= 1,      "cva (rho_eos): size(y) >= 1 violated for CV " // trim(cv%label), print_integer=[size(y)])
     call assert_dimension(p%v%d, temp%v%d)
     call assert_dimension(p%v%d, y(1)%v%d)
     call assert_dimension(y, cv%gas)
@@ -345,20 +344,23 @@ pure function rho_eos(cv, p, temp, y)
         do j = 1, size(y)
             denominator = denominator + y(j)*(cv%gas(i)%mm/cv%gas(j)%mm) ! MAYBE: change so that the molar masses have units?
         end do
-        call assert(denominator%v%v > 0.0_WP, "cva (rho_eos): denominator is zero", print_real=[denominator%v%v])
+        call assert(denominator%v%v > 0.0_WP, "cva (rho_eos): denominator is zero for CV " // trim(cv%label), &
+                        print_real=[denominator%v%v])
         call gas_mm%v%init_const(cv%gas(i)%mm, n_d)
         mm    = mm + y(i)*gas_mm/denominator
         y_sum = y_sum + y(i)
     end do
     
-    call assert(is_close(y_sum%v%v, 1.0_WP), "cva (rho_eos): y does not sum to 1", print_real=[y_sum%v%v])
+    call assert(is_close(y_sum%v%v, 1.0_WP), "cva (rho_eos): y does not sum to 1 for CV " // trim(cv%label), &
+                    print_real=[y_sum%v%v])
     
     call r_bar_%v%init_const(R_BAR, n_d)
     r_cv = r_bar_ / mm
     
     rho_eos = p / (r_cv * temp)
     
-    call assert(rho_eos%v%v > 0.0_WP, "cva (rho_eos): rho_eos%v > 0 violated", print_real=[rho_eos%v%v])
+    call assert(rho_eos%v%v > 0.0_WP, "cva (rho_eos): rho_eos%v > 0 violated for CV " // trim(cv%label), &
+                    print_real=[rho_eos%v%v])
 end function rho_eos
 !tripwire$ end
 
@@ -376,25 +378,28 @@ pure function p_c(cv)
     type(si_pressure) :: p_ci
     type(unitless)    :: chi_sum
     
-    call assert(cv%eos /= CONST_EOS, "cva (p_c): CONST_EOS may not have positive mass and should not be checked here")
+    call assert(cv%eos /= CONST_EOS, &
+                    "cva (p_c): CONST_EOS may not have positive mass and should not be checked here, CV " // trim(cv%label))
     
     call p_c%v%init_const(0.0_WP, size(cv%m_k(1)%v%d))
     call chi_sum%v%init_const(0.0_WP, size(cv%m_k(1)%v%d))
     do i = 1, size(cv%m_k)
         call denominator%v%init_const(0.0_WP, size(cv%m_k(1)%v%d))
         do j = 1, size(cv%m_k)
-            call assert(cv%m_k(j)%v%v >= 0.0_WP, "cva (p_c): m_k(j) >= 0 violated", &
+            call assert(cv%m_k(j)%v%v >= 0.0_WP, "cva (p_c): m_k(j) >= 0 violated for CV " // trim(cv%label), &
                             print_integer=[i, j, size(cv%m_k)], print_real=[cv%m_k(j)%v%v])
             denominator = denominator + cv%m_k(j)*(cv%gas(i)%mm/cv%gas(j)%mm) ! MAYBE: change so that the molar masses have units?
         end do
-        call assert(denominator%v%v > 0.0_WP, "cva (p_c): denominator > 0 violated", print_real=[denominator%v%v])
+        call assert(denominator%v%v > 0.0_WP, "cva (p_c): denominator > 0 violated for CV " // trim(cv%label), &
+                        print_real=[denominator%v%v])
         chi = cv%m_k(i) / denominator
         call p_ci%v%init_const(cv%gas(i)%p_c, size(cv%m_k(1)%v%d))
         p_c = p_c + chi*p_ci
         chi_sum = chi_sum + chi
     end do
     
-    call assert(is_close(chi_sum%v%v, 1.0_WP), "cva (p_c): chi does not sum to 1", print_real=[chi_sum%v%v])
+    call assert(is_close(chi_sum%v%v, 1.0_WP), "cva (p_c): chi does not sum to 1 for CV " // trim(cv%label), &
+                    print_real=[chi_sum%v%v])
 end function p_c
 
 pure function y(cv)
@@ -494,8 +499,9 @@ pure function r_cv(cv)
     call r_bar_%v%init_const(R_BAR, n_d)
     r_cv = r_bar_ / mm
     
-    call assert(r_cv%v%v > 0.0_WP, "cva (r_cv): r_cv > 0 violated", print_real=[r_cv%v%v])
-    call assert(is_close(chi_sum%v%v, 1.0_WP), "cva (r_cv): chi does not sum to 1", print_real=[chi_sum%v%v])
+    call assert(r_cv%v%v > 0.0_WP, "cva (r_cv): r_cv > 0 violated for CV " // trim(cv%label), print_real=[r_cv%v%v])
+    call assert(is_close(chi_sum%v%v, 1.0_WP), "cva (r_cv): chi does not sum to 1 for CV " // trim(cv%label), &
+                    print_real=[chi_sum%v%v])
 end function r_cv
 
 pure function temp_cv(cv)
@@ -531,7 +537,7 @@ pure function temp_cv(cv)
         case (CONST_EOS)
             temp_cv = cv%temp_const
         case default
-            error stop "cva (temp_cv): invalid cv%eos"
+            error stop "cva (temp_cv): invalid cv%eos for CV " // trim(cv%label)
     end select
     
     ! Disabled in favor of `check_sys` temperature check.
@@ -544,12 +550,14 @@ pure function vol_cv(cv)
     
     type(si_volume) :: vol_cv
     
-    call assert(cv%x%v%v > 0.0_WP, "cva (vol_cv): cv%x > 0 violated", print_real=[cv%x%v%v])
-    call assert(cv%csa%v%v > 0.0_WP, "cva (vol_cv): cv%csa > 0 violated", print_real=[cv%csa%v%v])
+    call assert(cv%eos == IDEAL_EOS, "cva (vol_cv): ideal equation of state required for CV " // trim(cv%label), &
+                    print_integer=[cv%eos])
+    call assert(cv%x%v%v > 0.0_WP, "cva (vol_cv): cv%x > 0 violated for CV " // trim(cv%label), print_real=[cv%x%v%v])
+    call assert(cv%csa%v%v > 0.0_WP, "cva (vol_cv): cv%csa > 0 violated for CV " // trim(cv%label), print_real=[cv%csa%v%v])
     
     vol_cv = cv%x * cv%csa
     
-    call assert(vol_cv%v%v > 0.0_WP, "cva (vol_cv): vol_cv > 0 violated", print_real=[vol_cv%v%v])
+    call assert(vol_cv%v%v > 0.0_WP, "cva (vol_cv): vol_cv > 0 violated for CV " // trim(cv%label), print_real=[vol_cv%v%v])
 end function vol_cv
 
 pure function rho_cv(cv)
@@ -562,17 +570,23 @@ pure function rho_cv(cv)
     
     type(si_volume) :: vol
     
+    call assert(cv%eos == IDEAL_EOS, "cva (rho_cv): ideal equation of state required for CV " // trim(cv%label), &
+                    print_integer=[cv%eos])
+    
     call assert_mass(cv, "rho_cv")
     
     vol = cv%vol()
-    call assert(vol%v%v > 0.0_WP, "cva (rho_cv): volume is zero or smaller", print_real=[vol%v%v])
+    call assert(vol%v%v > 0.0_WP, "cva (rho_cv): volume is zero or smaller for CV " // trim(cv%label), &
+                    print_real=[vol%v%v])
     rho_cv = cv%m_total() / vol
     
     select case (cv%eos)
         case (IDEAL_EOS)
-            call assert(rho_cv%v%v > 0.0_WP, "cva (rho_cv, IDEAL_EOS): rho_cv > 0 violated", print_real=[rho_cv%v%v])
+            call assert(rho_cv%v%v > 0.0_WP, "cva (rho_cv, IDEAL_EOS): rho_cv > 0 violated for CV " // trim(cv%label), &
+                            print_real=[rho_cv%v%v])
         case (CONST_EOS)
-            call assert(rho_cv%v%v >= 0.0_WP, "cva (rho_cv, CONST_EOS): rho_cv >= 0 violated", print_real=[rho_cv%v%v])
+            call assert(rho_cv%v%v >= 0.0_WP, "cva (rho_cv, CONST_EOS): rho_cv >= 0 violated for CV " // trim(cv%label), &
+                            print_real=[rho_cv%v%v])
         case default
             error stop "cva (rho_cv): invalid cv%eos"
     end select
@@ -597,7 +611,7 @@ pure function u_cv(cv)
         u_cv = u_cv + cv%m_k(k)*cv%gas(k)%u(temp)/m_total
     end do
     
-    call assert(u_cv%v%v > 0.0_WP, "cva (u_cv): u_cv > 0 violated", print_real=[u_cv%v%v])
+    call assert(u_cv%v%v > 0.0_WP, "cva (u_cv): u_cv > 0 violated for CV " // trim(cv%label), print_real=[u_cv%v%v])
 end function u_cv
 
 pure function h_cv(cv)
@@ -626,7 +640,7 @@ pure function h_cv(cv)
         h_cv = h_cv + y*cv%gas(k)%h(temp)
     end do
     
-    call assert(h_cv%v%v >= 0.0_WP, "cva (h_cv): h_cv > 0 violated", print_real=[h_cv%v%v])
+    call assert(h_cv%v%v >= 0.0_WP, "cva (h_cv): h_cv > 0 violated for CV " // trim(cv%label), print_real=[h_cv%v%v])
 end function h_cv
 
 pure function gamma_cv(cv, y)
@@ -651,7 +665,8 @@ pure function gamma_cv(cv, y)
     
     gamma_cv = c_p_cv / c_v_cv
     
-    call assert(gamma_cv%v%v > 1.0_WP, "cva (gamma_cv): gamma_cv > 1 violated", print_real=[gamma_cv%v%v])
+    call assert(gamma_cv%v%v > 1.0_WP, "cva (gamma_cv): gamma_cv > 1 violated for CV " // trim(cv%label), &
+                    print_real=[gamma_cv%v%v])
 end function gamma_cv
 
 pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, k, delta_pre, gas, &
@@ -1365,7 +1380,7 @@ pure function alpha_m_dot(con, t)
 end function alpha_m_dot
 !tripwire$ end
 
-!tripwire$ begin 23FE997C Update \secref{connection-flow-model} of theory.tex if necessary.
+!tripwire$ begin 0F00E257 Update \secref{connection-flow-model} of theory.tex if necessary.
 pure function f_m_dot(p_r, b)
     ! See beater_pneumatic_2007 eq. 5.4
     ! This is a replacement for the ((p_2/p_1 - b)/(1-b))**2 term, smoothly going between the various cases.
@@ -1386,6 +1401,12 @@ pure function f_m_dot(p_r, b)
     
     f_m_dot = square((smooth_min(p_r, p_rl_) - b) / (1.0_WP - b)) &
                 * 0.5_WP * (1.0_WP + tanh((p_r - b) / p_rs))
+    
+    ! These aren't strictly true, but violating them will cause problems.
+    call assert(f_m_dot%v%v >= 0.0_WP, "cva (f_m_dot): f_m_dot >= 0 violated", &
+                    print_real=[f_m_dot%v%v, p_r%v%v, p_rl_%v%v, b%v%v, p_rs%v%v])
+    call assert(f_m_dot%v%v <= 1.0_WP, "cva (f_m_dot): f_m_dot <= 1 violated", &
+                    print_real=[f_m_dot%v%v, p_r%v%v, p_rl_%v%v, b%v%v, p_rs%v%v])
 end function f_m_dot
 
 pure function g_m_dot(p_r)

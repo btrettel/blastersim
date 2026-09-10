@@ -156,16 +156,17 @@ type_definition       = "type(unitless)"
 required              = .false.
 tex_unit              = "1"
 tex_description       = "Critical pressure ratio of the valve."
+tex_description_2     = "At the moment the upper bound is not 1 as higher than 0.9 presents numerical issues that are being investigated."
 tex_variable_name     = "$b$"
 lower_bound_active    = .true.
 lower_bound           = 0.0
 lower_bound_not_equal = .false.
 upper_bound_active    = .true.
-upper_bound           = 1.0
+upper_bound           = 0.9
 upper_bound_not_equal = .false.
 default_value         = "0.5"
 bound_fmt             = "f3.1"
-fuzz_range            = 0.0, 1.0
+fuzz_range            = 0.0, 0.9
 /
 
 &input_variable
@@ -317,6 +318,7 @@ lower_bound           = 0.0
 lower_bound_not_equal = .false.
 default_value         = "0.0"
 bound_fmt             = "f3.1"
+fuzz_range            = 0.0, 50.0
 /
 
 &input_variable

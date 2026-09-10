@@ -196,11 +196,11 @@ subroutine test_constant_cv(tests)
     
     p    = cv%p()
     temp = cv%temp()
-    rho  = cv%rho()
     
     call tests%real_eq(p%v%v, P_ATM, "p_cv, constant CV")
     call tests%real_eq(temp%v%v, TEMP_ATM, "temp_cv, constant CV")
-    call tests%real_eq(rho%v%v, 2.0_WP, "rho_cv, constant CV") ! calculated from mass, not meaningful
+    
+    ! `rho` not tested here as it is calculated from mass and is not meaningful
 end subroutine test_constant_cv
 
 subroutine test_rho_eos(tests)

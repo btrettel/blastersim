@@ -1,5 +1,7 @@
 ### v0.3.0
 
+- Switch away from smoothed friction model and use event detection instead.
+    - Reenable `(d_e_f_d_t%v%v >= 0.0_WP` and `abs(p_f%v%v)` assertions once this is done.
 - docs: Does `rm_p` of zero imply no kinetic energy? Add to coding conventions.
 - In nmlfuzz, detect if requires variables have a range of zero but do not have `fuzz = .true.` set.
 - geninput: required variables can't have a default value

@@ -374,7 +374,8 @@ elemental function ad_integer_exponentiate(ad_in, integer_in)
     type(ad) :: ad_integer_exponentiate
     
     call assert(.not. (is_close(ad_in%v, 0.0_WP) .and. (integer_in <= 0)), &
-                    "fmad (ad_integer_exponentiate): exponent is negative or zero and argument is zero")
+                    "fmad (ad_integer_exponentiate): exponent is negative or zero and argument is zero", &
+                    print_real=[ad_in%v], print_integer=[integer_in])
     call assert(allocated(ad_in%d), "fmad (ad_integer_exponentiate): ad_in%d must be allocated")
 
     ad_integer_exponentiate%v = ad_in%v**integer_in
@@ -392,7 +393,8 @@ elemental function ad_ad_exponentiate(ad_left, ad_right)
     type(ad) :: ad_ad_exponentiate
     
     call assert(.not. (is_close(ad_left%v, 0.0_WP) .and. (ad_right%v <= 0.0_WP)), &
-                    "fmad (ad_ad_exponentiate): exponent is negative or zero and argument is zero")
+                    "fmad (ad_ad_exponentiate): exponent is negative or zero and argument is zero", &
+                    print_real=[ad_left%v, ad_right%v])
     call assert(allocated(ad_left%d), "fmad (ad_ad_exponentiate): ad_left%d must be allocated")
     call assert(allocated(ad_right%d), "fmad (ad_ad_exponentiate): ad_right%d must be allocated")
     
@@ -455,7 +457,7 @@ elemental function ad_sqrt(ad_in)
     
     type(ad) :: ad_sqrt
     
-    call assert(ad_in%v > 0.0_WP, "fmad (ad_sqrt): argument is zero or negative")
+    call assert(ad_in%v > 0.0_WP, "fmad (ad_sqrt): argument is zero or negative", print_real=[ad_in%v])
     call assert(allocated(ad_in%d), "fmad (ad_sqrt): ad_in%d must be allocated")
     
     ad_sqrt%v = sqrt(ad_in%v)
@@ -478,7 +480,7 @@ elemental function ad_log(ad_in)
     
     type(ad) :: ad_log
     
-    call assert(ad_in%v > 0.0_WP, "fmad (ad_log): argument is zero or negative")
+    call assert(ad_in%v > 0.0_WP, "fmad (ad_log): argument is zero or negative", print_real=[ad_in%v])
     call assert(allocated(ad_in%d), "fmad (ad_log): ad_in%d must be allocated")
     
     ad_log%v = log(ad_in%v)
@@ -612,7 +614,7 @@ elemental function ad_atanh(ad_in)
     type(ad) :: ad_atanh
     
     call assert(allocated(ad_in%d), "fmad (ad_atanh): ad_in%d must be allocated")
-    call assert(abs(ad_in%v) < 1.0_WP, "fmad (ad_atanh): abs(ad_in%v) < 1 violated")
+    call assert(abs(ad_in%v) < 1.0_WP, "fmad (ad_atanh): abs(ad_in%v) < 1 violated", print_real=[ad_in%v])
     
     ad_atanh%v = atanh(ad_in%v)
     ad_atanh%d = ad_in%d/(1.0_WP - ad_in%v**2)
