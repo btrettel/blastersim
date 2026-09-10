@@ -1,10 +1,11 @@
-FFLAGS   = -Error=Any_Warning -f2018 -info -quiet -I src -w=ques
-DFLAGS   = -g
-RFLAGS   = -O2
-AFLAGS   = 
-NFLAGS   = -target=native
-SFLAGS   = -Bstatic
-OMPFLAGS = -openmp
+FFLAGS    = -Error=Any_Warning -f2018 -info -quiet -I src -w=ques
+DFLAGS    = -g
+RFLAGS    = -O2
+FUZZFLAGS = -O2 -g
+AFLAGS    = 
+NFLAGS    = -target=native
+SFLAGS    = -Bstatic
+OMPFLAGS  = -openmp
 
 # `-I src`: Required because unlike other compilers, nagfor won't look for `include`d files in the same directory as the source code calling it.
 

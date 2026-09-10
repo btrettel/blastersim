@@ -1,10 +1,11 @@
-FFLAGS   = -Minform=inform -Werror
-DFLAGS   = -g
-RFLAGS   = -fast -Minfo=all -Mneginfo=all
-AFLAGS   = 
-NFLAGS   = 
-SFLAGS   = 
-OMPFLAGS = -mp
+FFLAGS    = -Minform=inform -Werror
+DFLAGS    = -g
+RFLAGS    = -fast -Minfo=all -Mneginfo=all
+FUZZFLAGS = -fast -g
+AFLAGS    = 
+NFLAGS    = 
+SFLAGS    = 
+OMPFLAGS  = -mp
 
 # <https://docs.nvidia.com/hpc-sdk//compilers/hpc-compilers-user-guide/index.html#gs-perform-fast>
 

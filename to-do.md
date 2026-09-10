@@ -1,8 +1,6 @@
 ### v0.3.0
 
 - docs: Does `rm_p` of zero imply no kinetic energy? Add to coding conventions.
-- Make optimized debug version of BlasterSim for fuzz testing.
-    - `BUILD=fuzz`
 - In nmlfuzz, detect if requires variables have a range of zero but do not have `fuzz = .true.` set.
 - geninput: required variables can't have a default value
 - Increase assertion density.

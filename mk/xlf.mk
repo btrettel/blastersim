@@ -1,10 +1,11 @@
-FFLAGS   = -qlanglvl=2008pure -qwarn64 -qinfo=all -qsuppress=1512-045:1521-004:1516-329 -qsclk=micro
-DFLAGS   = -g2 -qcheck=all -qflttrap=inexact:invalid:overflow:underflow:zerodivide
-RFLAGS   = -O2 -qreport=hotlist -qlto
-AFLAGS   = 
-NFLAGS   = -qarch=qauto
-SFLAGS   = 
-OMPFLAGS = -qsmp=omp
+FFLAGS    = -qlanglvl=2008pure -qwarn64 -qinfo=all -qsuppress=1512-045:1521-004:1516-329 -qsclk=micro
+DFLAGS    = -g2 -qcheck=all -qflttrap=inexact:invalid:overflow:underflow:zerodivide
+RFLAGS    = -O2 -qreport=hotlist -qlto
+FUZZFLAGS = -O2 -qreport=hotlist -qlto -qcheck=all -qflttrap=inexact:invalid:overflow:underflow:zerodivide
+AFLAGS    = 
+NFLAGS    = -qarch=qauto
+SFLAGS    = 
+OMPFLAGS  = -qsmp=omp
 
 # `-qsuppress` explanations:
 # `1512-045`: IBM XL Fortran doesn't seem to support `g0` edit descriptors, so I disable the message for this.

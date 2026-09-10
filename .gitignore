@@ -65,6 +65,7 @@ docs/pneumatic-example.nml
 !test/springer-non-default.nml
 !test/pneumatic-default.nml
 !test/pneumatic-non-default.nml
+!test/fuzz/*.nml
 *.csv
 docs/blastersim-out-*.txt
 docs/blastersim.txt

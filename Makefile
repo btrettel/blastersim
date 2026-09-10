@@ -34,8 +34,10 @@ AFLAGS = $(NFLAGS)
 FFLAGS = $(FFLAGS) $(DFLAGS) $(AFLAGS)
 !elseif "$(BUILD)" == "release"
 FFLAGS = $(FFLAGS) $(RFLAGS) $(AFLAGS)
+!elseif "$(BUILD)" == "fuzz"
+FFLAGS = $(FFLAGS) $(FUZZFLAGS) $(AFLAGS)
 !else
-!error Set BUILD to either debug or release. BUILD=$(BUILD)
+!error Set BUILD to either debug, release, or fuzz. BUILD=$(BUILD)
 !endif
 
 !if "$(OPENMP)" == "yes"
