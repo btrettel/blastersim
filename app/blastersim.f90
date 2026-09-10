@@ -157,8 +157,10 @@ pure subroutine post_run_checks(sys_start, sys_end, rc)
     v_escape = 2.0_WP * sqrt(sys_start%cv(I_SOURCE)%gamma(y) * sys_start%cv(I_SOURCE)%r() * sys_start%cv(I_SOURCE)%temp()) &
                             / (sys_start%cv(I_SOURCE)%gamma(y) - 1.0_WP)
     
-    if ((rc < SUCCESS_RC) .and. (sys_end%cv(I_BARREL)%x_dot > v_escape)) then
-        rc = MAX_VELOCITY_EXCEEDED_RC
+    if (rc < SUCCESS_RC) then
+        if (sys_end%cv(I_BARREL)%x_dot > v_escape) then
+            rc = MAX_VELOCITY_EXCEEDED_RC
+        end if
     end if
 end subroutine post_run_checks
 
