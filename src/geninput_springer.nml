@@ -166,6 +166,7 @@ upper_bound           = 1.0
 upper_bound_not_equal = .false.
 default_value         = "0.5"
 bound_fmt             = "f3.1"
+fuzz_range            = 0.0, 1.0
 /
 
 &input_variable
