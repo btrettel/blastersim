@@ -75,6 +75,7 @@ subroutine write_defaults()
     use gasdata, only: P_ATM, TEMP_ATM, TEMP_0
     use convert, only: CONVERT_C_TO_K, CONVERT_PA_TO_KPA, CONVERT_M_TO_CM
     use io, only: I_BARREL, I_SOURCE, write_latex_engineering
+    use stopcodes, only: EX_USAGE, EX_SOFTWARE
     
     integer :: tex_unit
     
@@ -107,6 +108,8 @@ subroutine write_defaults()
                                                 CONVERT_M_TO_CM*IMPACT_STOP_VELOCITY, "} % cm/s"
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\ibarrel}{", I_BARREL, "}"
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\isource}{", I_SOURCE, "}"
+    write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\exusage}{", EX_USAGE, "}"
+    write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\exsoftware}{", EX_SOFTWARE, "}"
     close(tex_unit)
 end subroutine write_defaults
 

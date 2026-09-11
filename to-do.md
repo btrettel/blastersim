@@ -24,6 +24,7 @@
     - Save problems found via fuzz testing to use as regression tests.
     - Turn Radioactive springer cases into tests to make sure that they get the same return codes at the very least.
 - Make Python script generate an animation of a springer based on BlasterSim output.
+- Check that every return code from `check_sys` is tested, and add to the tripwire to update the test subroutine in test_cva.f90.
 
 ***
 
