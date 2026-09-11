@@ -86,7 +86,7 @@ integer, public, parameter :: MAX_VELOCITY_EXCEEDED_RC       = 15
 !integer, public, parameter :: E_F_BLOW_UP_RUN_RC            = 
 !tripwire$ end
 
-integer, public, parameter :: MAX_ITERS_TIME_LOOP    = 10**8
+integer, public, parameter :: MAX_ITERS_TIME_LOOP    = 10**6
 integer, public, parameter :: MAX_ITERS_GET_SYS_AT_X = 50
 
 integer, public, parameter :: HEADER_ROW_TYPE = 1
