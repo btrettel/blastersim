@@ -4,21 +4,26 @@
     - Check assertion density
     - Fortitude
     - Compile and run tests with multiple compilers.
-    - Fuzz testing for X hours.
+    - Fuzz testing for X hours with each compiler.
+        - Maybe change conservation failures to not have a user error exit code to examine those.
+    - Check code coverage for any code definitely not covered.
+    - Mutation testing
+        - Make a simpler mutation tester which only comments out lines
     - Ask LLM for feedback.
 - Replace `smin` with alternative function that is always equal to or greater than `min`.
     - Limit `b` to at most `P_RL`?
-    - Make sure that `f_m_dot` is finite with b = 1
-- Switch away from smoothed friction model and use event detection instead.
-    - Reenable `(d_e_f_d_t%v%v >= 0.0_WP` and `abs(p_f%v%v)` assertions once this is done.
+    - Make sure that `f_m_dot` is finite with `b = 1`.
+    - Change upper limit of `b` to `P_RL` when new `smin` is complete.
 - docs: Does `rm_p` of zero imply no kinetic energy? Add to coding conventions.
 - In nmlfuzz, detect if requires variables have a range of zero but do not have `fuzz = .true.` set.
 - geninput: required variables can't have a default value
 - Increase assertion density.
+    - Add efficiency output and add assertions on efficiency bounds.
+        - Making nmlfuzz have an optimizer and trying to get more than 100% efficiency could find some bugs that would be very valuable to fix.
 - Make testing system that runs BlasterSim input files and only checks the return codes. (Return codes are more specific than exit codes.)
     - Save problems found via fuzz testing to use as regression tests.
     - Turn Radioactive springer cases into tests to make sure that they get the same return codes at the very least.
-- Use an optimizer to find the best values of the exponential backoff algorithm for the time step. Minimize time with a configuration that can solve all validation, example, and regression testing input files you have? Penalize oscillations in the time step?
+- Make Python script generate an animation of a springer based on BlasterSim output.
 
 ***
 
@@ -264,7 +269,9 @@
                     - > Technical Document: EPE Coefficient of Linear Thermal Expansion (CLTE)
                     - <https://arplankdirect.com/wp-content/uploads/2021/04/techdoc-CLTE-EPE.pdf>
             - EPP
-- Make Python script generate an animation of a springer based on BlasterSim output.
+- Switch away from smoothed friction model and use event detection instead?
+    - Reenable `(d_e_f_d_t%v%v >= 0.0_WP` and `abs(p_f%v%v)` assertions once this is done.
+- Use an optimizer to find the best values of the exponential backoff algorithm for the time step. Minimize time with a configuration that can solve all validation, example, and regression testing input files you have? Penalize oscillations in the time step?
 
 ***
 

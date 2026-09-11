@@ -6,6 +6,7 @@ write_tex             = .true.
 write_return          = .false.
 executable            = "./blastersim"
 acceptable_exit_codes = 0, 64
+run_time_threshold    = 60.0
 /
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

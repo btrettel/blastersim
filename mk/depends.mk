@@ -16,6 +16,8 @@ src$(DIR_SEP)debug.$(OBJEXT): src$(DIR_SEP)debug.f90
 
 src$(DIR_SEP)fmad.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)fmad.f90
 
+src$(DIR_SEP)fuzz.$(OBJEXT): src$(DIR_SEP)fuzz.f90
+
 src$(DIR_SEP)ga.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)purerng.$(OBJEXT) src$(DIR_SEP)ga.f90
 
 src$(DIR_SEP)gasdata.$(OBJEXT): src$(DIR_SEP)checks.$(OBJEXT) src$(DIR_SEP)convert.$(OBJEXT) src$(DIR_SEP)prec.$(OBJEXT) src$(DIR_SEP)units.$(OBJEXT) src$(DIR_SEP)gasdata.f90
