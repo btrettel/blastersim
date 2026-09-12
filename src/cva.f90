@@ -1722,7 +1722,8 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     type(cv_system_type), allocatable :: sys_old, sys_new, sys_temp, sys_event
     
     character(len=CL)     :: error_message
-    integer               :: n_d, i, csv_unit, rc_get_sys_at_x, rc_time_step, i_last_dt_change, i_cv_x_event
+    integer               :: n_d, i, csv_unit, rc_get_sys_at_x, rc_time_step, i_last_dt_change, i_cv_x_event, &
+                                prev_rc
     type(si_time)         :: t, t_old, dt
     logical               :: exit_time_loop, stop_at_first_event_
     type(si_inverse_mass) :: rm_p_eff
@@ -1739,6 +1740,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     call t%v%init_const(0.0_WP, n_d)
     i = 0
     i_last_dt_change = -huge(1)
+    prev_rc          = huge(1)
     
     if (config%csv_output) then
         open(newunit=csv_unit, action="write", status="replace", position="rewind", &
@@ -1809,6 +1811,9 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
                     ! `t` to `t_old` so that the time iteration is rerun.
                     ! Set the `cor` to zero so that the plunger stops when the time iteration is rerun.
                     
+                    call assert(prev_rc /= IMPACT_STOP_OTHER_RUN_RC, &
+                                    "cva (run): repeated IMPACT_STOP_OTHER_RUN_RC")
+                    
                     status%rc = IMPACT_STOP_OTHER_RUN_RC
                     t = t_old
                     sys_new = sys_old
@@ -1859,6 +1864,8 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
         call move_alloc(from=sys_old,  to=sys_temp)
         call move_alloc(from=sys_new,  to=sys_old)
         call move_alloc(from=sys_temp, to=sys_new)
+        
+        prev_rc = status%rc
     end do time_loop
     
     call move_alloc(from=sys_new, to=sys_end)
@@ -1866,7 +1873,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     status%t = t
 end subroutine run
 
-!tripwire$ begin 04CA5CFB Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
+!tripwire$ begin B68743B0 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
 pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_start
@@ -1900,7 +1907,9 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         
         ! Check whether `x < x_min`.
         if ((sys%cv(i_cv)%x < sys%cv(i_cv)%x_min) &
-                .and. (sys%cv(i_cv)%eos /= CONST_EOS)) then
+                .and. (sys%cv(i_cv)%eos /= CONST_EOS) &
+                .and. (.not. is_close(sys%cv(i_cv)%x%v%v, sys%cv(i_cv)%x_min%v%v))) then
+            ! The `is_close` part is needed to avoid the problem where round off error makes `x` a bit off.
             status%rc = X_LT_X_MIN_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv

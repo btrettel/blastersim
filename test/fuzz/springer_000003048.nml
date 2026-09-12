@@ -1,0 +1,23 @@
+! Hash where bug was found: 44164cbee64c14321e151961f4376f068a93c99a
+! This would cause BlasterSim to stall, repeating lines like:
+! `i=5988 t=35.820628712520396 ms dt=0.10000000000000000E-001 ms: final plunger impact, plunger now immobile`
+&springer
+d_barrel = 19.199862752569995 ! mm
+d_e = 3.1849284785422127 ! mm
+d_plunger = 4.1119604951313899 ! mm
+delta_pre = 82.236797683931798 ! mm
+k = 1597.4460280886444 ! N/m
+l_draw = 235.86331697571183 ! mm
+l_travel = 1007.1520793847399 ! mm
+m_plunger = 251.91021000517895 ! g
+m_proj = 6.5615886559174568 ! g
+m_spring = 290.40058740603268 ! g
+p_fd_plunger = 8086.7872188691581 ! kPa
+p_fd_proj = 5725.6391954977680 ! kPa
+p_fs_plunger = 5086.0760930536626 ! kPa
+p_fs_proj = 4992.4159675628680 ! kPa
+vol_dead = 22.208676844713061 ! mL
+b = 0.76657582445021022 ! 1
+cor = 0.13526555499880211 ! 1
+csv_output = .false. ! 
+/
