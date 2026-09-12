@@ -21,6 +21,7 @@ call tests%start_tests("cva.nml")
 
 call write_defaults()
 
+call test_parameters(tests)
 call test_m_total(tests)
 call test_p_cv_ideal(tests)
 call test_constant_cv(tests)
@@ -112,6 +113,59 @@ subroutine write_defaults()
     write(unit=tex_unit, fmt="(a, i0, a)") "\newcommand*{\exsoftware}{", EX_SOFTWARE, "}"
     close(tex_unit)
 end subroutine write_defaults
+
+subroutine test_parameters(tests)
+    use cva, only: P_RL, C_MS, X_STOP_DEFAULT, X_MIN_DEFAULT, X_REF_DEFAULT, COR_DEFAULT, CSV_FREQUENCY_DEFAULT, T_STOP_DEFAULT, &
+                    DT_DEFAULT, MASS_TOLERANCE, ENERGY_TOLERANCE, MASS_DERIV_TOLERANCE, ENERGY_DERIV_TOLERANCE, &
+                    MIRROR_X_TOLERANCE, MAX_ITERS_TIME_LOOP, MAX_ITERS_TIME_LOOP, MAX_ITERS_GET_SYS_AT_X, DT_BACKOFF_CONSERVATION, &
+                    DT_BACKOFF_MASS_TOLERANCE, DT_BACKOFF_ENERGY_TOLERANCE, DT_BACKOFF_IMPACT, DT_RECOVERY_ITERATIONS, &
+                    DT_RECOVERY, PRINT_FREQUENCY, IMPACT_STOP_VELOCITY
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    call tests%real_gt(P_RL, 0.0_WP, "test_parameters: P_RL > 0")
+    call tests%real_lt(P_RL, 1.0_WP, "test_parameters: P_RL < 0")
+    
+    call tests%real_ge(C_MS, 0.0_WP, "test_parameters: C_MS >= 0")
+    call tests%real_le(C_MS, 1.0_WP, "test_parameters: C_MS <= 1")
+    
+    call tests%real_gt(X_STOP_DEFAULT, 0.0_WP, "test_parameters: X_STOP_DEFAULT > 0")
+    
+    call tests%real_ge(X_MIN_DEFAULT, 0.0_WP, "test_parameters: X_MIN_DEFAULT >= 0")
+    
+    call tests%real_ge(X_REF_DEFAULT, 0.0_WP, "test_parameters: X_REF_DEFAULT >= 0")
+    
+    call tests%real_ge(COR_DEFAULT, 0.0_WP, "test_parameters: COR_DEFAULT >= 0")
+    call tests%real_le(COR_DEFAULT, 1.0_WP, "test_parameters: COR_DEFAULT <= 1")
+    
+    call tests%integer_ge(CSV_FREQUENCY_DEFAULT, 1, "test_parameters: CSV_FREQUENCY_DEFAULT >= 1")
+    
+    call tests%real_gt(T_STOP_DEFAULT, 0.0_WP, "test_parameters: T_STOP_DEFAULT > 0")
+    
+    call tests%real_gt(DT_DEFAULT, 0.0_WP, "test_parameters: DT_DEFAULT > 0")
+    
+    call tests%real_gt(MASS_TOLERANCE,         0.0_WP, "test_parameters: MASS_TOLERANCE > 0")
+    call tests%real_gt(ENERGY_TOLERANCE,       0.0_WP, "test_parameters: ENERGY_TOLERANCE > 0")
+    call tests%real_gt(MASS_DERIV_TOLERANCE,   0.0_WP, "test_parameters: MASS_DERIV_TOLERANCE > 0")
+    call tests%real_gt(ENERGY_DERIV_TOLERANCE, 0.0_WP, "test_parameters: ENERGY_DERIV_TOLERANCE > 0")
+    call tests%real_gt(MIRROR_X_TOLERANCE,     0.0_WP, "test_parameters: MIRROR_X_TOLERANCE > 0")
+    
+    call tests%integer_ge(MAX_ITERS_TIME_LOOP,    10**3, "test_parameters: MAX_ITERS_TIME_LOOP >= 10**3")
+    call tests%integer_ge(MAX_ITERS_GET_SYS_AT_X, 10,    "test_parameters: MAX_ITERS_GET_SYS_AT_X >= 10")
+    
+    call tests%real_gt(DT_BACKOFF_CONSERVATION,     0.0_WP, "test_parameters: DT_BACKOFF_CONSERVATION > 0")
+    call tests%real_lt(DT_BACKOFF_CONSERVATION,     1.0_WP, "test_parameters: DT_BACKOFF_CONSERVATION < 0")
+    call tests%real_gt(DT_BACKOFF_MASS_TOLERANCE,   0.0_WP, "test_parameters: DT_BACKOFF_MASS_TOLERANCE > 0")
+    call tests%real_gt(DT_BACKOFF_ENERGY_TOLERANCE, 0.0_WP, "test_parameters: DT_BACKOFF_ENERGY_TOLERANCE > 0")
+    call tests%real_gt(DT_BACKOFF_IMPACT,           0.0_WP, "test_parameters: DT_BACKOFF_IMPACT > 0")
+    call tests%real_lt(DT_BACKOFF_IMPACT,           1.0_WP, "test_parameters: DT_BACKOFF_IMPACT < 0")
+    call tests%integer_ge(DT_RECOVERY_ITERATIONS,   1,      "test_parameters: DT_RECOVERY_ITERATIONS >= 1")
+    call tests%real_gt(DT_RECOVERY,                 1.0_WP, "test_parameters: DT_RECOVERY > 1")
+    
+    call tests%integer_ge(PRINT_FREQUENCY, 1, "test_parameters: PRINT_FREQUENCY >= 1")
+    
+    call tests%real_gt(IMPACT_STOP_VELOCITY, 0.0_WP, "test_parameters: IMPACT_STOP_VELOCITY > 0")
+end subroutine test_parameters
 
 subroutine test_m_total(tests)
     use gasdata, only: DRY_AIR
