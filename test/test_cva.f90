@@ -165,6 +165,7 @@ subroutine test_parameters(tests)
     call tests%integer_ge(PRINT_FREQUENCY, 1, "test_parameters: PRINT_FREQUENCY >= 1")
     
     call tests%real_gt(IMPACT_STOP_VELOCITY, 0.0_WP, "test_parameters: IMPACT_STOP_VELOCITY > 0")
+    call tests%real_lt(IMPACT_STOP_VELOCITY, 1.0_WP, "test_parameters: IMPACT_STOP_VELOCITY < 1 m/s")
 end subroutine test_parameters
 
 subroutine test_m_total(tests)

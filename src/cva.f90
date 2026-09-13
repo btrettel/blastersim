@@ -210,6 +210,7 @@ end type run_config_type
 type, public :: run_status_type
     integer       :: rc
     type(si_time) :: t
+    integer       :: i
     integer, allocatable  :: i_cv(:) ! control volume(s) with associated error
     real(WP), allocatable :: data(:) ! additional error data
 end type run_status_type
@@ -1770,6 +1771,12 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
         t     = t + dt
         i     = i + 1
         
+        if (prev_rc == X_LT_X_MIN_RUN_RC) then
+            call assert(dt%v%v >= 0.0_WP, "cva (run): dt >= 0 violated", print_integer=[prev_rc])
+        else
+            call assert(dt%v%v > 0.0_WP, "cva (run): dt > 0 violated", print_integer=[prev_rc])
+        end if
+        
         !print *, t%v%v
         
         call check_sys(config, sys_new, sys_start, t, status)
@@ -1871,6 +1878,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     call move_alloc(from=sys_new, to=sys_end)
     if (config%csv_output) close(unit=csv_unit)
     status%t = t
+    status%i = i
 end subroutine run
 
 !tripwire$ begin B68743B0 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.

@@ -15,13 +15,14 @@ Use \href{https://www.conventionalcommits.org/en/v1.0.0/}{Conventional Commits} 
 For bug fixes, if possible, refer to the issue ID number or commit introducing the bug with \texttt{Fixes: \#[issue ID]} or \texttt{Fixes: [commit hash] ("[commit message first line]")}. % chktex 18
 \item Do not squash your commits before sending a pull request.
 That can make \texttt{git bisect} work poorly.
+\item Add \href{https://swcarpentry.github.io/python-novice-inflammation/10-defensive.html#assertions}{assertions} as appropriate to new code.
+Use the \texttt{assert} subroutine in the \texttt{checks} module (checks.f90).
+Aim for an assertion density of at least 5\% (5 assertions per source/non-comment line of code).
 \item Contributed code must pass all existing tests.
 Contributed code with new functionality must add and pass new tests for the new functionality.
 Existing tests can be run with \texttt{make check} on Linux and macOS and \texttt{jom check} on Windows as discussed in \secref{verval}.
 The tests themselves are in the test directory and are Fortran code.
 Contributors should examine existing tests to understand the testing system.
-\item Add \href{https://blog.regehr.org/archives/1091}{assertions} as appropriate to new code.
-% TODO: I aim for an assertion density of at least X% (X assertions per source/non-comment line of code).
 \item New features must be documented.
 See the docs directory for this documentation's source code in LaTeX.
 \end{itemize}

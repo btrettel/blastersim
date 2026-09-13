@@ -1,5 +1,6 @@
 ### v0.3.0
 
+- Add severity of issue to all error return codes in `check_sys` in `status%data(1)`.
 - Create a checklist for testing before a new release.
     - Check assertion density
     - Fortitude
@@ -14,6 +15,7 @@
     - Limit `b` to at most `P_RL`?
     - Make sure that `f_m_dot` is finite with `b = 1`.
     - Change upper limit of `b` to `P_RL` when new `smin` is complete.
+    - property test: $smin(x) \geq x$ for many random $b \leq x \leq p_\text{rl}$
 - docs: Does `rm_p` of zero imply no kinetic energy? Add to coding conventions.
 - In nmlfuzz, detect if requires variables have a range of zero but do not have `fuzz = .true.` set.
 - geninput: required variables can't have a default value

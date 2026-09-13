@@ -11,5 +11,6 @@ implicit none
 private
 
 logical, public, parameter :: DEBUG = .true.
+logical, public, parameter :: FUZZ  = .true.
 
 end module build
