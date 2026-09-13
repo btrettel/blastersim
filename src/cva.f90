@@ -1881,7 +1881,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     status%i = i
 end subroutine run
 
-!tripwire$ begin B68743B0 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
+!tripwire$ begin 21C871DF Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
 pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_start
@@ -1892,7 +1892,7 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
     type(si_mass)        :: m_start, m_total_i, m_total_j, rel_m
     type(si_energy)      :: e_start, rel_e
     type(si_temperature) :: temp_i, temp_j
-    type(si_pressure)    :: p_j
+    type(si_pressure)    :: p_j, p_c
     type(unitless)       :: rel_delta
     real(WP)             :: max_abs_m_deriv, max_abs_e_deriv
     type(si_length)      :: x_sum_start, x_sum
@@ -1921,6 +1921,8 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
             status%rc = X_LT_X_MIN_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
+            allocate(status%data(1))
+            status%data(1) = sys%cv(i_cv)%x_min%v%v - sys%cv(i_cv)%x%v%v
             return
         end if
         
@@ -1931,7 +1933,7 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
             allocate(status%data(1))
-            status%data(1) = sys%cv(i_cv)%x%v%v
+            status%data(1) = -sys%cv(i_cv)%x%v%v
             return
         end if
         
@@ -1940,23 +1942,23 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         if (m_total_i%v%v < 0.0_WP) then
             status%rc = NEGATIVE_CV_M_TOTAL_RUN_RC
             
-            allocate(status%data(n_cv))
             n_bad_cv = 0
             do j_cv = 1, n_cv
                 m_total_j = sys%cv(j_cv)%m_total()
                 if (m_total_j%v%v < 0.0_WP) n_bad_cv = n_bad_cv + 1
-                status%data(j_cv) = m_total_j%v%v
             end do
             call assert(n_bad_cv >= 1, "cva (check_sys): number of control volumes with negative mass should be >= 1", &
                             print_integer=[n_bad_cv])
             
             allocate(status%i_cv(n_bad_cv))
+            allocate(status%data(n_bad_cv))
             n_bad_cv = 0
             do j_cv = 1, n_cv
                 m_total_j = sys%cv(j_cv)%m_total()
                 if (m_total_j%v%v < 0.0_WP) then
                     n_bad_cv = n_bad_cv + 1
                     status%i_cv(n_bad_cv) = j_cv
+                    status%data(n_bad_cv) = -m_total_j%v%v
                 end if
             end do
             
@@ -1968,24 +1970,24 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         if (temp_i%v%v <= 0.0_WP) then
             status%rc = NEGATIVE_CV_TEMP_RUN_RC
             
-            allocate(status%data(n_cv))
             n_bad_cv = 0
             do j_cv = 1, n_cv
                 temp_j = sys%cv(j_cv)%temp()
                 if (temp_j%v%v < 0.0_WP) n_bad_cv = n_bad_cv + 1
-                status%data(j_cv) = temp_j%v%v
             end do
             call assert(n_bad_cv >= 1, &
                 "cva (check_sys): number of control volumes with negative or zero temperature should be >= 1", &
                             print_integer=[n_bad_cv])
             
             allocate(status%i_cv(n_bad_cv))
+            allocate(status%data(n_bad_cv))
             n_bad_cv = 0
             do j_cv = 1, n_cv
                 temp_j = sys%cv(j_cv)%temp()
                 if (temp_j%v%v < 0.0_WP) then
                     n_bad_cv = n_bad_cv + 1
                     status%i_cv(n_bad_cv) = j_cv
+                    status%data(n_bad_cv) = -temp_j%v%v
                 end if
             end do
             
@@ -1997,26 +1999,27 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
             if (sys%cv(i_cv)%p() >= sys%cv(i_cv)%p_c()) then
                 status%rc = IDEAL_EOS_RUN_RC
                 
-                allocate(status%data(n_cv))
                 n_bad_cv = 0
                 do j_cv = 1, n_cv
                     if (sys%cv(j_cv)%eos == IDEAL_EOS) then
                         p_j = sys%cv(j_cv)%p()
                         if (p_j >= sys%cv(j_cv)%p_c()) n_bad_cv = n_bad_cv + 1
-                        status%data(j_cv) = p_j%v%v
                     end if
                 end do
                 call assert(n_bad_cv >= 1, "cva (check_sys): number of control volumes with p >= p_c should be >= 1", &
                             print_integer=[n_bad_cv])
                 
                 allocate(status%i_cv(n_bad_cv))
+                allocate(status%data(n_bad_cv))
                 n_bad_cv = 0
                 do j_cv = 1, n_cv
                     if (sys%cv(j_cv)%eos == IDEAL_EOS) then
                         p_j = sys%cv(j_cv)%p()
-                        if (p_j >= sys%cv(j_cv)%p_c()) then
+                        p_c = sys%cv(j_cv)%p_c()
+                        if (p_j >= p_c) then
                             n_bad_cv = n_bad_cv + 1
                             status%i_cv(n_bad_cv) = j_cv
+                            status%data(n_bad_cv) = p_j%v%v - p_c%v%v
                         end if
                     end if
                 end do
@@ -2074,9 +2077,9 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         end do
         if (max_abs_m_deriv > MASS_DERIV_TOLERANCE) then
             status%rc = MASS_DERIV_TOLERANCE_RUN_RC
-            allocate(status%data(2))
+            allocate(status%data(1))
             status%data(1) = max_abs_m_deriv
-            status%data(2) = real(i_d_max, WP)
+            !status%data(2) = real(i_d_max, WP) ! commented out because it wouldn't work as a fuzz testing objective function
             return
         end if
         
@@ -2101,9 +2104,9 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         end do
         if (max_abs_e_deriv > ENERGY_DERIV_TOLERANCE) then
             status%rc = ENERGY_DERIV_TOLERANCE_RUN_RC
-            allocate(status%data(2))
+            allocate(status%data(1))
             status%data(1) = max_abs_e_deriv
-            status%data(2) = real(i_d_max, WP)
+            !status%data(2) = real(i_d_max, WP) ! commented out because it wouldn't work as a fuzz testing objective function
             return
         end if
     end if

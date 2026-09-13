@@ -8,10 +8,10 @@
 program blastersim
 
 use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT, OUTPUT_UNIT
-use prec, only: CL
+use prec, only: CL, WP
 use cli, only: get_input_file_name_from_cli
 use io, only: I_BARREL, read_pneumatic_namelist, read_springer_namelist
-use cva, only: run_config_type, cv_system_type, run_status_type, T_STOP_DEFAULT, run, &
+use cva, only: run_config_type, cv_system_type, run_status_type, T_STOP_DEFAULT, run, MAX_ITERS_TIME_LOOP, &
                     SUCCESS_RC, TIMEOUT_RUN_RC, NEGATIVE_CV_M_TOTAL_RUN_RC, NEGATIVE_CV_TEMP_RUN_RC, &
                     MASS_TOLERANCE_RUN_RC, ENERGY_TOLERANCE_RUN_RC, MASS_DERIV_TOLERANCE_RUN_RC, &
                     ENERGY_DERIV_TOLERANCE_RUN_RC, IDEAL_EOS_RUN_RC, MIRROR_X_TOLERANCE_RUN_RC, &
@@ -20,13 +20,17 @@ use cva, only: run_config_type, cv_system_type, run_status_type, T_STOP_DEFAULT,
 use stopcodes, only: EX_OK, EX_USAGE, EX_SOFTWARE
 use rev, only: TAG, REVISION_DATE, MODIFIED
 use checks, only: assert
+use build, only: FUZZ
+use units
 implicit none
 
 character(len=CL)                 :: input_file, extra, modified_string
 type(run_config_type)             :: config
 type(cv_system_type), allocatable :: sys_start, sys_end
-integer                           :: rc
+integer                           :: rc, out_unit
 type(run_status_type)             :: status
+type(si_length)                   :: l_end, l_travel
+real(WP)                          :: f, sum_g
 
 extra = "<http://trettel.us/blastersim/>" // new_line("a") // "Written by Ben Trettel."
 
@@ -65,9 +69,44 @@ end block nml_blk
 
 call run(config, sys_start, sys_end, status)
 
-!tripwire$ begin BE34A827 Update `\secref{return-codes}` of usage.tex.
 call post_run_checks(sys_start, sys_end, rc)
 
+if (FUZZ) then
+    ! Write out data used in feedback-based fuzzing.
+    
+    ! More time steps indicates more opportunities for things to go wrong, so incentivize that.
+    ! Scale it so that it's not huge.
+    f = -real(status%i, WP)/real(MAX_ITERS_TIME_LOOP, WP)
+    
+    if (allocated(status%data)) then
+        call assert(sum(status%data) >= 0.0_WP, &
+                        "blastersim: all elements of status%data should be non-negative to enable fuzz testing")
+        
+        f = f - sum(status%data)
+    end if
+    
+    ! If successful, no constraints are violated.
+    ! If not successful, set a constraint to incentivize the projectile leaving the barrel.
+    ! With purely random testing, the vast majority of cases do not leave the barrel.
+    ! So I want to test more cases that leave the barrel.
+    if (status%rc < SUCCESS_RC) then
+        sum_g = 0.0_WP
+    else
+        l_travel = sys_start%cv(I_BARREL)%x_stop - sys_start%cv(I_BARREL)%x
+        l_end    = sys_end%cv(I_BARREL)%x        - sys_start%cv(I_BARREL)%x
+        sum_g = (l_end%v%v - l_travel%v%v)/l_end%v%v
+        
+        call assert(sum_g >= 0.0_WP, "blastersim: sum_g >= violated")
+        call assert(sum_g <= 1.0_WP, "blastersim: sum_g <= violated")
+    end if
+    
+    open(newunit=out_unit, action="write", status="replace", position="rewind", &
+            file=trim(input_file) // ".out")
+    write(unit=out_unit, fmt="(es24.17, 1x, es24.17)") f, sum_g
+    close(unit=out_unit)
+end if
+
+!tripwire$ begin 36CD5B66 Update `\secref{return-codes}` of usage.tex.
 if (status%rc < SUCCESS_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
     write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
@@ -138,9 +177,7 @@ subroutine refer_to_docs()
 end subroutine refer_to_docs
 
 pure subroutine post_run_checks(sys_start, sys_end, rc)
-    use units
     use io, only: I_SOURCE
-    use prec, only: WP
     
     type(cv_system_type), allocatable, intent(in) :: sys_start, sys_end
     integer, intent(in out)                       :: rc

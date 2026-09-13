@@ -2270,9 +2270,8 @@ subroutine test_check_sys(tests)
     call tests%integer_eq(status%rc, NEGATIVE_CV_M_TOTAL_RUN_RC, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, status%rc")
     call tests%integer_eq(size(status%i_cv), 1, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, size(status%i_cv)")
     call tests%integer_eq(status%i_cv(1), 1, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, status%i_cv(1)")
-    call tests%integer_eq(size(status%data), 2, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, size(status%data)")
-    call tests%real_eq(status%data(1), -0.5_WP, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, status%data(1)")
-    call tests%real_eq(status%data(2), 1.5_WP, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, status%data(2)")
+    call tests%integer_eq(size(status%data), 1, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, size(status%data)")
+    call tests%real_eq(status%data(1), 0.5_WP, "test_check_sys, NEGATIVE_CV_M_TOTAL_RUN_RC, status%data(1)")
     
     ! `NEGATIVE_CV_TEMP_RUN_RC`
     
@@ -2325,10 +2324,8 @@ subroutine test_check_sys(tests)
     call tests%integer_eq(status%rc, NEGATIVE_CV_TEMP_RUN_RC, "test_check_sys, NEGATIVE_CV_TEMP_RUN_RC, status%rc")
     call tests%integer_eq(size(status%i_cv), 1, "test_check_sys, NEGATIVE_CV_TEMP_RUN_RC, size(status%i_cv)")
     call tests%integer_eq(status%i_cv(1), 2, "test_check_sys, NEGATIVE_CV_TEMP_RUN_RC, status%i_cv(1)")
-    call tests%integer_eq(size(status%data), 2, "test_check_sys, NEGATIVE_CV_TEMP_RUN_RC, size(status%data)")
-    call tests%real_gt(status%data(1), 0.0_WP, "test_check_sys, NEGATIVE_CV_TEMP_RUN_RC, status%data(1) sign")
-    call tests%real_lt(status%data(2), 0.0_WP, "test_check_sys, NEGATIVE_CV_TEMP_RUN_RC, status%data(2) sign")
-    call tests%real_eq(status%data(2), -100.0_WP, "test_check_sys, NEGATIVE_CV_TEMP_RUN_RC, status%data(2)")
+    call tests%integer_eq(size(status%data), 1, "test_check_sys, NEGATIVE_CV_TEMP_RUN_RC, size(status%data)")
+    call tests%real_eq(status%data(1), 100.0_WP, "test_check_sys, NEGATIVE_CV_TEMP_RUN_RC, status%data(1)")
     
     ! `MASS_TOLERANCE_RUN_RC`
     
@@ -2481,9 +2478,8 @@ subroutine test_check_sys(tests)
     call tests%integer_eq(size(sys%cv(1)%x%v%d), 2, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, n_d")
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, MASS_DERIV_TOLERANCE_RUN_RC, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, status%rc")
-    call tests%integer_eq(size(status%data), 2, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, size(status%data)")
+    call tests%integer_eq(size(status%data), 1, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, size(status%data)")
     call tests%real_eq(status%data(1), 1.0_WP, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, status%data(1)")
-    call tests%real_eq(status%data(2), 1.0_WP, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, status%data(2)")
     
     ! `ENERGY_DERIV_TOLERANCE_RUN_RC`
     
@@ -2534,9 +2530,8 @@ subroutine test_check_sys(tests)
     call tests%integer_eq(size(sys%cv(1)%x%v%d), 2, "test_check_sys, MASS_DERIV_TOLERANCE_RUN_RC, n_d")
     call check_sys(config, sys, sys_start, t, status)
     call tests%integer_eq(status%rc, ENERGY_DERIV_TOLERANCE_RUN_RC, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, status%rc")
-    call tests%integer_eq(size(status%data), 2, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, size(status%data)")
+    call tests%integer_eq(size(status%data), 1, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, size(status%data)")
     call tests%real_eq(status%data(1), 1.0_WP, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, status%data(1)")
-    call tests%real_eq(status%data(2), 1.0_WP, "test_check_sys, ENERGY_DERIV_TOLERANCE_RUN_RC, status%data(2)")
     
     ! `IDEAL_EOS_RUN_RC`
     
@@ -2588,11 +2583,10 @@ subroutine test_check_sys(tests)
     call tests%integer_eq(status%rc, IDEAL_EOS_RUN_RC, "test_check_sys, IDEAL_EOS_RUN_RC, status%rc")
     call tests%integer_eq(size(status%i_cv), 1, "test_check_sys, IDEAL_EOS_RUN_RC, size(status%i_cv)")
     call tests%integer_eq(status%i_cv(1), 1, "test_check_sys, IDEAL_EOS_RUN_RC, status%i_cv(1)")
-    call tests%integer_eq(size(status%data), 2, "test_check_sys, IDEAL_EOS_RUN_RC, size(status%data)")
+    call tests%integer_eq(size(status%data), 1, "test_check_sys, IDEAL_EOS_RUN_RC, size(status%data)")
     p = sys%cv(1)%p()
     call tests%real_gt(p%v%v, DRY_AIR%p_c, "test_check_sys, IDEAL_EOS_RUN_RC, p >= p_c")
-    call tests%real_gt(status%data(1), DRY_AIR%p_c, "test_check_sys, IDEAL_EOS_RUN_RC, status%data(1) sign")
-    call tests%real_lt(status%data(2), DRY_AIR%p_c, "test_check_sys, IDEAL_EOS_RUN_RC, status%data(2) sign")
+    call tests%real_gt(status%data(1), 0.0_WP, "test_check_sys, IDEAL_EOS_RUN_RC, status%data(1) sign")
     
     ! `MIRROR_X_TOLERANCE_RUN_RC`
     
@@ -2655,15 +2649,14 @@ subroutine test_check_sys(tests)
     call tests%integer_eq(status%rc, X_LT_X_MIN_RUN_RC, "test_check_sys, X_LT_X_MIN_RUN_RC, status%rc")
     call tests%integer_eq(size(status%i_cv), 1, "test_check_sys, X_LT_X_MIN_RUN_RC, size(status%i_cv)")
     call tests%integer_eq(status%i_cv(1), 2, "test_check_sys, X_LT_X_MIN_RUN_RC, status%i_cv(1)")
+    call tests%integer_eq(size(status%data), 1, "test_check_sys, X_LT_X_MIN_RUN_RC, size(status%data)")
+    call tests%real_eq(status%data(1), 0.9_WP, "test_check_sys, X_LT_X_MIN_RUN_RC, status%data(1)")
     
-    ! TODO: `X_BLOW_UP_RUN_RC`
-    ! TODO: `X_DOT_BLOW_UP_RUN_RC`
-    ! TODO: `M_BLOW_UP_RUN_RC`
-    ! TODO: `E_BLOW_UP_RUN_RC`
-    ! TODO: `E_F_BLOW_UP_RUN_RC`
+    ! TODO: `NEGATIVE_CV_X_RUN_RC`
+    ! TODO: other return codes
 end subroutine test_check_sys
 
-!tripwire$ begin E3F28CD6 Update `\secref{single-cv-exact}` of verval.tex.
+!tripwire$ begin 6DDDD431 Update `\secref{single-cv-exact}` of verval.tex.
 pure function exact_x_dot(sys_0, x)
     use checks, only: assert, is_close
     use cva, only: IDEAL_EOS, CONST_EOS, NORMAL_CV_TYPE, MIRROR_CV_TYPE, cv_system_type
@@ -2780,7 +2773,7 @@ subroutine exact_x_dot_de(n, ne, ne_d)
     
     if (status%rc == ENERGY_DERIV_TOLERANCE_RUN_RC) then
         print *, "ENERGY_DERIV_TOLERANCE_RUN_RC"
-        print *, status%data(1), int(status%data(2)), ENERGY_DERIV_TOLERANCE
+        print *, status%data(1), ENERGY_DERIV_TOLERANCE
     end if
     call assert(status%rc == TIMEOUT_RUN_RC, "test_single_cv_exact, status%rc")
     
