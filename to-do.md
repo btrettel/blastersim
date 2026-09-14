@@ -1,6 +1,6 @@
 ### v0.3.0
 
-- Add severity of issue to all error return codes in `check_sys` in `status%data(1)`.
+- For input validation errors, output a .out file listing the amount of the violation.
 - Create a checklist for testing before a new release.
     - Check assertion density
     - Fortitude

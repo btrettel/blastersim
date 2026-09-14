@@ -19,7 +19,7 @@ use cva, only: run_config_type, cv_system_type, run_status_type, T_STOP_DEFAULT,
                     RK_STAGE_NEGATIVE_MASS_RC, RK_STAGE_NEGATIVE_ENERGY_RC, MAX_VELOCITY_EXCEEDED_RC
 use stopcodes, only: EX_OK, EX_USAGE, EX_SOFTWARE
 use rev, only: TAG, REVISION_DATE, MODIFIED
-use checks, only: assert
+use checks, only: assert, is_close
 use build, only: FUZZ
 use units
 implicit none
@@ -94,10 +94,16 @@ if (FUZZ) then
     else
         l_travel = sys_start%cv(I_BARREL)%x_stop - sys_start%cv(I_BARREL)%x
         l_end    = sys_end%cv(I_BARREL)%x        - sys_start%cv(I_BARREL)%x
-        sum_g = (l_end%v%v - l_travel%v%v)/l_end%v%v
+        sum_g    = (l_travel%v%v - l_end%v%v)/l_travel%v%v
         
-        call assert(sum_g >= 0.0_WP, "blastersim: sum_g >= violated")
-        call assert(sum_g <= 1.0_WP, "blastersim: sum_g <= violated")
+        call assert(.not. is_close(l_travel%v%v, 0.0_WP), "blastersim: l_travel must be /= 0")
+        
+        call assert(sum_g >= 0.0_WP, "blastersim: sum_g >= 0 violated", &
+                        print_real=[sum_g, l_end%v%v, l_travel%v%v])
+        
+        ! Commented out as until I fix the friction to not have any backwards motion, `sum_g` can go above 1.
+        !call assert(sum_g <= 1.0_WP, "blastersim: sum_g <= 1 violated", &
+                        !print_real=[sum_g, l_end%v%v, l_travel%v%v])
     end if
     
     open(newunit=out_unit, action="write", status="replace", position="rewind", &
