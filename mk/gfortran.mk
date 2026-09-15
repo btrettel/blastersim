@@ -11,7 +11,9 @@ FUZZFLAGS = -O2 -Wno-uninitialized -fopt-info-missed=$(MISSED) -flto -ffpe-summa
 AFLAGS    = 
 NFLAGS    = -march=native
 SFLAGS    = -static
-OMPFLAGS  = -fopenmp -Wdeprecated-openmp
+OMPFLAGS  = -fopenmp
+
+# TODO: Re-add `-Wdeprecated-openmp` to `OMPFLAGS` when Ubuntu has it.
 
 # Making `-finit-integer=2147483647` is better than making it a large negative number.
 # Say you have a loop: `do i = 1, n` and you forget to initialize `n`.

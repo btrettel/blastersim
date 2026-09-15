@@ -1,5 +1,12 @@
 ### v0.3.0
 
+- Make test for ga.f90 showing that if all of the initial population are infeasible, ga.f90 navigates the population towards a feasible area.
+- Update ga.f90 in BlasterSim repository.
+- Isometric icon and logo for BlasterSim? Check Super Soaker icons you have.
+    - Sell BlasterSim stickers to put on blasters that were designed using it? Getting a good logo for this is key.
+        - <https://ezhik.jp/laptop-stickers/>
+            - He sort of reviews stickers in general. Having a strong adhesive would be nice.
+        - Could also sell printed copies of the BlasterSim manual. Spiral-bound manuals are great as they can lay flat: <https://youtu.be/UtLR4nXAm4w?t=487>
 - For input validation errors, output a .out file listing the amount of the violation.
 - Create a checklist for testing before a new release.
     - Check assertion density
@@ -519,11 +526,6 @@
         - Can test the following: `x`, `x_dot`, `e_f`
 - Fitting model coefficients to data
     - Have a way to put muzzle velocity measurements in the input file as an array so there's only one file with everything.
-- Isometric icon and logo for BlasterSim? Check Super Soaker icons you have.
-    - Sell BlasterSim stickers to put on blasters that were designed using it? Getting a good logo for this is key.
-        - <https://ezhik.jp/laptop-stickers/>
-            - He sort of reviews stickers in general. Having a strong adhesive would be nice.
-        - Could also sell printed copies of the BlasterSim manual. Spiral-bound manuals are great as they can lay flat: <https://youtu.be/UtLR4nXAm4w?t=487>
 - Sensitivity analysis for muzzle velocity and optimal barrel length. For barrel length in particular it can be useful to show (if true) that the length doesn't depend much on the plunger mass, spring stiffness.
 - Determine when dart heads will be blown off and include that in BlasterSim. Add as a constraint too.
 - spring fatigue life, add as a constraint too
