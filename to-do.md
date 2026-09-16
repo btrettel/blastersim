@@ -1,5 +1,7 @@
 ### v0.3.0
 
+- Save `p_peak`, output it for material safety and to help get projectiles moving through a constraint that `p_peak > p_fs`
+- ga.f90 printout: Add mean, standard deviation, percent infeasible.
 - Make test for ga.f90 showing that if all of the initial population are infeasible, ga.f90 navigates the population towards a feasible area.
 - Update ga.f90 in BlasterSim repository.
 - Isometric icon and logo for BlasterSim? Check Super Soaker icons you have.
@@ -7,6 +9,11 @@
         - <https://ezhik.jp/laptop-stickers/>
             - He sort of reviews stickers in general. Having a strong adhesive would be nice.
         - Could also sell printed copies of the BlasterSim manual. Spiral-bound manuals are great as they can lay flat: <https://youtu.be/UtLR4nXAm4w?t=487>
+    - Add icon to Windows version of BlasterSim.
+        - <https://learn.microsoft.com/en-us/windows/apps/design/iconography/app-icon-construction>
+            - > Apps should have, at the bare minimum: 16x16, 24x24, 32x32, 48x48, and 256x256.
+        - <https://handmade.network/p/64/geometer/blog/p/3089-adding_icons_and_other_resources_to_your_executable_windows__cross-platform>
+        - <https://www.howtogeek.com/75983/stupid-geek-tricks-how-to-modify-the-icon-of-an-.exe-file/>
 - For input validation errors, output a .out file listing the amount of the violation.
 - Create a checklist for testing before a new release.
     - Check assertion density

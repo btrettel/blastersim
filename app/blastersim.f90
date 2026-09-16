@@ -10,7 +10,7 @@ program blastersim
 use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT, OUTPUT_UNIT
 use prec, only: CL, WP
 use cli, only: get_input_file_name_from_cli
-use io, only: I_BARREL, read_pneumatic_namelist, read_springer_namelist
+use io, only: I_BARREL, I_BARREL_ATM, read_pneumatic_namelist, read_springer_namelist
 use cva, only: run_config_type, cv_system_type, run_status_type, T_STOP_DEFAULT, run, MAX_ITERS_TIME_LOOP, &
                     SUCCESS_RC, TIMEOUT_RUN_RC, NEGATIVE_CV_M_TOTAL_RUN_RC, NEGATIVE_CV_TEMP_RUN_RC, &
                     MASS_TOLERANCE_RUN_RC, ENERGY_TOLERANCE_RUN_RC, MASS_DERIV_TOLERANCE_RUN_RC, &
@@ -85,16 +85,23 @@ if (FUZZ) then
         f = f - sum(status%data)
     end if
     
-    ! If successful, no constraints are violated.
-    ! If not successful, set a constraint to incentivize the projectile leaving the barrel.
-    ! With purely random testing, the vast majority of cases do not leave the barrel.
-    ! So I want to test more cases that leave the barrel.
     if (status%rc < SUCCESS_RC) then
+        ! If successful, no constraints are violated.
         sum_g = 0.0_WP
     else
+        ! If not successful, set a constraint to incentivize the projectile leaving the barrel.
+        ! With purely random testing, the vast majority of cases do not leave the barrel.
+        ! So I want to test more cases that leave the barrel.
+        
+        ! One part of the constraint is whether the pressure is high enough to cause the projectile to move at all.
+        sum_g = max(0.0_WP, (sys_end%cv(I_BARREL)%p_fs%v%v &
+                                - (sys_end%cv(I_BARREL)%p_peak%v%v - sys_end%cv(I_BARREL_ATM)%p_const%v%v)) &
+                                    / sys_end%cv(I_BARREL)%p_fs%v%v)
+        
+        ! The other part of the constraint is how far the projectile moves down the barrel.
         l_travel = sys_start%cv(I_BARREL)%x_stop - sys_start%cv(I_BARREL)%x
         l_end    = sys_end%cv(I_BARREL)%x        - sys_start%cv(I_BARREL)%x
-        sum_g    = (l_travel%v%v - l_end%v%v)/l_travel%v%v
+        sum_g    = sum_g + (l_travel%v%v - l_end%v%v)/l_travel%v%v
         
         call assert(.not. is_close(l_travel%v%v, 0.0_WP), "blastersim: l_travel must be /= 0")
         

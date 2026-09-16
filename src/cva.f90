@@ -113,6 +113,7 @@ type, public :: cv_type ! control volume
     type(si_energy)            :: e_g    ! energy of gas in control volume
     type(si_energy)            :: e_f    ! energy lost to projectile/plunger friction in control volume
     type(si_energy)            :: e_m    ! energy lost to plunger impact in control volume
+    type(si_pressure)          :: p_peak ! peak pressure so far in this control volume
     
     ! constants
     character(len=32)           :: label           ! human-readable label for control volume
@@ -728,6 +729,7 @@ pure subroutine set(cv, x, x_dot, y, p, temp_atm, label, csa, rm_p, p_fs, p_fd, 
     cv%delta_pre   = delta_pre
     cv%gas         = gas
     cv%i_cv_mirror = i_cv_mirror
+    cv%p_peak      = p
     
     if (present(x_stop)) then
         cv%x_stop = x_stop
@@ -928,6 +930,7 @@ pure subroutine set_const(cv, label, csa, p_const, temp_const, gas, y_const, i_c
     call assert(cv%x%v%v < cv%x_stop%v%v, "cva (set_const): x >= x_stop will cause immediate termination of run", &
                     print_real=[cv%x%v%v, cv%x_stop%v%v])
     
+    cv%p_peak      = p_const
     cv%label       = label
     cv%csa         = csa
     cv%eos         = CONST_EOS
@@ -1600,6 +1603,9 @@ pure subroutine calculate_next_time_step(sys_old, t, dt, sys_new, rc)
         end do
         
         call assert_mass(sys_new%cv(i_cv), "calculate_next_time_step")
+        
+        sys_new%cv(i_cv)%p_peak = max(sys_new%cv(i_cv)%p_peak, sys_new%cv(i_cv)%p())
+        call assert(sys_new%cv(i_cv)%p_peak%v%v >= 0.0_WP, "cva (calculate_next_time_step): ")
     end do
 end subroutine calculate_next_time_step
 

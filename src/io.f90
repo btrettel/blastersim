@@ -12,8 +12,9 @@ use units
 use checks, only: assert
 implicit none
 
-integer, parameter, public :: I_BARREL = 1
-integer, parameter, public :: I_SOURCE = 2
+integer, parameter, public :: I_BARREL     = 1
+integer, parameter, public :: I_SOURCE     = 2
+integer, parameter, public :: I_BARREL_ATM = 3
 
 public :: write_latex_engineering
 public :: create_barrel
@@ -197,7 +198,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     type(si_area)      :: csa_plunger, csa_barrel
     type(si_length)    :: x_dead_plunger
     
-    integer, parameter :: I_PLUNGER = I_SOURCE, I_BARREL_ATM  = 3, I_PLUNGER_ATM = 4
+    integer, parameter :: I_PLUNGER = I_SOURCE, I_PLUNGER_ATM = 4
     
     !tripwire$ begin 2807623D Update \secref{notation} of theory.tex.
     type(gas_type), parameter :: BARREL_GAS(*)   = [DRY_AIR], &
