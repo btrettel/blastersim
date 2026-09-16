@@ -1,7 +1,6 @@
 ### v0.3.0
 
-- Save `p_peak`, output it for material safety and to help get projectiles moving through a constraint that `p_peak > p_fs`
-- ga.f90 printout: Add mean, standard deviation, percent infeasible.
+- Put code coverage numbers in docs: line and branch coverage
 - Make test for ga.f90 showing that if all of the initial population are infeasible, ga.f90 navigates the population towards a feasible area.
 - Update ga.f90 in BlasterSim repository.
 - Isometric icon and logo for BlasterSim? Check Super Soaker icons you have.
@@ -524,6 +523,7 @@
             - This could be useful to improve accuracy.
         - draw length that is comfortable
             - <https://discord.com/channels/825852031239061545/825852073382772758/1542382607055065158>
+        - Use `p_peak` as a constraint for material safety.
     - For optimization, have ability to pick discrete values taken from text file.
         - How can UQ be handled with this? Have a second column for uncertainty?
 - Check entropy conservation.

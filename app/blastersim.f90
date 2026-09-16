@@ -94,9 +94,9 @@ if (FUZZ) then
         ! So I want to test more cases that leave the barrel.
         
         ! One part of the constraint is whether the pressure is high enough to cause the projectile to move at all.
-        sum_g = max(0.0_WP, (sys_end%cv(I_BARREL)%p_fs%v%v &
+        sum_g = max(0.0_WP, (max(sys_end%cv(I_BARREL)%p_fs%v%v, sys_end%cv(I_BARREL)%p_fd%v%v) &
                                 - (sys_end%cv(I_BARREL)%p_peak%v%v - sys_end%cv(I_BARREL_ATM)%p_const%v%v)) &
-                                    / sys_end%cv(I_BARREL)%p_fs%v%v)
+                                    / max(sys_end%cv(I_BARREL)%p_fs%v%v, sys_end%cv(I_BARREL)%p_fd%v%v))
         
         ! The other part of the constraint is how far the projectile moves down the barrel.
         l_travel = sys_start%cv(I_BARREL)%x_stop - sys_start%cv(I_BARREL)%x
