@@ -1,6 +1,8 @@
 ### v0.3.0
 
+- Check entropy as an invariant?
 - Put code coverage numbers in docs: line and branch coverage
+- Test `p_peak`.
 - Make test for ga.f90 showing that if all of the initial population are infeasible, ga.f90 navigates the population towards a feasible area.
 - Update ga.f90 in BlasterSim repository.
 - Isometric icon and logo for BlasterSim? Check Super Soaker icons you have.

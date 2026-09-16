@@ -78,11 +78,13 @@ end subroutine create_barrel
 subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_muzzle_, actual_v_muzzle_stdev_, &
                                     actual_v_muzzle_n_, actual_rc_)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
+    use build, only: FUZZ
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT, CSV_FREQUENCY_DEFAULT
     use port, only: path_basename
     use gasdata, only: P_ATM_KPA, TEMP_ATM_ => TEMP_ATM, DRY_AIR, gas_type
     use checks, only: is_close, check
     use prec, only: CL, PI
+    use ga, only: constraint_lt
     
     character(len=*), intent(in)                   :: input_file
     type(cv_system_type), allocatable, intent(out) :: sys
@@ -108,11 +110,26 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
                                  ATM_GAS(*)     = [DRY_AIR]
     !tripwire$ end
     
+    ! for guided fuzz testing
+    integer  :: out_unit
+    real(WP) :: sum_g
+    
     include "geninput_pneumatic.f90"
     
+    sum_g = 0.0_WP
+    
     call check(d_e_u <= d_barrel_u, "d_e being larger than d_barrel is physically impossible.", rc_read)
+    call constraint_lt(d_e, d_barrel, d_e, sum_g)
     
     if (rc_read /= 0) then
+        if (FUZZ) then
+            ! the 2 is to ensure this is always larger than `sum_g` if there are not input validation errors
+            sum_g = sum_g + 2.0_WP
+            open(newunit=out_unit, action="write", status="replace", position="rewind", &
+                file=trim(input_file) // ".out")
+            write(unit=out_unit, fmt="(es24.17, 1x, es24.17)") 0.0_WP, sum_g
+            close(unit=out_unit)
+        end if
         return
     end if
     
@@ -179,11 +196,13 @@ end subroutine read_pneumatic_namelist
 subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muzzle_, actual_v_muzzle_stdev_, &
                                     actual_v_muzzle_n_, actual_rc_)
     use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT
+    use build, only: FUZZ
     use cva, only: cv_system_type, run_config_type, DT_DEFAULT, CSV_FREQUENCY_DEFAULT, COR_DEFAULT
     use port, only: path_basename
     use gasdata, only: P_ATM_KPA, TEMP_ATM_ => TEMP_ATM, DRY_AIR, gas_type
     use checks, only: is_close, check
     use prec, only: CL, PI
+    use ga, only: constraint_lt
     
     character(len=*), intent(in)                   :: input_file
     type(cv_system_type), allocatable, intent(out) :: sys
@@ -207,11 +226,26 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
                                  PLUNGER_ATM_GAS(*) = [DRY_AIR]
     !tripwire$ end
     
+    ! for guided fuzz testing
+    integer  :: out_unit
+    real(WP) :: sum_g
+    
     include "geninput_springer.f90"
     
+    sum_g = 0.0_WP
+    
     call check(d_e_u <= d_barrel_u, "d_e being larger than d_barrel is physically impossible.", rc_read)
+    call constraint_lt(d_e, d_barrel, d_e, sum_g)
     
     if (rc_read /= 0) then
+        if (FUZZ) then
+            ! the 2 is to ensure this is always larger than `sum_g` if there are not input validation errors
+            sum_g = sum_g + 2.0_WP
+            open(newunit=out_unit, action="write", status="replace", position="rewind", &
+                file=trim(input_file) // ".out")
+            write(unit=out_unit, fmt="(es24.17, 1x, es24.17)") 0.0_WP, sum_g
+            close(unit=out_unit)
+        end if
         return
     end if
     
