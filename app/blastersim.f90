@@ -71,7 +71,7 @@ call run(config, sys_start, sys_end, status)
 
 call post_run_checks(sys_start, sys_end, rc)
 
-!tripwire$ begin 36CD5B66 Update `if (rc_read /= 0) then` sections of io.f90 to account for different total `sum_g` here.
+!tripwire$ begin 724E768C Update `if (rc_read /= 0) then` sections of io.f90 to account for different total `sum_g` here.
 ! `sum_g` there needs to strictly be higher than `sum_g` here to encourage going through input validation.
 if (FUZZ) then
     ! Write out data used in feedback-based fuzzing.
@@ -120,6 +120,7 @@ if (FUZZ) then
     write(unit=out_unit, fmt="(es24.17, 1x, es24.17)") f, sum_g
     close(unit=out_unit)
 end if
+!tripwire$ end
 
 !tripwire$ begin 36CD5B66 Update `\secref{return-codes}` of usage.tex.
 if (status%rc < SUCCESS_RC) then

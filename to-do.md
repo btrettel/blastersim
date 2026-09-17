@@ -1,5 +1,12 @@
 ### v0.3.0
 
+- Check literature for more validation data for BlasterSim.
+    - Use old GGDT cases on its website?
+    - Look for something with pressure trace data.
+    - Daniel Beaver validation cases:
+        - <http://nerfhaven.com/forums/topic/21832-experimental-methods-for-determining-and-predicting-blaster-power/?p=307341>
+        - <http://www.danielbeaver.net/storage/projects/nerf/SpringerTesting/>
+        - Doesn't provide enough data to make a complete test case.
 - Check entropy as an invariant?
 - Put code coverage numbers in docs: line and branch coverage
 - Test `p_peak`.
@@ -15,13 +22,13 @@
             - > Apps should have, at the bare minimum: 16x16, 24x24, 32x32, 48x48, and 256x256.
         - <https://handmade.network/p/64/geometer/blog/p/3089-adding_icons_and_other_resources_to_your_executable_windows__cross-platform>
         - <https://www.howtogeek.com/75983/stupid-geek-tricks-how-to-modify-the-icon-of-an-.exe-file/>
-- For input validation errors, output a .out file listing the amount of the violation.
 - Create a checklist for testing before a new release.
     - Check assertion density
     - Fortitude
     - Compile and run tests with multiple compilers.
     - Fuzz testing for X hours with each compiler.
         - Maybe change conservation failures to not have a user error exit code to examine those.
+        - Enable AD for all input variables to make fuzz testing more rigorous.
     - Check code coverage for any code definitely not covered.
     - Mutation testing
         - Make a simpler mutation tester which only comments out lines
@@ -45,6 +52,8 @@
 
 ***
 
+- Make BlasterSim able to convert GGDT files to BlasterSim inputs.
+    - Make an appendix in the notes on the GGDT file format.
 - Get ChkTeX to detect `\\href{[^h]`
 - Secant method in `get_sys_at_x`: Use optimal 3 point stencil from ash_optimal_1981 eq. 2 to minimize error.
     - See FLT's test_fmad.f90 `test_num_deriv` subroutine.
@@ -364,7 +373,6 @@
         - Any diameter is too large or too small to not only make sure that it's physically possible, but also that they use the correct units. Perhaps allow the latter to be disabled with `suggestions = .false.`.
         - `p < p_c` until RK EOS added
         - Return error if ambient temperature is too low. Likely they gave the temperature in C or F.
-        - `a_e` is not likely larger than the barrel diameter.
 - documentation
     - quick start
     - Put all the drawings and equations on paper first.
@@ -553,10 +561,6 @@
     - Data:
         - <https://diverdi.colostate.edu/C477/experiments/interior%20ballistics%20of%20a%20cannon/>
 - In `check_sys`, use something with less cancellation error? Pick different points for the derivative calculation to avoid catastrophic cancellation? ash_optimal_1981 eq. 2 won't be the best as it would require 4 function evaluations per iteration.
-- Daniel Beaver validation cases:
-    - <http://nerfhaven.com/forums/topic/21832-experimental-methods-for-determining-and-predicting-blaster-power/?p=307341>
-    - <http://www.danielbeaver.net/storage/projects/nerf/SpringerTesting/>
-    - Doesn't provide enough data to make a complete test case.
 - Test `get_sys_at_x` and `get_sys_at_peak_x_dot`.
     - Comparison with `x_stop`. Is a test needed given the assertion?
     - Test with something that can be solved exactly by RK4. Then `x_dot` can be known exactly.

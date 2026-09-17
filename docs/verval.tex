@@ -118,7 +118,7 @@ In terms of the projectile velocity, the result is
 \end{equation}
 
 \input{test_single_cv_exact.tex}
-This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_exact}. For $\Delta t = \testsinglecvexactdt$~s, the numerical error was measured at $\xdoterror$~m/s, which is negligible. The numerical order-of-accuracy was measured at $\xdotorder$, which is close to the theoretically expected order-of-accuracy of $4$ for the RK4 integrator. In other words, not only does BlasterSim closely match the exact solution, but BlasterSim's numerical error decreases at the theoretically expected rate as the time step decreases. This is the most rigorous test that can be made with an exact solution. For more information on order-of-accuracy verification, see \citet[\S~2.3]{roy_review_2005}.
+This case was implemented in test\_cva.f90 in the subroutine \texttt{test\_single\_cv\_exact}. For $\Delta t = \testsinglecvexactdt$~s, the numerical error was measured at $\xdoterror$~m/s, which is negligible. The numerical order-of-accuracy was measured at $\xdotorder$, which is close to the theoretically expected order-of-accuracy of $4$ for the RK4 integrator. In other words, not only does BlasterSim closely match the exact solution, but BlasterSim's numerical error decreases at the theoretically expected rate as the time step decreases. This is the most rigorous test that can be made with an exact solution. For more information on order-of-accuracy verification, see \citet[\S~2.3]{roy_review_2005}.
 
 \subsubsection{Comparison with plunger impact exact solution}\label{plunger-impact-exact}
 
@@ -163,6 +163,7 @@ Consequently, the order-of-accuracy test used in \secref{single-cv-exact} can no
 After the plunger has moved for $\plungerimpacttone$~s (which is well before plunger impact), the error in $m$ is $\plungerimpactmerrorone$~kg, the error in $E$ is $\plungerimpactegerrorone$~J (negligible compared against the expected energy of $\plungerimpactegone$~J), the error in $x$ is $\plungerimpactxerrorone$~m, and the error in $\dot{x}$ is $\plungerimpactxdoterrorone$~m/s.
 The error in $t_\text{impact}$ is $\plungerimpacttimpacterror$~s.
 Immediately after impact, the error in $\dot{x}$ is $\plungerimpactvelocityerror$~m/s.
+These tests are in test\_cva.f90, in the subroutines \texttt{test\_plunger\_impact\_1} (before impact) and \texttt{test\_plunger\_impact\_2} (impact time and post-impact velocity).
 
 \section{Validation}\label{validation}
 

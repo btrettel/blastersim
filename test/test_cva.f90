@@ -3116,6 +3116,8 @@ subroutine test_plunger_impact_1(tests)
 end subroutine test_plunger_impact_1
 
 subroutine test_plunger_impact_2(tests)
+    ! Tests at plunger impact.
+    
     use cva, only: X_LT_X_MIN_RUN_RC, cv_system_type, run_config_type, run_status_type, run
     use gasdata, only: TEMP_ATM, RHO_ATM
     use io, only: write_latex_engineering
