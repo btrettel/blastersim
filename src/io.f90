@@ -185,7 +185,7 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     ! `sys%cv(I_BARREL_ATM)`: atmosphere
     call sys%cv(I_BARREL_ATM)%set_const("atmosphere", csa_barrel, p_atm_u, temp_atm_u, ATM_GAS, y, I_BARREL)
     
-    call config%set(id, csv_output=csv_output, csv_frequency=csv_frequency, dt=dt_u, n_d=n_d, d_labels=d_labels)
+    call config%set(id, csv_output=csv_output, csv_frequency=csv_frequency, dt=dt_u, n_d=n_d, d_labels=d_labels, d_units=d_units)
     
     if (present(actual_v_muzzle_))       actual_v_muzzle_       = actual_v_muzzle_u
     if (present(actual_v_muzzle_stdev_)) actual_v_muzzle_stdev_ = actual_v_muzzle_stdev_u
@@ -311,7 +311,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     call sys%cv(I_PLUNGER_ATM)%set_const("atmosphere for plunger", csa_plunger, p_atm_u, temp_atm_u, PLUNGER_ATM_GAS, &
                                             y, I_PLUNGER)
     
-    call config%set(id, csv_output=csv_output, csv_frequency=csv_frequency, dt=dt_u, n_d=n_d, d_labels=d_labels)
+    call config%set(id, csv_output=csv_output, csv_frequency=csv_frequency, dt=dt_u, n_d=n_d, d_labels=d_labels, d_units=d_units)
     
     if (present(actual_v_muzzle_))       actual_v_muzzle_       = actual_v_muzzle_u
     if (present(actual_v_muzzle_stdev_)) actual_v_muzzle_stdev_ = actual_v_muzzle_stdev_u

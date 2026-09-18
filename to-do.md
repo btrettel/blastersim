@@ -1,6 +1,9 @@
 ### v0.3.0
 
-- `ad = .false.` for geninput variables to disable AD for them. `dt`, `actual_v_muzzle`, etc.
+- Multiply the derivatives by a scaling factor in the sensitivity output.
+- Fix gradients:
+    - `d(v_muzzle)/d(l_travel): 0.0000000000000000 (m/s)/(mm)`
+    - `d(v_muzzle)/d(t_opening): 0.0000000000000000 (m/s)/(ms)`
 - Check literature for more validation data for BlasterSim.
     - Use old GGDT cases on its website?
     - Look for something with pressure trace data.

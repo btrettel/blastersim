@@ -204,7 +204,7 @@ type, public :: run_config_type
     type(si_time)      :: t_stop, dt
     logical            :: tolerance_checks
     logical            :: const_dt
-    character(len=63), allocatable :: d_labels(:)
+    character(len=63), allocatable :: d_labels(:), d_units(:)
 contains
     procedure :: set => set_run_config
 end type run_config_type
@@ -1667,7 +1667,7 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out, rc)
     rc = SUCCESS_RC
 end subroutine rk_stage
 
-subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt, tolerance_checks, const_dt, d_labels)
+subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt, tolerance_checks, const_dt, d_labels, d_units)
     class(run_config_type), intent(out) :: config
     character(len=*), intent(in)        :: id ! CSV file name
     integer, intent(in)                 :: n_d
@@ -1676,7 +1676,7 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
     integer, intent(in), optional           :: csv_frequency
     type(si_time), intent(in), optional     :: t_stop, dt
     logical, intent(in), optional           :: tolerance_checks, const_dt
-    character(len=63), intent(in), optional :: d_labels(:)
+    character(len=63), intent(in), optional :: d_labels(:), d_units(:)
     
     config%id = id
     
@@ -1727,6 +1727,14 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
     end if
     call assert(size(config%d_labels) == n_d, "cva (set_run_config): size(d_labels) == n_d violated", &
                                         print_integer=[size(config%d_labels), n_d])
+    
+    if (present(d_units)) then
+        config%d_units = d_units
+    else
+        allocate(config%d_units(0))
+    end if
+    call assert(size(config%d_units) == n_d, "cva (set_run_config): size(d_units) == n_d violated", &
+                                        print_integer=[size(config%d_units), n_d])
 end subroutine set_run_config
 
 subroutine run(config, sys_start, sys_end, status, stop_at_first_event)

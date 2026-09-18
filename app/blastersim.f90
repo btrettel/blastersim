@@ -27,7 +27,7 @@ implicit none
 character(len=CL)                 :: input_file, extra, modified_string
 type(run_config_type)             :: config
 type(cv_system_type), allocatable :: sys_start, sys_end
-integer                           :: rc, out_unit
+integer                           :: rc, out_unit, i_d
 type(run_status_type)             :: status
 type(si_length)                   :: l_end, l_travel
 real(WP)                          :: f, sum_g
@@ -125,7 +125,14 @@ end if
 !tripwire$ begin 36CD5B66 Update `\secref{return-codes}` of usage.tex.
 if (status%rc < SUCCESS_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
-    write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "muzzle velocity: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
+    write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "v_muzzle: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
+    
+    do i_d = 1, size(sys_end%cv(I_BARREL)%x_dot%v%d)
+        ! TODO: Add units
+        write(unit=OUTPUT_UNIT, fmt="(3a, g0, 3a)") "d(v_muzzle)/d(", trim(config%d_labels(i_d)), "): ", &
+                                                    sys_end%cv(I_BARREL)%x_dot%v%d(i_d), &
+                                                    " (m/s)/(", trim(config%d_units(i_d)), ")"
+    end do
     
     stop EX_OK, quiet=.true.
 else
