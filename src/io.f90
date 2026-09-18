@@ -149,9 +149,9 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     sys%con(I_BARREL, I_CHAMBER)%a_e         = (PI/4.0_WP)*square(d_e_u)
     sys%con(I_BARREL, I_CHAMBER)%b           = b_u
     sys%con(I_BARREL, I_CHAMBER)%t_opening   = t_opening_u
-    call sys%con(I_BARREL, I_CHAMBER)%alpha_0%v%init_const(0.0_WP, 0)
-    call sys%con(I_BARREL, I_CHAMBER)%alpha_dot_0%v%init_const(1.0_WP, 0)
-    call sys%con(I_BARREL, I_CHAMBER)%m_dot_0%v%init_const(0.0_WP, 0)
+    call sys%con(I_BARREL, I_CHAMBER)%alpha_0%v%init_const(0.0_WP, n_d)
+    call sys%con(I_BARREL, I_CHAMBER)%alpha_dot_0%v%init_const(1.0_WP, n_d)
+    call sys%con(I_BARREL, I_CHAMBER)%m_dot_0%v%init_const(0.0_WP, n_d)
     sys%con(I_BARREL, I_BARREL)%active      = .false.
     sys%con(I_BARREL, I_BARREL_ATM)%active  = .false.
     
@@ -163,12 +163,12 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     sys%con(I_BARREL_ATM, I_CHAMBER)%active     = .false.
     sys%con(I_BARREL_ATM, I_BARREL_ATM)%active  = .false.
     
-    call x_dot%v%init_const(0.0_WP, 0)
-    call y(1)%v%init_const(1.0_WP, 0)
-    call rm_p%v%init_const(0.0_WP, 0) ! immobile
-    call k%v%init_const(0.0_WP, 0)
-    call delta_pre%v%init_const(0.0_WP, 0)
-    call p_f_chamber%v%init_const(0.0_WP, 0)
+    call x_dot%v%init_const(0.0_WP, n_d)
+    call y(1)%v%init_const(1.0_WP, n_d)
+    call rm_p%v%init_const(0.0_WP, n_d) ! immobile
+    call k%v%init_const(0.0_WP, n_d)
+    call delta_pre%v%init_const(0.0_WP, n_d)
+    call p_f_chamber%v%init_const(0.0_WP, n_d)
     
     ! `sys%cv(I_BARREL)`: barrel
     csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
@@ -185,7 +185,7 @@ subroutine read_pneumatic_namelist(input_file, sys, config, rc_read, actual_v_mu
     ! `sys%cv(I_BARREL_ATM)`: atmosphere
     call sys%cv(I_BARREL_ATM)%set_const("atmosphere", csa_barrel, p_atm_u, temp_atm_u, ATM_GAS, y, I_BARREL)
     
-    call config%set(id, csv_output=csv_output, csv_frequency=csv_frequency, dt=dt_u, n_d=0)
+    call config%set(id, csv_output=csv_output, csv_frequency=csv_frequency, dt=dt_u, n_d=n_d, d_labels=d_labels)
     
     if (present(actual_v_muzzle_))       actual_v_muzzle_       = actual_v_muzzle_u
     if (present(actual_v_muzzle_stdev_)) actual_v_muzzle_stdev_ = actual_v_muzzle_stdev_u
@@ -265,10 +265,10 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     sys%con(I_BARREL, I_PLUNGER)%active     = .true.
     sys%con(I_BARREL, I_PLUNGER)%a_e        = (PI/4.0_WP)*square(d_e_u)
     sys%con(I_BARREL, I_PLUNGER)%b          = b_u
-    call sys%con(I_BARREL, I_PLUNGER)%t_opening%v%init_const(0.0_WP, 0)
-    call sys%con(I_BARREL, I_PLUNGER)%alpha_0%v%init_const(1.0_WP, 0)
-    call sys%con(I_BARREL, I_PLUNGER)%alpha_dot_0%v%init_const(0.0_WP, 0)
-    call sys%con(I_BARREL, I_PLUNGER)%m_dot_0%v%init_const(0.0_WP, 0)
+    call sys%con(I_BARREL, I_PLUNGER)%t_opening%v%init_const(0.0_WP, n_d)
+    call sys%con(I_BARREL, I_PLUNGER)%alpha_0%v%init_const(1.0_WP, n_d)
+    call sys%con(I_BARREL, I_PLUNGER)%alpha_dot_0%v%init_const(0.0_WP, n_d)
+    call sys%con(I_BARREL, I_PLUNGER)%m_dot_0%v%init_const(0.0_WP, n_d)
     sys%con(I_BARREL, I_PLUNGER_ATM)%active = .false.
     sys%con(I_BARREL, I_BARREL_ATM)%active  = .false.
     
@@ -288,8 +288,8 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     sys%con(I_PLUNGER_ATM, I_PLUNGER_ATM)%active = .false.
     
     ! The same for every control volume.
-    call x_dot%v%init_const(0.0_WP, 0)
-    call y(1)%v%init_const(1.0_WP, 0)
+    call x_dot%v%init_const(0.0_WP, n_d)
+    call y(1)%v%init_const(1.0_WP, n_d)
     
     ! `sys%cv(I_BARREL)`: barrel
     csa_barrel = (PI/4.0_WP)*square(d_barrel_u)
@@ -311,7 +311,7 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     call sys%cv(I_PLUNGER_ATM)%set_const("atmosphere for plunger", csa_plunger, p_atm_u, temp_atm_u, PLUNGER_ATM_GAS, &
                                             y, I_PLUNGER)
     
-    call config%set(id, csv_output=csv_output, csv_frequency=csv_frequency, dt=dt_u, n_d=0)
+    call config%set(id, csv_output=csv_output, csv_frequency=csv_frequency, dt=dt_u, n_d=n_d, d_labels=d_labels)
     
     if (present(actual_v_muzzle_))       actual_v_muzzle_       = actual_v_muzzle_u
     if (present(actual_v_muzzle_stdev_)) actual_v_muzzle_stdev_ = actual_v_muzzle_stdev_u

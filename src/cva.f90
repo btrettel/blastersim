@@ -204,6 +204,7 @@ type, public :: run_config_type
     type(si_time)      :: t_stop, dt
     logical            :: tolerance_checks
     logical            :: const_dt
+    character(len=63), allocatable :: d_labels(:)
 contains
     procedure :: set => set_run_config
 end type run_config_type
@@ -1666,15 +1667,16 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out, rc)
     rc = SUCCESS_RC
 end subroutine rk_stage
 
-subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt, tolerance_checks, const_dt)
+subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt, tolerance_checks, const_dt, d_labels)
     class(run_config_type), intent(out) :: config
     character(len=*), intent(in)        :: id ! CSV file name
     integer, intent(in)                 :: n_d
     
-    logical, intent(in), optional       :: csv_output
-    integer, intent(in), optional       :: csv_frequency
-    type(si_time), intent(in), optional :: t_stop, dt
-    logical, intent(in), optional       :: tolerance_checks, const_dt
+    logical, intent(in), optional           :: csv_output
+    integer, intent(in), optional           :: csv_frequency
+    type(si_time), intent(in), optional     :: t_stop, dt
+    logical, intent(in), optional           :: tolerance_checks, const_dt
+    character(len=63), intent(in), optional :: d_labels(:)
     
     config%id = id
     
@@ -1695,12 +1697,16 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
     else
         call config%t_stop%v%init_const(T_STOP_DEFAULT, n_d)
     end if
+    call assert(size(config%t_stop%v%d) == n_d, "cva (set_run_config): size(t_stop%v%d) == n_d violated", &
+                                                    print_integer=[size(config%t_stop%v%d), n_d])
     
     if (present(dt)) then
         config%dt = dt
     else
         call config%dt%v%init_const(DT_DEFAULT, n_d)
     end if
+    call assert(size(config%dt%v%d) == n_d, "cva (set_run_config): size(dt%v%d) == n_d violated", &
+                                                print_integer=[size(config%dt%v%d), n_d])
     
     if (present(tolerance_checks)) then
         config%tolerance_checks = tolerance_checks
@@ -1713,6 +1719,14 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
     else
         config%const_dt = CONST_DT_DEFAULT
     end if
+    
+    if (present(d_labels)) then
+        config%d_labels = d_labels
+    else
+        allocate(config%d_labels(0))
+    end if
+    call assert(size(config%d_labels) == n_d, "cva (set_run_config): size(d_labels) == n_d violated", &
+                                        print_integer=[size(config%d_labels), n_d])
 end subroutine set_run_config
 
 subroutine run(config, sys_start, sys_end, status, stop_at_first_event)

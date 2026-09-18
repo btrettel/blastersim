@@ -4,6 +4,7 @@ namelist_group        = "pneumatic"
 kind_parameter        = "WP"
 write_tex             = .true.
 write_return          = .false.
+sensitivity           = .true.
 executable            = "./blastersim"
 acceptable_exit_codes = 0, 64
 run_time_threshold    = 300.0

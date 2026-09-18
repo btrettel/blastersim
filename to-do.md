@@ -1,5 +1,6 @@
 ### v0.3.0
 
+- `ad = .false.` for geninput variables to disable AD for them. `dt`, `actual_v_muzzle`, etc.
 - Check literature for more validation data for BlasterSim.
     - Use old GGDT cases on its website?
     - Look for something with pressure trace data.
@@ -13,6 +14,7 @@
 - Make test for ga.f90 showing that if all of the initial population are infeasible, ga.f90 navigates the population towards a feasible area.
 - Update ga.f90 in BlasterSim repository.
 - Isometric icon and logo for BlasterSim? Check Super Soaker icons you have.
+    - colorful, obviously a toy, maybe isometric
     - Sell BlasterSim stickers to put on blasters that were designed using it? Getting a good logo for this is key.
         - <https://ezhik.jp/laptop-stickers/>
             - He sort of reviews stickers in general. Having a strong adhesive would be nice.
