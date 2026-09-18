@@ -453,7 +453,8 @@ The time step will not increase above the time step set for the simulation.
 \subsection{Automatic differentiation}\label{autodiff}
 
 Forward-mode automatic differentiation is available internally in BlasterSim using a library I developed previously~\cite{trettel_btrettelflt_2026}.
-However, features dependent on automatic differentiation such as uncertainty quantification are not yet implemented.
+At present, automatic differentiation is used only for printing local sensitivities when a simulation completes and for testing.
+Uncertainty quantification using automatic differentiation is not yet implemented.
 
 Certain modeling decisions were made due to the use of automatic differentiation.
 Automatic differentiation would require detecting every discontinuity that occurs (as is done with the plunger impact; see \secref{plunger-impact}), so to reduce the amount of event detection needed, it is useful to use smooth submodels when possible.

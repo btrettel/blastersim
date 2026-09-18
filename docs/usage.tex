@@ -50,6 +50,9 @@ Most simulations will not reach $\printfrequency$ iterations, so it is normal to
 The message exists to show that BlasterSim is making progress on the simulation.
 When an event like plunger impact or time step adjustment occurs, BlasterSim will print the iteration number, simulation time, next time step value, and a brief message describing the event.
 
+If the simulation is successful, BlasterSim will print out the muzzle velocity (\texttt{v\_muzzle}) along with local sensitivities to the input variables.
+The local sensitivities can be used to determine how to improve performance.
+
 \section{Time trace output to CSV file}\label{csv}
 
 After BlasterSim completes, a CSV spreadsheet with detailed data the simulation is written.

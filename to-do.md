@@ -1,9 +1,9 @@
 ### v0.3.0
 
-- Multiply the derivatives by a scaling factor in the sensitivity output.
 - Fix gradients:
     - `d(v_muzzle)/d(l_travel): 0.0000000000000000 (m/s)/(mm)`
     - `d(v_muzzle)/d(t_opening): 0.0000000000000000 (m/s)/(ms)`
+    - `d(v_muzzle)/d(cor): 0.0000000000000000 (m/s)/(1)`
 - Check literature for more validation data for BlasterSim.
     - Use old GGDT cases on its website?
     - Look for something with pressure trace data.

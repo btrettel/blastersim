@@ -122,7 +122,7 @@ if (FUZZ) then
 end if
 !tripwire$ end
 
-!tripwire$ begin 36CD5B66 Update `\secref{return-codes}` of usage.tex.
+!tripwire$ begin 1590079C Update `\secref{return-codes}` of usage.tex.
 if (status%rc < SUCCESS_RC) then
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
     write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "v_muzzle: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
