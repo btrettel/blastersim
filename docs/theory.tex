@@ -409,17 +409,17 @@ In reality, all things have some dead volume, and where the plunger tube control
 In early versions of BlasterSim, all dead volume in springers was placed into the barrel, but $x_{\text{min},i}$ for the barrel and plunger tube are picked so that half the dead volume is in each.
 
 Having a non-zero coefficient of restitution will lead to an infinite number of bounces with a decreasing time between each bounce.
-The number of bounces in reality is finite, and the decreasing time between bounces can cause similar numerical issues when the time between bounces becomes comparable to the time step.
-A simple and crude way to fix this problem is to set the velocity of the plunger after impact to zero if the magnitude of the velocity before impact is below a threshold.
+The number of bounces in reality is finite, and the decreasing time between bounces can cause numerical issues when the time between bounces becomes comparable to the time step.
+BlasterSim takes two crude approaches to fixing these numerical issues.
+BlasterSim will set the velocity of the plunger after impact to zero if the magnitude of the velocity before impact is below a threshold.
 The threshold used in BlasterSim at the moment is $\impactstopvelocity$~cm/s.
 BlasterSim will also set the velocity of the plunger after impact to zero if it detects that the time between plunger impacts has decreased below the time step.
 
-If the plunger velocity after impact is zero (either due to the coefficient of restitution being zero or the velocity threshold mentioned in the previous paragraph), BlasterSim can stall.
+If the plunger velocity after impact is zero (either due to the coefficient of restitution being zero or the zero velocity fixes mentioned in the previous paragraph), BlasterSim would stall if not for a crude fix I've implemented.
 After impact, the plunger is located at the end of the plunger tube.
-If the coefficient of restitution is zero, then the plunger will initially have zero velocity after impact.
-However, the force on the plunger will push it past the end of the plunger tube in the simulation.
-BlasterSim simply identifies when the plunger moves past the end of the plunger tube and picks a time step to exactly hit the end of the plunger tube.
-The only time step that would not push the plunger past the end of the plunger tube in this case is zero, causing simulation progress to stall because the same problem will happen at the next time iteration.
+If the plunger has zero velocity after impact, the force on the plunger will push the plunger past the end of the plunger tube in the simulation.
+BlasterSim identifies when the plunger moves past the end of the plunger tube and picks a time step to exactly hit the end of the plunger tube.
+In this situation, the only time step that would not push the plunger past the end of the plunger tube is zero, causing simulation progress to stall because the same problem will happen at the next time iteration.
 BlasterSim at the moment does not apply a force to prevent the plunger from moving if it is at the end of the plunger tube, which would be more physically realistic.
 In the future, if desirable, BlasterSim could apply a force when the plunger is at the end of the plunger tube to keep the plunger stationary.
 The difference with the force is that it might be possible for the force to be overcome by the pressure inside the plunger, making the plunger start moving again.

@@ -27,10 +27,11 @@ implicit none
 character(len=CL)                 :: input_file, extra, modified_string
 type(run_config_type)             :: config
 type(cv_system_type), allocatable :: sys_start, sys_end
-integer                           :: rc, out_unit, i_d
+integer                           :: rc, out_unit, i_d, len_d_labels
 type(run_status_type)             :: status
 type(si_length)                   :: l_end, l_travel
 real(WP)                          :: f, sum_g
+character(len=2)                  :: fmt_part
 
 extra = "<http://trettel.us/blastersim/>" // new_line("a") // "Written by Ben Trettel."
 
@@ -122,16 +123,25 @@ if (FUZZ) then
 end if
 !tripwire$ end
 
-!tripwire$ begin 1590079C Update `\secref{return-codes}` of usage.tex.
+!tripwire$ begin 1F21282C Update `\secref{return-codes}` of usage.tex.
 if (status%rc < SUCCESS_RC) then
+    len_d_labels = 0
+    do i_d = 1, size(sys_end%cv(I_BARREL)%x_dot%v%d)
+        len_d_labels = max(len_d_labels, len(trim(config%d_labels(i_d))))
+    end do
+    write(unit=fmt_part, fmt="(i0)") len_d_labels + 16
+    
+    call assert(len("v_muzzle:") <= (len_d_labels + 16), "blastersim: v_muzzle will be cut off")
+    
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
-    write(unit=OUTPUT_UNIT, fmt="(a, f0.2, a)") "v_muzzle: ", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
+    write(unit=OUTPUT_UNIT, fmt="(a" // trim(fmt_part) // ", f9.3, a)") "v_muzzle:", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
     
     do i_d = 1, size(sys_end%cv(I_BARREL)%x_dot%v%d)
         ! TODO: Add units
-        write(unit=OUTPUT_UNIT, fmt="(3a, g0, 3a)") "d(v_muzzle)/d(", trim(config%d_labels(i_d)), "): ", &
-                                                    sys_end%cv(I_BARREL)%x_dot%v%d(i_d), &
-                                                    " (m/s)/(", trim(config%d_units(i_d)), ")"
+        ! I tried using unicode partial derivative symbols, but LaTeX returned an error.
+        write(unit=OUTPUT_UNIT, fmt="(a" // trim(fmt_part) // ", f9.3, 3a)") &
+                    "d(v_muzzle)/d(" // trim(config%d_labels(i_d)) // "):", &
+                    sys_end%cv(I_BARREL)%x_dot%v%d(i_d), " (m/s)/(", trim(config%d_units(i_d)), ")"
     end do
     
     stop EX_OK, quiet=.true.

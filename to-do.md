@@ -2,6 +2,8 @@
 
 - Fix gradients:
     - `d(v_muzzle)/d(l_travel): 0.0000000000000000 (m/s)/(mm)`
+        - Does this mean that I also get gradient associated with `x_min` wrong?
+        - Make a simpler version of `get_sys_at_x` and study what happens there. Use only `type(ad)` for simplicity.
     - `d(v_muzzle)/d(t_opening): 0.0000000000000000 (m/s)/(ms)`
     - `d(v_muzzle)/d(cor): 0.0000000000000000 (m/s)/(1)`
 - Check literature for more validation data for BlasterSim.
@@ -16,7 +18,7 @@
 - Test `p_peak`.
 - Make test for ga.f90 showing that if all of the initial population are infeasible, ga.f90 navigates the population towards a feasible area.
 - Update ga.f90 in BlasterSim repository.
-- Isometric icon and logo for BlasterSim? Check Super Soaker icons you have.
+- Icon (and maybe logo) for BlasterSim?
     - colorful, obviously a toy, maybe isometric
     - Sell BlasterSim stickers to put on blasters that were designed using it? Getting a good logo for this is key.
         - <https://ezhik.jp/laptop-stickers/>
@@ -109,9 +111,6 @@
 - Document how variable names are converted from LaTeX and code, as a general rule.
 - Have a conversion table for LaTeX and code variable names.
 - Maybe: Put springer and pneumatic governing equations in usage chapter. This might confuse people more than help.
-- Thanks/acknowledgements appendix
-    - Andrew Trettel for macOS binary
-    - Radioactive for data
 - docs: Discuss use of derived types defined in cva.f90.
 - `make dist`
 - `make web`

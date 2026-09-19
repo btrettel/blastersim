@@ -31,7 +31,7 @@
 % <https://tex.stackexchange.com/a/479390/9945>
 \usepackage{xurl}
 
-\usepackage{hyperref}
+\usepackage[pdfusetitle]{hyperref}
 \usepackage{listings}
 \usepackage{physics}
 \usepackage{xcolor} % Needed for gnuplot and some TikZ figures where I use color.
@@ -107,7 +107,12 @@
 \input{defaults.tex}
 
 \author{Ben Trettel}
+\iflatexml%
 \title{BlasterSim \gittag\ User's Guide}
+\else%
+\title{\texorpdfstring{BlasterSim \gittag\ User's Guide \\
+\includegraphics[width=0.75\textwidth]{full.png}}{BlasterSim \gittag\ User's Guide}}
+\fi%
 \date{\today}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -130,6 +135,16 @@
 \fi%
 
 \tableofcontents
+
+\chapter*{Acknowledgments}
+\addcontentsline{toc}{chapter}{Acknowledgments}
+% Alphabetical order.
+
+\begin{itemize}
+    % Later: Andrew Trettel for macOS binary
+    \item \href{https://bsky.app/profile/hotkoin.bsky.social/post/3mgqdfj2xjc2t}{Hotkoin} is thanked for providing the BlasterSim graphic/icon.
+    \item Radioactive is thanked for providing experimental data and his general springer knowledge.
+\end{itemize}
 
 \input{usage.tex}
 \input{theory.tex}

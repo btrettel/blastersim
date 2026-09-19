@@ -84,3 +84,8 @@ blastersim
 blastersim.exe
 *.gp
 *.tikz
+!docs/16x16.png
+!docs/24x24.png
+!docs/32x32.png
+!docs/48x48.png
+!docs/256x256.png
