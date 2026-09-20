@@ -1,11 +1,7 @@
 ### v0.3.0
 
 - Change `k` units to use mm?
-- Fix gradients:
-    - `d(v_muzzle)/d(l_travel): 0.0000000000000000 (m/s)/(mm)`
-        - I added an assertion that should catch issues like this in the future, but I should also add a test to make sure that the numbers are correct.
-        - This is fixed, but Gemini suggested there's a better way to handle this that I should look into.
-        - One remaining issue to address as well: If the time step lands exactly on `x_stop`, then there will be no sensitivity to `l_travel` as it won't go through the `get_sys_at_x` loop?
+- Fix derivatives:
     - `d(v_muzzle)/d(t_opening): 0.0000000000000000 (m/s)/(ms)`
     - `d(v_muzzle)/d(cor): 0.0000000000000000 (m/s)/(1)`
 - Check literature for more validation data for BlasterSim.
@@ -56,6 +52,7 @@
 
 ***
 
+- Improve `get_sys_at_x` derivatives with respect to `x_event` via the implicit function theorem as Gemini suggested.
 - Make BlasterSim able to convert GGDT files to BlasterSim inputs.
     - Make an appendix in the notes on the GGDT file format.
 - Get ChkTeX to detect `\\href{[^h]`

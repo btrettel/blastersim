@@ -55,13 +55,15 @@ integer, public, parameter :: NORMAL_CV_TYPE = 1
 integer, public, parameter :: MIRROR_CV_TYPE = 2
 integer, public, parameter :: MAX_CV_TYPE    = 2
 
-!tripwire$ begin D22EA909 Update \secref{return-codes} and `actual_rc` in geninput_*.nml.
+!tripwire$ begin 5A3E231B Update \secref{return-codes} and `actual_rc` in geninput_*.nml.
+integer, public, parameter :: X_EQ_X_MIN_RUN_RC              = -9
+integer, public, parameter :: X_EQ_X_STOP_RUN_RC             = -8
 integer, public, parameter :: IMPACT_STOP_OTHER_RUN_RC       = -7
 integer, public, parameter :: IMPACT_STOP_VELOCITY_RUN_RC    = -6
 integer, public, parameter :: DT_CHANGED_RECOVERY_RUN_RC     = -5
 integer, public, parameter :: DT_CHANGED_CONSERVATION_RUN_RC = -4
 integer, public, parameter :: X_LT_X_MIN_RUN_RC              = -3
-integer, public, parameter :: X_GE_X_STOP_RUN_RC             = -2
+integer, public, parameter :: X_GT_X_STOP_RUN_RC             = -2
 integer, public, parameter :: CONTINUE_RUN_RC                = -1
 integer, public, parameter :: SUCCESS_RC                     = 0 ! used for more than just the `run` subroutine.
 integer, public, parameter :: TIMEOUT_RUN_RC                 = 1
@@ -1810,7 +1812,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
         call check_sys(config, sys_new, sys_start, t, status)
         
         event_case: select case (status%rc)
-            case (X_GE_X_STOP_RUN_RC) ! -2
+            case (X_GT_X_STOP_RUN_RC) ! -2
                 ! Use Hénon's trick to ensure that `x == x_stop`.
                 call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_stop, &
                                         sys_old, sys_new, t, sys_end, rc_get_sys_at_x)
@@ -1823,7 +1825,10 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
                 if (rc_get_sys_at_x == SUCCESS_RC) then
                     call check_sys(config, sys_new, sys_start, t, status)
                     
-                    call assert(status%rc == X_GE_X_STOP_RUN_RC, "cva (run): status%rc == X_GE_X_STOP_RUN_RC violated")
+                    call assert(status%rc == X_EQ_X_STOP_RUN_RC, "cva (run): status%rc == X_EQ_X_STOP_RUN_RC violated")
+                    
+                    ! Set `status%rc` back to `X_GT_X_STOP_RUN_RC` to be able to distinguish between this and `X_EQ_X_STOP_RUN_RC`.
+                    status%rc = X_GT_X_STOP_RUN_RC
                 else
                     status%rc = rc_get_sys_at_x
                 end if
@@ -1859,6 +1864,19 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
                     end if
                     call sys_new%cv(i_cv_x_event)%rm_p%v%init_const(0.0_WP, n_d)
                 end if
+            case (X_EQ_X_STOP_RUN_RC, X_EQ_X_MIN_RUN_RC)
+                ! `x` landed exactly on `x_stop` or `x_min`.
+                ! This sounds great at first because it would avoid needing to run `get_sys_at_x`.
+                ! But running `get_sys_at_x` is necessary to get the proper derivative with respect to `l_travel` and `vol_dead`.
+                ! Rerun this time step so that `get_sys_at_x` will be run.
+                
+                ! 0.9 below is somewhat arbitrary.
+                ! I want something where it's highly unlikely that two time steps of this size in a row will end up here again.
+                ! That might cause an infinite loop.
+                
+                t       = t_old
+                dt      = 0.9_WP*dt
+                sys_new = sys_old
         end select event_case
         
         if (i >= MAX_ITERS_TIME_LOOP) status%rc = MAX_ITERS_TIME_LOOP_RUN_RC
@@ -1885,6 +1903,10 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
             case (IMPACT_STOP_VELOCITY_RUN_RC, IMPACT_STOP_OTHER_RUN_RC)
                 write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", CONVERT_S_TO_MS*t%v%v, " ms dt=", &
                         CONVERT_S_TO_MS*dt%v%v, " ms: final plunger impact, plunger now immobile"
+            case (X_EQ_X_STOP_RUN_RC, X_EQ_X_MIN_RUN_RC)
+                write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", CONVERT_S_TO_MS*t%v%v, " ms dt=", &
+                        CONVERT_S_TO_MS*dt%v%v, " ms: projectile or plunger exactly hit x_stop or x_min, " &
+                        // "redoing this time iteration with smaller time step to get derivatives right"
             case default
                 if ((mod(i, PRINT_FREQUENCY) == 0) .and. (.not. config%const_dt)) &
                         write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", &
@@ -1908,7 +1930,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     status%i = i
 end subroutine run
 
-!tripwire$ begin FB0C7DDB Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
+!tripwire$ begin 28486845 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
 pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_start
@@ -1933,9 +1955,16 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
     
     do i_cv = 1, n_cv
         ! Check whether the projectile left the barrel.
-        if ((sys%cv(i_cv)%x >= sys%cv(i_cv)%x_stop) &
-                .or. (is_close(sys%cv(i_cv)%x%v%v, sys%cv(i_cv)%x_stop%v%v))) then
-            status%rc = X_GE_X_STOP_RUN_RC
+        if (sys%cv(i_cv)%x > sys%cv(i_cv)%x_stop) then
+            status%rc = X_GT_X_STOP_RUN_RC
+            allocate(status%i_cv(1))
+            status%i_cv(1) = i_cv
+            return
+        end if
+        
+        ! Check whether the projectile is at `x_stop`, which requires special treatment to get the `l_travel` derivative right.
+        if (is_close(sys%cv(i_cv)%x%v%v, sys%cv(i_cv)%x_stop%v%v)) then
+            status%rc = X_EQ_X_STOP_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
             return
@@ -1947,6 +1976,17 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
                 .and. (.not. is_close(sys%cv(i_cv)%x%v%v, sys%cv(i_cv)%x_min%v%v))) then
             ! The `is_close` part is needed to avoid the problem where round off error makes `x` a bit off.
             status%rc = X_LT_X_MIN_RUN_RC
+            allocate(status%i_cv(1))
+            status%i_cv(1) = i_cv
+            allocate(status%data(1))
+            status%data(1) = sys%cv(i_cv)%x_min%v%v - sys%cv(i_cv)%x%v%v
+            return
+        end if
+        
+        ! Check whether the plunger is at `x_min`, which requires special treatment to get the `l_travel` derivative right.
+        if ((is_close(sys%cv(i_cv)%x%v%v, sys%cv(i_cv)%x_min%v%v)) &
+                .and. (sys%cv(i_cv)%eos /= CONST_EOS)) then
+            status%rc = X_EQ_X_MIN_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
             allocate(status%data(1))
