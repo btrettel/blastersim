@@ -1815,16 +1815,15 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
                 call get_sys_at_x(t_old, dt, status%i_cv(1), sys_old%cv(status%i_cv(1))%x_stop, &
                                         sys_old, sys_new, t, sys_end, rc_get_sys_at_x)
                 
+                exit_time_loop = .true.
+                
+                ! To avoid returning the wrong time level.
+                call move_alloc(from=sys_end, to=sys_new)
+                
                 if (rc_get_sys_at_x == SUCCESS_RC) then
-                    exit_time_loop = .true.
+                    call check_sys(config, sys_new, sys_start, t, status)
                     
-                    call check_sys(config, sys_end, sys_start, t, status)
-                    
-                    ! If `check_sys` thinks that the run can continue here, `run` can terminate.
-                    if (status%rc == CONTINUE_RUN_RC) then
-                        status%rc = X_GE_X_STOP_RUN_RC
-                        exit_time_loop = .true.
-                    end if
+                    call assert(status%rc == X_GE_X_STOP_RUN_RC, "cva (run): status%rc == X_GE_X_STOP_RUN_RC violated")
                 else
                     status%rc = rc_get_sys_at_x
                 end if
@@ -1909,7 +1908,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     status%i = i
 end subroutine run
 
-!tripwire$ begin 21C871DF Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
+!tripwire$ begin FB0C7DDB Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
 pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_start
@@ -1934,7 +1933,8 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
     
     do i_cv = 1, n_cv
         ! Check whether the projectile left the barrel.
-        if (sys%cv(i_cv)%x >= sys%cv(i_cv)%x_stop) then
+        if ((sys%cv(i_cv)%x >= sys%cv(i_cv)%x_stop) &
+                .or. (is_close(sys%cv(i_cv)%x%v%v, sys%cv(i_cv)%x_stop%v%v))) then
             status%rc = X_GE_X_STOP_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
@@ -2190,14 +2190,11 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
         ! <https://en.wikipedia.org/wiki/Secant_method#Computational_example>
         ! ellis_fortran_1994 p. 642 recommends a criteria based on how close the iteration is to the desired value.
         ! Note that the derivatives do not factor into this stopping criteria, as a value is what is being interpolated to.
-        if (abs(sys_im1%cv(i_cv_x_event)%x%v%v - sys_im2%cv(i_cv_x_event)%x%v%v) < x_tol) then
+        if ((abs(sys_im1%cv(i_cv_x_event)%x%v%v - sys_im2%cv(i_cv_x_event)%x%v%v) < x_tol) &
+                .and. (i >= 2)) then
+            ! The `i >= 2` part might be necessary to get a derivative with respect to `x_event`.
             rc = SUCCESS_RC
-            if (i > 1) then
-                call move_alloc(from=sys_im1, to=sys_i)
-            else
-                dt_i = dt_im2
-                call move_alloc(from=sys_im2, to=sys_i)
-            end if
+            call move_alloc(from=sys_im1, to=sys_i)
             exit 
         end if
         

@@ -1,13 +1,16 @@
 ### v0.3.0
 
+- Change `k` units to use mm?
 - Fix gradients:
     - `d(v_muzzle)/d(l_travel): 0.0000000000000000 (m/s)/(mm)`
-        - Does this mean that I also get gradient associated with `x_min` wrong?
-        - Make a simpler version of `get_sys_at_x` and study what happens there. Use only `type(ad)` for simplicity.
+        - I added an assertion that should catch issues like this in the future, but I should also add a test to make sure that the numbers are correct.
+        - This is fixed, but Gemini suggested there's a better way to handle this that I should look into.
+        - One remaining issue to address as well: If the time step lands exactly on `x_stop`, then there will be no sensitivity to `l_travel` as it won't go through the `get_sys_at_x` loop?
     - `d(v_muzzle)/d(t_opening): 0.0000000000000000 (m/s)/(ms)`
     - `d(v_muzzle)/d(cor): 0.0000000000000000 (m/s)/(1)`
 - Check literature for more validation data for BlasterSim.
     - Use old GGDT cases on its website?
+        - <https://web.archive.org/web/20080416132236/http://www.thehalls-in-bfe.com/GGDT/>
     - Look for something with pressure trace data.
     - Daniel Beaver validation cases:
         - <http://nerfhaven.com/forums/topic/21832-experimental-methods-for-determining-and-predicting-blaster-power/?p=307341>
@@ -18,17 +21,11 @@
 - Test `p_peak`.
 - Make test for ga.f90 showing that if all of the initial population are infeasible, ga.f90 navigates the population towards a feasible area.
 - Update ga.f90 in BlasterSim repository.
-- Icon (and maybe logo) for BlasterSim?
-    - colorful, obviously a toy, maybe isometric
-    - Sell BlasterSim stickers to put on blasters that were designed using it? Getting a good logo for this is key.
-        - <https://ezhik.jp/laptop-stickers/>
-            - He sort of reviews stickers in general. Having a strong adhesive would be nice.
-        - Could also sell printed copies of the BlasterSim manual. Spiral-bound manuals are great as they can lay flat: <https://youtu.be/UtLR4nXAm4w?t=487>
-    - Add icon to Windows version of BlasterSim.
-        - <https://learn.microsoft.com/en-us/windows/apps/design/iconography/app-icon-construction>
-            - > Apps should have, at the bare minimum: 16x16, 24x24, 32x32, 48x48, and 256x256.
-        - <https://handmade.network/p/64/geometer/blog/p/3089-adding_icons_and_other_resources_to_your_executable_windows__cross-platform>
-        - <https://www.howtogeek.com/75983/stupid-geek-tricks-how-to-modify-the-icon-of-an-.exe-file/>
+- Add icon to Windows version of BlasterSim.
+    - <https://learn.microsoft.com/en-us/windows/apps/design/iconography/app-icon-construction>
+        - > Apps should have, at the bare minimum: 16x16, 24x24, 32x32, 48x48, and 256x256.
+    - <https://handmade.network/p/64/geometer/blog/p/3089-adding_icons_and_other_resources_to_your_executable_windows__cross-platform>
+    - <https://www.howtogeek.com/75983/stupid-geek-tricks-how-to-modify-the-icon-of-an-.exe-file/>
 - Create a checklist for testing before a new release.
     - Check assertion density
     - Fortitude
@@ -125,6 +122,28 @@
 - Print useful error message for each error code.
     - Make a system to keep descriptions in the the docs and code consistent: generrors
 - Test CSV file.
+- Estimate reasonable coefficient of restitution from videos.
+    - <https://discord.com/channels/727038380054937610/1172390267890958366/1285109487828467774>
+    - <https://www.youtube.com/watch?v=mwP1k-bcjcA>
+
+### v0.4.0
+
+- Ask LFortran to test BlasterSim v0.3.0 if it still won't compile the executables at this point.
+- Combination tutorial and Bradley Phillips style test showing comparison of predicted muzzle velocity and actual measurement.
+    - Idea from private Discord discussion.
+- Web app
+    - Flang
+        - <https://gws.phd/posts/fortran_wasm/>
+            - <https://news.ycombinator.com/item?id=39944275>
+            - <https://hackaday.com/2024/04/08/fortran-and-webassembly-bringing-zippy-linear-algebra-to-nodejs-browsers/>
+        - <https://fortran-lang.discourse.group/t/flang-wasm-compiler/7589>
+        - <https://niconiconi.neocities.org/tech-notes/fortran-in-webassembly-and-field-solver/>
+    - LFortran
+        - <https://lfortran.org/blog/2024/05/fortran-on-web-using-lfortran/>
+            - <https://fortran-lang.discourse.group/t/fortran-on-web-using-lfortran/7957>
+            - <https://github.com/lfortran/mnist-classifier-blas-wasm/>
+            - <https://github.com/lfortran/Fortran-On-Web>
+        - <https://fortran-lang.discourse.group/t/flang-wasm-compiler/7589/8>
 
 ***
 
@@ -212,9 +231,6 @@
 - Add blowdown part of simulation.
     - Get flow rate out of barrel.
 - Track both impact energy before projectile exit and total impact energy including blow down period.
-- Estimate reasonable coefficient of restitution from videos.
-    - <https://discord.com/channels/727038380054937610/1172390267890958366/1285109487828467774>
-    - <https://www.youtube.com/watch?v=mwP1k-bcjcA>
 - Maybe: `MAX_ITERS_TIME_LOOP_RUN_RC`: Check if there was plunger impact and if the coefficient of restitution is small. If so, suggest making the coefficient of restitution larger or zero.
 - Make exact solution with `e_f` and motion in both directions.
 - Why does `e_f` go negative in plungers? Is it due to the continuous friction equation? Should I switch to a discontinuous friction equation?
@@ -663,6 +679,13 @@
 - Switch to unit conversion functions like CEA: <https://github.com/nasa/cea/blob/main/source/units.f90>
     - I want to use these in initialization expressions, but only intrinsic functions are allowed. So this doesn't work.
         - <https://fortran-lang.discourse.group/t/user-defined-functions-in-constant-expressions/1509>
+- Icon (and maybe logo) for BlasterSim?
+    _ Hotkoin icon is good for now. Some notes from before he made the icon:
+    - colorful, obviously a toy, maybe isometric
+    - Sell BlasterSim stickers to put on blasters that were designed using it? Getting a good logo for this is key. The existing icon is good but doesn't say "BlasterSim", so I think I'd need an actual logo for this.
+        - <https://ezhik.jp/laptop-stickers/>
+            - He sort of reviews stickers in general. Having a strong adhesive would be nice.
+        - Could also sell printed copies of the BlasterSim manual. Spiral-bound manuals are great as they can lay flat: <https://youtu.be/UtLR4nXAm4w?t=487>
 
 ***
 
@@ -735,24 +758,8 @@ inspiration for UI: SPICE, <https://en.wikipedia.org/wiki/Netlist>
 
 ***
 
-GUI ideas:
+Other GUI ideas:
 
-- Try WebAssembly to see what the limitations are. Having something that people can use without much effort and on their phones is important.
-    - Might need `bind(c)` subset to interface with webpage.
-    - I could write the core so that it will compile with LFortran as that seems to be the easiest way to get WebAssembly.
-    - LFortran
-        - I'd need to avoid custom derived type operators as I believe lfortran doesn't support those as of this writing (2024-06-29). Perhaps `interface` operators are okay? Then I could use genunits.
-        - <https://lfortran.org/blog/2024/05/fortran-on-web-using-lfortran/>
-            - <https://fortran-lang.discourse.group/t/fortran-on-web-using-lfortran/7957>
-            - <https://github.com/lfortran/mnist-classifier-blas-wasm/>
-        - <https://fortran-lang.discourse.group/t/flang-wasm-compiler/7589/8>
-        - <https://github.com/lfortran/Fortran-On-Web>
-    - Flang
-        - <https://gws.phd/posts/fortran_wasm/>
-            - <https://news.ycombinator.com/item?id=39944275>
-            - <https://hackaday.com/2024/04/08/fortran-and-webassembly-bringing-zippy-linear-algebra-to-nodejs-browsers/>
-        - <https://fortran-lang.discourse.group/t/flang-wasm-compiler/7589>
-        - <https://niconiconi.neocities.org/tech-notes/fortran-in-webassembly-and-field-solver/>
 - Look into running with a GUI using `iso_c_binding` (or otherwise). This should be started with early as it likely will limit the Fortran code in some way. Or perhaps not, if some sort of conversion subroutines will be needed.
     - <https://docs.python.org/3/library/tk.html>
 - Order inputs by sensitivity. Do a sensitivity study first to know the order.
