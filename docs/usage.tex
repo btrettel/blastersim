@@ -198,7 +198,7 @@ BlasterSim will continue to the next time step.
 BlasterSim will continue to the next time step.
 Return code -6 means that the velocity before impact was below the threshold of $\impactstopvelocity$~cm/s where BlasterSim dissipates all remaining plunger kinetic energy to prevent an infinite series of plunger impacts.
 Return code -7 means that the the time between plunger impacts has decreased below the time step, and BlasterSim chooses to not resolve that impact and instead dissipate all remaining plunger kinetic energy.
-\item[return code -8 and -9:] These return codes cover corner cases where a projectile/plunger hit a termination or impact location without going running the \texttt{get\_sys\_at\_x} subroutine.
+\item[return code -8 and -9:] These return codes cover corner cases where a projectile/plunger hit a termination or impact location without running the \texttt{get\_sys\_at\_x} subroutine.
 A user is highly unlikely to observe these return codes.
 Running the \texttt{get\_sys\_at\_x} subroutine at these events is necessary for automatic differentiation to work properly.
 In these return codes, the time iteration will return to the previous time iteration with a slightly reduced time step so that the \texttt{get\_sys\_at\_x} subroutine will be run.

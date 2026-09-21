@@ -1942,8 +1942,8 @@ subroutine test_mirror_1(tests)
     call sys_start%cv(2)%set(x_2, x_dot, y, p_2, temp, "chamber 2", csa, 1.0_WP/m_p, p_fs, p_fd, k, &
                                     delta_pre, [DRY_AIR], 1, type=MIRROR_CV_TYPE, v_scale_s=v_scale, v_scale_d=v_scale)
     
-    ! `const_dt=.true.` avoids a tolerance issue in one of the tests
-    call config%set("test_mirror_1", 0, t_stop=t_stop, const_dt=.true.)
+    ! `adaptive_dt=.false.` avoids a tolerance issue in one of the tests
+    call config%set("test_mirror_1", 0, t_stop=t_stop, adaptive_dt=.false.)
     call run(config, sys_start, sys_end, status)
     
     call tests%integer_eq(status%rc, TIMEOUT_RUN_RC, "test_mirror_1, status%rc")
@@ -2666,7 +2666,7 @@ subroutine test_check_sys(tests)
     ! TODO: other return codes
 end subroutine test_check_sys
 
-!tripwire$ begin 0AA5A495 Update `\secref{single-cv-exact}` of verval.tex.
+!tripwire$ begin C76C5667 Update `\secref{single-cv-exact}` of verval.tex.
 pure function exact_x_dot(sys_0, x)
     use checks, only: assert, is_close
     use cva, only: IDEAL_EOS, CONST_EOS, NORMAL_CV_TYPE, MIRROR_CV_TYPE, cv_system_type
@@ -2789,7 +2789,7 @@ subroutine exact_x_dot_de(n, ne, ne_d)
     ! However, `sys_interp` is not called if `rc == TIMEOUT_RUN_RC` as it is here.
     dt = t_stop / real(n, WP)
     
-    call config%set("test_single_cv_exact", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false., const_dt=.true., &
+    call config%set("test_single_cv_exact", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false., adaptive_dt=.false., &
                         d_labels=d_labels, d_units=d_units)
     call run(config, sys_start, sys_end, status)
     
@@ -2868,7 +2868,7 @@ subroutine test_single_cv_exact(tests)
 end subroutine test_single_cv_exact
 !tripwire$ end
 
-!tripwire$ begin 2D215887 Update `\secref{plunger-impact-exact}` of verval.tex.
+!tripwire$ begin A9AEEA04 Update `\secref{plunger-impact-exact}` of verval.tex.
 pure function plunger_impact_sys_0(rho_1, csa, x_0, x_min, x_dot_1, temp_1, cor)
     use cva, only: cv_system_type
     use checks, only: assert
@@ -3027,7 +3027,7 @@ subroutine exact_plunger_impact_1_de(n, ne, ne_d)
     call t_stop%v%init_const(TEST_PLUNGER_IMPACT_1_T_STOP, N_D)
     dt = t_stop / real(n, WP)
     
-    call config%set("test_plunger_impact_1", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false., const_dt=.true., &
+    call config%set("test_plunger_impact_1", N_D, t_stop=t_stop, dt=dt, tolerance_checks=.false., adaptive_dt=.false., &
                         d_labels=d_labels, d_units=d_units)
     call run(config, sys_0, sys_1, status)
     
@@ -3178,7 +3178,7 @@ subroutine test_plunger_impact_2(tests)
     sys_0 = plunger_impact_sys_0(rho, csa, x_0, x_min, x_dot, temp, cor)
     
     call t_stop%v%init_const(10.0_WP, N_D)
-    call config%set("test_plunger_impact_2", N_D, t_stop=t_stop, tolerance_checks=.false., const_dt=.true., &
+    call config%set("test_plunger_impact_2", N_D, t_stop=t_stop, tolerance_checks=.false., adaptive_dt=.false., &
                         d_labels=d_labels, d_units=d_units)
     call run(config, sys_0, sys_2, status, stop_at_first_event=.true.)
     

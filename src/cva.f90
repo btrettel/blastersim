@@ -36,7 +36,7 @@ integer, public, parameter  :: CSV_FREQUENCY_DEFAULT    = 10        ! time steps
 real(WP), public, parameter :: T_STOP_DEFAULT           = 0.1_WP    ! s
 real(WP), public, parameter :: DT_DEFAULT               = 1.0e-5_WP ! s
 logical, public, parameter  :: TOLERANCE_CHECKS_DEFAULT = .true.    ! tolerance checks are enabled by default
-logical, public, parameter  :: CONST_DT_DEFAULT         = .false.
+logical, public, parameter  :: ADAPTIVE_DT_DEFAULT      = .true.
 
 real(WP), public, parameter :: MASS_TOLERANCE         = 1.0e-5_WP  ! unitless
 real(WP), public, parameter :: ENERGY_TOLERANCE       = 1.0e-4_WP  ! unitless
@@ -205,7 +205,7 @@ type, public :: run_config_type
     integer            :: csv_frequency
     type(si_time)      :: t_stop, dt
     logical            :: tolerance_checks
-    logical            :: const_dt
+    logical            :: adaptive_dt
     character(len=63), allocatable :: d_labels(:), d_units(:)
 contains
     procedure :: set => set_run_config
@@ -1669,7 +1669,7 @@ pure subroutine rk_stage(t_old, dt, a, sys_old, cv_delta_in, cv_delta_out, rc)
     rc = SUCCESS_RC
 end subroutine rk_stage
 
-subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt, tolerance_checks, const_dt, d_labels, d_units)
+subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt, tolerance_checks, adaptive_dt, d_labels, d_units)
     class(run_config_type), intent(out) :: config
     character(len=*), intent(in)        :: id ! CSV file name
     integer, intent(in)                 :: n_d
@@ -1677,7 +1677,7 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
     logical, intent(in), optional           :: csv_output
     integer, intent(in), optional           :: csv_frequency
     type(si_time), intent(in), optional     :: t_stop, dt
-    logical, intent(in), optional           :: tolerance_checks, const_dt
+    logical, intent(in), optional           :: tolerance_checks, adaptive_dt
     character(len=63), intent(in), optional :: d_labels(:), d_units(:)
     
     config%id = id
@@ -1716,10 +1716,10 @@ subroutine set_run_config(config, id, n_d, csv_output, csv_frequency, t_stop, dt
         config%tolerance_checks = TOLERANCE_CHECKS_DEFAULT
     end if
     
-    if (present(const_dt)) then
-        config%const_dt = const_dt
+    if (present(adaptive_dt)) then
+        config%adaptive_dt = adaptive_dt
     else
-        config%const_dt = CONST_DT_DEFAULT
+        config%adaptive_dt = ADAPTIVE_DT_DEFAULT
     end if
     
     if (present(d_labels)) then
@@ -1789,7 +1789,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     
     dt = config%dt
     exit_time_loop = .false.
-    if (.not. config%const_dt) write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", &
+    if (config%adaptive_dt) write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", &
                                     CONVERT_S_TO_MS*t%v%v, " ms dt=", CONVERT_S_TO_MS*dt%v%v, " ms"
     time_loop: do
         call calculate_next_time_step(sys_old, t, dt, sys_new, rc_time_step)
@@ -1881,7 +1881,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
         
         if (i >= MAX_ITERS_TIME_LOOP) status%rc = MAX_ITERS_TIME_LOOP_RUN_RC
         
-        if (.not. config%const_dt) call adapt_dt(i, config%dt, sys_old, sys_new, dt, i_last_dt_change, status%rc)
+        if (config%adaptive_dt) call adapt_dt(i, config%dt, sys_old, sys_new, dt, i_last_dt_change, status%rc)
         
         if (config%csv_output .and. &
                 ((mod(i, config%csv_frequency) == 0) .or. (status%rc < CONTINUE_RUN_RC))) then
@@ -1908,7 +1908,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
                         CONVERT_S_TO_MS*dt%v%v, " ms: projectile or plunger exactly hit x_stop or x_min, " &
                         // "redoing this time iteration with smaller time step to get derivatives right"
             case default
-                if ((mod(i, PRINT_FREQUENCY) == 0) .and. (.not. config%const_dt)) &
+                if ((mod(i, PRINT_FREQUENCY) == 0) .and. config%adaptive_dt) &
                         write(unit=*, fmt="(a, i0, a, g0, a, g0, a)") "i=", i, " t=", &
                                     CONVERT_S_TO_MS*t%v%v, " ms dt=", CONVERT_S_TO_MS*dt%v%v, " ms"
         end select

@@ -123,7 +123,7 @@ if (FUZZ) then
 end if
 !tripwire$ end
 
-!tripwire$ begin 83F8174F Update `\secref{return-codes}` of usage.tex.
+!tripwire$ begin 86D7BFF9 Update `\secref{return-codes}` of usage.tex.
 if (status%rc < SUCCESS_RC) then
     len_d_labels = 0
     do i_d = 1, size(sys_end%cv(I_BARREL)%x_dot%v%d)
@@ -132,15 +132,15 @@ if (status%rc < SUCCESS_RC) then
     write(unit=fmt_part, fmt="(i0)") len_d_labels + 16
     
     call assert(len("v_muzzle:") <= (len_d_labels + 16), "blastersim: v_muzzle will be cut off")
-    
     call assert(is_close(sys_end%cv(I_BARREL)%x%v%v, sys_end%cv(I_BARREL)%x_stop%v%v), "blastersim: x == x_stop violated", &
                     print_real=[sys_end%cv(I_BARREL)%x%v%v, sys_end%cv(I_BARREL)%x_stop%v%v])
+    call assert(sys_end%cv(I_BARREL)%x_dot%v%v >= 0.0_WP, "blastersim: x_dot >= 0 violated", &
+                    print_real=[sys_end%cv(I_BARREL)%x_dot%v%v])
     
     write(unit=OUTPUT_UNIT, fmt="(a)") "SUCCESS!"
     write(unit=OUTPUT_UNIT, fmt="(a" // trim(fmt_part) // ", f9.3, a)") "v_muzzle:", sys_end%cv(I_BARREL)%x_dot%v%v, " m/s"
     
     do i_d = 1, size(sys_end%cv(I_BARREL)%x_dot%v%d)
-        ! TODO: Add units
         ! I tried using unicode partial derivative symbols, but LaTeX returned an error.
         write(unit=OUTPUT_UNIT, fmt="(a" // trim(fmt_part) // ", f9.3, 3a)") &
                     "d(v_muzzle)/d(" // trim(config%d_labels(i_d)) // "):", &

@@ -3,7 +3,6 @@
 - Change `k` units to use mm?
 - Fix derivatives:
     - `d(v_muzzle)/d(t_opening): 0.0000000000000000 (m/s)/(ms)`
-    - `d(v_muzzle)/d(cor): 0.0000000000000000 (m/s)/(1)`
 - Check literature for more validation data for BlasterSim.
     - Use old GGDT cases on its website?
         - <https://web.archive.org/web/20080416132236/http://www.thehalls-in-bfe.com/GGDT/>
@@ -38,8 +37,8 @@
     - Make sure that `f_m_dot` is finite with `b = 1`.
     - Change upper limit of `b` to `P_RL` when new `smin` is complete.
     - property test: $smin(x) \geq x$ for many random $b \leq x \leq p_\text{rl}$
-- docs: Does `rm_p` of zero imply no kinetic energy? Add to coding conventions.
-- In nmlfuzz, detect if requires variables have a range of zero but do not have `fuzz = .true.` set.
+- docs: Does `rm_p` of zero imply no kinetic energy? Add to coding conventions if so.
+- In nmlfuzz, detect if required variables have a range of zero but do not have `fuzz = .true.` set.
 - geninput: required variables can't have a default value
 - Increase assertion density.
     - Add efficiency output and add assertions on efficiency bounds.
