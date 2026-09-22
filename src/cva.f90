@@ -2233,6 +2233,8 @@ pure subroutine get_sys_at_x(t_old, dt, i_cv_x_event, x_event, sys_old, sys_new,
         if ((abs(sys_im1%cv(i_cv_x_event)%x%v%v - sys_im2%cv(i_cv_x_event)%x%v%v) < x_tol) &
                 .and. (i >= 2)) then
             ! The `i >= 2` part might be necessary to get a derivative with respect to `x_event`.
+            ! Secant methods may have derivatives that lag behind the primal in convergence; see griewank_derivative_1993.
+            ! TODO: Improve this later when you understand AD better.
             rc = SUCCESS_RC
             call move_alloc(from=sys_im1, to=sys_i)
             exit 

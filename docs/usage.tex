@@ -344,10 +344,20 @@ I figure it would be easier for someone to add vent holes or improve the flow ot
 Some factors planned to be added in the future are discussed in \secref{road-map}.
 
 \section{Known issues}\label{known-issues}
+\iflatexml\else%
+\warningside%
+\fi%
 
 The following issues are known to affect BlasterSim:
 \begin{itemize}
 \item Some known issues related to the input file reading are listed at the end of \secref{inputs-general}.
+\item The accuracy of the sensitivities with respect to \texttt{l\_travel} for both pneumatics and springers and \texttt{vol\_dead} for springers may be reduced as the convergence criteria in the final time step does not consider automatic differentiation.
+This issue is not believed to be of practical significance, but is planned to be fixed in the future.
+\item There may be some slight backwards motion of the projectile initially, on the order of $\mu$m.
+This is caused by the differentiable friction model (see \secref{friction}) not having a perfect match between static friction force and pressure, and is harmless given how small it is.
+\item When the coefficient of restitution (\texttt{cor} in the inputs) is zero, the sensitivity of anything with respect to the coefficient of restitution will also be zero.
+This sensitivity is not physically accurate and is the result of the plunger velocity being set to zero for a coefficient of restitution of zero.
+If a more physically realistic sensitivity is required, try a small value of \texttt{cor} rather than zero.
 \end{itemize}
 
 Additional issues may be available on GitHub: \url{https://github.com/btrettel/blastersim/issues}

@@ -533,6 +533,8 @@
         - dart head decapitation
             - maximum dart pressure difference to prevent dart bursting
             - <https://www.reddit.com/r/Nerf/comments/1vna9ys/decapitated_darts_tips/>: temperature increasing can weaken the glue
+            - <https://discord.com/channels/825852031239061545/825852073382772758/1551779506157789296>
+                - > we dont usuall decap these days from pressure. its usually impact [on the target] now
         - pneumatics might want to use less gas mass per shot
         - spring compression
             - <https://discord.com/channels/727038380054937610/1172390267890958366/1466253503151476877>
@@ -550,6 +552,8 @@
         - draw length that is comfortable
             - <https://discord.com/channels/825852031239061545/825852073382772758/1542382607055065158>
         - Use `p_peak` as a constraint for material safety.
+        - foam shredding
+            - <https://discord.com/channels/825852031239061545/825852073382772758/1551780115007144057>
     - For optimization, have ability to pick discrete values taken from text file.
         - How can UQ be handled with this? Have a second column for uncertainty?
 - Check entropy conservation.
