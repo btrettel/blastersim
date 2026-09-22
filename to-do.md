@@ -1,5 +1,12 @@
 ### v0.3.0
 
+- Switch to TODO.md format for this.
+- Efficiency output
+    - Add more digits to printout?
+    - Make efficiency a function.
+    - Test efficiency function against old values in 2010 pneumatic tests spreadsheet and Radioactive's mega sniper case.
+    - Document efficiency.
+    - Making nmlfuzz have an optimizer and trying to get more than 100% efficiency could find some bugs that would be very valuable to fix.
 - Change `k` units to use mm?
 - Fix derivatives:
     - `d(v_muzzle)/d(t_opening): 0.0000000000000000 (m/s)/(ms)`
@@ -41,8 +48,6 @@
 - In nmlfuzz, detect if required variables have a range of zero but do not have `fuzz = .true.` set.
 - geninput: required variables can't have a default value
 - Increase assertion density.
-    - Add efficiency output and add assertions on efficiency bounds.
-        - Making nmlfuzz have an optimizer and trying to get more than 100% efficiency could find some bugs that would be very valuable to fix.
 - Make testing system that runs BlasterSim input files and only checks the return codes. (Return codes are more specific than exit codes.)
     - Save problems found via fuzz testing to use as regression tests.
     - Turn Radioactive springer cases into tests to make sure that they get the same return codes at the very least.

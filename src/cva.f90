@@ -236,6 +236,8 @@ pure function m_total(cv)
     do k = 1, size(cv%m_k)
         m_total = m_total + cv%m_k(k)
     end do
+    
+    ! I don't have an assertion on `m_total` here as that'll be found by `check_sys`.
 end function m_total
 
 pure function e_s(cv)
@@ -250,6 +252,9 @@ pure function e_s(cv)
     else
         e_s = 0.5_WP*cv%k*square(cv%x - cv%x_min + cv%delta_pre)
     end if
+    
+    call assert(e_s%v%v >= 0.0_WP, "cva (e_s): e_s >= 0 violated for " // trim(cv%label), &
+                    print_real=[e_s%v%v])
 end function e_s
 
 pure function e_k(cv)
@@ -264,6 +269,9 @@ pure function e_k(cv)
     else
         e_k = 0.5_WP*square(cv%x_dot)/cv%rm_p_eff()
     end if
+    
+    call assert(e_k%v%v >= 0.0_WP, "cva (e_k): e_k >= 0 violated for " // trim(cv%label), &
+                    print_real=[e_k%v%v])
 end function e_k
 
 pure function e_total(cv)
@@ -272,6 +280,15 @@ pure function e_total(cv)
     type(si_energy) :: e_total
     
     e_total = cv%e_g + cv%e_f + cv%e_m + cv%e_s() + cv%e_k()
+    
+    if (cv%eos /= CONST_EOS) call assert(cv%e_g%v%v >= 0.0_WP, &
+                    "cva (e_total): e_g >= 0 violated for " // trim(cv%label), print_real=[cv%e_g%v%v])
+    ! TODO: This `e_f` assertion is sometimes violated and I'm not quite sure why.
+    ! I think it's possibly due to the differentiable friction model not respecting the signs correctly.
+!    call assert(cv%e_f%v%v >= 0.0_WP, "cva (e_total): e_f >= 0 violated for " // trim(cv%label), &
+!                    print_real=[cv%e_f%v%v])
+    call assert(cv%e_m%v%v >= 0.0_WP, "cva (e_total): e_m >= 0 violated for " // trim(cv%label), &
+                    print_real=[cv%e_m%v%v])
 end function e_total
 
 !tripwire$ begin F87ADB50 Update `\secref{equations-of-state}` of theory.tex if necessary.
@@ -419,6 +436,9 @@ pure function y(cv)
     integer        :: k
     type(si_mass)  :: m_total
     type(unitless) :: y_sum
+    
+    ! This won't necessarily work on `CONST_EOS` as `m_total` could be zero there.
+    call assert(cv%eos /= CONST_EOS, "cva (y): CONST_EOS can't be used here, use y_const")
     
     call y_sum%v%init_const(0.0_WP, size(cv%m_k(1)%v%d))
     m_total = cv%m_total()
