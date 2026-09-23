@@ -80,7 +80,7 @@ call run(config, sys_start, sys_end, status)
 
 call post_run_checks(sys_start, sys_end, rc)
 
-!tripwire$ begin 724E768C Update `if (rc_read /= 0) then` sections of io.f90 to account for different total `sum_g` here.
+!tripwire$ begin 216FEB39 Update `if (rc_read /= 0) then` sections of io.f90 to account for different total `sum_g` here.
 ! `sum_g` there needs to strictly be higher than `sum_g` here to encourage going through input validation.
 if (FUZZ) then
     ! Write out data used in feedback-based fuzzing.
@@ -99,6 +99,8 @@ if (FUZZ) then
     if (status%rc < SUCCESS_RC) then
         ! If successful, no constraints are violated.
         sum_g = 0.0_WP
+        
+        ! TODO: incentivize `eta` going near 0 or 1
     else
         ! If not successful, set a constraint to incentivize the projectile leaving the barrel.
         ! With purely random testing, the vast majority of cases do not leave the barrel.

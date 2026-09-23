@@ -17,7 +17,7 @@ contains
 subroutine get_input_file_name_from_cli(prog, input_file_name, extra)
     use, intrinsic :: iso_fortran_env, only: compiler_options, compiler_version, error_unit
     use prec, only: CL
-    use build, only: DEBUG
+    use build, only: DEBUG, FUZZ
     use rev, only: TAG, REVISION_DATE, MODIFIED
     use checks, only: assert
     use stopcodes, only: EX_OK, EX_NOINPUT
@@ -50,9 +50,17 @@ subroutine get_input_file_name_from_cli(prog, input_file_name, extra)
         write(unit=*, fmt="(a)") "Version: " // TAG // " (" // REVISION_DATE // trim(modified_string) // ")"
         
         if (DEBUG) then
-            write(unit=*, fmt="(a)") "Build: debug"
+            if (FUZZ) then
+                write(unit=*, fmt="(a)") "Build: debug+fuzz"
+            else
+                write(unit=*, fmt="(a)") "Build: debug"
+            end if
         else
-            write(unit=*, fmt="(a)") "Build: release"
+            if (FUZZ) then
+                write(unit=*, fmt="(a)") "Build: release+fuzz"
+            else
+                write(unit=*, fmt="(a)") "Build: release"
+            end if
         end if
         
         write(unit=*, fmt="(a, a)") "Compiler: ", compiler_version()

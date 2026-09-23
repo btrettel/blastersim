@@ -22,10 +22,12 @@ public :: init_pop, mutate_indiv, cross_two_indivs, select_indiv, evaluate, opti
 public :: constraint_lt, constraint_gt
 public :: standard_ga_config
 
+character(len=*), public, parameter :: STOP_NOW_FILE = "stop_now"
+
 integer, parameter          :: MAX_SAMPLES = 10000
 character(len=*), parameter :: GENER_FMT = "(i8)"
 
-type, public :: ga_config
+type, public :: ga_config_type
     integer :: n_genes = 0 ! number of genes (default set to zero to catch when not set)
     
     ! martins_engineering_2021 p. 309:
@@ -59,7 +61,7 @@ type, public :: ga_config
     
     logical          :: progress = .true., check_sum_g = .true.
     character(len=8) :: f_fmt = "f12.2"
-end type ga_config
+end type ga_config_type
 
 type, public :: indiv_type
     real(WP), allocatable :: chromo(:)
@@ -78,6 +80,10 @@ type, public :: pop_type
     type(indiv_type), allocatable :: indivs(:)
     
     type(indiv_type) :: best_pop_indiv, best_ever_indiv
+contains
+    procedure :: percent_feasible
+    procedure :: range => f_range
+    procedure :: mean
 end type pop_type
 
 contains
@@ -86,9 +92,9 @@ subroutine init_pop(config, rng, pop)
     use purerng, only: rng_type
     use checks, only: assert
     
-    type(ga_config), intent(in)    :: config
-    type(rng_type), intent(in out) :: rng
-    type(pop_type), intent(out)    :: pop
+    type(ga_config_type), intent(in) :: config
+    type(rng_type), intent(in out)   :: rng
+    type(pop_type), intent(out)      :: pop
     
     integer :: i_pop, i_gene
     
@@ -128,7 +134,7 @@ pure subroutine mutate_indiv(config, rng, indiv)
     use purerng, only: rng_type
     use checks, only: assert
     
-    type(ga_config), intent(in)      :: config
+    type(ga_config_type), intent(in) :: config
     type(rng_type), intent(in out)   :: rng
     type(indiv_type), intent(in out) :: indiv
     
@@ -177,7 +183,7 @@ pure subroutine cross_two_indivs(config, rng, indiv_1, indiv_2)
     use purerng, only: rng_type
     use checks, only: assert, assert_dimension
     
-    type(ga_config), intent(in)      :: config
+    type(ga_config_type), intent(in) :: config
     type(rng_type), intent(in out)   :: rng
     type(indiv_type), intent(in out) :: indiv_1, indiv_2
     
@@ -214,10 +220,10 @@ pure subroutine select_indiv(config, rng, pop, indiv)
     use purerng, only: rng_type
     use checks, only: assert, assert_dimension
     
-    type(ga_config), intent(in)    :: config
-    type(rng_type), intent(in out) :: rng
-    type(pop_type), intent(in out) :: pop
-    type(indiv_type), intent(out)  :: indiv
+    type(ga_config_type), intent(in) :: config
+    type(rng_type), intent(in out)   :: rng
+    type(pop_type), intent(in out)   :: pop
+    type(indiv_type), intent(out)    :: indiv
     
     integer :: nu, i_pop
     
@@ -238,18 +244,19 @@ pure subroutine select_indiv(config, rng, pop, indiv)
 end subroutine select_indiv
 
 subroutine evaluate(config, objfun, pop)
+    !$ use omp_lib
     use prec, only: WP
     use checks, only: assert, is_close
     
-    type(ga_config), intent(in)    :: config
-    type(pop_type), intent(in out) :: pop
+    type(ga_config_type), intent(in) :: config
+    type(pop_type), intent(in out)   :: pop
     
     integer  :: i_pop
-    real(WP) :: f_max
+    real(WP) :: f_max, f_scale
     logical  :: best_pop_indiv_set
     
     interface
-        pure subroutine objfun(chromo, f, sum_g)
+        subroutine objfun(chromo, f, sum_g)
             use prec, only: WP
             
             ! Passing in all `real`s means that the objective function does not need any of this module's derived types.
@@ -262,7 +269,9 @@ subroutine evaluate(config, objfun, pop)
     call assert(config%n_pop == size(pop%indivs), "ga (evaluate): config%n_pop == size(pop%indivs) violated")
     call assert(pop%best_ever_indiv%set, "ga (evaluate): pop%best_ever_indiv%set violated")
     
-    do concurrent (i_pop = 1:config%n_pop)
+    !$omp parallel
+    !$omp do
+    do i_pop = 1, config%n_pop
         if (.not. pop%indivs(i_pop)%set) then
             call objfun(pop%indivs(i_pop)%chromo, pop%indivs(i_pop)%f, pop%indivs(i_pop)%sum_g)
         end if
@@ -272,13 +281,15 @@ subroutine evaluate(config, objfun, pop)
         ! If `sum_g` is much less than `f_max`, then underflow could occur.
         ! This prevents the constraint violation from providing a gradient to guide the population to a feasible area.
         ! Consequently, `sum_g` should be scaled to be order 1.
-        ! Later when calculating `f`, `sum_g` will be multiplied by `abs(f_max)` to avoid underflow.
+        ! Later when calculating `f`, `sum_g` will be multiplied by `abs(f_max)` to avoid underflow (unless `f_max` is zero).
         ! `constraint_lt` and `constraint_gt` are set up to encourage this scaling.
         if (config%check_sum_g) then
             call assert(pop%indivs(i_pop)%sum_g <= 10.0_WP, "ga (evaluate): sum_g must be order 1" // &
                                                                 " (disable check with config%check_sum_g=.false.)")
         end if
     end do
+    !$omp end do
+    !$omp end parallel
     
     f_max                = -huge(1.0_WP)
     pop%best_pop_indiv%f = huge(1.0_WP)
@@ -297,6 +308,7 @@ subroutine evaluate(config, objfun, pop)
     
     ! deb_efficient_2000 p. 317: > If no feasible solution exists in a population, $f_max$ is set to zero.
     ! I don't like this as `f` could normally be above 0.
+    ! Then the `best_ever_indiv` could be wrong.
     ! I decided to stop with an error by default in this situation.
     if (.not. best_pop_indiv_set) then
         if (config%stop_if_all_unfeasible) then
@@ -307,6 +319,12 @@ subroutine evaluate(config, objfun, pop)
         end if
     end if
     
+    if (is_close(f_max, 0.0_WP)) then
+        f_scale = 1.0_WP
+    else
+        f_scale = abs(f_max)
+    end if
+    
     ! set `f` for indivs that had constraint violations
     ! See deb_efficient_2000 eq. 4.
     do concurrent (i_pop = 1:config%n_pop)
@@ -314,12 +332,18 @@ subroutine evaluate(config, objfun, pop)
             ! Infeasible individuals have their fitness recalculated based on the current population.
             ! This is regardless of whether they were `set` before `evaluate` was called.
             ! This avoid issues from the fitness depending on the population.
-            pop%indivs(i_pop)%f   = f_max + pop%indivs(i_pop)%sum_g*abs(f_max)
+            pop%indivs(i_pop)%f   = f_max + pop%indivs(i_pop)%sum_g*f_scale
             pop%indivs(i_pop)%set = .true.
+            
+            if (pop%best_pop_indiv%f > pop%indivs(i_pop)%f) then
+                pop%best_pop_indiv = pop%indivs(i_pop)
+                best_pop_indiv_set = .true.
+            end if
         end if
     end do
     
     ! set best ever individual
+    call assert(best_pop_indiv_set, "ga (evaluate): best individual not set")
     if (pop%best_ever_indiv%f > pop%best_pop_indiv%f) then
         pop%best_ever_indiv = pop%best_pop_indiv
     end if
@@ -331,17 +355,18 @@ subroutine optimize_ga(config, rng, objfun, pop, rc)
     use purerng, only: rng_type
     use checks, only: assert
     
-    type(ga_config), intent(in)    :: config
-    type(rng_type), intent(in out) :: rng
-    type(pop_type), intent(in out) :: pop
-    integer, intent(out)           :: rc ! TODO: return codes
+    type(ga_config_type), intent(in) :: config
+    type(rng_type), intent(in out)   :: rng
+    type(pop_type), intent(in out)   :: pop
+    integer, intent(out)             :: rc ! TODO: return codes
     
-    integer :: i_gener, i_pop
+    integer  :: i_gener, i_pop, out_unit
+    logical  :: stop_now_detected
     
     type(pop_type) :: next_pop
     
     interface
-        pure subroutine objfun(chromo, f, sum_g)
+        subroutine objfun(chromo, f, sum_g)
             use prec, only: WP
             
             ! Passing in all `real`s means that the objective function does not need any of this module's derived types.
@@ -364,12 +389,16 @@ subroutine optimize_ga(config, rng, objfun, pop, rc)
     next_pop%best_pop_indiv%set = .false.
     
     if (config%progress) then
-        write(unit=*, fmt="(a)") "   gener    pop best   best ever"
+        write(unit=*, fmt="(a)") "   gener    pop best   best ever  % feasible        mean       range"
         write(unit=*, fmt=GENER_FMT, advance="no") 0
     end if
     call evaluate(config, objfun, pop)
     if (config%progress) then
-        write(unit=*, fmt="(2" // trim(config%f_fmt) // ")") pop%best_pop_indiv%f, pop%best_ever_indiv%f
+        write(unit=*, fmt="(5" // trim(config%f_fmt) // ")") pop%best_pop_indiv%f, &
+                                                                pop%best_ever_indiv%f, &
+                                                                pop%percent_feasible(), &
+                                                                pop%mean(), &
+                                                                pop%range()
     end if
     
     rc = 0
@@ -392,10 +421,81 @@ subroutine optimize_ga(config, rng, objfun, pop, rc)
         end if
         call evaluate(config, objfun, pop)
         if (config%progress) then
-            write(unit=*, fmt="(2" // trim(config%f_fmt) // ")") pop%best_pop_indiv%f, pop%best_ever_indiv%f
+            write(unit=*, fmt="(5" // trim(config%f_fmt) // ")") pop%best_pop_indiv%f, &
+                                                                    pop%best_ever_indiv%f, &
+                                                                    pop%percent_feasible(), &
+                                                                    pop%mean(), &
+                                                                    pop%range()
+        end if
+        
+        ! detect `stop_now` file and quit if found
+        inquire(file=STOP_NOW_FILE, exist=stop_now_detected)
+        if (stop_now_detected) then
+            open(newunit=out_unit, status="old", file=STOP_NOW_FILE)
+            close(unit=out_unit, status="delete")
+            write(unit=*, fmt="(2a)") STOP_NOW_FILE, " detected, terminating."
+            exit
         end if
     end do
 end subroutine optimize_ga
+
+pure function percent_feasible(pop)
+    use checks, only: is_close, assert
+    
+    class(pop_type), intent(in) :: pop
+    
+    real(WP) :: percent_feasible
+    
+    integer :: i_pop, n_feasible
+    
+    n_feasible = 0
+    do i_pop = 1, size(pop%indivs)
+        call assert(pop%indivs(i_pop)%set, "ga (percent_feasible): not set?")
+        if (is_close(pop%indivs(i_pop)%sum_g, 0.0_WP)) n_feasible = n_feasible + 1
+    end do
+    percent_feasible = 100.0_WP*real(n_feasible, WP)/real(size(pop%indivs), WP)
+    
+    call assert(percent_feasible >= 0.0_WP, "ga (percent_feasible): percent_feasible >= 0 violated")
+end function percent_feasible
+
+pure function f_range(pop)
+    use checks, only: assert
+    
+    class(pop_type), intent(in) :: pop
+    
+    real(WP) :: f_range
+    
+    integer  :: i_pop
+    real(WP) :: f_lower, f_upper
+    
+    f_lower = huge(1.0_WP)
+    f_upper = -huge(1.0_WP)
+    do i_pop = 1, size(pop%indivs)
+        call assert(pop%indivs(i_pop)%set, "ga (f_range): not set?")
+        f_lower = min(f_lower, pop%indivs(i_pop)%f)
+        f_upper = max(f_upper, pop%indivs(i_pop)%f)
+    end do
+    f_range = f_upper - f_lower
+    
+    call assert(f_range >= 0.0_WP, "ga (f_range): f_range >= 0 violated")
+end function f_range
+
+pure function mean(pop)
+    use checks, only: assert
+    
+    class(pop_type), intent(in) :: pop
+    
+    real(WP) :: mean
+    
+    integer :: i_pop
+    
+    mean = 0.0_WP
+    do i_pop = 1, size(pop%indivs)
+        call assert(pop%indivs(i_pop)%set, "ga (mean): not set?")
+        mean = mean + pop%indivs(i_pop)%f
+    end do
+    mean = mean/real(size(pop%indivs), WP)
+end function mean
 
 pure subroutine constraint_lt(x, y, delta_scale, sum_g)
     use checks, only: assert
@@ -430,8 +530,8 @@ pure subroutine constraint_gt(x, y, delta_scale, sum_g)
 end subroutine constraint_gt
 
 pure subroutine standard_ga_config(n_genes, config)
-    integer, intent(in)          :: n_genes
-    type(ga_config), intent(out) :: config
+    integer, intent(in)               :: n_genes
+    type(ga_config_type), intent(out) :: config
     
     config%n_genes = n_genes
     

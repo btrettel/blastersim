@@ -1,12 +1,17 @@
 ### v0.3.0
 
-- Switch to TODO.md format for this.
 - Efficiency output
-    - Add more digits to printout?
-    - Make efficiency a function.
+    - Make .csv file into -trace.csv file.
+    - Make efficiency a function in io.f90.
+    - Write primals, derivatives, and eventually standard deviations to -uq.csv file. One column for primal, one column for stdev, one column each per derivative.
+        - `v_muzzle`
+        - `eta`
+        - `p_peak` (for each CV, excluding constant pressure CVs)
+        - Make subroutine in io.f90.
     - Test efficiency function against old values in 2010 pneumatic tests spreadsheet and Radioactive's mega sniper case.
-    - Document efficiency.
-    - Making nmlfuzz have an optimizer and trying to get more than 100% efficiency could find some bugs that would be very valuable to fix.
+    - Document efficiency in each usage section.
+    - Incentivize nmlfuzz to get more than 100% efficiency could find some bugs that would be very valuable to fix.
+- Switch to TODO.md format for this.
 - Change `k` units to use mm?
 - Fix derivatives:
     - `d(v_muzzle)/d(t_opening): 0.0000000000000000 (m/s)/(ms)`
@@ -22,7 +27,6 @@
 - Put code coverage numbers in docs: line and branch coverage
 - Test `p_peak`.
 - Make test for ga.f90 showing that if all of the initial population are infeasible, ga.f90 navigates the population towards a feasible area.
-- Update ga.f90 in BlasterSim repository.
 - Add icon to Windows version of BlasterSim.
     - <https://learn.microsoft.com/en-us/windows/apps/design/iconography/app-icon-construction>
         - > Apps should have, at the bare minimum: 16x16, 24x24, 32x32, 48x48, and 256x256.
