@@ -1,5 +1,6 @@
 ### v0.3.0
 
+- Make ga.f90 print time to run generation.
 - Efficiency output
     - Test efficiency function against old values in 2010 pneumatic tests spreadsheet and Radioactive's mega sniper case.
     - Document efficiency in theory subsection.

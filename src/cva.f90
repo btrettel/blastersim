@@ -2004,8 +2004,11 @@ pure subroutine check_sys(config, sys, sys_start, t, status)
         end if
         
         ! Check whether the plunger is at `x_min`, which requires special treatment to get the `l_travel` derivative right.
+        ! The last condition checks whether the plunger was made immobile.
+        ! TODO: Assert that immobile plungers have zero velocity at some point.
         if ((is_close(sys%cv(i_cv)%x%v%v, sys%cv(i_cv)%x_min%v%v)) &
-                .and. (sys%cv(i_cv)%eos /= CONST_EOS)) then
+                .and. (sys%cv(i_cv)%eos /= CONST_EOS) &
+                .and. (.not. is_close(sys%cv(i_cv)%rm_p%v%v, 0.0_WP))) then
             status%rc = X_EQ_X_MIN_RUN_RC
             allocate(status%i_cv(1))
             status%i_cv(1) = i_cv
