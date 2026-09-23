@@ -16,6 +16,9 @@ integer, parameter, public :: I_BARREL     = 1
 integer, parameter, public :: I_SOURCE     = 2
 integer, parameter, public :: I_BARREL_ATM = 3
 
+integer, parameter, public :: PNEUMATIC_MODE = 1
+integer, parameter, public :: SPRINGER_MODE  = 2
+
 public :: write_latex_engineering
 public :: create_barrel
 public :: read_springer_namelist, read_pneumatic_namelist
@@ -318,5 +321,40 @@ subroutine read_springer_namelist(input_file, sys, config, rc_read, actual_v_muz
     if (present(actual_v_muzzle_n_))     actual_v_muzzle_n_     = actual_v_muzzle_n
     if (present(actual_rc_))             actual_rc_             = actual_rc
 end subroutine read_springer_namelist
+
+pure subroutine calculate_eta(sys_start, sys_end, mode, eta)
+    use, intrinsic :: iso_fortran_env, only: ERROR_UNIT
+    use cva, only: cv_system_type
+    
+    type(cv_system_type), allocatable, intent(in) :: sys_start, sys_end
+    integer, intent(in)                           :: mode
+    type(unitless), intent(out)                   :: eta
+    
+    type(si_energy) :: input_energy, muzzle_energy
+    type(unitless)  :: p_0s
+    type(unitless), allocatable :: y(:)
+    
+    select case (mode)
+        case (PNEUMATIC_MODE)
+            y    = sys_start%cv(I_BARREL_ATM)%y_const
+            p_0s = sys_start%cv(I_SOURCE)%p() / sys_start%cv(I_BARREL_ATM)%p_const
+            input_energy = (sys_start%cv(I_BARREL_ATM)%p_const * sys_start%cv(I_SOURCE)%vol() &
+                                / (sys_start%cv(I_SOURCE)%gamma(y) - 1.0_WP)) &
+                                    * (p_0s - p_0s**(1.0_WP/sys_start%cv(I_SOURCE)%gamma(y)))
+        case (SPRINGER_MODE)
+            input_energy = 0.5_WP*sys_start%cv(I_SOURCE)%k &
+                                    *(square(sys_start%cv(I_SOURCE)%x - sys_start%cv(I_SOURCE)%x_min &
+                                                + sys_start%cv(I_SOURCE)%delta_pre) &
+                                            - square(sys_start%cv(I_SOURCE)%delta_pre))
+        case default
+            error stop "cva (calculate_eta): invalid mode"
+    end select
+    
+    muzzle_energy = sys_end%cv(I_BARREL)%e_k()
+    eta = muzzle_energy / input_energy
+    
+    call assert(eta%v%v >= 0.0_WP, "blastersim: eta >= 0 violated")
+    call assert(eta%v%v <= 1.0_WP, "blastersim: eta <= 1 violated")
+end subroutine calculate_eta
 
 end module io

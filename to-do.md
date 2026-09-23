@@ -1,16 +1,15 @@
 ### v0.3.0
 
 - Efficiency output
+    - Test efficiency function against old values in 2010 pneumatic tests spreadsheet and Radioactive's mega sniper case.
+    - Document efficiency in theory subsection.
+- Maybe: Two different CSV files for output.
     - Make .csv file into -trace.csv file.
-    - Make efficiency a function in io.f90.
     - Write primals, derivatives, and eventually standard deviations to -uq.csv file. One column for primal, one column for stdev, one column each per derivative.
         - `v_muzzle`
         - `eta`
         - `p_peak` (for each CV, excluding constant pressure CVs)
         - Make subroutine in io.f90.
-    - Test efficiency function against old values in 2010 pneumatic tests spreadsheet and Radioactive's mega sniper case.
-    - Document efficiency in each usage section.
-    - Incentivize nmlfuzz to get more than 100% efficiency could find some bugs that would be very valuable to fix.
 - Switch to TODO.md format for this.
 - Change `k` units to use mm?
 - Fix derivatives:
@@ -75,6 +74,7 @@
     - $b$ regression in Beater book
     - spring $G$ for various materials
     - KED data
+    - Ask Radioactive if you can link to his spreadsheets.
 - pre-commit hook
 - Add preface section describing side icons
 - Add optional icon to some sections like Roache V&V book. Mark equations in usage section as optional.

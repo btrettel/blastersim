@@ -426,6 +426,23 @@ The difference with the force is that it might be possible for the force to be o
 Making the plunger immobile prevents that real motion, but is a reasonable approximation for springers.
 It would not be a reasonable approximation when simulating the full cycle of a HPA blaster using an air cylinder.
 
+\subsection{Energy efficiency}\label{energy-efficiency}
+
+The energy efficiency of the interior ballistic process is defined as the fraction of the input energy that is converted into projectile kinetic energy at the muzzle:
+\begin{equation}
+   \eta = \frac{E_\text{muzzle}}{E_\text{input}},
+\end{equation}
+where
+$E_\text{muzzle} = \frac{1}{2} m_\text{proj} V_\text{muzzle}^2$ is the muzzle kinetic energy,
+$E_\text{input}$ is the input energy (to be defined mathematically), 
+$m_\text{proj}$ is the projectile mass, and
+$V_\text{muzzle}$ is the muzzle velocity.
+
+Here, I focus on the efficiency of the interior ballistic process.
+Energy losses due to heat transfer before the trigger is pulled, hysteresis, pump friction in pneumatics, etc., are neglected.
+
+% TODO
+
 %\section{Exterior ballistics}\label{exterior-ballistics}
 % TODO later
 

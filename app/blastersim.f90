@@ -10,7 +10,9 @@ program blastersim
 use, intrinsic :: iso_fortran_env, only: IOSTAT_END, ERROR_UNIT, OUTPUT_UNIT
 use prec, only: CL, WP
 use cli, only: get_input_file_name_from_cli
-use io, only: I_BARREL, I_SOURCE, I_BARREL_ATM, read_pneumatic_namelist, read_springer_namelist
+use io, only: I_BARREL, I_BARREL_ATM, &
+                PNEUMATIC_MODE, SPRINGER_MODE, &
+                read_pneumatic_namelist, read_springer_namelist, calculate_eta
 use cva, only: run_config_type, cv_system_type, run_status_type, T_STOP_DEFAULT, run, MAX_ITERS_TIME_LOOP, &
                     SUCCESS_RC, TIMEOUT_RUN_RC, NEGATIVE_CV_M_TOTAL_RUN_RC, NEGATIVE_CV_TEMP_RUN_RC, &
                     MASS_TOLERANCE_RUN_RC, ENERGY_TOLERANCE_RUN_RC, MASS_DERIV_TOLERANCE_RUN_RC, &
@@ -24,20 +26,15 @@ use build, only: FUZZ
 use units
 implicit none
 
-integer, parameter :: PNEUMATIC_MODE = 1
-integer, parameter :: SPRINGER_MODE  = 2
-
-character(len=CL)                 :: input_file, extra, modified_string
-type(run_config_type)             :: config
+character(len=CL)     :: input_file, extra, modified_string
+type(run_config_type) :: config
+integer               :: rc, mode, out_unit, i_d, len_d_labels
+type(run_status_type) :: status
+type(si_length)       :: l_end, l_travel
+real(WP)              :: f, sum_g
+character(len=2)      :: fmt_part
+type(unitless)        :: eta
 type(cv_system_type), allocatable :: sys_start, sys_end
-integer                           :: rc, mode, out_unit, i_d, len_d_labels
-type(run_status_type)             :: status
-type(si_length)                   :: l_end, l_travel
-real(WP)                          :: f, sum_g
-character(len=2)                  :: fmt_part
-type(si_energy)                   :: input_energy, muzzle_energy
-type(unitless), allocatable       :: y(:)
-type(unitless)                    :: p_0s, eta
 
 extra = "<http://trettel.us/blastersim/>" // new_line("a") // "Written by Ben Trettel."
 
@@ -80,7 +77,9 @@ call run(config, sys_start, sys_end, status)
 
 call post_run_checks(sys_start, sys_end, rc)
 
-!tripwire$ begin 216FEB39 Update `if (rc_read /= 0) then` sections of io.f90 to account for different total `sum_g` here.
+call calculate_eta(sys_start, sys_end, mode, eta)
+
+!tripwire$ begin B7115CD8 Update `if (rc_read /= 0) then` sections of io.f90 to account for different total `sum_g` here.
 ! `sum_g` there needs to strictly be higher than `sum_g` here to encourage going through input validation.
 if (FUZZ) then
     ! Write out data used in feedback-based fuzzing.
@@ -88,6 +87,9 @@ if (FUZZ) then
     ! More time steps indicates more opportunities for things to go wrong, so incentivize that.
     ! Scale it so that it's not huge.
     f = -real(status%i, WP)/real(MAX_ITERS_TIME_LOOP, WP)
+    
+    ! Incentivize impossible efficiencies (`eta < 0` and `eta > 1`).
+    f = f - 4.0_WP*(eta%v%v - 0.5_WP)**2
     
     if (allocated(status%data)) then
         call assert(sum(status%data) >= 0.0_WP, &
@@ -133,7 +135,7 @@ if (FUZZ) then
 end if
 !tripwire$ end
 
-!tripwire$ begin 4F857B96 Update `\secref{return-codes}` of usage.tex.
+!tripwire$ begin DBA7F79F Update `\secref{return-codes}` of usage.tex.
 if (status%rc < SUCCESS_RC) then
     len_d_labels = 0
     do i_d = 1, size(sys_end%cv(I_BARREL)%x_dot%v%d)
@@ -157,26 +159,6 @@ if (status%rc < SUCCESS_RC) then
                     sys_end%cv(I_BARREL)%x_dot%v%d(i_d), " (m/s)/(", trim(config%d_units(i_d)), ")"
     end do
     
-    select case (mode)
-        case (PNEUMATIC_MODE)
-            y    = sys_start%cv(I_BARREL_ATM)%y_const
-            p_0s = sys_start%cv(I_SOURCE)%p() / sys_start%cv(I_BARREL_ATM)%p_const
-            input_energy = (sys_start%cv(I_BARREL_ATM)%p_const * sys_start%cv(I_SOURCE)%vol() &
-                                / (sys_start%cv(I_SOURCE)%gamma(y) - 1.0_WP)) &
-                                    * (p_0s - p_0s**(1.0_WP/sys_start%cv(I_SOURCE)%gamma(y)))
-        case (SPRINGER_MODE)
-            input_energy = 0.5_WP*sys_start%cv(I_SOURCE)%k &
-                                    *(square(sys_start%cv(I_SOURCE)%x - sys_start%cv(I_SOURCE)%x_min &
-                                                + sys_start%cv(I_SOURCE)%delta_pre) &
-                                            - square(sys_start%cv(I_SOURCE)%delta_pre))
-        case default
-            write(unit=ERROR_UNIT, fmt="(a, i0)") "Invalid mode: ", mode
-            stop EX_SOFTWARE, quiet=.true.
-    end select
-    
-    muzzle_energy = sys_end%cv(I_BARREL)%e_k()
-    eta = muzzle_energy / input_energy
-    
     write(unit=OUTPUT_UNIT, fmt="(a" // trim(fmt_part) // ", f9.3, a)") "eta:", 100.0_WP*eta%v%v, " %"
     do i_d = 1, size(eta%v%d)
         ! I tried using unicode partial derivative symbols, but LaTeX returned an error.
@@ -184,9 +166,6 @@ if (status%rc < SUCCESS_RC) then
                     "d(eta)/d(" // trim(config%d_labels(i_d)) // "):", &
                     100.0_WP*eta%v%d(i_d), " (%)/(", trim(config%d_units(i_d)), ")"
     end do
-    
-    call assert(eta%v%v >= 0.0_WP, "blastersim: eta >= 0 violated")
-    call assert(eta%v%v <= 1.0_WP, "blastersim: eta <= 1 violated")
     
     stop EX_OK, quiet=.true.
 else
