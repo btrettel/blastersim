@@ -1894,6 +1894,11 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
                 ! I want something where it's highly unlikely that two time steps of this size in a row will end up here again.
                 ! That might cause an infinite loop.
                 
+                call assert((status%rc == X_EQ_X_STOP_RUN_RC) .and. (prev_rc /= X_EQ_X_STOP_RUN_RC), &
+                                    "cva (run): repeated X_EQ_X_STOP_RUN_RC")
+                call assert((status%rc == X_EQ_X_MIN_RUN_RC) .and. (prev_rc /= X_EQ_X_MIN_RUN_RC), &
+                                    "cva (run): repeated X_EQ_X_MIN_RUN_RC")
+                
                 t       = t_old
                 dt      = 0.9_WP*dt
                 sys_new = sys_old
@@ -1950,7 +1955,7 @@ subroutine run(config, sys_start, sys_end, status, stop_at_first_event)
     status%i = i
 end subroutine run
 
-!tripwire$ begin 28486845 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
+!tripwire$ begin F94B3733 Update `\secref{run-time-checks}` and `actual_rc` in geninput_*.nml.
 pure subroutine check_sys(config, sys, sys_start, t, status)
     type(run_config_type), intent(in)             :: config
     type(cv_system_type), allocatable, intent(in) :: sys, sys_start
