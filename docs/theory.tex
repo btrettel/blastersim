@@ -433,13 +433,29 @@ The energy efficiency of the interior ballistic process is defined as the fracti
    \eta = \frac{E_\text{muzzle}}{E_\text{input}},
 \end{equation}
 where
-$E_\text{muzzle} = \frac{1}{2} m_\text{proj} V_\text{muzzle}^2$ is the muzzle kinetic energy,
+$E_\text{muzzle} = \frac{1}{2} m_\text{proj} v_\text{muzzle}^2$ is the muzzle kinetic energy,
 $E_\text{input}$ is the input energy (to be defined mathematically), 
 $m_\text{proj}$ is the projectile mass, and
-$V_\text{muzzle}$ is the muzzle velocity.
+$v_\text{muzzle}$ is the muzzle velocity.
 
 Here, I focus on the efficiency of the interior ballistic process.
 Energy losses due to heat transfer before the trigger is pulled, hysteresis, pump friction in pneumatics, etc., are neglected.
+
+For pneumatics, work \textit{into} the pressure chamber (the input energy) can be derived starting from~\citep[eq.~3.54, p.~129]{moran_fundamentals_2008}:
+\begin{equation}
+    E_\text{input} = -\int_{V_1}^{V_2} p \dd{V} = \frac{p_2 V_2 - p_1 V_1}{\gamma - 1},
+\end{equation}
+where
+$p_2 = p_\text{chamber}$ is the chamber pressure (in absolute units),
+$V_2 = V_\text{chamber}$ is the chamber volume,
+$p_1 = p_\text{atm}$ is atmospheric pressure (in absolute units), and
+$V_1$ is the initial volume of the gas, to be found later.
+The negative sign is chosen because this is work into the pressure chamber, so $E_\text{input}$ must be positive during the charging process.
+
+Then, noting that the adiabatic process relationship for an ideal gas with constant $\gamma$ implies $p_\text{chamber} V_\text{chamber}^\gamma = p_\text{atm} V_1^\gamma$, $V_1$ can be found and substituted, returning the input energy for pneumatics:
+\begin{equation}
+    E_\text{input} = \frac{p_\text{atm} V_\text{chamber}}{\gamma - 1} \left[\frac{p_\text{chamber}}{p_\text{atm}} - {\left(\frac{p_\text{chamber}}{p_\text{atm}}\right)}^{1/\gamma}\right].
+\end{equation}
 
 % TODO
 

@@ -1,5 +1,6 @@
 ### v0.3.0
 
+- Make old ballistics PDF file redirect to BlasterSim.
 - Make ga.f90 print time to run generation.
 - Efficiency output
     - Test efficiency function against old values in 2010 pneumatic tests spreadsheet and Radioactive's mega sniper case.
@@ -12,7 +13,7 @@
         - `p_peak` (for each CV, excluding constant pressure CVs)
         - Make subroutine in io.f90.
 - Switch to TODO.md format for this.
-- Change `k` units to use mm?
+- Change `k` units to be N/mm.
 - Fix derivatives:
     - `d(v_muzzle)/d(t_opening): 0.0000000000000000 (m/s)/(ms)`
 - Check literature for more validation data for BlasterSim.

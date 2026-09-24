@@ -5,6 +5,8 @@ UserWarn
     e\_spring # deprecated variable name, replace with e\_s
     m\_p\_ke # deprecated variable name, replace with e\_p
     ** # indicates a Fortran format problem
+    "\dd " # use `\dd{x}` instead of `\dd x` according to physics package documentation
+    "V_\text{muzzle}" # use `v_\text{muzzle}`
 }
 [ # case insensitive
     piston # write plunger
