@@ -1,5 +1,7 @@
 ### v0.3.0
 
+- `cv_system_type` type-bound procedure consistency improvements
+    - Make `cv%gamma` take `y` as an `optional` argument so that it can be used more simply.
 - Make old ballistics PDF file redirect to BlasterSim.
 - Make ga.f90 print time to run generation.
 - Efficiency output

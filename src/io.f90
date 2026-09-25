@@ -336,7 +336,7 @@ pure subroutine calculate_eta(sys_start, sys_end, mode, eta)
     
     select case (mode)
         case (PNEUMATIC_MODE)
-            y    = sys_start%cv(I_BARREL_ATM)%y_const
+            y    = sys_start%cv(I_SOURCE)%y()
             p_0s = sys_start%cv(I_SOURCE)%p() / sys_start%cv(I_BARREL_ATM)%p_const
             input_energy = (sys_start%cv(I_BARREL_ATM)%p_const * sys_start%cv(I_SOURCE)%vol() &
                                 / (sys_start%cv(I_SOURCE)%gamma(y) - 1.0_WP)) &

@@ -441,7 +441,7 @@ $v_\text{muzzle}$ is the muzzle velocity.
 Here, I focus on the efficiency of the interior ballistic process.
 Energy losses due to heat transfer before the trigger is pulled, hysteresis, pump friction in pneumatics, etc., are neglected.
 
-For pneumatics, work \textit{into} the pressure chamber (the input energy) can be derived starting from~\citep[eq.~3.54, p.~129]{moran_fundamentals_2008}:
+For pneumatics, work \textit{into} the pressure chamber (the input energy) can be derived starting from a result for adiabatic processes of an ideal gas with constant $\gamma$~\citep[eq.~3.54, p.~129]{moran_fundamentals_2008}:
 \begin{equation}
     E_\text{input} = -\int_{V_1}^{V_2} p \dd{V} = \frac{p_2 V_2 - p_1 V_1}{\gamma - 1},
 \end{equation}
@@ -457,7 +457,10 @@ Then, noting that the adiabatic process relationship for an ideal gas with const
     E_\text{input} = \frac{p_\text{atm} V_\text{chamber}}{\gamma - 1} \left[\frac{p_\text{chamber}}{p_\text{atm}} - {\left(\frac{p_\text{chamber}}{p_\text{atm}}\right)}^{1/\gamma}\right].
 \end{equation}
 
-% TODO
+For springers, the input energy is simply the spring potential energy at full draw minus the spring potential energy at the zero draw:
+\begin{equation}
+    E_\text{input} = \frac{1}{2} k \left[{\left(l_\text{draw} + \Delta_\text{pre}\right)}^2 - \Delta_\text{pre}^2\right].
+\end{equation}
 
 %\section{Exterior ballistics}\label{exterior-ballistics}
 % TODO later
