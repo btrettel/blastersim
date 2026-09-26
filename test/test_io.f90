@@ -26,7 +26,7 @@ call test_read_springer_namelist_non_default(tests)
 call test_read_springer_namelist_default(tests)
 
 call test_calculate_eta_pneumatic(tests)
-!call test_calculate_eta_springer(tests)
+call test_calculate_eta_springer(tests)
 
 call tests%end_tests()
 
@@ -350,5 +350,34 @@ subroutine test_calculate_eta_pneumatic(tests)
     ! This number was calculated by an old spreadsheet using rounded `v_muzzle` and `vol_chamber` values matching the input file.
     call tests%real_eq(eta%v%v, 0.16049644048116973_WP, "calculate_eta, pneumatic", abs_tol=1.0e-8_WP)
 end subroutine test_calculate_eta_pneumatic
+
+subroutine test_calculate_eta_springer(tests)
+    use cva, only: run_config_type, cv_system_type, run_status_type, run
+    use io, only: I_BARREL, SPRINGER_MODE, read_springer_namelist, calculate_eta
+    use port, only: path_join
+    use prec, only: CL
+    
+    type(test_results_type), intent(in out) :: tests
+    
+    character(len=CL)     :: path_array(2), input_file
+    type(run_config_type) :: config
+    integer               :: rc
+    type(si_velocity)     :: actual_v_muzzle
+    type(unitless)        :: eta
+    type(cv_system_type), allocatable :: sys_start, sys_end
+    
+    path_array(1) = "examples"
+    path_array(2) = "radioactive-ranger-mega-sniper-k11.nml"
+    input_file    = path_join(path_array)
+    call read_springer_namelist(input_file, sys_start, config, rc, actual_v_muzzle_=actual_v_muzzle)
+    
+    sys_end = sys_start
+    sys_end%cv(I_BARREL)%x_dot = actual_v_muzzle
+    
+    call calculate_eta(sys_start, sys_end, SPRINGER_MODE, eta)
+    
+    ! <https://discord.com/channels/825852031239061545/1177799131268382902/1178501509722427414>
+    call tests%real_eq(eta%v%v, 0.5152_WP, "calculate_eta, springer", abs_tol=1.0e-3_WP)
+end subroutine test_calculate_eta_springer
 
 end program test_io
