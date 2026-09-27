@@ -19,7 +19,7 @@ use cva, only: run_config_type, cv_system_type, run_status_type, T_STOP_DEFAULT,
                     ENERGY_DERIV_TOLERANCE_RUN_RC, IDEAL_EOS_RUN_RC, MIRROR_X_TOLERANCE_RUN_RC, &
                     NEGATIVE_CV_X_RUN_RC, MAX_ITERS_TIME_LOOP_RUN_RC, MAX_ITERS_GET_SYS_AT_X_RUN_RC, &
                     RK_STAGE_NEGATIVE_MASS_RC, RK_STAGE_NEGATIVE_ENERGY_RC, MAX_VELOCITY_EXCEEDED_RC
-use stopcodes, only: EX_OK, EX_USAGE, EX_SOFTWARE
+use stopcodes, only: EX_OK, EX_USAGE, EX_SOFTWARE, EX_ACCSTAB
 use rev, only: TAG, REVISION_DATE, MODIFIED
 use checks, only: assert, is_close
 use build, only: FUZZ
@@ -184,7 +184,7 @@ else
             write(unit=ERROR_UNIT, fmt="(2a)") "Mass or energy tolerance exceeded. ", &
                                                 "Decrease dt by a factor of 10 and report a bug if that doesn't help."
             call refer_to_docs()
-            stop EX_USAGE, quiet=.true.
+            stop EX_ACCSTAB, quiet=.true.
         case (IDEAL_EOS_RUN_RC)
             write(unit=ERROR_UNIT, fmt="(a)") "Critical pressure exceeded. The ideal gas law is inaccurate here. ", &
                     "BlasterSim can not handle pressures this high at the moment."
@@ -209,7 +209,7 @@ else
             write(unit=ERROR_UNIT, fmt="(2a)") "Negative mass of a gas species or energy detected during a Runge-Kutta stage. ", &
                     "Check whether d_e is too large, or possibly if dt is too large."
             call refer_to_docs()
-            stop EX_USAGE, quiet=.true.
+            stop EX_ACCSTAB, quiet=.true.
         case (MAX_VELOCITY_EXCEEDED_RC)
             write(unit=ERROR_UNIT, fmt="(a)") "Muzzle velocity exceeded what is physically possible. ", &
                                                 "This is a bug that should be reported."

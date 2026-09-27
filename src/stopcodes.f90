@@ -28,7 +28,7 @@ integer, parameter :: EX_NOINPUT = 66
 
 ! > A service is unavailable. This can occur if  a support program or file does not exist. This can also be used as a catchall
 ! > message when something you wanted to do does not work, but you do not know why.
-integer, parameter :: EX_UNAVAILABLE = 70
+integer, parameter :: EX_UNAVAILABLE = 69
 
 ! > An internal software error has been detected. This should be limited to non-operating system related errors as possible.
 integer, parameter :: EX_SOFTWARE = 70
@@ -42,6 +42,13 @@ integer, parameter :: EX_IOERR = 74
 ! > Something was found in an unconfigured or misconfigured state.
 integer, parameter :: EX_CONFIG = 78
 
-! Later I may add exit codes not from the sysexits standard below. These will be chosen to not conflict.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Non-sysexits stop codes: !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! gfortran uses an exit code of 1 for `error stop "string"`.
+
+! Inaccuracy or instability detected. Intended for when adjusting time step or grid might or might not help.
+integer, parameter :: EX_ACCSTAB = 79
 
 end module stopcodes
