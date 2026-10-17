@@ -1,5 +1,7 @@
 ### v0.3.0
 
+- Have some polls on Atean Armory and Kelly Industries asking whether people would prefer a web, desktop, or command line interface. Think of other polls to have too, perhaps on comfort with unit conversions.
+    - <https://support.discord.com/hc/en-us/articles/22163184112407-Polls-FAQ>
 - Allow for different distribution of dead volume in the plunger tube and barrel other than 50-50.
 - Add `select case` statements for `prop` integer defining type of thermodynamic properties used.
     - Start with only `CONST_GAMMA` which can be `use`d from the `gastype` module. This will make it more clear which parts of BlasterSim need to be modified to add better thermodynamic property models in the future.
@@ -41,8 +43,9 @@
 - Fix derivatives:
     - `d(v_muzzle)/d(t_opening): 0.0000000000000000 (m/s)/(ms)`
 - Check literature for more validation data for BlasterSim.
-    - Use old GGDT cases on its website?
+    - Pneumatics: Use old GGDT cases on its website
         - <https://web.archive.org/web/20080416132236/http://www.thehalls-in-bfe.com/GGDT/>
+    - Add more Atean Armory springer data once you can estimate spring mass. Make predicted vs. actual plot for springers.
     - Look for something with pressure trace data.
     - Daniel Beaver validation cases:
         - <http://nerfhaven.com/forums/topic/21832-experimental-methods-for-determining-and-predicting-blaster-power/?p=307341>
@@ -51,6 +54,7 @@
 - Use total system entropy as an invariant.
     - moran_thermodynamics_2011 p. 265, sec. 6.5.2
     - 2026-09-27 handwritten notes
+    - Friction makes BlasterSim not isentropic *if the entropy of the projectile/plunger is considered*. (It is not.) Friction will cause the projectile/plunger temperature to increase, increasing the projectile/plunger entropy. That is not considered here. The process is irreversible but still isentropic as coded in BlasterSim.
 - Put code coverage numbers in docs: line and branch coverage
 - Test `p_peak`.
 - Add icon to Windows version of BlasterSim.
@@ -96,7 +100,6 @@
 
 ***
 
-- Have some polls on Atean Armory and Kelly Industries asking whether people would prefer a web or CLI interface. Think of other polls to have too, perhaps on comfort with unit conversions.
 - Improve `get_sys_at_x` derivatives with respect to `x_event` via the implicit function theorem as Gemini suggested.
 - Make BlasterSim able to convert GGDT files to BlasterSim inputs.
     - Make an appendix in the notes on the GGDT file format.
@@ -604,6 +607,7 @@
             - spring displacement is low enough to prevent permanent deformation/settling (alternative: look into fatigue life of spring assuming no amount of deformation will be okay?)
                 - <https://discord.com/channels/825852031239061545/825852033898774543/1540066532527444078>
                 - <https://news.ycombinator.com/item?id=49596781>
+                - <https://discord.com/channels/825852031239061545/938585512447459388/1560011869551468676>
             - spring stress
             - spring buckling
                 - <https://www.reddit.com/r/nerfhomemades/comments/1w6nd9v/how_do_you_solve_spring_buckling_problem_in/>
@@ -617,7 +621,7 @@
         - Use `p_peak` as a constraint for material safety.
         - foam shredding
             - <https://discord.com/channels/825852031239061545/825852073382772758/1551780115007144057>
-    - For optimization, have ability to pick discrete values taken from text file.
+    - For optimization of discrete variables, have ability to pick discrete values taken from text file.
         - How can UQ be handled with this? Have a second column for uncertainty?
 - Check entropy conservation.
 - Order-of-accuracy tests

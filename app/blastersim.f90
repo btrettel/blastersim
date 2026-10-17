@@ -133,7 +133,7 @@ if (FUZZ) then
 end if
 !tripwire$ end
 
-!tripwire$ begin DBA7F79F Update `\secref{return-codes}` of usage.tex.
+!tripwire$ begin 7B5C6926 Update `\secref{return-codes}` of usage.tex.
 if (status%rc < SUCCESS_RC) then
     len_d_labels = 0
     do i_d = 1, size(sys_end%cv(I_BARREL)%x_dot%v%d)

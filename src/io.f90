@@ -353,8 +353,8 @@ pure subroutine calculate_eta(sys_start, sys_end, mode, eta)
     muzzle_energy = sys_end%cv(I_BARREL)%e_k()
     eta = muzzle_energy / input_energy
     
-    call assert(eta%v%v >= 0.0_WP, "blastersim: eta >= 0 violated")
-    call assert(eta%v%v <= 1.0_WP, "blastersim: eta <= 1 violated")
+    call assert(eta%v%v >= 0.0_WP, "cva (calculate_eta): eta >= 0 violated")
+    call assert(eta%v%v <= 1.0_WP, "cva (calculate_eta): eta <= 1 violated")
 end subroutine calculate_eta
 
 end module io
