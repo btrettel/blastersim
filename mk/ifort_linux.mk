@@ -1,3 +1,5 @@
+# Note: The Intel compilers will not compile BlasterSim as of this writing. This file is present for testing and does not imply that the Intel compilers work with BlasterSim.
+
 # ifort is here due to possible performance benefits on x86.
 # `-init=snan,arrays` seems to lead to false positives with ifort.
 

@@ -18,6 +18,8 @@
 - GALE: <https://www.spudfiles.com/viewtopic.php?f=5&t=26154>
 - <https://www.airgunnation.com/threads/internal-and-external-ballistics-spreadsheet.976916/>
 - <https://ballistics.eu/airgun.html>
+- <https://claude.ai/artifact/KAJg8etVGJF4DCjY3adVn3>
+    - <https://discord.com/channels/999821037036388422/999827401691385897/1562241739740151878>
 
 ### Spring calculators
 

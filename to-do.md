@@ -1,10 +1,24 @@
-### v0.3.0
+# BlasterSim to-do list
 
+These tasks are either not implemented or in the process of being implemented. Tasks are removed from the to-do list once they are implemented. Not everything in here will necessarily be implemented. This is also a bit of a scratchpad.
+
+## v0.3.0
+
+- docs: Correct misunderstandings of the DeepWiki LLM: <https://deepwiki.com/btrettel/blastersim/1-overview>
+    - Add AGENTS.md to clarify some other things?
+        - f90lint.py and lint-wrapper.py are unused.
+- docs: Add "Powered by Fortran" logo to cover page.
+    - <https://github.com/sebastian-mutz/powered_by_fortran_logo>
+    - <https://fortran-lang.discourse.group/t/powered-by-fortran/11172/33>
+- docs: Explain confusing `%v%v` notation in dev.tex.
 - Have some polls on Atean Armory and Kelly Industries asking whether people would prefer a web, desktop, or command line interface. Think of other polls to have too, perhaps on comfort with unit conversions.
     - <https://support.discord.com/hc/en-us/articles/22163184112407-Polls-FAQ>
 - Allow for different distribution of dead volume in the plunger tube and barrel other than 50-50.
 - Add `select case` statements for `prop` integer defining type of thermodynamic properties used.
     - Start with only `CONST_GAMMA` which can be `use`d from the `gastype` module. This will make it more clear which parts of BlasterSim need to be modified to add better thermodynamic property models in the future.
+    - Modify the following:
+        - `calculate_eta`: assert `eos == CONST_GAMMA` for pneumatics
+        - TODO
 - Add `X_BLOW_UP_RUN_RC`, etc. Check for derivative blowup too.
 - Run in parallel with one CV per thread? Make the loop over CVs use `do concurrent` to allow for this in the future.
 - `gnuplot = .true.`: Option to make .gp files for every output for quick visualization.
@@ -47,6 +61,7 @@
         - <https://web.archive.org/web/20080416132236/http://www.thehalls-in-bfe.com/GGDT/>
     - Add more Atean Armory springer data once you can estimate spring mass. Make predicted vs. actual plot for springers.
     - Look for something with pressure trace data.
+        - mcgahee_final_2012 (Unfortunately there's no barrel length, but I could guess that.)
     - Daniel Beaver validation cases:
         - <http://nerfhaven.com/forums/topic/21832-experimental-methods-for-determining-and-predicting-blaster-power/?p=307341>
         - <http://www.danielbeaver.net/storage/projects/nerf/SpringerTesting/>
@@ -106,7 +121,7 @@
 - Get ChkTeX to detect `\\href{[^h]`
 - Secant method in `get_sys_at_x`: Use optimal 3 point stencil from ash_optimal_1981 eq. 2 to minimize error.
     - See FLT's test_fmad.f90 `test_num_deriv` subroutine.
-- docs: Differentiate between time step as in `dt` and time step as a particular location in time. Time iteration to refer to a particular point in time?
+- docs: Differentiate between time step as in `dt` and time step as a particular location in time. "Time iteration" to refer to a particular point in time? "Frame" works in game development. Might be worth asking a LLM for suggestions on this.
 - Test `adapt_dt`.
 - Order-of-accuracy test for `e_f`.
 - Use linters including fortitude.
@@ -179,7 +194,7 @@
     - Use probability of exceeding a limit if UQ is enabled
 - Look into geometric integration. This likely will might make using conservation metrics to adjust the time step not work, though.
 
-### v0.4.0
+## v0.4.0
 
 - Ask LFortran to test BlasterSim v0.3.0 if it still won't compile the executables at this point.
 - Combination tutorial and Bradley Phillips style test showing comparison of predicted muzzle velocity and actual measurement.
@@ -613,6 +628,7 @@
                 - <https://www.reddit.com/r/nerfhomemades/comments/1w6nd9v/how_do_you_solve_spring_buckling_problem_in/>
         - maximum draw force limit
         - recoil
+            - /home/ben/reference/Physics [53]/General mechanics [531]/Ballistics [531.55|.58]/Interior ballistics [531.57]/Recoil/
             - <https://kwk.us/recoil.html>
         - amount of gas ejected from the barrel after projectile exit during blowdown phase
             - This could be useful to improve accuracy.

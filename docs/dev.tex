@@ -12,12 +12,12 @@ Split large changes into multiple pull requests.
 If this is not possible, contact Ben Trettel before filing a pull request.
 \item All commit messages must be descriptive.
 Use \href{https://www.conventionalcommits.org/en/v1.0.0/}{Conventional Commits} prefixes.
-For bug fixes, if possible, refer to the issue ID number or commit introducing the bug with \texttt{Fixes: \#[issue ID]} or \texttt{Fixes: [commit hash] ("[commit message first line]")}. % chktex 18
+For bug fixes, if possible, refer to the issue ID number or commit introducing the bug with \texttt{Fixes: \#[issue ID] ("[issue title]")} or \texttt{Fixes: [commit hash] ("[commit message first line]")}. % chktex 18
 \item Do not squash your commits before sending a pull request.
 That can make \texttt{git bisect} work poorly.
 \item Add \href{https://swcarpentry.github.io/python-novice-inflammation/10-defensive.html#assertions}{assertions} as appropriate to new code.
 Use the \texttt{assert} subroutine in the \texttt{checks} module (checks.f90).
-Aim for an assertion density of at least 5\% (5 assertions per source/non-comment line of code).
+Aim for an assertion density of at least 5\% (5 assertions per 100 source/non-comment lines of code).
 \item Contributed code must pass all existing tests.
 Contributed code with new functionality must add and pass new tests for the new functionality.
 Existing tests can be run with \texttt{make check} on Linux and macOS and \texttt{jom check} on Windows as discussed in \secref{verval}.
@@ -25,6 +25,11 @@ The tests themselves are in the test directory and are Fortran code.
 Contributors should examine existing tests to understand the testing system.
 \item New features must be documented.
 See the docs directory for this documentation's source code in LaTeX.
+\item The new/modified parts of the documentation must not be in an AI writing style or be rated as likely coming from an AI from any of the AI writing detectors like Pangram.
+I personally find ``Claudish'' to be annoying and difficult to read.
+This is also a trust issue, as many people do not trust writing by AIs.
+Note that this applies whether a human or AI wrote the documentation.
+Bad writing is bad writing!
 \end{itemize}
 
 BlasterSim uses \href{https://trunkbaseddevelopment.com/}{trunk based development}.
@@ -37,14 +42,7 @@ To contribute validation data, recreate the experimental conditions in BlasterSi
 A note on generative AI\@:
 To date, all BlasterSim code and documentation are written by a human.
 AI was used in BlasterSim's development only as a research and learning tool, not to write code or documentation.
-I am willing to accept LLM-written code and documentation that meets the pull request requirements listed above, with two additional requirements:
-\begin{itemize}
-\item The prompts used to generate the code will need to be provided in the pull request.
-This allows me to get a better sense of what was focused on so I can focus my own checking in the most productive spots.
-\item The new/modified parts of the documentation must not be in a LLM writing style or be rated as likely coming from a LLM from any of the LLM writing detectors like Pangram.
-I personally find ``Claudish'' to be annoying and difficult to read.
-This is also a trust issue, as many people do not trust writing by LLMs.
-\end{itemize}
+I am willing to accept AI-written code and documentation that meets the pull request requirements listed above.
 
 \section{Compiling BlasterSim}\label{compiling}
 
@@ -200,6 +198,30 @@ and can ease identifying where LaTeX compilation errors are.
 \end{itemize}
 
 % TODO: converting between LaTeX variable names and source code variable names
+
+\section{Repository file structure}\label{file-structure}
+% TODO: Write a script to check this for new files and directories and remind me to update it, or automatically update it.
+
+At the root of the BlasterSim repository is the following directories and files:
+
+\begin{itemize}
+    \item app: BlasterSim command line interface source code.
+    \item docs: BlasterSim documentation.
+    \item examples: BlasterSim example inputs.
+    \item mk: Included Make files for the build system, following the intersection of POSIX Make, GNU Make, BSD Make, NMAKE, and jom as to allow use of any of those build systems.
+    \item py: Python helper scripts.
+    \item src: BlasterSim module source code.
+    \item test: BlasterSim test source code.
+    \item .gitignore: A list of files to be ignored by Git. % chktex 26
+    \item CHANGELOG.md: List of changes made in each BlasterSim version.
+    \item GNUmakefile: A Makefile compatible with GNU Make.
+    \item LICENSE\@: GNU AGPL license.
+    \item Makefile: A Makefile compatible with NMAKE and jom.
+    \item README.md: A brief README file referring the user to various websites.
+    \item config.ini: Configuration for some of the Python helper scripts.
+    \item other-sims.md: Links to other similar spring plunger and pneumatic gun simulators.
+    \item to-do.md: To-do list and scratchpad for ideas.
+\end{itemize}
 
 \section{Road map}\label{road-map}
 
